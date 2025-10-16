@@ -9,12 +9,6 @@
     <link rel="stylesheet" href="styles-base.css">
     <link rel="stylesheet" href="styles-componentes.css">
     <link rel="stylesheet" href="styles-pages.css">
-    
-    <!-- CSS de emergência - REMOVA depois que funcionar -->
-    <style>
-        /* TESTE: Remove depois que os CSS carregarem */
-        body { background-color: #f6ecc5 !important; }
-    </style>
 </head>
 <body>
     <!-- Header -->
@@ -22,7 +16,7 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <img src="assets/images/logoamorconect.png" alt="Amor Conect" style="height: 180px; width: auto;">
+                    <img src="assets/images/logoamorconect.png" alt="Amor Conect">
                     <h1>Amor Conect</h1>
                 </div>
                 
@@ -31,13 +25,13 @@
                     <a href="cadastro.html" class="btn btn-primary">Cadastre-se</a>
                 </div>
 
-                <button class="menu-toggle" aria-label="Menu">
+                <div class="menu-toggle">
                     <span></span>
                     <span></span>
                     <span></span>
-                </button>
+                </div>
 
-                <nav class="nav-menu">
+                <nav>
                     <ul>
                         <li><a href="#como-funciona">Como Funciona</a></li>
                         <li><a href="#depoimentos">Depoimentos</a></li>
@@ -207,17 +201,35 @@
         </div>
     </footer>
 
-    <!-- JavaScript Simplificado -->
+    <!-- JavaScript Corrigido -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Menu Hamburguer
             const menuToggle = document.querySelector('.menu-toggle');
-            const navMenu = document.querySelector('.nav-menu');
+            const nav = document.querySelector('nav');
             
-            if (menuToggle && navMenu) {
+            if (menuToggle && nav) {
                 menuToggle.addEventListener('click', function() {
                     menuToggle.classList.toggle('active');
-                    navMenu.classList.toggle('active');
+                    nav.classList.toggle('active');
+                });
+
+                // Fechar menu ao clicar em um link
+                document.querySelectorAll('nav a').forEach(link => {
+                    link.addEventListener('click', function() {
+                        if (menuToggle.classList.contains('active')) {
+                            menuToggle.classList.remove('active');
+                            nav.classList.remove('active');
+                        }
+                    });
+                });
+
+                // Fechar menu ao rolar
+                window.addEventListener('scroll', function() {
+                    if (nav.classList.contains('active')) {
+                        menuToggle.classList.remove('active');
+                        nav.classList.remove('active');
+                    }
                 });
             }
 
