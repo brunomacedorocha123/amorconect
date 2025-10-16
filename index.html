@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amor Conect - Encontre seu par ideal</title>
+    
+    <!-- CSS GLOBAIS -->
+    <link rel="stylesheet" href="globals.css">
+    <link rel="stylesheet" href="components.css">
+    <link rel="stylesheet" href="hamburger.css">
+    
+    <!-- JS GLOBAL -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="globals.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <button id="hamburgerBtn">☰</button>
+                
+                <div class="logo">
+                    <img src="logoamorconect.png" alt="Amor Conect" class="logo-image">
+                </div>
+                
+                <div class="auth-buttons">
+                    <a href="login.html" class="btn btn-outline">Entrar</a>
+                    <a href="cadastro.html" class="btn btn-primary">Cadastre-se</a>
+                </div>
+
+                <nav>
+                    <ul>
+                        <li><a href="#como-funciona">Como Funciona</a></li>
+                        <li><a href="#depoimentos">Depoimentos</a></li>
+                        <li><a href="#sobre">Sobre</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Menu Mobile -->
+    <div id="mobileMenu">
+        <button id="closeMobileMenu">×</button>
+        
+        <div class="mobile-user-info">
+            <div class="user-avatar">
+                <div class="user-avatar-fallback">👤</div>
+            </div>
+            <div>Visitante</div>
+        </div>
+
+        <div class="mobile-nav">
+            <a href="login.html" class="btn btn-outline">Entrar</a>
+            <a href="cadastro.html" class="btn btn-primary">Cadastre-se</a>
+            <a href="#como-funciona" class="btn btn-outline">Como Funciona</a>
+            <a href="#depoimentos" class="btn btn-outline">Depoimentos</a>
+            <a href="#sobre" class="btn btn-outline">Sobre Nós</a>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h2>Encontre a conexão que seu coração procura</h2>
+                <p>Uma plataforma segura e discreta para conhecer pessoas especiais e construir relacionamentos genuínos.</p>
+                <a href="cadastro.html" class="btn btn-primary btn-lg">Comece sua jornada</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <div class="section-title">
+                <h2>Por que escolher o Amor Conect?</h2>
+                <p>Nossa plataforma foi desenvolvida pensando em sua segurança e privacidade, oferecendo uma experiência única de conexão.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Segurança Total</h3>
+                    <p>Perfis verificados e ambiente controlado para sua tranquilidade.</p>
+                </div>
+                <div class="feature-card card">
+                    <div class="feature-icon">💌</div>
+                    <h3>Conexões Autênticas</h3>
+                    <p>Conheça pessoas reais com interesses compatíveis com os seus.</p>
+                </div>
+                <div class="feature-card card">
+                    <div class="feature-icon">🌟</div>
+                    <h3>Experiência Personalizada</h3>
+                    <p>Encontre pessoas que compartilham seus valores e objetivos.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="como-funciona">
+        <div class="container">
+            <div class="section-title">
+                <h2>Como Funciona</h2>
+                <p>Em poucos passos, você estará conectado com pessoas incríveis.</p>
+            </div>
+            <div class="steps">
+                <div class="step card">
+                    <div class="step-number">1</div>
+                    <h3>Crie seu Perfil</h3>
+                    <p>Cadastre-se fornecendo informações básicas e crie um perfil autêntico.</p>
+                </div>
+                <div class="step card">
+                    <div class="step-number">2</div>
+                    <h3>Complete seu Perfil</h3>
+                    <p>Adicione informações complementares para aumentar suas conexões.</p>
+                </div>
+                <div class="step card">
+                    <div class="step-number">3</div>
+                    <h3>Encontre Pessoas</h3>
+                    <p>Explore perfis compatíveis com seus interesses e valores.</p>
+                </div>
+                <div class="step card">
+                    <div class="step-number">4</div>
+                    <h3>Conecte-se</h3>
+                    <p>Envie mensagens e construa relacionamentos significativos.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials" id="depoimentos">
+        <div class="container">
+            <div class="section-title">
+                <h2>Histórias de Sucesso</h2>
+                <p>Conheça relatos reais de pessoas que encontraram sua conexão perfeita.</p>
+            </div>
+            <div class="testimonial-grid">
+                <div class="testimonial-card card">
+                    <p class="testimonial-text">"Depois de anos tentando aplicativos tradicionais, finalmente encontrei alguém com valores compatíveis. Hoje estamos juntos há 6 meses!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">M</div>
+                        <div class="author-info">
+                            <h4>Mariana</h4>
+                            <p>32 anos, São Paulo</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card card">
+                    <p class="testimonial-text">"A plataforma me permitiu conhecer pessoas genuínas. A conexão que fiz aqui foi diferente de qualquer outra experiência online."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">R</div>
+                        <div class="author-info">
+                            <h4>Ricardo</h4>
+                            <p>38 anos, Rio de Janeiro</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card card">
+                    <p class="testimonial-text">"Adorei a privacidade e o respeito que encontrei na plataforma. Conheci alguém especial sem pressão e no meu tempo."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">C</div>
+                        <div class="author-info">
+                            <h4>Carolina</h4>
+                            <p>29 anos, Belo Horizonte</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <h2>Pronto para encontrar sua conexão perfeita?</h2>
+            <p>Junte-se a milhares de pessoas que já descobriram relacionamentos significativos através da nossa plataforma.</p>
+            <a href="cadastro.html" class="btn btn-light btn-lg">Comece Agora</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Amor Conect</h3>
+                    <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-icon">f</a>
+                        <a href="#" class="social-icon">t</a>
+                        <a href="#" class="social-icon">i</a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Links Rápidos</h3>
+                    <ul>
+                        <li><a href="https://amorconect.netlify.app">Página Inicial</a></li>
+                        <li><a href="#como-funciona">Como Funciona</a></li>
+                        <li><a href="#depoimentos">Depoimentos</a></li>
+                        <li><a href="#sobre">Sobre Nós</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Suporte</h3>
+                    <ul>
+                        <li><a href="#">Central de Ajuda</a></li>
+                        <li><a href="#">Política de Privacidade</a></li>
+                        <li><a href="#">Termos de Uso</a></li>
+                        <li><a href="#">Contato</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2023 Amor Conect. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <style>
+        /* ==================== ESTILOS ESPECÍFICOS DA INDEX ==================== */
+        
+        /* Header com logo grande mas compacto */
+        .header-content {
+            position: relative;
+            height: 90px; /* Altura fixa para o header */
+        }
+
+        .logo {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            top: -25px; /* Posiciona a logo para cima */
+        }
+
+        .logo-image {
+            height: 180px !important; /* Logo grande */
+            width: auto;
+            max-width: none;
+            display: block;
+        }
+
+        .logo h1 {
+            display: none; /* Remove o título */
+        }
+
+        /* Ajuste dos botões de auth */
+        .auth-buttons {
+            margin-left: auto;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 5rem 0;
+            background: linear-gradient(rgba(246, 236, 197, 0.9), rgba(246, 236, 197, 0.9)), url('casal.jpg') center/cover no-repeat;
+            text-align: center;
+            margin-top: 0; /* Remove margem extra */
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h2 {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: var(--vermelho-rosado);
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: var(--text-light);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 5rem 0;
+            background-color: var(--branco);
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: var(--vermelho-rosado);
+            margin-bottom: 1rem;
+        }
+
+        .section-title p {
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 5rem 0;
+            background-color: var(--bege);
+        }
+
+        .steps {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .step {
+            flex: 1;
+            min-width: 250px;
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0 auto 1.5rem;
+        }
+
+        .step h3 {
+            margin-bottom: 1rem;
+            color: var(--vermelho-rosado);
+        }
+
+        .step p {
+            text-align: center;
+        }
+
+        /* Testimonials */
+        .testimonials {
+            padding: 5rem 0;
+            background-color: var(--branco);
+        }
+
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .testimonial-text {
+            font-style: italic;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+            text-align: justify;
+            text-justify: inter-word;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--branco);
+            font-weight: bold;
+        }
+
+        .author-info h4 {
+            color: var(--vermelho-rosado);
+        }
+
+        .author-info p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 5rem 0;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+            color: var(--branco);
+            text-align: center;
+        }
+
+        .cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn-light {
+            background: var(--branco);
+            color: var(--vermelho-rosado);
+        }
+
+        /* Navigation */
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: var(--branco);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+        }
+
+        nav a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Social Links */
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--lilas);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            color: var(--branco);
+            text-decoration: none;
+        }
+
+        .social-icon:hover {
+            background-color: var(--vermelho-rosado);
+            transform: translateY(-3px);
+        }
+
+        /* ==================== RESPONSIVIDADE ESPECÍFICA ==================== */
+        @media (max-width: 768px) {
+            .header-content {
+                height: 80px;
+            }
+
+            .logo {
+                top: -20px;
+            }
+
+            .logo-image {
+                height: 150px !important;
+            }
+
+            .hero h2 {
+                font-size: 2.2rem;
+            }
+
+            .steps {
+                flex-direction: column;
+            }
+
+            .features-grid,
+            .testimonial-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero,
+            .features,
+            .how-it-works,
+            .testimonials,
+            .cta {
+                padding: 3rem 0;
+            }
+
+            nav {
+                display: none;
+            }
+
+            #hamburgerBtn {
+                display: flex;
+            }
+
+            .auth-buttons {
+                display: none;
+            }
+
+            nav.active {
+                display: block;
+                width: 100%;
+                order: 4;
+                margin-top: 1rem;
+            }
+
+            nav ul {
+                flex-direction: column;
+                gap: 0;
+                width: 100%;
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                border-radius: 10px;
+                padding: 1rem 0;
+            }
+
+            nav ul li {
+                width: 100%;
+                text-align: center;
+            }
+
+            nav a {
+                display: block;
+                padding: 1rem;
+                border-radius: 0;
+                margin: 0.2rem 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo-image {
+                height: 130px !important;
+            }
+
+            .hero h2 {
+                font-size: 1.8rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .logo-image {
+                height: 110px !important;
+            }
+        }
+    </style>
+
+    <script>
+        // ==================== JAVASCRIPT ESPECÍFICO DA INDEX ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Smooth scrolling para links internos
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    if(targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if(targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 80,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+
+            console.log('✅ Index.html carregada com sucesso!');
+        });
+    </script>
+</body>
+</html>
