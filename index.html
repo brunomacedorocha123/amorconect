@@ -4,584 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Amor Conect - Encontre seu par ideal</title>
-  <style>
-/* Reset e configurações gerais */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-:root {
-    --bege: #f6ecc5;
-    --vermelho-rosado: #d1656d;
-    --lilas: #dfc9ed;
-    --branco: #ffffff;
-    --text: #444;
-    --text-light: #666;
-    --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    --transition: all 0.3s ease;
-}
-
-body {
-    background-color: var(--bege);
-    color: var(--text);
-    line-height: 1.6;
-    overflow-x: hidden; /* IMPEDE SCROLL HORIZONTAL */
-}
-
-.container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-/* Header */
-header {
-    background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-    color: var(--branco);
-    padding: 0.8rem 0;
-    box-shadow: var(--shadow);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 70px;
-}
-
-.logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-shrink: 0;
-}
-
-.logo img {
-    height: 180px;
-    width: auto;
-    object-fit: contain;
-}
-
-.logo h1 {
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: var(--branco);
-    white-space: nowrap;
-}
-
-/* Menu Hamburguer */
-.menu-toggle {
-    display: none;
-    flex-direction: column;
-    cursor: pointer;
-    gap: 4px;
-    padding: 8px;
-}
-
-.menu-toggle span {
-    width: 25px;
-    height: 3px;
-    background: var(--branco);
-    transition: var(--transition);
-    border-radius: 2px;
-}
-
-.menu-toggle.active span:nth-child(1) {
-    transform: rotate(45deg) translate(6px, 6px);
-}
-
-.menu-toggle.active span:nth-child(2) {
-    opacity: 0;
-}
-
-.menu-toggle.active span:nth-child(3) {
-    transform: rotate(-45deg) translate(6px, -6px);
-}
-
-nav ul {
-    display: flex;
-    list-style: none;
-    gap: 2rem;
-}
-
-nav a {
-    color: var(--branco);
-    text-decoration: none;
-    font-weight: 500;
-    transition: var(--transition);
-    padding: 0.5rem 1rem;
-    border-radius: 30px;
-}
-
-nav a:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-}
-
-.auth-buttons {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-}
-
-.btn {
-    padding: 0.6rem 1.2rem;
-    border-radius: 30px;
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-    text-decoration: none;
-    display: inline-block;
-    text-align: center;
-    font-size: 0.9rem;
-}
-
-.btn-outline {
-    background: transparent;
-    border: 2px solid var(--branco);
-    color: var(--branco);
-}
-
-.btn-primary {
-    background: var(--branco);
-    color: var(--vermelho-rosado);
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-/* Hero Section */
-.hero {
-    padding: 5rem 0;
-    background: linear-gradient(rgba(246, 236, 197, 0.9), rgba(246, 236, 197, 0.9)), url('casal.jpg') center/cover no-repeat;
-    text-align: center;
-}
-
-.hero-content {
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.hero h2 {
-    font-size: 3rem;
-    margin-bottom: 1.5rem;
-    color: var(--vermelho-rosado);
-    line-height: 1.2;
-}
-
-.hero p {
-    font-size: 1.2rem;
-    margin-bottom: 2rem;
-    color: var(--text-light);
-}
-
-.btn-large {
-    padding: 1rem 2.5rem;
-    font-size: 1.1rem;
-}
-
-/* Features Section */
-.features {
-    padding: 5rem 0;
-    background-color: var(--branco);
-}
-
-.section-title {
-    text-align: center;
-    margin-bottom: 3rem;
-}
-
-.section-title h2 {
-    font-size: 2.5rem;
-    color: var(--vermelho-rosado);
-    margin-bottom: 1rem;
-}
-
-.section-title p {
-    color: var(--text-light);
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-}
-
-.feature-card {
-    background: var(--branco);
-    border-radius: 15px;
-    padding: 2rem;
-    text-align: center;
-    box-shadow: var(--shadow);
-    transition: var(--transition);
-    border: 1px solid var(--lilas);
-}
-
-.feature-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 10px 25px rgba(209, 101, 109, 0.15);
-}
-
-.feature-icon {
-    font-size: 3rem;
-    margin-bottom: 1.5rem;
-    color: var(--vermelho-rosado);
-}
-
-.feature-card h3 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: var(--vermelho-rosado);
-}
-
-.feature-card p {
-    text-align: center;
-}
-
-/* How It Works */
-.how-it-works {
-    padding: 5rem 0;
-    background-color: var(--bege);
-}
-
-.steps {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 2rem;
-    margin-top: 3rem;
-}
-
-.step {
-    flex: 1;
-    min-width: 250px;
-    text-align: center;
-    padding: 2rem 1rem;
-    background: var(--branco);
-    border-radius: 15px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--lilas);
-}
-
-.step-number {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-    color: var(--branco);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin: 0 auto 1.5rem;
-}
-
-.step h3 {
-    margin-bottom: 1rem;
-    color: var(--vermelho-rosado);
-}
-
-.step p {
-    text-align: center;
-}
-
-/* Testimonials */
-.testimonials {
-    padding: 5rem 0;
-    background-color: var(--branco);
-}
-
-.testimonial-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-}
-
-.testimonial-card {
-    background: var(--bege);
-    border-radius: 15px;
-    padding: 2rem;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--lilas);
-}
-
-.testimonial-text {
-    font-style: italic;
-    margin-bottom: 1.5rem;
-    color: var(--text);
-    text-align: justify;
-    text-justify: inter-word;
-}
-
-.testimonial-author {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.author-avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--branco);
-    font-weight: bold;
-}
-
-.author-info h4 {
-    color: var(--vermelho-rosado);
-}
-
-.author-info p {
-    color: var(--text-light);
-    font-size: 0.9rem;
-}
-
-/* CTA Section */
-.cta {
-    padding: 5rem 0;
-    background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-    color: var(--branco);
-    text-align: center;
-}
-
-.cta h2 {
-    font-size: 2.5rem;
-    margin-bottom: 1.5rem;
-}
-
-.cta p {
-    font-size: 1.2rem;
-    margin-bottom: 2rem;
-    max-width: 700px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.btn-light {
-    background: var(--branco);
-    color: var(--vermelho-rosado);
-}
-
-/* Footer */
-footer {
-    background-color: var(--bege);
-    color: var(--text);
-    padding: 3rem 0 1.5rem;
-    border-top: 1px solid var(--lilas);
-}
-
-.footer-content {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 2rem;
-    margin-bottom: 2rem;
-}
-
-.footer-column h3 {
-    margin-bottom: 1.5rem;
-    font-size: 1.2rem;
-    color: var(--vermelho-rosado);
-}
-
-.footer-column ul {
-    list-style: none;
-}
-
-.footer-column ul li {
-    margin-bottom: 0.8rem;
-}
-
-.footer-column a {
-    color: var(--text);
-    text-decoration: none;
-    transition: var(--transition);
-}
-
-.footer-column a:hover {
-    color: var(--vermelho-rosado);
-}
-
-.social-links {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.social-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: var(--lilas);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-    color: var(--branco);
-    text-decoration: none;
-}
-
-.social-icon:hover {
-    background-color: var(--vermelho-rosado);
-    transform: translateY(-3px);
-}
-
-.copyright {
-    text-align: center;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--lilas);
-    font-size: 0.9rem;
-    color: var(--text-light);
-}
-
-/* ========== MOBILE - APENAS LOGO CORRIGIDA ========== */
-@media (max-width: 768px) {
-    .header-content {
-        flex-wrap: wrap;
-        height: auto;
-        padding: 10px 0;
-        gap: 10px;
-        align-items: center;
-    }
-
-    /* LOGO - TAMANHO NORMAL PARA MOBILE */
-    .logo {
-        order: 1;
-        flex: 0 0 auto;
-    }
-
-    .logo img {
-        height: 150px !important; /* TAMANHO PEQUENO E FIXO */
-        width: auto !important;
-        max-width: 150px !important;
-        object-fit: contain;
-        margin: 0 !important;
-        display: block;
-    }
-
-    .logo h1 {
-        display: none;
-    }
-
-    .menu-toggle {
-        display: flex;
-        order: 2;
-        margin-left: auto;
-    }
-
-    .auth-buttons {
-        order: 3;
-        gap: 0.5rem;
-    }
-
-    .auth-buttons .btn {
-        padding: 0.5rem 1rem;
-        font-size: 0.85rem;
-        white-space: nowrap;
-    }
-
-    nav {
-        display: none;
-        width: 100%;
-        order: 4;
-        margin-top: 1rem;
-    }
-
-    nav.active {
-        display: block;
-    }
-
-    nav ul {
-        flex-direction: column;
-        gap: 0;
-        width: 100%;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 10px;
-        padding: 1rem 0;
-    }
-
-    nav ul li {
-        width: 100%;
-        text-align: center;
-    }
-
-    nav a {
-        display: block;
-        padding: 1rem;
-        border-radius: 0;
-        margin: 0.2rem 0;
-    }
-
-    .hero h2 {
-        font-size: 2.2rem;
-    }
-
-    .steps {
-        flex-direction: column;
-    }
-
-    .features-grid,
-    .testimonial-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .hero,
-    .features,
-    .how-it-works,
-    .testimonials,
-    .cta {
-        padding: 3rem 0;
-    }
-}
-
-@media (max-width: 480px) {
-    .logo img {
-        height: 90px !important; /* AINDA MENOR EM TELAS PEQUENAS */
-        max-width: 140px !important;
-    }
-
-    .auth-buttons .btn {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.8rem;
-    }
-
-    .hero h2 {
-        font-size: 1.8rem;
-    }
-
-    .hero p {
-        font-size: 1rem;
-    }
-}
-
-@media (max-width: 360px) {
-    .logo img {
-        height: 80px !important; /* MÍNIMO PARA TELAS MUITO PEQUENAS */
-        max-width: 130px !important;
-    }
-
-    .auth-buttons .btn {
-        padding: 0.3rem 0.6rem;
-        font-size: 0.75rem;
-    }
-}
-</style>
+    
+    <!-- CSS ORGANIZADO -->
+    <link rel="stylesheet" href="styles-base.css">
+    <link rel="stylesheet" href="styles-componentes.css">
+    <link rel="stylesheet" href="styles-pages.css">
 </head>
 <body>
     <!-- Header -->
@@ -589,7 +16,7 @@ footer {
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <img src="logoamorconect.png" alt="Amor Conect">
+                    <img src="assets/images/logoamorconect.png" alt="Amor Conect">
                     <h1>Amor Conect</h1>
                 </div>
                 
@@ -615,7 +42,6 @@ footer {
         </div>
     </header>
 
-    <!-- Resto do código permanece igual -->
     <!-- Hero Section -->
     <section class="hero">
         <div class="container">
@@ -770,59 +196,234 @@ footer {
                 </div>
             </div>
             <div class="copyright">
-                <p>&copy; 2023 Amor Conect. Todos os direitos reservados.</p>
+                <p>&copy; 2024 Amor Conect. Todos os direitos reservados.</p>
             </div>
         </div>
     </footer>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Menu Hamburguer
-            const menuToggle = document.querySelector('.menu-toggle');
-            const nav = document.querySelector('nav');
-            
-            if (menuToggle) {
-                menuToggle.addEventListener('click', function() {
-                    this.classList.toggle('active');
-                    nav.classList.toggle('active');
-                });
+    <!-- JavaScript Organizado -->
+    <script type="module">
+        // Importar utilitários
+        import { funcaoUtilitario } from './scripts/funcao-utilitario.js'
+
+        // Inicializar funcionalidades da página inicial
+        class IndexPage {
+            constructor() {
+                this.init()
             }
 
-            // Fechar menu ao clicar em um link
-            document.querySelectorAll('nav a').forEach(link => {
-                link.addEventListener('click', function() {
-                    if (menuToggle.classList.contains('active')) {
-                        menuToggle.classList.remove('active');
-                        nav.classList.remove('active');
-                    }
-                });
-            });
+            init() {
+                this.setupMenuHamburguer()
+                this.setupSmoothScroll()
+                this.setupAnimations()
+                this.setupNewsletter()
+                
+                console.log('✅ Página inicial inicializada')
+            }
 
-            // Smooth scrolling para links internos
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const targetId = this.getAttribute('href');
-                    if(targetId === '#') return;
-                    
-                    const targetElement = document.querySelector(targetId);
-                    if(targetElement) {
-                        window.scrollTo({
-                            top: targetElement.offsetTop - 80,
-                            behavior: 'smooth'
-                        });
-                    }
-                });
-            });
+            // Menu Hamburguer para página inicial
+            setupMenuHamburguer() {
+                const menuToggle = document.querySelector('.menu-toggle')
+                const nav = document.querySelector('nav')
+                
+                if (menuToggle && nav) {
+                    menuToggle.addEventListener('click', () => {
+                        menuToggle.classList.toggle('active')
+                        nav.classList.toggle('active')
+                    })
 
-            // Fechar menu ao rolar a página
-            window.addEventListener('scroll', function() {
-                if (nav.classList.contains('active')) {
-                    menuToggle.classList.remove('active');
-                    nav.classList.remove('active');
+                    // Fechar menu ao clicar em um link
+                    document.querySelectorAll('nav a').forEach(link => {
+                        link.addEventListener('click', () => {
+                            if (menuToggle.classList.contains('active')) {
+                                menuToggle.classList.remove('active')
+                                nav.classList.remove('active')
+                            }
+                        })
+                    })
+
+                    // Fechar menu ao rolar
+                    window.addEventListener('scroll', () => {
+                        if (nav.classList.contains('active')) {
+                            menuToggle.classList.remove('active')
+                            nav.classList.remove('active')
+                        }
+                    })
                 }
-            });
-        });
+            }
+
+            // Scroll suave para links internos
+            setupSmoothScroll() {
+                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                    anchor.addEventListener('click', function (e) {
+                        e.preventDefault()
+                        const targetId = this.getAttribute('href')
+                        if(targetId === '#') return
+                        
+                        const targetElement = document.querySelector(targetId)
+                        if(targetElement) {
+                            window.scrollTo({
+                                top: targetElement.offsetTop - 80,
+                                behavior: 'smooth'
+                            })
+                        }
+                    })
+                })
+            }
+
+            // Animações de entrada
+            setupAnimations() {
+                // Observer para animar elementos quando entram na viewport
+                const observerOptions = {
+                    threshold: 0.1,
+                    rootMargin: '0px 0px -50px 0px'
+                }
+
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.style.opacity = '1'
+                            entry.target.style.transform = 'translateY(0)'
+                        }
+                    })
+                }, observerOptions)
+
+                // Observar elementos para animação
+                document.querySelectorAll('.feature-card, .step, .testimonial-card').forEach(el => {
+                    el.style.opacity = '0'
+                    el.style.transform = 'translateY(30px)'
+                    el.style.transition = 'all 0.6s ease'
+                    observer.observe(el)
+                })
+            }
+
+            // Sistema de newsletter simples
+            setupNewsletter() {
+                const newsletterForm = document.getElementById('newsletterForm')
+                if (newsletterForm) {
+                    newsletterForm.addEventListener('submit', (e) => {
+                        e.preventDefault()
+                        const email = newsletterForm.querySelector('input[type="email"]').value
+                        
+                        if (funcaoUtilitario.validarEmail(email)) {
+                            this.subscribeNewsletter(email)
+                        } else {
+                            funcaoUtilitario.mostrarAlerta('Por favor, insira um email válido.', 'aviso')
+                        }
+                    })
+                }
+            }
+
+            // Inscrever na newsletter
+            async subscribeNewsletter(email) {
+                try {
+                    // Simular cadastro na newsletter
+                    await new Promise(resolve => setTimeout(resolve, 1000))
+                    
+                    funcaoUtilitario.mostrarAlerta('Obrigado por se inscrever! Em breve você receberá nossas novidades.', 'sucesso')
+                    
+                    // Limpar formulário
+                    const newsletterForm = document.getElementById('newsletterForm')
+                    if (newsletterForm) {
+                        newsletterForm.reset()
+                    }
+                    
+                } catch (error) {
+                    console.error('Erro ao inscrever na newsletter:', error)
+                    funcaoUtilitario.mostrarAlerta('Erro ao processar inscrição. Tente novamente.', 'erro')
+                }
+            }
+
+            // Contador de usuários (opcional)
+            async updateUserCount() {
+                try {
+                    // Simular contagem de usuários
+                    const userCount = Math.floor(Math.random() * 1000) + 5000
+                    const countElement = document.getElementById('userCount')
+                    
+                    if (countElement) {
+                        this.animateCount(countElement, 0, userCount, 2000)
+                    }
+                } catch (error) {
+                    console.error('Erro ao atualizar contador:', error)
+                }
+            }
+
+            // Animação de contagem
+            animateCount(element, start, end, duration) {
+                let startTimestamp = null
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1)
+                    const value = Math.floor(progress * (end - start) + start)
+                    element.textContent = value.toLocaleString('pt-BR')
+                    
+                    if (progress < 1) {
+                        window.requestAnimationFrame(step)
+                    }
+                }
+                window.requestAnimationFrame(step)
+            }
+        }
+
+        // Inicializar quando o DOM carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            new IndexPage()
+        })
+
+        // Adicionar newsletter section opcional no footer
+        function adicionarNewsletter() {
+            const footerColumns = document.querySelector('.footer-content')
+            if (footerColumns) {
+                const newsletterColumn = document.createElement('div')
+                newsletterColumn.className = 'footer-column'
+                newsletterColumn.innerHTML = `
+                    <h3>Newsletter</h3>
+                    <p>Receba novidades e dicas de relacionamento</p>
+                    <form id="newsletterForm" class="newsletter-form">
+                        <input type="email" placeholder="Seu melhor email" required>
+                        <button type="submit" class="btn btn-primary">Inscrever</button>
+                    </form>
+                `
+                footerColumns.appendChild(newsletterColumn)
+            }
+        }
+
+        // Estilos para newsletter
+        const newsletterStyles = `
+            .newsletter-form {
+                display: flex;
+                gap: 0.5rem;
+                margin-top: 1rem;
+            }
+            
+            .newsletter-form input {
+                flex: 1;
+                padding: 0.5rem;
+                border: 1px solid var(--lilas);
+                border-radius: 5px;
+                font-size: 0.9rem;
+            }
+            
+            .newsletter-form button {
+                white-space: nowrap;
+            }
+            
+            @media (max-width: 768px) {
+                .newsletter-form {
+                    flex-direction: column;
+                }
+            }
+        `
+
+        // Adicionar estilos da newsletter
+        const styleSheet = document.createElement('style')
+        styleSheet.textContent = newsletterStyles
+        document.head.appendChild(styleSheet)
+
+        // Adicionar seção de newsletter (opcional)
+        // adicionarNewsletter()
+
     </script>
 </body>
 </html>

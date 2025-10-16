@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Amor Conect</title>
+    
+    <!-- CSS ORGANIZADO -->
+    <link rel="stylesheet" href="styles-base.css">
+    <link rel="stylesheet" href="styles-componentes.css">
+    <link rel="stylesheet" href="styles-pages.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="assets/images/logoamorconect.png" alt="Amor Conect">
+                    <h1>Amor Conect</h1>
+                </div>
+                
+                <div class="auth-buttons">
+                    <a href="login.html" class="btn btn-outline">Entrar</a>
+                    <a href="cadastro.html" class="btn btn-primary">Cadastre-se</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content auth-page">
+        <div class="container">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <h2>Comece sua jornada</h2>
+                    <p>Crie sua conta e encontre conexões genuínas</p>
+                </div>
+                <div class="auth-body">
+                    <!-- Alert Messages -->
+                    <div class="alert alert-error" id="errorAlert" style="display: none;"></div>
+                    <div class="alert alert-info" id="infoAlert" style="display: none;"></div>
+                    <div class="alert alert-success" id="successAlert" style="display: none;"></div>
+
+                    <form id="cadastroForm">
+                        <div class="form-group">
+                            <label for="nickname">Apelido *</label>
+                            <input type="text" id="nickname" class="form-control" placeholder="Como quer ser chamado(a)" required>
+                            <div class="error-message" id="nicknameError">O apelido é obrigatório</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fullName">Nome Completo *</label>
+                            <input type="text" id="fullName" class="form-control" placeholder="Seu nome completo" required>
+                            <div class="error-message" id="fullNameError">O nome completo é obrigatório</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">E-mail *</label>
+                            <input type="email" id="email" class="form-control" placeholder="seu@email.com" required>
+                            <div class="error-message" id="emailError">Por favor, insira um e-mail válido</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Senha *</label>
+                            <div class="password-container">
+                                <input type="password" id="password" class="form-control" placeholder="Mínimo 6 caracteres" required>
+                                <button type="button" class="toggle-password" id="togglePassword">👁️</button>
+                            </div>
+                            <div class="error-message" id="passwordError">A senha deve ter pelo menos 6 caracteres</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirmar Senha *</label>
+                            <div class="password-container">
+                                <input type="password" id="confirmPassword" class="form-control" placeholder="Digite a senha novamente" required>
+                                <button type="button" class="toggle-password" id="toggleConfirmPassword">👁️</button>
+                            </div>
+                            <div class="error-message" id="confirmPasswordError">As senhas não coincidem</div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="terms-agreement">
+                                <input type="checkbox" id="agreeTerms" required>
+                                <label for="agreeTerms">
+                                    Concordo com os <a href="termos.html" target="_blank">Termos de Uso</a> e 
+                                    <a href="privacidade.html" target="_blank">Política de Privacidade</a>
+                                </label>
+                            </div>
+                            <div class="error-message" id="termsError">Você deve aceitar os termos para continuar</div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
+                            Criar Conta
+                        </button>
+
+                        <div class="loading" id="loading">
+                            <div class="spinner"></div>
+                            <p>Criando sua conta...</p>
+                        </div>
+                    </form>
+
+                    <div class="auth-footer">
+                        <p>Já tem uma conta? <a href="login.html">Faça login aqui</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Amor Conect</h3>
+                    <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Links Rápidos</h3>
+                    <ul>
+                        <li><a href="index.html">Página Inicial</a></li>
+                        <li><a href="#como-funciona">Como Funciona</a></li>
+                        <li><a href="#depoimentos">Depoimentos</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Suporte</h3>
+                    <ul>
+                        <li><a href="#">Central de Ajuda</a></li>
+                        <li><a href="#">Política de Privacidade</a></li>
+                        <li><a href="#">Termos de Uso</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 Amor Conect. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Organizado -->
+    <script type="module">
+        import { authService } from './scripts/auth-service.js'
+        import { funcaoUtilitario } from './scripts/funcao-utilitario.js'
+
+        class CadastroPage {
+            constructor() {
+                this.init()
+            }
+
+            async init() {
+                await this.checkExistingAuth()
+                this.setupEventListeners()
+                
+                console.log('✅ Página de cadastro inicializada')
+            }
+
+            // Verificar se já está autenticado
+            async checkExistingAuth() {
+                try {
+                    const user = await authService.checkAuth()
+                    if (user) {
+                        window.location.href = 'home.html'
+                    }
+                } catch (error) {
+                    // Usuário não está autenticado, continuar normalmente
+                console.log('👤 Usuário não autenticado, permitindo cadastro')
+                return false
+                }
+            }
+
+            // Configurar event listeners
+            setupEventListeners() {
+                const form = document.getElementById('cadastroForm')
+                const togglePassword = document.getElementById('togglePassword')
+                const toggleConfirmPassword = document.getElementById('toggleConfirmPassword')
+                const passwordInput = document.getElementById('password')
+                const confirmPasswordInput = document.getElementById('confirmPassword')
+
+                // Toggle password visibility
+                togglePassword?.addEventListener('click', () => {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password'
+                    passwordInput.setAttribute('type', type)
+                    togglePassword.textContent = type === 'password' ? '👁️' : '🔒'
+                })
+
+                toggleConfirmPassword?.addEventListener('click', () => {
+                    const type = confirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password'
+                    confirmPasswordInput.setAttribute('type', type)
+                    toggleConfirmPassword.textContent = type === 'password' ? '👁️' : '🔒'
+                })
+
+                // Validação em tempo real
+                document.getElementById('nickname')?.addEventListener('blur', () => this.validateNickname())
+                document.getElementById('fullName')?.addEventListener('blur', () => this.validateFullName())
+                document.getElementById('email')?.addEventListener('blur', () => this.validateEmail())
+                document.getElementById('password')?.addEventListener('blur', () => this.validatePassword())
+                document.getElementById('confirmPassword')?.addEventListener('blur', () => this.validateConfirmPassword())
+                document.getElementById('agreeTerms')?.addEventListener('change', () => this.validateTerms())
+
+                // Submit do formulário
+                form?.addEventListener('submit', (e) => this.handleCadastro(e))
+            }
+
+            // Validar apelido
+            validateNickname() {
+                const nickname = document.getElementById('nickname')
+                const value = nickname.value.trim()
+                const isValid = value.length >= 2
+                
+                if (!isValid && value !== '') {
+                    this.showError('nicknameError', 'O apelido deve ter pelo menos 2 caracteres')
+                    nickname.classList.add('error')
+                } else {
+                    this.hideError('nicknameError')
+                    nickname.classList.remove('error')
+                }
+                
+                return isValid || value === ''
+            }
+
+            // Validar nome completo
+            validateFullName() {
+                const fullName = document.getElementById('fullName')
+                const value = fullName.value.trim()
+                const isValid = value.length >= 3 && value.includes(' ')
+                
+                if (!isValid && value !== '') {
+                    this.showError('fullNameError', 'Digite seu nome completo')
+                    fullName.classList.add('error')
+                } else {
+                    this.hideError('fullNameError')
+                    fullName.classList.remove('error')
+                }
+                
+                return isValid || value === ''
+            }
+
+            // Validar email
+            validateEmail() {
+                const email = document.getElementById('email')
+                const value = email.value.trim()
+                const isValid = funcaoUtilitario.validarEmail(value)
+                
+                if (!isValid && value !== '') {
+                    this.showError('emailError', 'Por favor, insira um e-mail válido')
+                    email.classList.add('error')
+                } else {
+                    this.hideError('emailError')
+                    email.classList.remove('error')
+                }
+                
+                return isValid || value === ''
+            }
+
+            // Validar senha
+            validatePassword() {
+                const password = document.getElementById('password')
+                const value = password.value
+                const isValid = value.length >= 6
+                
+                if (!isValid && value !== '') {
+                    this.showError('passwordError', 'A senha deve ter pelo menos 6 caracteres')
+                    password.classList.add('error')
+                } else {
+                    this.hideError('passwordError')
+                    password.classList.remove('error')
+                }
+                
+                return isValid || value === ''
+            }
+
+            // Validar confirmação de senha
+            validateConfirmPassword() {
+                const confirmPassword = document.getElementById('confirmPassword')
+                const password = document.getElementById('password').value
+                const value = confirmPassword.value
+                const isValid = value === password
+                
+                if (!isValid && value !== '') {
+                    this.showError('confirmPasswordError', 'As senhas não coincidem')
+                    confirmPassword.classList.add('error')
+                } else {
+                    this.hideError('confirmPasswordError')
+                    confirmPassword.classList.remove('error')
+                }
+                
+                return isValid || value === ''
+            }
+
+            // Validar termos
+            validateTerms() {
+                const agreeTerms = document.getElementById('agreeTerms')
+                const isValid = agreeTerms.checked
+                
+                if (!isValid) {
+                    this.showError('termsError', 'Você deve aceitar os termos para continuar')
+                } else {
+                    this.hideError('termsError')
+                }
+                
+                return isValid
+            }
+
+            // Mostrar erro
+            showError(elementId, message) {
+                const errorElement = document.getElementById(elementId)
+                errorElement.textContent = message
+                errorElement.style.display = 'block'
+            }
+
+            // Esconder erro
+            hideError(elementId) {
+                const errorElement = document.getElementById(elementId)
+                errorElement.style.display = 'none'
+            }
+
+            // Esconder todos os alertas
+            hideAllAlerts() {
+                const alerts = ['errorAlert', 'infoAlert', 'successAlert']
+                alerts.forEach(alertId => {
+                    const alert = document.getElementById(alertId)
+                    if (alert) alert.style.display = 'none'
+                })
+            }
+
+            // Mostrar alerta
+            showAlert(alertElement, message) {
+                this.hideAllAlerts()
+                alertElement.textContent = message
+                alertElement.style.display = 'block'
+            }
+
+            // Validar formulário completo
+            validateForm() {
+                const nicknameValid = this.validateNickname()
+                const fullNameValid = this.validateFullName()
+                const emailValid = this.validateEmail()
+                const passwordValid = this.validatePassword()
+                const confirmPasswordValid = this.validateConfirmPassword()
+                const termsValid = this.validateTerms()
+                
+                return nicknameValid && fullNameValid && emailValid && passwordValid && confirmPasswordValid && termsValid
+            }
+
+            // Processar cadastro
+            async handleCadastro(event) {
+                event.preventDefault()
+                this.hideAllAlerts()
+                
+                if (!this.validateForm()) {
+                    this.showAlert(
+                        document.getElementById('errorAlert'), 
+                        '❌ Por favor, corrija os erros no formulário'
+                    )
+                    return
+                }
+                
+                const submitBtn = document.getElementById('submitBtn')
+                const loading = document.getElementById('loading')
+                
+                const userData = {
+                    nickname: document.getElementById('nickname').value.trim(),
+                    fullName: document.getElementById('fullName').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    password: document.getElementById('password').value
+                }
+
+                submitBtn.disabled = true
+                loading.style.display = 'block'
+                
+                try {
+                    console.log('🔄 Tentando cadastrar usuário:', userData.email)
+                    
+                    const result = await authService.signUp(userData.email, userData.password, userData)
+
+                    if (result.success) {
+                        this.showAlert(
+                            document.getElementById('successAlert'), 
+                            '✅ Conta criada com sucesso! Verifique seu e-mail para ativar sua conta.'
+                        )
+                        
+                        // Limpar formulário
+                        document.getElementById('cadastroForm').reset()
+                        
+                        // Redirecionar para página de verificação após 3 segundos
+                        setTimeout(() => {
+                            window.location.href = 'verificacao.html?email=' + encodeURIComponent(userData.email)
+                        }, 3000)
+                        
+                    } else {
+                        throw new Error(result.error)
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Erro no cadastro:', error)
+                    
+                    if (error.message.includes('User already registered')) {
+                        this.showAlert(
+                            document.getElementById('errorAlert'), 
+                            '❌ Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.'
+                        )
+                    } else if (error.message.includes('Password should be at least')) {
+                        this.showAlert(
+                            document.getElementById('errorAlert'), 
+                            '❌ A senha deve ter pelo menos 6 caracteres.'
+                        )
+                    } else if (error.message.includes('Invalid email')) {
+                        this.showAlert(
+                            document.getElementById('errorAlert'), 
+                            '❌ Por favor, insira um e-mail válido.'
+                        )
+                    } else {
+                        this.showAlert(
+                            document.getElementById('errorAlert'), 
+                            '❌ Erro ao criar conta: ' + error.message
+                        )
+                    }
+                } finally {
+                    submitBtn.disabled = false
+                    loading.style.display = 'none'
+                }
+            }
+        }
+
+        // Inicializar quando o DOM carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            new CadastroPage()
+        })
+
+    </script>
+</body>
+</html>

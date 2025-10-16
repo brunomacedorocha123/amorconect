@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Amor Conect</title>
+    
+    <!-- CSS ORGANIZADO -->
+    <link rel="stylesheet" href="styles-base.css">
+    <link rel="stylesheet" href="styles-componentes.css">
+    <link rel="stylesheet" href="styles-pages.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="assets/images/logoamorconect.png" alt="Amor Conect">
+                    <h1>Amor Conect</h1>
+                </div>
+                
+                <div class="auth-buttons">
+                    <a href="login.html" class="btn btn-outline">Entrar</a>
+                    <a href="cadastro.html" class="btn btn-primary">Cadastre-se</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content auth-page">
+        <div class="container">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <h2>Bem-vindo de volta</h2>
+                    <p>Faça login para continuar sua jornada</p>
+                </div>
+                <div class="auth-body">
+                    <!-- Alert Messages -->
+                    <div class="alert alert-error" id="errorAlert" style="display: none;"></div>
+                    <div class="alert alert-info" id="verificationAlert" style="display: none;"></div>
+                    <div class="alert alert-success" id="successAlert" style="display: none;"></div>
+
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="email">E-mail</label>
+                            <input type="email" id="email" class="form-control" placeholder="seu@email.com" required>
+                            <div class="error-message" id="emailError">Por favor, insira um e-mail válido</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Senha</label>
+                            <div class="password-container">
+                                <input type="password" id="password" class="form-control" placeholder="Sua senha" required>
+                                <button type="button" class="toggle-password" id="togglePassword">👁️</button>
+                            </div>
+                            <div class="error-message" id="passwordError">Por favor, insira sua senha</div>
+                        </div>
+
+                        <div class="remember-forgot">
+                            <div class="remember-me">
+                                <input type="checkbox" id="rememberMe">
+                                <label for="rememberMe">Lembrar-me</label>
+                            </div>
+                            <a href="recuperar-senha.html" class="forgot-password">Esqueci minha senha</a>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
+                            Entrar
+                        </button>
+
+                        <div class="loading" id="loading">
+                            <div class="spinner"></div>
+                            <p>Autenticando...</p>
+                        </div>
+                    </form>
+
+                    <div class="auth-footer">
+                        <p>Não tem uma conta? <a href="cadastro.html">Cadastre-se aqui</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Amor Conect</h3>
+                    <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Links Rápidos</h3>
+                    <ul>
+                        <li><a href="index.html">Página Inicial</a></li>
+                        <li><a href="#como-funciona">Como Funciona</a></li>
+                        <li><a href="#depoimentos">Depoimentos</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Suporte</h3>
+                    <ul>
+                        <li><a href="#">Central de Ajuda</a></li>
+                        <li><a href="#">Política de Privacidade</a></li>
+                        <li><a href="#">Termos de Uso</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 Amor Conect. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Organizado -->
+    <script type="module">
+        import { authService } from './scripts/auth-service.js'
+        import { funcaoUtilitario } from './scripts/funcao-utilitario.js'
+
+        class LoginPage {
+            constructor() {
+                this.init()
+            }
+
+            async init() {
+                await this.checkExistingAuth()
+                this.setupEventListeners()
+                this.loadRememberedEmail()
+                this.checkVerificationStatus()
+                
+                console.log('✅ Página de login inicializada')
+            }
+
+            // Verificar se já está autenticado
+            async checkExistingAuth() {
+                try {
+                    const user = await authService.checkAuth()
+                    if (user) {
+                        window.location.href = 'home.html'
+                    }
+                } catch (error) {
+                    // Usuário não está autenticado, continuar normalmente
+                }
+            }
+
+            // Configurar event listeners
+            setupEventListeners() {
+                const form = document.getElementById('loginForm')
+                const togglePassword = document.getElementById('togglePassword')
+                const passwordInput = document.getElementById('password')
+                const rememberMe = document.getElementById('rememberMe')
+
+                // Toggle password visibility
+                togglePassword?.addEventListener('click', () => {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password'
+                    passwordInput.setAttribute('type', type)
+                    togglePassword.textContent = type === 'password' ? '👁️' : '🔒'
+                })
+
+                // Validação em tempo real
+                document.getElementById('email')?.addEventListener('blur', () => this.validateEmail())
+                document.getElementById('password')?.addEventListener('blur', () => this.validatePassword())
+
+                // Remember me
+                rememberMe?.addEventListener('change', () => this.toggleRememberMe())
+
+                // Submit do formulário
+                form?.addEventListener('submit', (e) => this.handleLogin(e))
+            }
+
+            // Validar email
+            validateEmail() {
+                const email = document.getElementById('email')
+                const value = email.value.trim()
+                const isValid = funcaoUtilitario.validarEmail(value)
+                
+                if (!isValid && value !== '') {
+                    this.showError('emailError', 'Por favor, insira um e-mail válido')
+                    email.classList.add('error')
+                } else {
+                    this.hideError('emailError')
+                    email.classList.remove('error')
+                }
+                
+                return isValid || value === ''
+            }
+
+            // Validar senha
+            validatePassword() {
+                const password = document.getElementById('password')
+                const value = password.value
+                const isValid = value.length >= 6
+                
+                if (!isValid && value !== '') {
+                    this.showError('passwordError', 'A senha deve ter pelo menos 6 caracteres')
+                    password.classList.add('error')
+                } else {
+                    this.hideError('passwordError')
+                    password.classList.remove('error')
+                }
+                
+                return isValid || value === ''
+            }
+
+            // Mostrar erro
+            showError(elementId, message) {
+                const errorElement = document.getElementById(elementId)
+                errorElement.textContent = message
+                errorElement.style.display = 'block'
+            }
+
+            // Esconder erro
+            hideError(elementId) {
+                const errorElement = document.getElementById(elementId)
+                errorElement.style.display = 'none'
+            }
+
+            // Esconder todos os alertas
+            hideAllAlerts() {
+                const alerts = ['errorAlert', 'verificationAlert', 'successAlert']
+                alerts.forEach(alertId => {
+                    const alert = document.getElementById(alertId)
+                    if (alert) alert.style.display = 'none'
+                })
+            }
+
+            // Mostrar alerta
+            showAlert(alertElement, message) {
+                this.hideAllAlerts()
+                alertElement.textContent = message
+                alertElement.style.display = 'block'
+                
+                // Auto-esconder alertas de sucesso
+                if (alertElement.id === 'successAlert') {
+                    setTimeout(() => {
+                        alertElement.style.display = 'none'
+                    }, 5000)
+                }
+            }
+
+            // Validar formulário completo
+            validateForm() {
+                const emailValid = this.validateEmail()
+                const passwordValid = this.validatePassword()
+                
+                return emailValid && passwordValid
+            }
+
+            // Lembrar email
+            toggleRememberMe() {
+                const rememberMe = document.getElementById('rememberMe')
+                const email = document.getElementById('email').value.trim()
+                
+                if (rememberMe.checked && email) {
+                    localStorage.setItem('rememberedEmail', email)
+                } else {
+                    localStorage.removeItem('rememberedEmail')
+                }
+            }
+
+            // Carregar email lembrado
+            loadRememberedEmail() {
+                const savedEmail = localStorage.getItem('rememberedEmail')
+                if (savedEmail) {
+                    document.getElementById('email').value = savedEmail
+                    document.getElementById('rememberMe').checked = true
+                }
+            }
+
+            // Verificar status de verificação
+            checkVerificationStatus() {
+                const urlParams = new URLSearchParams(window.location.search)
+                
+                if (urlParams.get('verified') === 'true') {
+                    this.showAlert(
+                        document.getElementById('successAlert'), 
+                        '✅ E-mail verificado com sucesso! Faça login para continuar.'
+                    )
+                    
+                    // Limpar parâmetro da URL
+                    window.history.replaceState({}, document.title, window.location.pathname)
+                }
+            }
+
+            // Processar login
+            async handleLogin(event) {
+                event.preventDefault()
+                this.hideAllAlerts()
+                
+                if (!this.validateForm()) {
+                    return
+                }
+                
+                const submitBtn = document.getElementById('submitBtn')
+                const loading = document.getElementById('loading')
+                const email = document.getElementById('email').value.trim()
+                const password = document.getElementById('password').value
+
+                submitBtn.disabled = true
+                loading.style.display = 'block'
+                
+                try {
+                    console.log('🔄 Tentando login para:', email)
+                    
+                    const result = await authService.login(email, password)
+
+                    if (result.success) {
+                        this.showAlert(
+                            document.getElementById('successAlert'), 
+                            '✅ Login realizado com sucesso! Redirecionando...'
+                        )
+                        
+                        // Salvar email se "Lembrar-me" estiver marcado
+                        if (document.getElementById('rememberMe').checked) {
+                            localStorage.setItem('rememberedEmail', email)
+                        }
+                        
+                        // Redirecionar para home
+                        setTimeout(() => {
+                            window.location.href = 'home.html'
+                        }, 1500)
+                        
+                    } else {
+                        throw new Error(result.error)
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Erro no login:', error)
+                    
+                    if (error.message.includes('Invalid login credentials')) {
+                        this.showAlert(
+                            document.getElementById('errorAlert'), 
+                            '❌ E-mail ou senha incorretos. Tente novamente.'
+                        )
+                    } else if (error.message.includes('Email not confirmed')) {
+                        this.showAlert(
+                            document.getElementById('verificationAlert'), 
+                            '📧 Sua conta precisa ser verificada. Verifique seu e-mail antes de fazer login.'
+                        )
+                    } else if (error.message.includes('User not found')) {
+                        this.showAlert(
+                            document.getElementById('errorAlert'), 
+                            '❌ Usuário não encontrado. Verifique o e-mail ou cadastre-se.'
+                        )
+                    } else {
+                        this.showAlert(
+                            document.getElementById('errorAlert'), 
+                            '❌ Erro ao fazer login: ' + error.message
+                        )
+                    }
+                } finally {
+                    submitBtn.disabled = false
+                    loading.style.display = 'none'
+                }
+            }
+        }
+
+        // Inicializar quando o DOM carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            new LoginPage()
+        })
+
+    </script>
+</body>
+</html>
