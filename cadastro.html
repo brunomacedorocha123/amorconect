@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro - Amor Conect</title>
     
-    <!-- CSS CORRIGIDO -->
+    <!-- CSS -->
     <link rel="stylesheet" href="globals.css">
     <link rel="stylesheet" href="components.css">
     
@@ -18,10 +18,22 @@
             max-width: 500px;
             background: var(--branco);
             border-radius: 20px;
-            box-shadow: var(--shadow);
+            box-shadow: var(--shadow-xl);
             padding: 3rem;
             border: 1px solid var(--lilas);
             margin: 2rem auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
         }
 
         .auth-header {
@@ -35,17 +47,22 @@
             margin: 0 auto 1rem auto;
             object-fit: contain;
             display: block;
+            border-radius: 50%;
+            padding: 10px;
+            background: var(--bege);
         }
 
         .auth-header h1 {
             font-size: 2.2rem;
             color: var(--vermelho-rosado);
             margin-bottom: 0.5rem;
+            font-weight: 700;
         }
 
         .auth-header p {
             color: var(--text-light);
             font-size: 1rem;
+            line-height: 1.5;
         }
 
         .form-row {
@@ -59,6 +76,7 @@
             padding: 1rem;
             font-size: 1.1rem;
             margin-top: 1rem;
+            position: relative;
         }
 
         .auth-footer {
@@ -81,11 +99,14 @@
             color: var(--vermelho-rosado);
             margin-bottom: 0.5rem;
             font-size: 0.9rem;
+            font-weight: 600;
         }
 
         .requirements-list {
             list-style: none;
             font-size: 0.8rem;
+            margin: 0;
+            padding: 0;
         }
 
         .requirements-list li {
@@ -93,6 +114,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            transition: var(--transition);
         }
 
         .requirement-met {
@@ -115,29 +137,45 @@
         /* Password Strength Meter */
         .password-strength {
             margin-top: 0.5rem;
-            height: 4px;
-            border-radius: 2px;
+            height: 6px;
+            border-radius: 3px;
             background: #e5e7eb;
             overflow: hidden;
+            position: relative;
         }
 
         .strength-bar {
             height: 100%;
             width: 0%;
             transition: var(--transition);
-            border-radius: 2px;
+            border-radius: 3px;
+            position: absolute;
+            left: 0;
+            top: 0;
         }
 
-        .strength-weak { background: var(--error); width: 25%; }
-        .strength-fair { background: #f59e0b; width: 50%; }
-        .strength-good { background: #eab308; width: 75%; }
-        .strength-strong { background: var(--success); width: 100%; }
+        .strength-weak { 
+            background: linear-gradient(90deg, #ef4444, #f97316);
+            width: 25%; 
+        }
+        .strength-fair { 
+            background: linear-gradient(90deg, #f97316, #eab308);
+            width: 50%; 
+        }
+        .strength-good { 
+            background: linear-gradient(90deg, #eab308, #84cc16);
+            width: 75%; 
+        }
+        .strength-strong { 
+            background: linear-gradient(90deg, #84cc16, #22c55e);
+            width: 100%; 
+        }
 
         .strength-text {
             font-size: 0.75rem;
             margin-top: 0.25rem;
             text-align: right;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         /* Terms Checkbox */
@@ -146,21 +184,28 @@
             align-items: flex-start;
             gap: 0.75rem;
             margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--cinza-claro);
+            border-radius: 10px;
+            border: 1px solid var(--cinza-medio);
         }
 
         .terms-group input[type="checkbox"] {
             margin-top: 0.25rem;
             accent-color: var(--vermelho-rosado);
+            transform: scale(1.2);
         }
 
         .terms-group label {
             font-size: 0.9rem;
             line-height: 1.4;
+            color: var(--preto);
         }
 
         .terms-group a {
             color: var(--vermelho-rosado);
             text-decoration: none;
+            font-weight: 600;
         }
 
         .terms-group a:hover {
@@ -173,6 +218,8 @@
             border-radius: 10px;
             margin-bottom: 1rem;
             display: none;
+            position: relative;
+            padding-right: 2.5rem;
         }
 
         .alert-error {
@@ -187,11 +234,105 @@
             color: #276749;
         }
 
+        .alert .close-alert {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: var(--transition);
+        }
+
+        .alert .close-alert:hover {
+            opacity: 1;
+        }
+
         .loading {
             display: none;
             text-align: center;
             padding: 1rem;
             color: var(--vermelho-rosado);
+        }
+
+        /* Toggle Password */
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 4px;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+
+        .password-toggle:hover {
+            background: var(--cinza-claro);
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        /* Loading States */
+        .spinner-small {
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        /* Botões com estados de loading */
+        .btn:disabled {
+            position: relative;
+            color: transparent;
+        }
+
+        .btn:disabled::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Animações */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-container {
+            animation: slideInUp 0.5s ease;
+        }
+
+        /* Estados de foco melhorados */
+        .form-control:focus {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(233, 30, 99, 0.15);
         }
 
         /* Responsividade */
@@ -228,6 +369,10 @@
             .auth-header h1 {
                 font-size: 1.8rem;
             }
+            
+            .terms-group {
+                padding: 0.75rem;
+            }
         }
     </style>
 </head>
@@ -259,45 +404,55 @@
                 </div>
 
                 <!-- Alert Messages -->
-                <div id="errorAlert" class="alert alert-error"></div>
-                <div id="successAlert" class="alert alert-success"></div>
-                <div id="loading" class="loading">Processando cadastro...</div>
+                <div id="errorAlert" class="alert alert-error">
+                    <button class="close-alert" onclick="this.parentElement.style.display='none'">×</button>
+                    <span class="alert-message"></span>
+                </div>
+                <div id="successAlert" class="alert alert-success">
+                    <button class="close-alert" onclick="this.parentElement.style.display='none'">×</button>
+                    <span class="alert-message"></span>
+                </div>
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Processando cadastro...</p>
+                </div>
 
                 <form id="registerForm">
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="firstName">Nome</label>
-                            <input type="text" id="firstName" class="form-control" required>
+                            <label for="firstName" class="form-label">Nome *</label>
+                            <input type="text" id="firstName" class="form-control" required placeholder="Seu nome">
                             <div id="firstNameError" class="error-message"></div>
                         </div>
                         <div class="form-group">
-                            <label for="lastName">Sobrenome</label>
-                            <input type="text" id="lastName" class="form-control" required>
+                            <label for="lastName" class="form-label">Sobrenome *</label>
+                            <input type="text" id="lastName" class="form-control" required placeholder="Seu sobrenome">
                             <div id="lastNameError" class="error-message"></div>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="nickname">Apelido/Nickname</label>
-                        <input type="text" id="nickname" class="form-control" required>
+                        <label for="nickname" class="form-label">Apelido/Nickname *</label>
+                        <input type="text" id="nickname" class="form-control" required placeholder="Como quer ser chamado(a)">
                         <div id="nicknameError" class="error-message"></div>
                     </div>
 
                     <div class="form-group">
-                        <label for="email">E-mail</label>
-                        <input type="email" id="email" class="form-control" required>
+                        <label for="email" class="form-label">E-mail *</label>
+                        <input type="email" id="email" class="form-control" required placeholder="seu@email.com">
                         <div id="emailError" class="error-message"></div>
                     </div>
 
                     <div class="form-group">
-                        <label for="birthDate">Data de Nascimento</label>
+                        <label for="birthDate" class="form-label">Data de Nascimento *</label>
                         <input type="date" id="birthDate" class="form-control" required>
                         <div id="birthDateError" class="error-message"></div>
                     </div>
 
                     <div class="form-group">
-                        <label for="password">Senha</label>
-                        <input type="password" id="password" class="form-control" required>
+                        <label for="password" class="form-label">Senha *</label>
+                        <input type="password" id="password" class="form-control" required placeholder="Crie uma senha segura">
+                        <button type="button" class="password-toggle" id="togglePassword" aria-label="Mostrar senha">👁️</button>
                         <div id="passwordError" class="error-message"></div>
                         
                         <!-- REQUISITOS DA SENHA -->
@@ -318,20 +473,21 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="confirmPassword">Confirmar Senha</label>
-                        <input type="password" id="confirmPassword" class="form-control" required>
+                        <label for="confirmPassword" class="form-label">Confirmar Senha *</label>
+                        <input type="password" id="confirmPassword" class="form-control" required placeholder="Digite a senha novamente">
                         <div id="confirmPasswordError" class="error-message"></div>
                     </div>
 
                     <div class="terms-group">
                         <input type="checkbox" id="terms" required>
                         <label for="terms">
-                            Concordo com os <a href="#">Termos de Serviço</a> e 
-                            <a href="#">Política de Privacidade</a>
+                            Concordo com os <a href="#" target="_blank">Termos de Serviço</a> e 
+                            <a href="#" target="_blank">Política de Privacidade</a> *
                         </label>
                     </div>
+                    <div id="termsError" class="error-message"></div>
 
-                    <button type="submit" class="btn btn-primary btn-block">
+                    <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
                         Criar Conta
                     </button>
 
@@ -374,141 +530,274 @@
         </div>
     </footer>
 
-    <!-- SCRIPTS CORRIGIDOS -->
+    <!-- SCRIPTS -->
     <script src="globals.js"></script>
     <script src="auth.js"></script>
     
-    <!-- JS ESPECÍFICO DO CADASTRO -->
+    <!-- INICIALIZAÇÃO DO CADASTRO -->
     <script>
-        // ==================== CADASTRO JS ====================
+        // ==================== INICIALIZAÇÃO DO CADASTRO ====================
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('📝 Cadastro.js inicializando...');
-            initializeCadastro();
-        });
-
-        function initializeCadastro() {
+            console.log('📝 Cadastro.html - Inicializando...');
+            
             // Configurar data máxima (18 anos atrás)
             const today = new Date();
             const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
             document.getElementById('birthDate').max = maxDate.toISOString().split('T')[0];
-
-            // Configurar formulário
-            setupRegisterForm();
-        }
-
-        function setupRegisterForm() {
-            const form = document.getElementById('registerForm');
             
-            // Validações em tempo real
-            document.getElementById('firstName').addEventListener('blur', validateName);
-            document.getElementById('lastName').addEventListener('blur', validateName);
-            document.getElementById('nickname').addEventListener('blur', validateNickname);
-            document.getElementById('email').addEventListener('blur', validateEmail);
-            document.getElementById('birthDate').addEventListener('change', validateBirthDate);
-            document.getElementById('password').addEventListener('input', function() {
-                updatePasswordRequirements(this.value);
-                validatePasswordRealTime();
-            });
-            document.getElementById('confirmPassword').addEventListener('blur', validateConfirmPassword);
-        }
+            // Configurar data mínima (100 anos atrás)
+            const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
+            document.getElementById('birthDate').min = minDate.toISOString().split('T')[0];
 
-        // Funções de validação
-        function validateName(e) {
-            const field = e.target;
-            const errorElement = document.getElementById(field.id + 'Error');
-            if (field.value.trim().length < 2) {
-                errorElement.textContent = field.id === 'firstName' ? 
-                    'Nome deve ter pelo menos 2 caracteres' : 
-                    'Sobrenome deve ter pelo menos 2 caracteres';
-                errorElement.style.display = 'block';
-                field.classList.add('error');
-            } else {
-                errorElement.style.display = 'none';
-                field.classList.remove('error');
+            // Salvar texto original do botão
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.setAttribute('data-original-text', submitBtn.innerHTML);
+            }
+
+            // Configurar toggle de senha
+            setupPasswordToggle();
+
+            // Configurar validações em tempo real
+            setupRealTimeValidation();
+
+            console.log('✅ Cadastro.html inicializado!');
+        });
+
+        function setupPasswordToggle() {
+            const toggleBtn = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('password');
+            
+            if (toggleBtn && passwordInput) {
+                toggleBtn.addEventListener('click', function() {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    toggleBtn.textContent = type === 'password' ? '👁️' : '🔒';
+                    toggleBtn.setAttribute('aria-label', type === 'password' ? 'Mostrar senha' : 'Ocultar senha');
+                });
             }
         }
 
-        function validateNickname() {
-            const field = document.getElementById('nickname');
-            const errorElement = document.getElementById('nicknameError');
-            if (field.value.trim().length < 3) {
-                errorElement.textContent = 'Nickname deve ter pelo menos 3 caracteres';
-                errorElement.style.display = 'block';
-                field.classList.add('error');
-            } else {
-                errorElement.style.display = 'none';
-                field.classList.remove('error');
-            }
-        }
-
-        function validateEmail() {
-            const field = document.getElementById('email');
-            const errorElement = document.getElementById('emailError');
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(field.value.trim())) {
-                errorElement.textContent = 'Por favor, insira um e-mail válido';
-                errorElement.style.display = 'block';
-                field.classList.add('error');
-            } else {
-                errorElement.style.display = 'none';
-                field.classList.remove('error');
-            }
-        }
-
-        function validateBirthDate() {
-            const field = document.getElementById('birthDate');
-            const errorElement = document.getElementById('birthDateError');
-            if (!field.value) {
-                errorElement.textContent = 'Data de nascimento é obrigatória';
-                errorElement.style.display = 'block';
-                field.classList.add('error');
-            } else {
-                const selectedDate = new Date(field.value);
-                const maxDate = new Date();
-                maxDate.setFullYear(maxDate.getFullYear() - 18);
-                
-                if (selectedDate > maxDate) {
-                    errorElement.textContent = 'Você deve ter pelo menos 18 anos';
-                    errorElement.style.display = 'block';
-                    field.classList.add('error');
-                } else {
-                    errorElement.style.display = 'none';
-                    field.classList.remove('error');
+        function setupRealTimeValidation() {
+            // Limpar erros ao digitar
+            const inputs = ['firstName', 'lastName', 'nickname', 'email', 'password', 'confirmPassword', 'birthDate'];
+            
+            inputs.forEach(inputId => {
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.addEventListener('input', function() {
+                        clearFieldError(inputId);
+                        // Validar em tempo real para alguns campos
+                        if (inputId === 'password') {
+                            validatePasswordRealTime();
+                        } else if (inputId === 'confirmPassword') {
+                            validateConfirmPasswordRealTime();
+                        } else if (inputId === 'email') {
+                            validateEmailRealTime();
+                        }
+                    });
+                    
+                    // Validar ao sair do campo
+                    input.addEventListener('blur', function() {
+                        if (inputId === 'firstName' || inputId === 'lastName') {
+                            validateNameRealTime(inputId);
+                        } else if (inputId === 'nickname') {
+                            validateNicknameRealTime();
+                        } else if (inputId === 'email') {
+                            validateEmailRealTime();
+                        } else if (inputId === 'birthDate') {
+                            validateBirthDateRealTime();
+                        } else if (inputId === 'confirmPassword') {
+                            validateConfirmPasswordRealTime();
+                        }
+                    });
                 }
+            });
+
+            // Validação específica para termos
+            const termsInput = document.getElementById('terms');
+            if (termsInput) {
+                termsInput.addEventListener('change', function() {
+                    clearFieldError('terms');
+                });
+            }
+        }
+
+        // ==================== VALIDAÇÕES EM TEMPO REAL ====================
+
+        function validateNameRealTime(fieldId) {
+            const field = document.getElementById(fieldId);
+            const value = field.value.trim();
+            
+            if (value === '') {
+                hideFieldError(fieldId);
+                field.classList.remove('error');
+                return;
+            }
+            
+            if (value.length < 2) {
+                showFieldError(fieldId, fieldId === 'firstName' ? 
+                    'Nome deve ter pelo menos 2 caracteres' : 
+                    'Sobrenome deve ter pelo menos 2 caracteres');
+                field.classList.add('error');
+            } else {
+                hideFieldError(fieldId);
+                field.classList.remove('error');
+            }
+        }
+
+        function validateNicknameRealTime() {
+            const field = document.getElementById('nickname');
+            const value = field.value.trim();
+            
+            if (value === '') {
+                hideFieldError('nickname');
+                field.classList.remove('error');
+                return;
+            }
+            
+            if (value.length < 3) {
+                showFieldError('nickname', 'Nickname deve ter pelo menos 3 caracteres');
+                field.classList.add('error');
+            } else {
+                hideFieldError('nickname');
+                field.classList.remove('error');
+            }
+        }
+
+        function validateEmailRealTime() {
+            const field = document.getElementById('email');
+            const value = field.value.trim();
+            
+            if (value === '') {
+                hideFieldError('email');
+                field.classList.remove('error');
+                return;
+            }
+            
+            const isValid = validateEmail(value);
+            
+            if (!isValid) {
+                showFieldError('email', 'Por favor, insira um e-mail válido');
+                field.classList.add('error');
+            } else {
+                hideFieldError('email');
+                field.classList.remove('error');
+            }
+        }
+
+        function validateBirthDateRealTime() {
+            const field = document.getElementById('birthDate');
+            const value = field.value;
+            
+            if (!value) {
+                hideFieldError('birthDate');
+                field.classList.remove('error');
+                return;
+            }
+            
+            const age = calculateAge(value);
+            
+            if (age < 18) {
+                showFieldError('birthDate', 'Você deve ter pelo menos 18 anos');
+                field.classList.add('error');
+            } else if (age > 100) {
+                showFieldError('birthDate', 'Data de nascimento inválida');
+                field.classList.add('error');
+            } else {
+                hideFieldError('birthDate');
+                field.classList.remove('error');
             }
         }
 
         function validatePasswordRealTime() {
             const field = document.getElementById('password');
-            const errorElement = document.getElementById('passwordError');
-            const passwordValidation = validatePassword(field.value);
+            const value = field.value;
             
-            if (field.value && !passwordValidation.isValid) {
-                errorElement.textContent = 'A senha não atende aos requisitos de segurança';
-                errorElement.style.display = 'block';
+            if (value === '') {
+                hideFieldError('password');
+                field.classList.remove('error');
+                return;
+            }
+            
+            const passwordValidation = validatePassword(value);
+            
+            if (!passwordValidation.isValid) {
+                showFieldError('password', 'A senha não atende aos requisitos de segurança');
                 field.classList.add('error');
             } else {
-                errorElement.style.display = 'none';
+                hideFieldError('password');
                 field.classList.remove('error');
             }
         }
 
-        function validateConfirmPassword() {
+        function validateConfirmPasswordRealTime() {
             const field = document.getElementById('confirmPassword');
             const password = document.getElementById('password').value;
-            const errorElement = document.getElementById('confirmPasswordError');
-            if (field.value !== password) {
-                errorElement.textContent = 'As senhas não coincidem';
-                errorElement.style.display = 'block';
+            const value = field.value;
+            
+            if (value === '') {
+                hideFieldError('confirmPassword');
+                field.classList.remove('error');
+                return;
+            }
+            
+            if (value !== password) {
+                showFieldError('confirmPassword', 'As senhas não coincidem');
                 field.classList.add('error');
             } else {
-                errorElement.style.display = 'none';
+                hideFieldError('confirmPassword');
                 field.classList.remove('error');
             }
         }
 
-        // Sistema de requisitos de senha
+        // ==================== FUNÇÕES AUXILIARES ====================
+
+        function showFieldError(fieldId, message) {
+            const errorElement = document.getElementById(fieldId + 'Error');
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+                errorElement.classList.add('show');
+            }
+        }
+
+        function hideFieldError(fieldId) {
+            const errorElement = document.getElementById(fieldId + 'Error');
+            if (errorElement) {
+                errorElement.style.display = 'none';
+                errorElement.classList.remove('show');
+            }
+        }
+
+        function clearFieldError(fieldId) {
+            hideFieldError(fieldId);
+            const field = document.getElementById(fieldId);
+            if (field) field.classList.remove('error');
+        }
+
+        function showAlert(message, type = 'error') {
+            // Esconder todos os alerts primeiro
+            document.querySelectorAll('.alert').forEach(alert => {
+                alert.style.display = 'none';
+            });
+            
+            const alertElement = document.getElementById(type + 'Alert');
+            if (alertElement) {
+                const messageElement = alertElement.querySelector('.alert-message');
+                if (messageElement) {
+                    messageElement.textContent = message;
+                }
+                alertElement.style.display = 'block';
+                
+                // Scroll para o alerta
+                alertElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        // ==================== SISTEMA DE FORÇA DA SENHA ====================
+
         function updatePasswordRequirements(password) {
             const { requirements, strength } = checkPasswordStrength(password);
             const requirementElements = {
@@ -537,51 +826,58 @@
             const strengthBar = document.getElementById('strengthBar');
             const strengthText = document.getElementById('strengthText');
             
-            strengthBar.className = 'strength-bar';
-            strengthText.textContent = '';
-            
-            if (password.length > 0) {
-                switch(strength) {
-                    case 1:
-                    case 2:
-                        strengthBar.classList.add('strength-weak');
-                        strengthText.textContent = 'Fraca';
-                        strengthText.style.color = '#ef4444';
-                        break;
-                    case 3:
-                        strengthBar.classList.add('strength-fair');
-                        strengthText.textContent = 'Razoável';
-                        strengthText.style.color = '#f59e0b';
-                        break;
-                    case 4:
-                        strengthBar.classList.add('strength-good');
-                        strengthText.textContent = 'Boa';
-                        strengthText.style.color = '#eab308';
-                        break;
-                    case 5:
-                        strengthBar.classList.add('strength-strong');
-                        strengthText.textContent = 'Forte';
-                        strengthText.style.color = '#22c55e';
-                        break;
+            if (strengthBar && strengthText) {
+                strengthBar.className = 'strength-bar';
+                strengthText.textContent = '';
+                strengthText.style.color = '';
+                
+                if (password.length > 0) {
+                    let strengthClass = '';
+                    let strengthMessage = '';
+                    let color = '';
+                    
+                    switch(strength) {
+                        case 0:
+                        case 1:
+                            strengthClass = 'strength-weak';
+                            strengthMessage = 'Muito Fraca';
+                            color = '#ef4444';
+                            break;
+                        case 2:
+                            strengthClass = 'strength-weak';
+                            strengthMessage = 'Fraca';
+                            color = '#f97316';
+                            break;
+                        case 3:
+                            strengthClass = 'strength-fair';
+                            strengthMessage = 'Razoável';
+                            color = '#eab308';
+                            break;
+                        case 4:
+                            strengthClass = 'strength-good';
+                            strengthMessage = 'Boa';
+                            color = '#84cc16';
+                            break;
+                        case 5:
+                            strengthClass = 'strength-strong';
+                            strengthMessage = 'Forte';
+                            color = '#22c55e';
+                            break;
+                    }
+                    
+                    strengthBar.classList.add(strengthClass);
+                    strengthText.textContent = strengthMessage;
+                    strengthText.style.color = color;
                 }
             }
         }
 
-        // Função auxiliar para verificar força da senha
-        function checkPasswordStrength(password) {
-            const requirements = {
-                length: password.length >= 8,
-                uppercase: /[A-Z]/.test(password),
-                lowercase: /[a-z]/.test(password),
-                number: /[0-9]/.test(password),
-                special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
-            };
-            
-            const strength = Object.values(requirements).filter(Boolean).length;
-            return { requirements, strength };
-        }
+        // Event listener para a senha
+        document.getElementById('password').addEventListener('input', function() {
+            updatePasswordRequirements(this.value);
+        });
 
-        console.log('✅ Cadastro.js carregado!');
+        console.log('🎯 Sistema de cadastro pronto!');
     </script>
 </body>
 </html>

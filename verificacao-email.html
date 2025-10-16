@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verificar E-mail - Amor Conect</title>
     
-    <!-- CSS MODULAR -->
-    <link rel="stylesheet" href="css/globals.css">
-    <link rel="stylesheet" href="css/components.css">
+    <!-- CSS -->
+    <link rel="stylesheet" href="globals.css">
+    <link rel="stylesheet" href="components.css">
     
     <style>
         /* Estilos específicos da verificação */
@@ -24,80 +24,90 @@
             background: var(--branco);
             padding: 3rem;
             border-radius: 20px;
-            box-shadow: var(--shadow);
+            box-shadow: var(--shadow-xl);
             max-width: 500px;
             width: 100%;
             text-align: center;
             border: 1px solid var(--lilas);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .verification-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
         }
 
         .verification-icon {
             font-size: 4rem;
             margin-bottom: 1rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
         }
 
         h1 {
             color: var(--vermelho-rosado);
             margin-bottom: 1rem;
+            font-size: 2.2rem;
         }
 
-        .btn {
-            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-            color: white;
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 30px;
+        .email-display {
+            background: var(--bege);
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            font-weight: bold;
+            color: var(--vermelho-rosado);
+            border: 1px solid var(--lilas);
+            word-break: break-all;
+        }
+
+        .instructions {
+            text-align: left;
+            background: var(--cinza-claro);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            border-left: 4px solid var(--vermelho-rosado);
+        }
+
+        .instructions h3 {
+            color: var(--vermelho-rosado);
+            margin-bottom: 1rem;
             font-size: 1.1rem;
-            cursor: pointer;
-            margin: 1rem 0;
-            text-decoration: none;
-            display: inline-block;
-            transition: var(--transition);
         }
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        .instructions ol {
+            margin-left: 1.5rem;
+            color: var(--preto);
         }
 
-        .alert {
-            padding: 1rem;
-            border-radius: 10px;
-            margin: 1rem 0;
-        }
-
-        .alert-success {
-            background: #f0fff4;
-            border: 1px solid #9ae6b4;
-            color: #276749;
-        }
-
-        .alert-error {
-            background: #fed7d7;
-            border: 1px solid #feb2b2;
-            color: #c53030;
-        }
-
-        .token-input {
-            width: 100%;
-            padding: 1rem;
-            margin: 1rem 0;
-            border: 2px solid var(--lilas);
-            border-radius: 10px;
-            font-size: 1rem;
-            font-family: inherit;
-        }
-
-        .token-input:focus {
-            outline: none;
-            border-color: var(--vermelho-rosado);
+        .instructions li {
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
         }
 
         .spinner {
-            width: 30px;
-            height: 30px;
-            border: 3px solid var(--bege);
-            border-top: 3px solid var(--vermelho-rosado);
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--bege);
+            border-top: 4px solid var(--vermelho-rosado);
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 1rem auto;
@@ -108,6 +118,49 @@
             100% { transform: rotate(360deg); }
         }
 
+        .resend-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--lilas);
+        }
+
+        .countdown {
+            font-size: 0.9rem;
+            color: var(--cinza-escuro);
+            margin-top: 0.5rem;
+        }
+
+        .manual-verification {
+            background: var(--bege);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            border: 1px solid var(--lilas);
+            text-align: left;
+        }
+
+        .token-input {
+            width: 100%;
+            padding: 1rem;
+            margin: 1rem 0;
+            border: 2px solid var(--lilas);
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+
+        .token-input:focus {
+            outline: none;
+            border-color: var(--vermelho-rosado);
+            box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.1);
+        }
+
+        .btn-block {
+            width: 100%;
+            margin: 0.5rem 0;
+        }
+
         @media (max-width: 768px) {
             .verification-container {
                 padding: 2rem;
@@ -116,6 +169,10 @@
 
             h1 {
                 font-size: 1.8rem;
+            }
+
+            .verification-icon {
+                font-size: 3rem;
             }
         }
 
@@ -128,43 +185,114 @@
                 font-size: 1.6rem;
             }
 
-            .btn {
-                padding: 0.8rem 1.5rem;
-                font-size: 1rem;
+            .instructions {
+                padding: 1rem;
             }
         }
     </style>
 </head>
 <body>
     <div class="verification-container">
-        <h1>🔐 Verificação de E-mail</h1>
+        <div class="verification-icon">📧</div>
+        <h1>Verificação de E-mail</h1>
         
-        <div id="autoVerification">
+        <!-- Mensagem Inicial -->
+        <div id="initialMessage">
+            <p>Enviamos um link de confirmação para:</p>
+            <div id="emailDisplay" class="email-display">carregando...</div>
+            <p>Clique no link do e-mail para ativar sua conta.</p>
+        </div>
+
+        <!-- Instruções -->
+        <div class="instructions">
+            <h3>📋 Não recebeu o e-mail?</h3>
+            <ol>
+                <li>Verifique sua <strong>pasta de spam</strong> ou <strong>lixo eletrônico</strong></li>
+                <li>Certifique-se de que digitou o e-mail corretamente</li>
+                <li>Aguarde alguns minutos - pode levar até 5 minutos para chegar</li>
+                <li>Se ainda não recebeu, clique em "Reenviar E-mail" abaixo</li>
+            </ol>
+        </div>
+
+        <!-- Verificação Automática -->
+        <div id="autoVerification" style="display: none;">
             <p>Verificando automaticamente...</p>
             <div class="spinner"></div>
         </div>
         
+        <!-- Verificação Manual -->
         <div id="manualVerification" style="display: none;">
-            <p>⚠️ Verificação automática falhou.</p>
-            <p>Copie o token do e-mail e cole abaixo:</p>
-            <input type="text" id="tokenInput" placeholder="Cole o token aqui" class="token-input">
-            <button class="btn" onclick="verifyManual()">Verificar E-mail</button>
+            <div class="manual-verification">
+                <p><strong>⚠️ Verificação automática falhou</strong></p>
+                <p>Se você recebeu um token por e-mail, cole-o abaixo:</p>
+                <input type="text" id="tokenInput" placeholder="Cole o token aqui (opcional)" class="token-input">
+                <button class="btn btn-primary btn-block" onclick="verifyManual()">Verificar E-mail</button>
+            </div>
         </div>
         
+        <!-- Mensagens de Status -->
         <div id="successMessage" class="alert alert-success" style="display: none;">
-            ✅ E-mail verificado com sucesso! <a href="login.html" class="btn">Fazer Login</a>
+            <h3>✅ E-mail Verificado!</h3>
+            <p>Sua conta foi ativada com sucesso!</p>
+            <a href="login.html" class="btn btn-primary btn-block">Fazer Login</a>
         </div>
         
-        <div id="errorMessage" class="alert alert-error" style="display: none;">
-            ❌ Erro na verificação
+        <div id="errorMessage" class="alert alert-error" style="display: none;"></div>
+
+        <!-- Seção de Reenvio -->
+        <div class="resend-section">
+            <p>Não recebeu o e-mail de confirmação?</p>
+            <button class="btn btn-outline btn-block" onclick="resendConfirmation()" id="resendBtn">
+                🔄 Reenviar E-mail
+            </button>
+            <div id="countdown" class="countdown"></div>
+        </div>
+
+        <!-- Voltar ao Cadastro -->
+        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--lilas);">
+            <p>Digitou o e-mail errado?</p>
+            <a href="cadastro.html" class="btn btn-secondary btn-block">↩️ Voltar ao Cadastro</a>
         </div>
     </div>
 
-    <script src="js/globals.js"></script>
+    <script src="globals.js"></script>
     
     <script>
         // ==================== VERIFICAÇÃO DE E-MAIL ====================
         
+        let userEmail = '';
+        let resendCooldown = 60; // 60 segundos de cooldown
+        let resendTimer = null;
+
+        // Inicializar página
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📧 Página de verificação inicializada');
+            
+            // Obter email da URL
+            const urlParams = new URLSearchParams(window.location.search);
+            userEmail = urlParams.get('email');
+            
+            if (userEmail) {
+                document.getElementById('emailDisplay').textContent = userEmail;
+                // Salvar email no localStorage para recuperação
+                localStorage.setItem('pendingVerificationEmail', userEmail);
+            } else {
+                // Tentar recuperar do localStorage
+                userEmail = localStorage.getItem('pendingVerificationEmail');
+                if (userEmail) {
+                    document.getElementById('emailDisplay').textContent = userEmail;
+                } else {
+                    document.getElementById('emailDisplay').textContent = 'Não identificado';
+                }
+            }
+            
+            // Iniciar verificação automática
+            attemptAutoVerification();
+            
+            // Iniciar contador de reenvio
+            startResendCooldown();
+        });
+
         // Tentar verificação automática pela URL
         async function attemptAutoVerification() {
             const urlParams = new URLSearchParams(window.location.hash.substring(1));
@@ -172,6 +300,11 @@
             const type = urlParams.get('type');
             
             if (accessToken && type === 'email') {
+                console.log('🔄 Tentando verificação automática...');
+                
+                document.getElementById('initialMessage').style.display = 'none';
+                document.getElementById('autoVerification').style.display = 'block';
+                
                 try {
                     const { data, error } = await supabase.auth.verifyOtp({
                         token_hash: accessToken,
@@ -180,15 +313,18 @@
                     
                     if (error) throw error;
                     
-                    document.getElementById('autoVerification').style.display = 'none';
-                    document.getElementById('successMessage').style.display = 'block';
+                    // ✅ SUCESSO
+                    console.log('✅ E-mail verificado com sucesso!');
+                    showSuccess();
+                    
+                    // Limpar URL e localStorage
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    localStorage.removeItem('pendingVerificationEmail');
                     
                 } catch (error) {
-                    console.error('Erro verificação automática:', error);
+                    console.error('❌ Erro verificação automática:', error);
                     showManualVerification();
                 }
-            } else {
-                showManualVerification();
             }
         }
 
@@ -201,9 +337,14 @@
             const token = document.getElementById('tokenInput').value.trim();
             
             if (!token) {
-                alert('Por favor, cole o token do e-mail');
+                showError('Por favor, cole o token do e-mail ou aguarde a verificação automática.');
                 return;
             }
+            
+            const verifyBtn = document.querySelector('#manualVerification .btn');
+            const originalText = verifyBtn.innerHTML;
+            verifyBtn.innerHTML = '<div class="spinner" style="width: 20px; height: 20px; margin: 0 auto;"></div> Verificando...';
+            verifyBtn.disabled = true;
             
             try {
                 const { data, error } = await supabase.auth.verifyOtp({
@@ -214,16 +355,120 @@
                 if (error) throw error;
                 
                 document.getElementById('manualVerification').style.display = 'none';
-                document.getElementById('successMessage').style.display = 'block';
+                showSuccess();
+                
+                // Limpar localStorage
+                localStorage.removeItem('pendingVerificationEmail');
                 
             } catch (error) {
-                document.getElementById('errorMessage').style.display = 'block';
-                document.getElementById('errorMessage').textContent = '❌ Erro: ' + error.message;
+                console.error('❌ Erro na verificação manual:', error);
+                showError('Token inválido ou expirado. Tente novamente ou solicite um novo e-mail.');
+            } finally {
+                verifyBtn.innerHTML = originalText;
+                verifyBtn.disabled = false;
             }
         }
 
-        // Iniciar verificação quando página carregar
-        document.addEventListener('DOMContentLoaded', attemptAutoVerification);
+        async function resendConfirmation() {
+            if (!userEmail) {
+                showError('E-mail não identificado. Volte à página de cadastro.');
+                return;
+            }
+            
+            const resendBtn = document.getElementById('resendBtn');
+            resendBtn.disabled = true;
+            resendBtn.innerHTML = '📨 Enviando...';
+            
+            try {
+                const { error } = await supabase.auth.resend({
+                    type: 'signup',
+                    email: userEmail,
+                    options: {
+                        emailRedirectTo: `${window.location.origin}/verificacao-email.html`
+                    }
+                });
+                
+                if (error) throw error;
+                
+                showSuccess('✅ E-mail de confirmação reenviado! Verifique sua caixa de entrada.');
+                
+                // Reiniciar cooldown
+                startResendCooldown();
+                
+            } catch (error) {
+                console.error('❌ Erro ao reenviar confirmação:', error);
+                showError('Erro ao reenviar e-mail: ' + error.message);
+                resendBtn.disabled = false;
+                resendBtn.innerHTML = '🔄 Reenviar E-mail';
+            }
+        }
+
+        function startResendCooldown() {
+            clearInterval(resendTimer);
+            resendCooldown = 60;
+            
+            const resendBtn = document.getElementById('resendBtn');
+            const countdown = document.getElementById('countdown');
+            
+            resendBtn.disabled = true;
+            
+            resendTimer = setInterval(() => {
+                resendCooldown--;
+                
+                if (resendCooldown <= 0) {
+                    clearInterval(resendTimer);
+                    resendBtn.disabled = false;
+                    resendBtn.innerHTML = '🔄 Reenviar E-mail';
+                    countdown.textContent = '';
+                } else {
+                    resendBtn.innerHTML = `⏳ ${resendCooldown}s`;
+                    countdown.textContent = `Aguarde ${resendCooldown} segundos para reenviar`;
+                }
+            }, 1000);
+        }
+
+        function showSuccess(message) {
+            if (!message) {
+                document.getElementById('initialMessage').style.display = 'none';
+                document.getElementById('autoVerification').style.display = 'none';
+                document.getElementById('manualVerification').style.display = 'none';
+                document.getElementById('successMessage').style.display = 'block';
+            } else {
+                showError(message, 'success');
+            }
+        }
+
+        function showError(message, type = 'error') {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.className = type === 'success' ? 'alert alert-success' : 'alert alert-error';
+            errorDiv.style.display = 'block';
+            
+            // Scroll para o erro
+            errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            
+            // Auto-esconder após 5 segundos para mensagens de sucesso
+            if (type === 'success') {
+                setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Verificar se o usuário já está logado (email já confirmado)
+        async function checkIfAlreadyVerified() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user && user.email_confirmed_at) {
+                    showSuccess();
+                }
+            } catch (error) {
+                console.error('Erro ao verificar status:', error);
+            }
+        }
+
+        // Verificar a cada 10 segundos se o email foi confirmado
+        setInterval(checkIfAlreadyVerified, 10000);
     </script>
 </body>
 </html>
