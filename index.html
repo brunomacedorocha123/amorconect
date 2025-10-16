@@ -15,19 +15,25 @@
     <script src="globals.js"></script>
 </head>
 <body>
-    <!-- Header -->
+    <!-- Header ORIGINAL -->
     <header>
         <div class="container">
             <div class="header-content">
-                <button id="hamburgerBtn">☰</button>
-                
                 <div class="logo">
-                    <img src="logoamorconect.png" alt="Amor Conect" class="logo-image">
+                    <img src="logoamorconect.png" alt="Amor Conect">
+                    <h1>Amor Conect</h1>
                 </div>
                 
                 <div class="auth-buttons">
                     <a href="login.html" class="btn btn-outline">Entrar</a>
                     <a href="cadastro.html" class="btn btn-primary">Cadastre-se</a>
+                </div>
+
+                <!-- Menu toggle ORIGINAL -->
+                <div class="menu-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
                 </div>
 
                 <nav>
@@ -40,26 +46,6 @@
             </div>
         </div>
     </header>
-
-    <!-- Menu Mobile -->
-    <div id="mobileMenu">
-        <button id="closeMobileMenu">×</button>
-        
-        <div class="mobile-user-info">
-            <div class="user-avatar">
-                <div class="user-avatar-fallback">👤</div>
-            </div>
-            <div>Visitante</div>
-        </div>
-
-        <div class="mobile-nav">
-            <a href="login.html" class="btn btn-outline">Entrar</a>
-            <a href="cadastro.html" class="btn btn-primary">Cadastre-se</a>
-            <a href="#como-funciona" class="btn btn-outline">Como Funciona</a>
-            <a href="#depoimentos" class="btn btn-outline">Depoimentos</a>
-            <a href="#sobre" class="btn btn-outline">Sobre Nós</a>
-        </div>
-    </div>
 
     <!-- Hero Section -->
     <section class="hero">
@@ -223,44 +209,11 @@
     <style>
         /* ==================== ESTILOS ESPECÍFICOS DA INDEX ==================== */
         
-        /* Header com logo grande mas compacto */
-        .header-content {
-            position: relative;
-            height: 90px; /* Altura fixa para o header */
-        }
-
-        .logo {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            top: -25px; /* Posiciona a logo para cima */
-        }
-
-        .logo-image {
-            height: 180px !important; /* Logo grande */
-            width: auto;
-            max-width: none;
-            display: block;
-        }
-
-        .logo h1 {
-            display: none; /* Remove o título */
-        }
-
-        /* Ajuste dos botões de auth */
-        .auth-buttons {
-            margin-left: auto;
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
         /* Hero Section */
         .hero {
             padding: 5rem 0;
             background: linear-gradient(rgba(246, 236, 197, 0.9), rgba(246, 236, 197, 0.9)), url('casal.jpg') center/cover no-repeat;
             text-align: center;
-            margin-top: 0; /* Remove margem extra */
         }
 
         .hero-content {
@@ -447,6 +400,35 @@
             background-color: rgba(255, 255, 255, 0.2);
         }
 
+        /* Menu Hamburguer ORIGINAL */
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            gap: 4px;
+            padding: 8px;
+        }
+
+        .menu-toggle span {
+            width: 25px;
+            height: 3px;
+            background: var(--branco);
+            transition: var(--transition);
+            border-radius: 2px;
+        }
+
+        .menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(6px, 6px);
+        }
+
+        .menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(6px, -6px);
+        }
+
         /* Social Links */
         .social-links {
             display: flex;
@@ -475,55 +457,58 @@
         /* ==================== RESPONSIVIDADE ESPECÍFICA ==================== */
         @media (max-width: 768px) {
             .header-content {
-                height: 80px;
+                flex-wrap: wrap;
+                height: auto;
+                padding: 10px 0;
+                gap: 10px;
+                align-items: center;
             }
 
+            /* LOGO - TAMANHO NORMAL PARA MOBILE */
             .logo {
-                top: -20px;
+                order: 1;
+                flex: 0 0 auto;
             }
 
-            .logo-image {
+            .logo img {
                 height: 150px !important;
+                width: auto !important;
+                max-width: 150px !important;
+                object-fit: contain;
+                margin: 0 !important;
+                display: block;
             }
 
-            .hero h2 {
-                font-size: 2.2rem;
+            .logo h1 {
+                display: none;
             }
 
-            .steps {
-                flex-direction: column;
+            .menu-toggle {
+                display: flex;
+                order: 2;
+                margin-left: auto;
             }
 
-            .features-grid,
-            .testimonial-grid {
-                grid-template-columns: 1fr;
+            .auth-buttons {
+                order: 3;
+                gap: 0.5rem;
             }
 
-            .hero,
-            .features,
-            .how-it-works,
-            .testimonials,
-            .cta {
-                padding: 3rem 0;
+            .auth-buttons .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+                white-space: nowrap;
             }
 
             nav {
                 display: none;
-            }
-
-            #hamburgerBtn {
-                display: flex;
-            }
-
-            .auth-buttons {
-                display: none;
+                width: 100%;
+                order: 4;
+                margin-top: 1rem;
             }
 
             nav.active {
                 display: block;
-                width: 100%;
-                order: 4;
-                margin-top: 1rem;
             }
 
             nav ul {
@@ -547,11 +532,38 @@
                 border-radius: 0;
                 margin: 0.2rem 0;
             }
+
+            .hero h2 {
+                font-size: 2.2rem;
+            }
+
+            .steps {
+                flex-direction: column;
+            }
+
+            .features-grid,
+            .testimonial-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero,
+            .features,
+            .how-it-works,
+            .testimonials,
+            .cta {
+                padding: 3rem 0;
+            }
         }
 
         @media (max-width: 480px) {
-            .logo-image {
-                height: 130px !important;
+            .logo img {
+                height: 120px !important;
+                max-width: 140px !important;
+            }
+
+            .auth-buttons .btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
             }
 
             .hero h2 {
@@ -564,8 +576,14 @@
         }
 
         @media (max-width: 360px) {
-            .logo-image {
-                height: 110px !important;
+            .logo img {
+                height: 100px !important;
+                max-width: 130px !important;
+            }
+
+            .auth-buttons .btn {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.75rem;
             }
         }
     </style>
@@ -573,6 +591,27 @@
     <script>
         // ==================== JAVASCRIPT ESPECÍFICO DA INDEX ====================
         document.addEventListener('DOMContentLoaded', function() {
+            // Menu Hamburguer ORIGINAL
+            const menuToggle = document.querySelector('.menu-toggle');
+            const nav = document.querySelector('nav');
+            
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    nav.classList.toggle('active');
+                });
+            }
+
+            // Fechar menu ao clicar em um link
+            document.querySelectorAll('nav a').forEach(link => {
+                link.addEventListener('click', function() {
+                    if (menuToggle.classList.contains('active')) {
+                        menuToggle.classList.remove('active');
+                        nav.classList.remove('active');
+                    }
+                });
+            });
+
             // Smooth scrolling para links internos
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
@@ -588,6 +627,14 @@
                         });
                     }
                 });
+            });
+
+            // Fechar menu ao rolar a página
+            window.addEventListener('scroll', function() {
+                if (nav.classList.contains('active')) {
+                    menuToggle.classList.remove('active');
+                    nav.classList.remove('active');
+                }
             });
 
             console.log('✅ Index.html carregada com sucesso!');
