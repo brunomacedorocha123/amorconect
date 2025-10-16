@@ -164,11 +164,14 @@
         </div>
     </footer>
 
+    <!-- SCRIPTS CORRETOS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="globals.js"></script>
     <script src="auth.js"></script>
 
+    <!-- INICIALIZAÇÃO DO CADASTRO -->
     <script>
-        // ✅ CONFIGURAÇÃO DO CADASTRO
+        // ✅ AGORA O SUPABASE JÁ ESTÁ CARREGADO
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Cadastro inicializado');
             
@@ -263,7 +266,26 @@
                 terms: document.getElementById('terms').checked
             };
 
+            // Validações básicas
+            if (!formData.terms) {
+                errorAlert.textContent = '❌ Você deve aceitar os termos e condições';
+                errorAlert.style.display = 'block';
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+                return;
+            }
+
+            if (formData.password !== formData.confirmPassword) {
+                errorAlert.textContent = '❌ As senhas não coincidem';
+                errorAlert.style.display = 'block';
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+                return;
+            }
+
             try {
+                console.log('📧 Tentando cadastrar:', formData.email);
+                
                 // ✅ CADASTRO NO SUPABASE
                 const { data, error } = await supabase.auth.signUp({
                     email: formData.email,
@@ -278,9 +300,12 @@
                     }
                 });
 
-                if (error) throw error;
+                if (error) {
+                    console.error('❌ Erro do Supabase:', error);
+                    throw error;
+                }
 
-                console.log('✅ Cadastro realizado:', data);
+                console.log('✅ Resposta do Supabase:', data);
 
                 if (data.user) {
                     successAlert.innerHTML = `
@@ -291,6 +316,9 @@
                     `;
                     successAlert.style.display = 'block';
                     
+                    // Limpar formulário
+                    document.getElementById('registerForm').reset();
+                    
                     // Redirecionar para verificação
                     setTimeout(() => {
                         window.location.href = `verificacao-email.html?email=${encodeURIComponent(formData.email)}`;
@@ -299,7 +327,17 @@
 
             } catch (error) {
                 console.error('❌ Erro no cadastro:', error);
-                errorAlert.textContent = `❌ Erro: ${error.message}`;
+                
+                let errorMessage = '❌ Erro ao realizar cadastro';
+                if (error.message.includes('already registered')) {
+                    errorMessage = '❌ Este e-mail já está cadastrado';
+                } else if (error.message.includes('password')) {
+                    errorMessage = '❌ A senha não atende aos requisitos de segurança';
+                } else if (error.message.includes('email')) {
+                    errorMessage = '❌ E-mail inválido';
+                }
+                
+                errorAlert.textContent = errorMessage;
                 errorAlert.style.display = 'block';
             } finally {
                 submitBtn.disabled = false;
