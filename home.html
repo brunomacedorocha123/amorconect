@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Amor Conect</title>
+    
+    <!-- CSS ORGANIZADO -->
+    <link rel="stylesheet" href="css/globals.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/hamburger.css">
+    <style>
+        /* ==================== HOME.CSS ==================== */
+        /* Estilos específicos da página home - FICA AQUI MESMO */
+        
+        .main-content {
+            padding: 2rem 0;
+        }
+
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--branco);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--lilas);
+        }
+
+        .welcome-section h2 {
+            font-size: 2.5rem;
+            color: var(--vermelho-rosado);
+            margin-bottom: 1rem;
+        }
+
+        .welcome-section p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .user-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        /* ... (TODO O RESTANTE DO CSS ESPECÍFICO DA HOME) ... */
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <button id="hamburgerBtn">☰</button>
+                <div class="logo">
+                    <img src="logoamorconect.png" alt="Amor Conect">
+                </div>
+                <div class="user-menu">
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">
+                            <img class="user-avatar-img" src="" alt="Avatar" style="display: none;">
+                            <div class="user-avatar-fallback">U</div>
+                        </div>
+                        <span id="userNickname">Usuário</span>
+                    </div>
+                    <div id="freeBadge" class="free-badge" style="display: none;">Free</div>
+                    <a href="princing.html" id="premiumBtn" class="btn btn-premium" style="display: none;">Premium</a>
+                    <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
+                    <a href="busca.html" class="btn btn-outline">Buscar</a>
+                    <a href="painel.html" class="btn btn-outline">Perfil</a>
+                    <a href="blocks.html" class="btn btn-outline">🚫 Bloqueados</a>
+                    <button class="btn btn-outline" id="logoutBtn">Sair</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MENU MOBILE -->
+    <div id="mobileMenu">
+        <button id="closeMobileMenu">×</button>
+        
+        <div class="mobile-user-info">
+            <div class="user-avatar" id="mobileUserAvatar">
+                <img class="user-avatar-img" src="" alt="Avatar" style="display: none;">
+                <div class="user-avatar-fallback">U</div>
+            </div>
+            <div id="mobileUserNickname">Usuário</div>
+        </div>
+
+        <div class="mobile-nav">
+            <div id="mobileFreeBadge" class="free-badge" style="display: none;">Free</div>
+            <a href="princing.html" id="mobilePremiumBtn" class="btn btn-premium" style="display: none;">Premium</a>
+            <a href="busca.html" class="btn btn-outline">Buscar</a>
+            <a href="painel.html" class="btn btn-outline">Perfil</a>
+            <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
+            <a href="blocks.html" class="btn btn-outline">🚫 Bloqueados</a>
+            <button class="btn btn-outline" id="mobileLogoutBtn">Sair</button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <div class="container">
+            
+            <!-- SEÇÃO DE BOAS-VINDAS -->
+            <section class="welcome-section">
+                <h2>Olá, <span id="welcomeNickname">Usuário</span>! ❤️</h2>
+                <p>Encontre conexões genuínas e construa relacionamentos significativos</p>
+            </section>
+
+            <!-- ESTATÍSTICAS -->
+            <div class="user-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="usersOnline">0</div>
+                    <div class="stat-label">Pessoas Online</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalUsers">0</div>
+                    <div class="stat-label">Usuários na Plataforma</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="newMatches">0</div>
+                    <div class="stat-label">Novos Matches</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="profileViews">0</div>
+                    <div class="stat-label">Visualizações do Perfil</div>
+                </div>
+            </div>
+
+            <!-- VISITANTES -->
+            <section class="visitors-section">
+                <div class="visitors-card">
+                    <div class="visitors-header">
+                        <h2>👀 Quem te visitou</h2>
+                        <div class="visitors-count" id="visitorsCount">0 visitas</div>
+                    </div>
+
+                    <!-- Conteúdo Premium -->
+                    <div class="premium-content" id="premiumVisitors" style="display: none;">
+                        <div class="visitors-grid" id="visitorsGrid">
+                            <div class="visitors-loading">
+                                <div class="visitors-spinner"></div>
+                                <p>Carregando visitantes...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Conteúdo Free -->
+                    <div class="free-content" id="freeVisitors">
+                        <div class="icon">🔒</div>
+                        <h3>Descubra quem se interessou por você!</h3>
+                        <p>
+                            <span id="freeVisitorsCount">0 pessoas</span> visitaram seu perfil esta semana
+                        </p>
+                        <a href="princing.html" class="btn btn-premium">
+                            Seja Premium para ver
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- USUÁRIOS PARA CONHECER -->
+            <section class="users-section">
+                <div class="section-header">
+                    <h2>Conheça Novas Pessoas</h2>
+                    <a href="princing.html" class="btn btn-premium btn-sm">Premium</a>
+                </div>
+                <div class="users-grid" id="usersGrid">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Carregando usuários...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AÇÕES RÁPIDAS -->
+            <section class="quick-actions">
+                <h2>Ações Rápidas</h2>
+                <div class="actions-grid">
+                    <a href="painel.html" class="action-card">
+                        <div class="action-icon">👤</div>
+                        <h3>Completar Perfil</h3>
+                        <p>Adicione mais informações ao seu perfil</p>
+                    </a>
+                    <a href="busca.html" class="action-card">
+                        <div class="action-icon">🔍</div>
+                        <h3>Buscar Pessoas</h3>
+                        <p>Encontre pessoas com interesses similares</p>
+                    </a>
+                    <a href="mensagens.html" class="action-card">
+                        <div class="action-icon">💌</div>
+                        <h3>Minhas Mensagens</h3>
+                        <p>Ver e responder mensagens</p>
+                    </a>
+                    <a href="blocks.html" class="action-card" style="background: linear-gradient(135deg, #fed7d7, #feb2b2); border: 2px solid #e53e3e;">
+                        <div class="action-icon">🚫</div>
+                        <h3>Usuários Bloqueados</h3>
+                        <p>Gerencie usuários que você bloqueou</p>
+                    </a>
+                    <a href="princing.html" class="action-card" style="background: linear-gradient(135deg, #fff9c4, #ffecb3); border: 2px solid #ffd700;">
+                        <div class="action-icon">⭐</div>
+                        <h3>Plano Premium</h3>
+                        <p>Desbloqueie recursos exclusivos</p>
+                    </a>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Amor Conect</h3>
+                    <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Links Rápidos</h3>
+                    <ul>
+                        <li><a href="index.html">Página Inicial</a></li>
+                        <li><a href="princing.html">Planos Premium</a></li>
+                        <li><a href="#como-funciona">Como Funciona</a></li>
+                        <li><a href="#depoimentos">Depoimentos</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Suporte</h3>
+                    <ul>
+                        <li><a href="#">Central de Ajuda</a></li>
+                        <li><a href="#">Política de Privacidade</a></li>
+                        <li><a href="#">Termos de Uso</a></li>
+                        <li><a href="#" onclick="openSupportModal()">🚨 Reportar Problema</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2023 Amor Conect. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAIS -->
+    <!-- Modal de Reporte -->
+    <div class="modal-overlay" id="reportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🚨 Reportar Usuário</h3>
+                <button class="close-modal" onclick="closeReportModal()">×</button>
+            </div>
+            <!-- Conteúdo do modal de reporte -->
+        </div>
+    </div>
+
+    <!-- Modal de Bloqueio -->
+    <div class="modal-overlay" id="blockModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🚫 Bloquear Usuário</h3>
+                <button class="close-modal" onclick="closeBlockModal()">×</button>
+            </div>
+            <!-- Conteúdo do modal de bloqueio -->
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/globals.js"></script>
+    <script src="js/home.js"></script>
+</body>
+</html>
