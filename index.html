@@ -9,6 +9,12 @@
     <link rel="stylesheet" href="styles-base.css">
     <link rel="stylesheet" href="styles-componentes.css">
     <link rel="stylesheet" href="styles-pages.css">
+    
+    <!-- CSS de emergência - REMOVA depois que funcionar -->
+    <style>
+        /* TESTE: Remove depois que os CSS carregarem */
+        body { background-color: #f6ecc5 !important; }
+    </style>
 </head>
 <body>
     <!-- Header -->
@@ -16,7 +22,7 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <img src="assets/images/logoamorconect.png" alt="Amor Conect">
+                    <img src="assets/images/logoamorconect.png" alt="Amor Conect" style="height: 180px; width: auto;">
                     <h1>Amor Conect</h1>
                 </div>
                 
@@ -25,13 +31,13 @@
                     <a href="cadastro.html" class="btn btn-primary">Cadastre-se</a>
                 </div>
 
-                <div class="menu-toggle">
+                <button class="menu-toggle" aria-label="Menu">
                     <span></span>
                     <span></span>
                     <span></span>
-                </div>
+                </button>
 
-                <nav>
+                <nav class="nav-menu">
                     <ul>
                         <li><a href="#como-funciona">Como Funciona</a></li>
                         <li><a href="#depoimentos">Depoimentos</a></li>
@@ -201,134 +207,39 @@
         </div>
     </footer>
 
-    <!-- JavaScript Corrigido -->
+    <!-- JavaScript Simplificado -->
     <script>
-        // Classe para funcionalidades da página inicial
-        class IndexPage {
-            constructor() {
-                this.init();
-            }
-
-            init() {
-                this.setupMenuHamburguer();
-                this.setupSmoothScroll();
-                this.setupAnimations();
-                console.log('✅ Página inicial inicializada');
-            }
-
+        document.addEventListener('DOMContentLoaded', function() {
             // Menu Hamburguer
-            setupMenuHamburguer() {
-                const menuToggle = document.querySelector('.menu-toggle');
-                const nav = document.querySelector('nav');
-                
-                if (menuToggle && nav) {
-                    menuToggle.addEventListener('click', () => {
-                        menuToggle.classList.toggle('active');
-                        nav.classList.toggle('active');
-                    });
+            const menuToggle = document.querySelector('.menu-toggle');
+            const navMenu = document.querySelector('.nav-menu');
+            
+            if (menuToggle && navMenu) {
+                menuToggle.addEventListener('click', function() {
+                    menuToggle.classList.toggle('active');
+                    navMenu.classList.toggle('active');
+                });
+            }
 
-                    // Fechar menu ao clicar em um link
-                    document.querySelectorAll('nav a').forEach(link => {
-                        link.addEventListener('click', () => {
-                            if (menuToggle.classList.contains('active')) {
-                                menuToggle.classList.remove('active');
-                                nav.classList.remove('active');
-                            }
+            // Scroll Suave
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 80,
+                            behavior: 'smooth'
                         });
-                    });
-
-                    // Fechar menu ao rolar
-                    window.addEventListener('scroll', () => {
-                        if (nav.classList.contains('active')) {
-                            menuToggle.classList.remove('active');
-                            nav.classList.remove('active');
-                        }
-                    });
-                }
-            }
-
-            // Scroll suave para links internos
-            setupSmoothScroll() {
-                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                    anchor.addEventListener('click', function (e) {
-                        e.preventDefault();
-                        const targetId = this.getAttribute('href');
-                        if(targetId === '#') return;
-                        
-                        const targetElement = document.querySelector(targetId);
-                        if(targetElement) {
-                            window.scrollTo({
-                                top: targetElement.offsetTop - 80,
-                                behavior: 'smooth'
-                            });
-                        }
-                    });
+                    }
                 });
-            }
+            });
 
-            // Animações de entrada
-            setupAnimations() {
-                // Observer para animar elementos quando entram na viewport
-                const observerOptions = {
-                    threshold: 0.1,
-                    rootMargin: '0px 0px -50px 0px'
-                };
-
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            entry.target.style.opacity = '1';
-                            entry.target.style.transform = 'translateY(0)';
-                        }
-                    });
-                }, observerOptions);
-
-                // Observar elementos para animação
-                document.querySelectorAll('.feature-card, .step, .testimonial-card').forEach(el => {
-                    el.style.opacity = '0';
-                    el.style.transform = 'translateY(30px)';
-                    el.style.transition = 'all 0.6s ease';
-                    observer.observe(el);
-                });
-            }
-        }
-
-        // Inicializar quando o DOM carregar
-        document.addEventListener('DOMContentLoaded', () => {
-            new IndexPage();
+            console.log('✅ Página carregada com sucesso!');
         });
-
-        // Adicionar estilos para newsletter (opcional)
-        const newsletterStyles = `
-            .newsletter-form {
-                display: flex;
-                gap: 0.5rem;
-                margin-top: 1rem;
-            }
-            
-            .newsletter-form input {
-                flex: 1;
-                padding: 0.5rem;
-                border: 1px solid var(--lilas);
-                border-radius: 5px;
-                font-size: 0.9rem;
-            }
-            
-            .newsletter-form button {
-                white-space: nowrap;
-            }
-            
-            @media (max-width: 768px) {
-                .newsletter-form {
-                    flex-direction: column;
-                }
-            }
-        `;
-
-        // Adicionar estilos da newsletter
-        const styleSheet = document.createElement('style');
-        styleSheet.textContent = newsletterStyles;
-        document.head.appendChild(styleSheet);
     </script>
 </body>
 </html>
