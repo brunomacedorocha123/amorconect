@@ -9,38 +9,8 @@
     <link rel="stylesheet" href="globals.css">
     <link rel="stylesheet" href="components.css">
     
-    <!-- CSS ESPECÍFICO DO CADASTRO -->
+    <!-- CSS ESPECÍFICO DO CADASTRO (SÓ O NECESSÁRIO) -->
     <style>
-        /* ==================== CADASTRO CSS ==================== */
-        
-        .auth-container {
-            width: 90%;
-            max-width: 500px;
-            background: var(--branco);
-            border-radius: 20px;
-            box-shadow: var(--shadow-xl);
-            padding: 3rem;
-            border: 1px solid var(--lilas);
-            margin: 2rem auto;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .auth-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
-        }
-
-        .auth-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
         .auth-logo {
             width: 150px;
             height: 150px;
@@ -51,214 +21,7 @@
             padding: 10px;
             background: var(--bege);
         }
-
-        .auth-header h1 {
-            font-size: 2.2rem;
-            color: var(--vermelho-rosado);
-            margin-bottom: 0.5rem;
-            font-weight: 700;
-        }
-
-        .auth-header p {
-            color: var(--text-light);
-            font-size: 1rem;
-            line-height: 1.5;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .btn-block {
-            width: 100%;
-            padding: 1rem;
-            font-size: 1.1rem;
-            margin-top: 1rem;
-            position: relative;
-        }
-
-        .auth-footer {
-            text-align: center;
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 1px solid var(--lilas);
-        }
-
-        /* Password Requirements */
-        .password-requirements {
-            background: var(--bege);
-            padding: 1rem;
-            border-radius: 10px;
-            margin-top: 0.5rem;
-            border: 1px solid var(--lilas);
-        }
-
-        .password-requirements h4 {
-            color: var(--vermelho-rosado);
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-
-        .requirements-list {
-            list-style: none;
-            font-size: 0.8rem;
-            margin: 0;
-            padding: 0;
-        }
-
-        .requirements-list li {
-            margin-bottom: 0.25rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: var(--transition);
-        }
-
-        .requirement-met {
-            color: var(--success);
-            font-weight: 600;
-        }
-
-        .requirement-met::before {
-            content: "✅ ";
-        }
-
-        .requirement-unmet {
-            color: var(--text-light);
-        }
-
-        .requirement-unmet::before {
-            content: "❌ ";
-        }
-
-        /* Password Strength Meter */
-        .password-strength {
-            margin-top: 0.5rem;
-            height: 6px;
-            border-radius: 3px;
-            background: #e5e7eb;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .strength-bar {
-            height: 100%;
-            width: 0%;
-            transition: var(--transition);
-            border-radius: 3px;
-            position: absolute;
-            left: 0;
-            top: 0;
-        }
-
-        .strength-weak { 
-            background: linear-gradient(90deg, #ef4444, #f97316);
-            width: 25%; 
-        }
-        .strength-fair { 
-            background: linear-gradient(90deg, #f97316, #eab308);
-            width: 50%; 
-        }
-        .strength-good { 
-            background: linear-gradient(90deg, #eab308, #84cc16);
-            width: 75%; 
-        }
-        .strength-strong { 
-            background: linear-gradient(90deg, #84cc16, #22c55e);
-            width: 100%; 
-        }
-
-        .strength-text {
-            font-size: 0.75rem;
-            margin-top: 0.25rem;
-            text-align: right;
-            font-weight: 600;
-        }
-
-        /* Terms Checkbox */
-        .terms-group {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-            padding: 1rem;
-            background: var(--cinza-claro);
-            border-radius: 10px;
-            border: 1px solid var(--cinza-medio);
-        }
-
-        .terms-group input[type="checkbox"] {
-            margin-top: 0.25rem;
-            accent-color: var(--vermelho-rosado);
-            transform: scale(1.2);
-        }
-
-        .terms-group label {
-            font-size: 0.9rem;
-            line-height: 1.4;
-            color: var(--preto);
-        }
-
-        .terms-group a {
-            color: var(--vermelho-rosado);
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .terms-group a:hover {
-            text-decoration: underline;
-        }
-
-        /* Alertas */
-        .alert {
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-            display: none;
-            position: relative;
-            padding-right: 2.5rem;
-        }
-
-        .alert-error {
-            background: #fed7d7;
-            border: 1px solid #feb2b2;
-            color: #c53030;
-        }
-
-        .alert-success {
-            background: #f0fff4;
-            border: 1px solid #9ae6b4;
-            color: #276749;
-        }
-
-        .alert .close-alert {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            font-size: 1.2rem;
-            cursor: pointer;
-            opacity: 0.7;
-            transition: var(--transition);
-        }
-
-        .alert .close-alert:hover {
-            opacity: 1;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 1rem;
-            color: var(--vermelho-rosado);
-        }
-
-        /* Toggle Password */
+        
         .password-toggle {
             position: absolute;
             right: 12px;
@@ -279,100 +42,6 @@
 
         .form-group {
             position: relative;
-        }
-
-        /* Loading States */
-        .spinner-small {
-            width: 16px;
-            height: 16px;
-            border: 2px solid transparent;
-            border-top: 2px solid currentColor;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-right: 8px;
-        }
-
-        /* Botões com estados de loading */
-        .btn:disabled {
-            position: relative;
-            color: transparent;
-        }
-
-        .btn:disabled::after {
-            content: '';
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            border: 2px solid transparent;
-            border-top: 2px solid currentColor;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        /* Animações */
-        @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .auth-container {
-            animation: slideInUp 0.5s ease;
-        }
-
-        /* Estados de foco melhorados */
-        .form-control:focus {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(233, 30, 99, 0.15);
-        }
-
-        /* Responsividade */
-        @media (max-width: 768px) {
-            .auth-container {
-                padding: 2rem;
-                margin: 1rem auto;
-            }
-
-            .auth-logo {
-                width: 120px;
-                height: 120px;
-            }
-
-            .auth-header h1 {
-                font-size: 2rem;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .auth-container {
-                padding: 1.5rem;
-            }
-
-            .auth-logo {
-                width: 100px;
-                height: 100px;
-            }
-
-            .auth-header h1 {
-                font-size: 1.8rem;
-            }
-            
-            .terms-group {
-                padding: 0.75rem;
-            }
         }
     </style>
 </head>
@@ -536,8 +205,6 @@
     
     <!-- INICIALIZAÇÃO DO CADASTRO -->
     <script>
-        // ==================== INICIALIZAÇÃO DO CADASTRO ====================
-
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📝 Cadastro.html - Inicializando...');
             
@@ -557,15 +224,6 @@
             }
 
             // Configurar toggle de senha
-            setupPasswordToggle();
-
-            // Configurar validações em tempo real
-            setupRealTimeValidation();
-
-            console.log('✅ Cadastro.html inicializado!');
-        });
-
-        function setupPasswordToggle() {
             const toggleBtn = document.getElementById('togglePassword');
             const passwordInput = document.getElementById('password');
             
@@ -577,227 +235,19 @@
                     toggleBtn.setAttribute('aria-label', type === 'password' ? 'Mostrar senha' : 'Ocultar senha');
                 });
             }
-        }
 
-        function setupRealTimeValidation() {
-            // Limpar erros ao digitar
-            const inputs = ['firstName', 'lastName', 'nickname', 'email', 'password', 'confirmPassword', 'birthDate'];
-            
-            inputs.forEach(inputId => {
-                const input = document.getElementById(inputId);
-                if (input) {
-                    input.addEventListener('input', function() {
-                        clearFieldError(inputId);
-                        // Validar em tempo real para alguns campos
-                        if (inputId === 'password') {
-                            validatePasswordRealTime();
-                        } else if (inputId === 'confirmPassword') {
-                            validateConfirmPasswordRealTime();
-                        } else if (inputId === 'email') {
-                            validateEmailRealTime();
-                        }
-                    });
-                    
-                    // Validar ao sair do campo
-                    input.addEventListener('blur', function() {
-                        if (inputId === 'firstName' || inputId === 'lastName') {
-                            validateNameRealTime(inputId);
-                        } else if (inputId === 'nickname') {
-                            validateNicknameRealTime();
-                        } else if (inputId === 'email') {
-                            validateEmailRealTime();
-                        } else if (inputId === 'birthDate') {
-                            validateBirthDateRealTime();
-                        } else if (inputId === 'confirmPassword') {
-                            validateConfirmPasswordRealTime();
-                        }
-                    });
-                }
-            });
-
-            // Validação específica para termos
-            const termsInput = document.getElementById('terms');
-            if (termsInput) {
-                termsInput.addEventListener('change', function() {
-                    clearFieldError('terms');
+            // Configurar validações em tempo real da senha
+            const passwordInputElement = document.getElementById('password');
+            if (passwordInputElement) {
+                passwordInputElement.addEventListener('input', function() {
+                    updatePasswordRequirements(this.value);
                 });
             }
-        }
 
-        // ==================== VALIDAÇÕES EM TEMPO REAL ====================
+            console.log('✅ Cadastro.html inicializado!');
+        });
 
-        function validateNameRealTime(fieldId) {
-            const field = document.getElementById(fieldId);
-            const value = field.value.trim();
-            
-            if (value === '') {
-                hideFieldError(fieldId);
-                field.classList.remove('error');
-                return;
-            }
-            
-            if (value.length < 2) {
-                showFieldError(fieldId, fieldId === 'firstName' ? 
-                    'Nome deve ter pelo menos 2 caracteres' : 
-                    'Sobrenome deve ter pelo menos 2 caracteres');
-                field.classList.add('error');
-            } else {
-                hideFieldError(fieldId);
-                field.classList.remove('error');
-            }
-        }
-
-        function validateNicknameRealTime() {
-            const field = document.getElementById('nickname');
-            const value = field.value.trim();
-            
-            if (value === '') {
-                hideFieldError('nickname');
-                field.classList.remove('error');
-                return;
-            }
-            
-            if (value.length < 3) {
-                showFieldError('nickname', 'Nickname deve ter pelo menos 3 caracteres');
-                field.classList.add('error');
-            } else {
-                hideFieldError('nickname');
-                field.classList.remove('error');
-            }
-        }
-
-        function validateEmailRealTime() {
-            const field = document.getElementById('email');
-            const value = field.value.trim();
-            
-            if (value === '') {
-                hideFieldError('email');
-                field.classList.remove('error');
-                return;
-            }
-            
-            const isValid = validateEmail(value);
-            
-            if (!isValid) {
-                showFieldError('email', 'Por favor, insira um e-mail válido');
-                field.classList.add('error');
-            } else {
-                hideFieldError('email');
-                field.classList.remove('error');
-            }
-        }
-
-        function validateBirthDateRealTime() {
-            const field = document.getElementById('birthDate');
-            const value = field.value;
-            
-            if (!value) {
-                hideFieldError('birthDate');
-                field.classList.remove('error');
-                return;
-            }
-            
-            const age = calculateAge(value);
-            
-            if (age < 18) {
-                showFieldError('birthDate', 'Você deve ter pelo menos 18 anos');
-                field.classList.add('error');
-            } else if (age > 100) {
-                showFieldError('birthDate', 'Data de nascimento inválida');
-                field.classList.add('error');
-            } else {
-                hideFieldError('birthDate');
-                field.classList.remove('error');
-            }
-        }
-
-        function validatePasswordRealTime() {
-            const field = document.getElementById('password');
-            const value = field.value;
-            
-            if (value === '') {
-                hideFieldError('password');
-                field.classList.remove('error');
-                return;
-            }
-            
-            const passwordValidation = validatePassword(value);
-            
-            if (!passwordValidation.isValid) {
-                showFieldError('password', 'A senha não atende aos requisitos de segurança');
-                field.classList.add('error');
-            } else {
-                hideFieldError('password');
-                field.classList.remove('error');
-            }
-        }
-
-        function validateConfirmPasswordRealTime() {
-            const field = document.getElementById('confirmPassword');
-            const password = document.getElementById('password').value;
-            const value = field.value;
-            
-            if (value === '') {
-                hideFieldError('confirmPassword');
-                field.classList.remove('error');
-                return;
-            }
-            
-            if (value !== password) {
-                showFieldError('confirmPassword', 'As senhas não coincidem');
-                field.classList.add('error');
-            } else {
-                hideFieldError('confirmPassword');
-                field.classList.remove('error');
-            }
-        }
-
-        // ==================== FUNÇÕES AUXILIARES ====================
-
-        function showFieldError(fieldId, message) {
-            const errorElement = document.getElementById(fieldId + 'Error');
-            if (errorElement) {
-                errorElement.textContent = message;
-                errorElement.style.display = 'block';
-                errorElement.classList.add('show');
-            }
-        }
-
-        function hideFieldError(fieldId) {
-            const errorElement = document.getElementById(fieldId + 'Error');
-            if (errorElement) {
-                errorElement.style.display = 'none';
-                errorElement.classList.remove('show');
-            }
-        }
-
-        function clearFieldError(fieldId) {
-            hideFieldError(fieldId);
-            const field = document.getElementById(fieldId);
-            if (field) field.classList.remove('error');
-        }
-
-        function showAlert(message, type = 'error') {
-            // Esconder todos os alerts primeiro
-            document.querySelectorAll('.alert').forEach(alert => {
-                alert.style.display = 'none';
-            });
-            
-            const alertElement = document.getElementById(type + 'Alert');
-            if (alertElement) {
-                const messageElement = alertElement.querySelector('.alert-message');
-                if (messageElement) {
-                    messageElement.textContent = message;
-                }
-                alertElement.style.display = 'block';
-                
-                // Scroll para o alerta
-                alertElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
-        }
-
-        // ==================== SISTEMA DE FORÇA DA SENHA ====================
-
+        // Sistema de força da senha
         function updatePasswordRequirements(password) {
             const { requirements, strength } = checkPasswordStrength(password);
             const requirementElements = {
@@ -871,11 +321,6 @@
                 }
             }
         }
-
-        // Event listener para a senha
-        document.getElementById('password').addEventListener('input', function() {
-            updatePasswordRequirements(this.value);
-        });
 
         console.log('🎯 Sistema de cadastro pronto!');
     </script>
