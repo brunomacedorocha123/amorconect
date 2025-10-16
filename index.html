@@ -3,31 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teste Básico</title>
+    <title>Amor Conect - Encontre seu par ideal</title>
+    
+    <!-- CSS ORGANIZADO -->
+    <link rel="stylesheet" href="styles-base.css">
+    <link rel="stylesheet" href="styles-componentes.css">
+    <link rel="stylesheet" href="styles-pages.css">
+    
+    <!-- CSS DE TESTE - ADICIONE ISSO -->
     <style>
-        body { 
-            background: red !important; 
-            color: white;
-            font-size: 24px;
-            text-align: center;
-            padding: 50px;
-        }
-        header {
-            background: blue !important;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
+    /* TESTE GRADUAL - BASE */
+    :root {
+        --bege: #f6ecc5;
+        --vermelho-rosado: #d1656d;
+        --lilas: #dfc9ed;
+        --branco: #ffffff;
+    }
+
+    body {
+        background: var(--bege) !important;
+    }
+
+    header {
+        background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas)) !important;
+        height: 80px !important;
+    }
+
+    .logo img {
+        height: 180px !important;
+    }
     </style>
 </head>
 <body>
-    <header>
-        <h1>TESTE HEADER</h1>
-    </header>
-    
-    <main>
-        <h2>TESTE CONTEÚDO</h2>
-        <p>Se isso aparecer colorido, o problema é no CSS complexo.</p>
-        <p>Se aparecer apenas texto preto/branco, o problema é mais grave.</p>
-    </main>
-</body>
-</html>
+    <!-- SEU CONTEÚDO AQUI (header, sections, etc) -->
