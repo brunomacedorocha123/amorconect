@@ -201,54 +201,49 @@
         </div>
     </footer>
 
-    <!-- JavaScript Organizado -->
-    <script type="module">
-        // Importar utilitários
-        import { funcaoUtilitario } from './scripts/funcao-utilitario.js'
-
-        // Inicializar funcionalidades da página inicial
+    <!-- JavaScript Corrigido -->
+    <script>
+        // Classe para funcionalidades da página inicial
         class IndexPage {
             constructor() {
-                this.init()
+                this.init();
             }
 
             init() {
-                this.setupMenuHamburguer()
-                this.setupSmoothScroll()
-                this.setupAnimations()
-                this.setupNewsletter()
-                
-                console.log('✅ Página inicial inicializada')
+                this.setupMenuHamburguer();
+                this.setupSmoothScroll();
+                this.setupAnimations();
+                console.log('✅ Página inicial inicializada');
             }
 
-            // Menu Hamburguer para página inicial
+            // Menu Hamburguer
             setupMenuHamburguer() {
-                const menuToggle = document.querySelector('.menu-toggle')
-                const nav = document.querySelector('nav')
+                const menuToggle = document.querySelector('.menu-toggle');
+                const nav = document.querySelector('nav');
                 
                 if (menuToggle && nav) {
                     menuToggle.addEventListener('click', () => {
-                        menuToggle.classList.toggle('active')
-                        nav.classList.toggle('active')
-                    })
+                        menuToggle.classList.toggle('active');
+                        nav.classList.toggle('active');
+                    });
 
                     // Fechar menu ao clicar em um link
                     document.querySelectorAll('nav a').forEach(link => {
                         link.addEventListener('click', () => {
                             if (menuToggle.classList.contains('active')) {
-                                menuToggle.classList.remove('active')
-                                nav.classList.remove('active')
+                                menuToggle.classList.remove('active');
+                                nav.classList.remove('active');
                             }
-                        })
-                    })
+                        });
+                    });
 
                     // Fechar menu ao rolar
                     window.addEventListener('scroll', () => {
                         if (nav.classList.contains('active')) {
-                            menuToggle.classList.remove('active')
-                            nav.classList.remove('active')
+                            menuToggle.classList.remove('active');
+                            nav.classList.remove('active');
                         }
-                    })
+                    });
                 }
             }
 
@@ -256,19 +251,19 @@
             setupSmoothScroll() {
                 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                     anchor.addEventListener('click', function (e) {
-                        e.preventDefault()
-                        const targetId = this.getAttribute('href')
-                        if(targetId === '#') return
+                        e.preventDefault();
+                        const targetId = this.getAttribute('href');
+                        if(targetId === '#') return;
                         
-                        const targetElement = document.querySelector(targetId)
+                        const targetElement = document.querySelector(targetId);
                         if(targetElement) {
                             window.scrollTo({
                                 top: targetElement.offsetTop - 80,
                                 behavior: 'smooth'
-                            })
+                            });
                         }
-                    })
-                })
+                    });
+                });
             }
 
             // Animações de entrada
@@ -277,119 +272,33 @@
                 const observerOptions = {
                     threshold: 0.1,
                     rootMargin: '0px 0px -50px 0px'
-                }
+                };
 
                 const observer = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
                         if (entry.isIntersecting) {
-                            entry.target.style.opacity = '1'
-                            entry.target.style.transform = 'translateY(0)'
+                            entry.target.style.opacity = '1';
+                            entry.target.style.transform = 'translateY(0)';
                         }
-                    })
-                }, observerOptions)
+                    });
+                }, observerOptions);
 
                 // Observar elementos para animação
                 document.querySelectorAll('.feature-card, .step, .testimonial-card').forEach(el => {
-                    el.style.opacity = '0'
-                    el.style.transform = 'translateY(30px)'
-                    el.style.transition = 'all 0.6s ease'
-                    observer.observe(el)
-                })
-            }
-
-            // Sistema de newsletter simples
-            setupNewsletter() {
-                const newsletterForm = document.getElementById('newsletterForm')
-                if (newsletterForm) {
-                    newsletterForm.addEventListener('submit', (e) => {
-                        e.preventDefault()
-                        const email = newsletterForm.querySelector('input[type="email"]').value
-                        
-                        if (funcaoUtilitario.validarEmail(email)) {
-                            this.subscribeNewsletter(email)
-                        } else {
-                            funcaoUtilitario.mostrarAlerta('Por favor, insira um email válido.', 'aviso')
-                        }
-                    })
-                }
-            }
-
-            // Inscrever na newsletter
-            async subscribeNewsletter(email) {
-                try {
-                    // Simular cadastro na newsletter
-                    await new Promise(resolve => setTimeout(resolve, 1000))
-                    
-                    funcaoUtilitario.mostrarAlerta('Obrigado por se inscrever! Em breve você receberá nossas novidades.', 'sucesso')
-                    
-                    // Limpar formulário
-                    const newsletterForm = document.getElementById('newsletterForm')
-                    if (newsletterForm) {
-                        newsletterForm.reset()
-                    }
-                    
-                } catch (error) {
-                    console.error('Erro ao inscrever na newsletter:', error)
-                    funcaoUtilitario.mostrarAlerta('Erro ao processar inscrição. Tente novamente.', 'erro')
-                }
-            }
-
-            // Contador de usuários (opcional)
-            async updateUserCount() {
-                try {
-                    // Simular contagem de usuários
-                    const userCount = Math.floor(Math.random() * 1000) + 5000
-                    const countElement = document.getElementById('userCount')
-                    
-                    if (countElement) {
-                        this.animateCount(countElement, 0, userCount, 2000)
-                    }
-                } catch (error) {
-                    console.error('Erro ao atualizar contador:', error)
-                }
-            }
-
-            // Animação de contagem
-            animateCount(element, start, end, duration) {
-                let startTimestamp = null
-                const step = (timestamp) => {
-                    if (!startTimestamp) startTimestamp = timestamp
-                    const progress = Math.min((timestamp - startTimestamp) / duration, 1)
-                    const value = Math.floor(progress * (end - start) + start)
-                    element.textContent = value.toLocaleString('pt-BR')
-                    
-                    if (progress < 1) {
-                        window.requestAnimationFrame(step)
-                    }
-                }
-                window.requestAnimationFrame(step)
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(30px)';
+                    el.style.transition = 'all 0.6s ease';
+                    observer.observe(el);
+                });
             }
         }
 
         // Inicializar quando o DOM carregar
         document.addEventListener('DOMContentLoaded', () => {
-            new IndexPage()
-        })
+            new IndexPage();
+        });
 
-        // Adicionar newsletter section opcional no footer
-        function adicionarNewsletter() {
-            const footerColumns = document.querySelector('.footer-content')
-            if (footerColumns) {
-                const newsletterColumn = document.createElement('div')
-                newsletterColumn.className = 'footer-column'
-                newsletterColumn.innerHTML = `
-                    <h3>Newsletter</h3>
-                    <p>Receba novidades e dicas de relacionamento</p>
-                    <form id="newsletterForm" class="newsletter-form">
-                        <input type="email" placeholder="Seu melhor email" required>
-                        <button type="submit" class="btn btn-primary">Inscrever</button>
-                    </form>
-                `
-                footerColumns.appendChild(newsletterColumn)
-            }
-        }
-
-        // Estilos para newsletter
+        // Adicionar estilos para newsletter (opcional)
         const newsletterStyles = `
             .newsletter-form {
                 display: flex;
@@ -414,16 +323,12 @@
                     flex-direction: column;
                 }
             }
-        `
+        `;
 
         // Adicionar estilos da newsletter
-        const styleSheet = document.createElement('style')
-        styleSheet.textContent = newsletterStyles
-        document.head.appendChild(styleSheet)
-
-        // Adicionar seção de newsletter (opcional)
-        // adicionarNewsletter()
-
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = newsletterStyles;
+        document.head.appendChild(styleSheet);
     </script>
 </body>
 </html>

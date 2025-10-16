@@ -1,11 +1,12 @@
-/* 📄 /styles/pages.css - ESTILOS ESPECÍFICOS POR PÁGINA */
+/* 📄 styles-pages.css - ESTILOS ESPECÍFICOS POR PÁGINA */
 
 /* ==================== INDEX.HTML ==================== */
 
 /* Hero Section */
 .hero {
-    padding: 5rem 0;
-    background: linear-gradient(rgba(246, 236, 197, 0.9), rgba(246, 236, 197, 0.9)), url('../assets/images/casal.jpg') center/cover no-repeat;
+    padding: 6rem 0;
+    background: linear-gradient(135deg, var(--vermelho-rosado), var(--lilas));
+    color: var(--branco);
     text-align: center;
 }
 
@@ -17,14 +18,15 @@
 .hero h2 {
     font-size: 3rem;
     margin-bottom: 1.5rem;
-    color: var(--vermelho-rosado);
+    color: var(--branco);
     line-height: 1.2;
 }
 
 .hero p {
     font-size: 1.2rem;
     margin-bottom: 2rem;
-    color: var(--text-light);
+    color: var(--branco);
+    opacity: 0.9;
 }
 
 .btn-large {
@@ -197,6 +199,7 @@
     max-width: 700px;
     margin-left: auto;
     margin-right: auto;
+    opacity: 0.9;
 }
 
 .btn-light {
@@ -600,8 +603,16 @@
     }
 
     /* Index Mobile */
+    .hero {
+        padding: 4rem 0;
+    }
+
     .hero h2 {
         font-size: 2.2rem;
+    }
+
+    .hero p {
+        font-size: 1.1rem;
     }
 
     .steps {
@@ -613,7 +624,6 @@
         grid-template-columns: 1fr;
     }
 
-    .hero,
     .features,
     .how-it-works,
     .testimonials,
