@@ -5,15 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro - Amor Conect</title>
     
-    <!-- CSS MODULAR -->
-    <link rel="stylesheet" href="css/globals.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/auth.css">
+    <!-- CSS CORRIGIDO -->
+    <link rel="stylesheet" href="globals.css">
+    <link rel="stylesheet" href="components.css">
     
     <!-- CSS ESPECÍFICO DO CADASTRO -->
     <style>
         /* ==================== CADASTRO CSS ==================== */
-        /* Estilos específicos para manter IDÊNTICO ao original */
         
         .auth-container {
             width: 90%;
@@ -23,7 +21,7 @@
             box-shadow: var(--shadow);
             padding: 3rem;
             border: 1px solid var(--lilas);
-            margin: 0 auto;
+            margin: 2rem auto;
         }
 
         .auth-header {
@@ -32,13 +30,11 @@
         }
 
         .auth-logo {
-            width: 250px;
-            height: 250px;
-            margin: -25px auto 1rem auto;
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 1rem auto;
             object-fit: contain;
             display: block;
-            position: relative;
-            z-index: 1;
         }
 
         .auth-header h1 {
@@ -72,7 +68,7 @@
             border-top: 1px solid var(--lilas);
         }
 
-        /* Password Requirements - IDÊNTICO AO ORIGINAL */
+        /* Password Requirements */
         .password-requirements {
             background: var(--bege);
             padding: 1rem;
@@ -97,7 +93,6 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            transition: var(--transition);
         }
 
         .requirement-met {
@@ -172,19 +167,43 @@
             text-decoration: underline;
         }
 
-        /* Responsividade IDÊNTICA */
+        /* Alertas */
+        .alert {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .alert-error {
+            background: #fed7d7;
+            border: 1px solid #feb2b2;
+            color: #c53030;
+        }
+
+        .alert-success {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            color: #276749;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 1rem;
+            color: var(--vermelho-rosado);
+        }
+
+        /* Responsividade */
         @media (max-width: 768px) {
             .auth-container {
-                padding: 2.5rem;
+                padding: 2rem;
                 margin: 1rem auto;
-                width: 95%;
-                max-width: 450px;
             }
 
             .auth-logo {
-                width: 130px;
-                height: 130px;
-                margin: -20px auto 0.8rem auto;
+                width: 120px;
+                height: 120px;
             }
 
             .auth-header h1 {
@@ -198,39 +217,16 @@
 
         @media (max-width: 480px) {
             .auth-container {
-                padding: 2rem;
-                margin: 1rem auto;
-                width: 95%;
+                padding: 1.5rem;
             }
 
             .auth-logo {
-                width: 80px;
-                height: 80px;
+                width: 100px;
+                height: 100px;
             }
 
             .auth-header h1 {
                 font-size: 1.8rem;
-            }
-
-            .auth-header p {
-                font-size: 0.95rem;
-            }
-        }
-
-        @media (max-width: 360px) {
-            .auth-container {
-                padding: 1.5rem;
-                margin: 0.5rem auto;
-                width: 98%;
-            }
-
-            .auth-logo {
-                width: 70px;
-                height: 70px;
-            }
-
-            .auth-header h1 {
-                font-size: 1.6rem;
             }
         }
     </style>
@@ -304,25 +300,15 @@
                         <input type="password" id="password" class="form-control" required>
                         <div id="passwordError" class="error-message"></div>
                         
-                        <!-- REQUISITOS DA SENHA - IDÊNTICO AO ORIGINAL -->
+                        <!-- REQUISITOS DA SENHA -->
                         <div class="password-requirements">
                             <h4>Requisitos da senha:</h4>
                             <ul class="requirements-list">
-                                <li id="reqLength" class="requirement-unmet">
-                                    Mínimo 8 caracteres
-                                </li>
-                                <li id="reqUppercase" class="requirement-unmet">
-                                    Pelo menos 1 letra maiúscula (A-Z)
-                                </li>
-                                <li id="reqLowercase" class="requirement-unmet">
-                                    Pelo menos 1 letra minúscula (a-z)
-                                </li>
-                                <li id="reqNumber" class="requirement-unmet">
-                                    Pelo menos 1 número (0-9)
-                                </li>
-                                <li id="reqSpecial" class="requirement-unmet">
-                                    Pelo menos 1 símbolo (!@#$% etc.)
-                                </li>
+                                <li id="reqLength" class="requirement-unmet">Mínimo 8 caracteres</li>
+                                <li id="reqUppercase" class="requirement-unmet">Pelo menos 1 letra maiúscula</li>
+                                <li id="reqLowercase" class="requirement-unmet">Pelo menos 1 letra minúscula</li>
+                                <li id="reqNumber" class="requirement-unmet">Pelo menos 1 número</li>
+                                <li id="reqSpecial" class="requirement-unmet">Pelo menos 1 símbolo</li>
                             </ul>
                             <div class="password-strength">
                                 <div id="strengthBar" class="strength-bar"></div>
@@ -341,7 +327,7 @@
                         <input type="checkbox" id="terms" required>
                         <label for="terms">
                             Concordo com os <a href="#">Termos de Serviço</a> e 
-                            <a href="#">Política de Privacidade</a> do Amor Conect
+                            <a href="#">Política de Privacidade</a>
                         </label>
                     </div>
 
@@ -363,7 +349,7 @@
             <div class="footer-content">
                 <div class="footer-column">
                     <h3>Amor Conect</h3>
-                    <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+                    <p>Uma plataforma segura e discreta para conectar corações.</p>
                 </div>
                 <div class="footer-column">
                     <h3>Links Rápidos</h3>
@@ -388,14 +374,13 @@
         </div>
     </footer>
 
-    <!-- SCRIPTS -->
-    <script src="js/globals.js"></script>
-    <script src="js/auth.js"></script>
+    <!-- SCRIPTS CORRIGIDOS -->
+    <script src="globals.js"></script>
+    <script src="auth.js"></script>
     
     <!-- JS ESPECÍFICO DO CADASTRO -->
     <script>
         // ==================== CADASTRO JS ====================
-        // Lógica específica do cadastro - IDÊNTICA AO ORIGINAL
 
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📝 Cadastro.js inicializando...');
@@ -412,7 +397,6 @@
             setupRegisterForm();
         }
 
-        // Configurar validações em tempo real
         function setupRegisterForm() {
             const form = document.getElementById('registerForm');
             
@@ -427,11 +411,9 @@
                 validatePasswordRealTime();
             });
             document.getElementById('confirmPassword').addEventListener('blur', validateConfirmPassword);
-
-            // O submit é tratado pelo auth.js
         }
 
-        // Funções de validação em tempo real
+        // Funções de validação
         function validateName(e) {
             const field = e.target;
             const errorElement = document.getElementById(field.id + 'Error');
@@ -526,7 +508,7 @@
             }
         }
 
-        // Sistema de requisitos de senha em tempo real
+        // Sistema de requisitos de senha
         function updatePasswordRequirements(password) {
             const { requirements, strength } = checkPasswordStrength(password);
             const requirementElements = {
