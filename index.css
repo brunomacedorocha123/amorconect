@@ -55,14 +55,9 @@ body {
     width: 100%;
 }
 
-/* LOGO 3X MAIOR - Só a imagem aumenta */
-.logo {
-    transform: scale(3); /* 3x maior */
-    transform-origin: left center;
-}
-
+/* LOGO BEM GRANDE E LEGÍVEL */
 .logo img {
-    height: 100px; /* Controla o tamanho base */
+    height: 65px; /* BEM GRANDE */
     width: auto;
     display: block;
 }
@@ -147,10 +142,10 @@ body {
 .hero-image {
     position: absolute;
     top: 50%;
-    right: 8%; /* Não colado na borda */
+    right: 8%;
     width: 380px;
     height: 500px;
-    transform: translateY(-50%); /* Centralizada verticalmente */
+    transform: translateY(-50%);
 }
 
 .hero-image img {
@@ -348,17 +343,12 @@ body {
     margin-bottom: var(--space-lg);
 }
 
-/* LOGO DO FOOTER 100% MAIOR */
-.footer-logo {
-    transform: scale(2); /* 100% maior (dobrou) */
-    transform-origin: left center;
-    margin-bottom: var(--space-md);
-}
-
+/* LOGO DO FOOTER MAIOR */
 .footer-logo img {
-    height: 40px;
+    height: 50px; /* Logo do footer maior */
     width: auto;
     display: block;
+    margin-bottom: var(--space-md);
 }
 
 .footer-section h3 {
@@ -414,12 +404,12 @@ body {
         height: 460px;
     }
     
-    .logo {
-        transform: scale(2.5);
+    .logo img {
+        height: 60px;
     }
     
-    .footer-logo {
-        transform: scale(1.8);
+    .footer-logo img {
+        height: 45px;
     }
 }
 
@@ -428,12 +418,8 @@ body {
         height: 70px;
     }
     
-    .logo {
-        transform: scale(2);
-    }
-    
     .logo img {
-        height: 25px;
+        height: 50px;
     }
     
     .nav {
@@ -473,10 +459,19 @@ body {
         font-size: 2.2rem;
     }
     
-    .footer-logo {
-        transform: scale(1.5);
-        transform-origin: center;
-        text-align: center;
+    .features-grid,
+    .testimonials-grid,
+    .steps,
+    .footer-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .section-title h2 {
+        font-size: 2rem;
+    }
+    
+    .footer-logo img {
+        height: 40px;
         margin: 0 auto var(--space-md);
     }
 }
