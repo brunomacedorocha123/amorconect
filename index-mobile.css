@@ -8,16 +8,31 @@
 
 .logo {
     order: 1;
+    z-index: 1002;
 }
 
 .logo img {
     height: 40px;
+    z-index: 1003;
 }
 
 .menu-toggle {
     display: flex;
     order: 2;
     margin-left: auto;
+    z-index: 1002;
+}
+
+.menu-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(6px, 6px);
+}
+
+.menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.menu-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(6px, -6px);
 }
 
 .auth-buttons {
@@ -30,6 +45,7 @@
     width: 100%;
     display: none;
     margin-top: var(--space-sm);
+    z-index: 1001;
 }
 
 .nav.active {
@@ -43,6 +59,7 @@
     border-radius: var(--radius);
     padding: var(--space-sm);
     box-shadow: var(--shadow-lg);
+    z-index: 1001;
 }
 
 .nav-list a {
@@ -51,6 +68,7 @@
     padding: var(--space-sm);
     margin: 2px 0;
     text-align: center;
+    z-index: 1001;
 }
 
 .nav-list a:hover {
@@ -81,6 +99,11 @@
     width: 100%;
     height: 300px;
     margin-top: var(--space-md);
+}
+
+.hero-image img {
+    border: 4px solid var(--white);
+    border-radius: 12px;
 }
 
 /* Features Mobile */
@@ -167,6 +190,7 @@
     .auth-buttons {
         display: flex;
         order: 2;
+        z-index: 1001;
     }
     
     .menu-toggle {
