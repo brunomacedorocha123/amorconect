@@ -1,8 +1,8 @@
 /* ========== VARIÁVEIS GLOBAIS ========== */
 :root {
-    --primary: #722F37;
-    --secondary: #C9A227;
-    --background: #F9F5F0;
+    --primary: #722F37;      /* Vinho */
+    --secondary: #C9A227;    /* Dourado */
+    --background: #F9F5F0;   /* Off-white */
     --white: #ffffff;
     --text: #1f1f1f;
     --text-light: #666666;
@@ -34,15 +34,18 @@ body {
     padding: 0 var(--space-md);
 }
 
-/* ========== HEADER SIMPLES ========== */
+/* ========== HEADER COM LOGO GRANDE ========== */
 .header {
     background: var(--white);
-    padding: 1rem 0;
+    padding: 0.8rem 0;
     position: sticky;
     top: 0;
     z-index: 1000;
     box-shadow: var(--shadow);
     border-bottom: 2px solid var(--secondary);
+    height: 80px; /* Altura fixa */
+    display: flex;
+    align-items: center;
 }
 
 .header-content {
@@ -50,11 +53,18 @@ body {
     justify-content: space-between;
     align-items: center;
     gap: var(--space-md);
+    width: 100%;
 }
 
-/* LOGO SIMPLES - VAI APARECER */
+/* LOGO GRANDE - CRESCE SEM EXPANDIR HEADER */
+.logo {
+    transform: scale(1.8); /* Logo 80% maior */
+    transform-origin: left center; /* Cresce a partir da esquerda */
+    margin-left: 10px;
+}
+
 .logo img {
-    height: 50px;
+    height: 35px; /* Base menor, mas escala aumenta */
     width: auto;
     display: block;
 }
@@ -141,18 +151,25 @@ body {
     border-radius: 2px;
 }
 
-/* ========== HERO SECTION ========== */
+/* ========== HERO SECTION COM IMAGEM DE FUNDO ========== */
 .hero {
     padding: var(--space-xl) 0;
-    background: var(--background);
+    background: 
+        linear-gradient(rgba(249, 245, 240, 0.7), rgba(249, 245, 240, 0.7)),
+        url('casal.jpg') center/cover no-repeat;
     position: relative;
-    min-height: 500px;
+    min-height: 600px;
     display: flex;
     align-items: center;
 }
 
 .hero-content {
     max-width: 600px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: var(--space-lg);
+    border-radius: var(--radius);
+    border: 2px solid var(--secondary);
+    box-shadow: var(--shadow);
 }
 
 .hero-content h1 {
@@ -169,27 +186,7 @@ body {
     line-height: 1.6;
 }
 
-/* IMAGEM 20% MENOR COM BORDA VINHO */
-.hero-image {
-    position: absolute;
-    top: 50%;
-    right: 5%;
-    width: 35%; /* 20% menor */
-    height: 70%;
-    transform: translateY(-50%);
-}
-
-.hero-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    border: 8px solid var(--primary); /* Borda vinho */
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-}
-
-/* ========== FEATURES ========== */
+/* ========== FEATURES COM CARDS VINHO ========== */
 .features {
     padding: var(--space-xl) 0;
     background: var(--white);
@@ -220,22 +217,31 @@ body {
     margin-top: var(--space-lg);
 }
 
+/* CARDS VINHO COM LETRAS DOURADAS */
 .feature-card {
-    background: var(--background);
+    background: var(--primary); /* Fundo vinho */
     padding: var(--space-lg);
     border-radius: var(--radius);
     text-align: center;
-    border: 1px solid rgba(114, 47, 55, 0.2);
+    border: 2px solid var(--secondary);
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow);
 }
 
 .feature-card h3 {
-    color: var(--primary);
+    color: var(--secondary); /* Letras douradas */
     margin-bottom: var(--space-sm);
+    font-size: 1.3rem;
 }
 
 .feature-card p {
-    color: var(--text-light);
+    color: var(--secondary); /* Letras douradas */
     line-height: 1.6;
+    opacity: 0.9;
 }
 
 /* ========== HOW IT WORKS ========== */
@@ -254,19 +260,22 @@ body {
 .step {
     text-align: center;
     padding: var(--space-lg);
-    background: var(--white);
+    background: var(--primary); /* Card vinho */
     border-radius: var(--radius);
-    border: 1px solid rgba(114, 47, 55, 0.2);
+    border: 2px solid var(--secondary);
+    color: var(--secondary); /* Texto dourado */
 }
 
 .step h3 {
-    color: var(--primary);
+    color: var(--secondary);
     margin-bottom: var(--space-sm);
+    font-size: 1.2rem;
 }
 
 .step p {
-    color: var(--text-light);
+    color: var(--secondary);
     line-height: 1.6;
+    opacity: 0.9;
 }
 
 /* ========== TESTIMONIALS ========== */
@@ -283,30 +292,31 @@ body {
 }
 
 .testimonial-card {
-    background: var(--background);
+    background: var(--primary); /* Card vinho */
     padding: var(--space-lg);
     border-radius: var(--radius);
-    border: 1px solid rgba(114, 47, 55, 0.2);
+    border: 2px solid var(--secondary);
+    color: var(--secondary); /* Texto dourado */
 }
 
 .testimonial-card p {
     font-style: italic;
-    color: var(--text);
     margin-bottom: var(--space-sm);
     line-height: 1.6;
+    opacity: 0.9;
 }
 
 .author {
-    color: var(--primary);
     font-weight: 600;
     font-size: 0.9rem;
+    opacity: 0.9;
 }
 
 /* ========== CTA ========== */
 .cta {
     padding: var(--space-xl) 0;
     background: var(--primary);
-    color: var(--white);
+    color: var(--secondary);
     text-align: center;
 }
 
@@ -318,13 +328,14 @@ body {
 .cta h2 {
     font-size: 2.2rem;
     margin-bottom: var(--space-md);
-    color: var(--white);
+    color: var(--secondary);
 }
 
 .cta p {
     font-size: 1.1rem;
     margin-bottom: var(--space-lg);
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--secondary);
+    opacity: 0.9;
 }
 
 .cta .btn-primary {

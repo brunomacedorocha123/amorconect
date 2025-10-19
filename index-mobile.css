@@ -1,17 +1,24 @@
 /* ========== MOBILE STYLES ========== */
 
 /* Header Mobile */
+.header {
+    height: 70px;
+    padding: 0.5rem 0;
+}
+
 .header-content {
     flex-wrap: wrap;
     gap: 1rem;
 }
 
 .logo {
-    order: 1;
+    transform: scale(1.4); /* Logo menor no mobile */
+    transform-origin: left center;
+    margin-left: 5px;
 }
 
 .logo img {
-    height: 40px;
+    height: 30px;
 }
 
 .menu-toggle {
@@ -56,8 +63,16 @@
 /* Hero Mobile */
 .hero {
     padding: 3rem 0;
-    min-height: auto;
-    text-align: center;
+    min-height: 500px;
+    background: 
+        linear-gradient(rgba(249, 245, 240, 0.8), rgba(249, 245, 240, 0.8)),
+        url('casal.jpg') center/cover no-repeat;
+}
+
+.hero-content {
+    max-width: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 1.5rem;
 }
 
 .hero-content h1 {
@@ -66,20 +81,6 @@
 
 .hero-content p {
     font-size: 1rem;
-}
-
-.hero-image {
-    position: relative;
-    width: 100%;
-    height: 250px;
-    margin-top: 2rem;
-    right: auto;
-    top: auto;
-    transform: none;
-}
-
-.hero-image img {
-    border: 4px solid var(--primary);
 }
 
 /* Features Mobile */
@@ -161,6 +162,10 @@
 @media (min-width: 481px) and (max-width: 768px) {
     .header-content {
         flex-wrap: nowrap;
+    }
+    
+    .logo {
+        transform: scale(1.6);
     }
     
     .auth-buttons {
