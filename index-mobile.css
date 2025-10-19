@@ -1,6 +1,5 @@
 /* ========== MOBILE STYLES ========== */
 
-/* Header Mobile */
 .header {
     height: 70px;
     padding: 0.5rem 0;
@@ -71,20 +70,25 @@
     text-align: center;
 }
 
-/* Hero Mobile */
 .hero {
     padding: 2rem 0;
-    min-height: 70vh;
-    background: linear-gradient(135deg, rgba(114, 47, 55, 0.5), rgba(201, 162, 39, 0.4)), url('casal.jpg') center/cover no-repeat;
+    min-height: auto;
+    text-align: center;
+}
+
+.hero-image {
+    position: relative;
+    width: 250px;
+    height: 300px;
+    margin: 2rem auto;
+    right: auto;
+    top: auto;
+    transform: none;
 }
 
 .hero-content {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 2rem 1.5rem;
-    margin: 0 1rem;
-    border-radius: var(--radius);
-    border: 2px solid var(--secondary);
-    box-shadow: var(--shadow);
+    max-width: 100%;
+    text-align: center;
 }
 
 .hero-content h1 {
@@ -95,7 +99,6 @@
     font-size: 1rem;
 }
 
-/* Features Mobile */
 .features {
     padding: 2rem 0;
 }
@@ -114,7 +117,6 @@
     padding: 1.5rem;
 }
 
-/* How It Works Mobile */
 .how-it-works {
     padding: 2rem 0;
 }
@@ -129,7 +131,6 @@
     padding: 1.5rem;
 }
 
-/* Testimonials Mobile */
 .testimonials {
     padding: 2rem 0;
 }
@@ -144,7 +145,6 @@
     padding: 1.5rem;
 }
 
-/* CTA Mobile */
 .cta {
     padding: 2rem 0;
 }
@@ -157,7 +157,6 @@
     font-size: 1rem;
 }
 
-/* Footer Mobile */
 .footer {
     padding: 2rem 0 1rem;
 }
@@ -169,12 +168,10 @@
     padding: 0 1rem;
 }
 
-/* Container mobile */
 .container {
     padding: 0 1rem;
 }
 
-/* ========== TABLET ========== */
 @media (min-width: 481px) and (max-width: 768px) {
     .header-content {
         flex-wrap: nowrap;
@@ -208,11 +205,6 @@
         color: var(--primary);
         padding: 0.5rem 1rem;
         font-size: 0.9rem;
-    }
-    
-    .hero-content {
-        max-width: 500px;
-        padding: 2.5rem;
     }
     
     .hero-content h1 {
