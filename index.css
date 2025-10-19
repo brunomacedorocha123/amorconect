@@ -55,15 +55,14 @@ body {
     width: 100%;
 }
 
-/* LOGO ENORME - Aumentei 100% */
+/* LOGO 3X MAIOR - Só a imagem aumenta */
 .logo {
-    transform: scale(3);
+    transform: scale(3); /* 3x maior */
     transform-origin: left center;
-    margin-left: 0.5rem;
 }
 
 .logo img {
-    height: 30px;
+    height: 30px; /* Controla o tamanho base */
     width: auto;
     display: block;
 }
@@ -138,20 +137,20 @@ body {
 .hero {
     padding: var(--space-xl) 0;
     position: relative;
-    min-height: 650px;
+    min-height: 600px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     background: var(--background);
 }
 
-/* IMAGEM DO CASAL - Aumentada e reposicionada */
+/* IMAGEM DO CASAL - Lado direito, centralizada vertical */
 .hero-image {
-    position: relative;
-    width: 420px;
-    height: 550px;
-    flex-shrink: 0;
-    margin-left: 2rem;
+    position: absolute;
+    top: 50%;
+    right: 8%; /* Não colado na borda */
+    width: 380px;
+    height: 500px;
+    transform: translateY(-50%); /* Centralizada verticalmente */
 }
 
 .hero-image img {
@@ -167,7 +166,6 @@ body {
 .hero-content {
     max-width: 550px;
     text-align: left;
-    flex: 1;
 }
 
 .hero-content h1 {
@@ -335,32 +333,45 @@ body {
     color: var(--primary);
 }
 
-/* ========== FOOTER GRANDE ========== */
+/* ========== FOOTER ========== */
 .footer {
     background: var(--background);
     color: var(--primary);
-    padding: var(--space-xl) 0 var(--space-lg); /* Aumentei o padding */
+    padding: var(--space-xl) 0 var(--space-lg);
     border-top: 3px solid var(--secondary);
 }
 
 .footer-content {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr;
-    gap: var(--space-xl); /* Aumentei o gap */
+    gap: var(--space-xl);
     margin-bottom: var(--space-lg);
+}
+
+/* LOGO DO FOOTER 100% MAIOR */
+.footer-logo {
+    transform: scale(2); /* 100% maior (dobrou) */
+    transform-origin: left center;
+    margin-bottom: var(--space-md);
+}
+
+.footer-logo img {
+    height: 40px;
+    width: auto;
+    display: block;
 }
 
 .footer-section h3 {
     color: var(--primary);
     margin-bottom: var(--space-md);
-    font-size: 1.4rem; /* Aumentei o tamanho da fonte */
+    font-size: 1.4rem;
 }
 
 .footer-section p {
     color: var(--primary);
     margin-bottom: var(--space-sm);
     opacity: 0.9;
-    font-size: 1.1rem; /* Aumentei o tamanho da fonte */
+    font-size: 1.1rem;
     line-height: 1.8;
 }
 
@@ -369,7 +380,7 @@ body {
 }
 
 .footer-section ul li {
-    margin-bottom: 1rem; /* Aumentei o espaçamento */
+    margin-bottom: 1rem;
 }
 
 .footer-section ul a {
@@ -377,7 +388,7 @@ body {
     text-decoration: none;
     opacity: 0.8;
     transition: all 0.3s ease;
-    font-size: 1.1rem; /* Aumentei o tamanho da fonte */
+    font-size: 1.1rem;
 }
 
 .footer-section ul a:hover {
@@ -397,31 +408,18 @@ body {
 
 /* ========== RESPONSIVE DESIGN ========== */
 @media (max-width: 1024px) {
-    .hero {
-        min-height: 600px;
-    }
-    
     .hero-image {
-        width: 380px;
-        height: 500px;
-    }
-    
-    .hero-content h1 {
-        font-size: 2.8rem;
-    }
-    
-    .features-grid,
-    .testimonials-grid,
-    .steps {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .footer-content {
-        grid-template-columns: 1fr 1fr;
+        right: 3%;
+        width: 350px;
+        height: 460px;
     }
     
     .logo {
         transform: scale(2.5);
+    }
+    
+    .footer-logo {
+        transform: scale(1.8);
     }
 }
 
@@ -453,71 +451,32 @@ body {
     .hero {
         min-height: auto;
         padding: var(--space-lg) 0;
-        flex-direction: column;
         text-align: center;
     }
     
     .hero-image {
+        position: relative;
         width: 320px;
         height: 420px;
         margin: var(--space-md) auto;
-        order: 2;
+        right: auto;
+        top: auto;
+        transform: none;
     }
     
     .hero-content {
         text-align: center;
         max-width: 100%;
-        order: 1;
     }
     
     .hero-content h1 {
         font-size: 2.2rem;
     }
     
-    .features-grid,
-    .testimonials-grid,
-    .steps,
-    .footer-content {
-        grid-template-columns: 1fr;
-    }
-    
-    .section-title h2 {
-        font-size: 2rem;
-    }
-    
-    .footer {
-        padding: var(--space-lg) 0 var(--space-md);
-    }
-}
-
-@media (max-width: 480px) {
-    .container {
-        padding: 0 var(--space-sm);
-    }
-    
-    .hero-content h1 {
-        font-size: 1.8rem;
-    }
-    
-    .hero-image {
-        width: 280px;
-        height: 370px;
-    }
-    
-    .logo {
-        transform: scale(1.8);
-    }
-    
-    .logo img {
-        height: 22px;
-    }
-    
-    .footer-section h3 {
-        font-size: 1.2rem;
-    }
-    
-    .footer-section p,
-    .footer-section ul a {
-        font-size: 1rem;
+    .footer-logo {
+        transform: scale(1.5);
+        transform-origin: center;
+        text-align: center;
+        margin: 0 auto var(--space-md);
     }
 }

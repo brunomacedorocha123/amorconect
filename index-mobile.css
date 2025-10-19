@@ -10,15 +10,14 @@
     gap: 1rem;
 }
 
-/* LOGO MAIOR PARA MOBILE */
+/* LOGO 3X MAIOR NO MOBILE TAMBÉM */
 .logo {
-    transform: scale(2.2);
+    transform: scale(2.5);
     transform-origin: left center;
-    margin-left: 0.5rem;
 }
 
 .logo img {
-    height: 35px;
+    height: 30px;
 }
 
 .menu-toggle {
@@ -77,10 +76,8 @@
     padding: 2rem 0;
     min-height: auto;
     text-align: center;
-    flex-direction: column;
 }
 
-/* IMAGEM DO CASAL PARA MOBILE */
 .hero-image {
     position: relative;
     width: 300px;
@@ -89,23 +86,11 @@
     right: auto;
     top: auto;
     transform: none;
-    order: 2;
-}
-
-.hero-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    border: 8px solid var(--primary);
-    border-radius: 12px;
-    box-shadow: var(--shadow);
 }
 
 .hero-content {
     max-width: 100%;
     text-align: center;
-    order: 1;
 }
 
 .hero-content h1 {
@@ -174,7 +159,7 @@
     font-size: 1rem;
 }
 
-/* FOOTER GRANDE PARA MOBILE */
+/* FOOTER MOBILE */
 .footer {
     padding: 3rem 0 1.5rem;
     background: var(--background);
@@ -186,6 +171,20 @@
     gap: 2.5rem;
     text-align: center;
     padding: 0 1rem;
+}
+
+/* LOGO DO FOOTER 100% MAIOR NO MOBILE */
+.footer-logo {
+    transform: scale(1.8);
+    transform-origin: center;
+    margin: 0 auto 1.5rem;
+}
+
+.footer-logo img {
+    height: 35px;
+    width: auto;
+    display: block;
+    margin: 0 auto;
 }
 
 .footer-section h3 {
@@ -276,11 +275,6 @@
         font-size: 2.5rem;
     }
     
-    .hero-image {
-        width: 350px;
-        height: 460px;
-    }
-    
     .features-grid {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -298,7 +292,7 @@
         text-align: left;
     }
     
-    .footer {
-        padding: 3.5rem 0 2rem;
+    .footer-logo {
+        transform-origin: left center;
     }
 }
