@@ -332,11 +332,12 @@ body {
     color: var(--primary);
 }
 
-/* ========== FOOTER ========== */
+/* ========== FOOTER CLARO ========== */
 .footer {
-    background: #2A1A1F;
-    color: var(--white);
+    background: var(--background); /* Fundo claro igual aos cards */
+    color: var(--primary); /* Letras vinho forte */
     padding: var(--space-lg) 0 var(--space-md);
+    border-top: 3px solid var(--secondary);
 }
 
 .footer-content {
@@ -347,14 +348,15 @@ body {
 }
 
 .footer-section h3 {
-    color: var(--secondary);
+    color: var(--primary); /* Títulos em vinho */
     margin-bottom: var(--space-sm);
     font-size: 1.1rem;
 }
 
 .footer-section p {
-    color: var(--gold-light);
+    color: var(--primary); /* Texto em vinho */
     margin-bottom: var(--space-sm);
+    opacity: 0.8;
 }
 
 .footer-section ul {
@@ -366,18 +368,22 @@ body {
 }
 
 .footer-section ul a {
-    color: var(--gold-light);
+    color: var(--primary); /* Links em vinho */
     text-decoration: none;
+    opacity: 0.8;
+    transition: all 0.3s ease;
 }
 
 .footer-section ul a:hover {
-    color: var(--secondary);
+    color: var(--primary);
+    opacity: 1;
 }
 
 .footer-bottom {
     text-align: center;
     padding-top: var(--space-md);
-    border-top: 1px solid rgba(201, 162, 39, 0.3);
-    color: var(--gold-light);
+    border-top: 1px solid var(--secondary);
+    color: var(--primary);
     font-size: 0.9rem;
+    opacity: 0.8;
 }
