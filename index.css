@@ -62,7 +62,7 @@ body {
 }
 
 .logo img {
-    height: 30px; /* Controla o tamanho base */
+    height: 100px; /* Controla o tamanho base */
     width: auto;
     display: block;
 }
