@@ -34,7 +34,7 @@ body {
     padding: 0 var(--space-md);
 }
 
-/* ========== HEADER SIMPLES E PROFISSIONAL ========== */
+/* ========== HEADER SIMPLES ========== */
 .header {
     background: var(--white);
     padding: 0;
@@ -55,9 +55,9 @@ body {
     width: 100%;
 }
 
-/* LOGO GRANDE +50% */
+/* LOGO GRANDE */
 .logo {
-    transform: scale(1.5); /* +50% do tamanho original */
+    transform: scale(1.5);
     transform-origin: left center;
 }
 
@@ -67,7 +67,7 @@ body {
     display: block;
 }
 
-/* NAVEGAÇÃO SIMPLES - SEM EFEITOS ESTRANHOS */
+/* NAVEGAÇÃO SIMPLES */
 .nav-list {
     display: flex;
     list-style: none;
@@ -88,7 +88,7 @@ body {
     color: var(--white);
 }
 
-/* BOTÕES SIMPLES */
+/* BOTÕES */
 .auth-buttons {
     display: flex;
     gap: var(--space-sm);
@@ -135,46 +135,25 @@ body {
     display: none;
 }
 
-/* ========== HERO SECTION FIXA ========== */
+/* ========== HERO SECTION CORRIGIDA ========== */
 .hero {
-    padding: 0;
+    padding: var(--space-xl) 0;
     position: relative;
-    height: 100vh; /* Tela inteira */
+    min-height: 80vh;
     display: flex;
     align-items: center;
-    justify-content: center;
-    overflow: hidden;
+    background: linear-gradient(135deg, rgba(114, 47, 55, 0.4), rgba(201, 162, 39, 0.3)), url('casal.jpg') center/cover no-repeat;
 }
 
-/* IMAGEM DE FUNDO FIXA - SÓ PARA O QUADRO */
-.hero-background {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: 
-        linear-gradient(rgba(114, 42, 55, 0.3), rgba(114, 42, 55, 0.3)),
-        url('casal.jpg') center/cover no-repeat;
-    z-index: 1;
-}
-
-/* QUADRO DO TÍTULO - FIXO NO CENTRO */
 .hero-content {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.92);
     padding: var(--space-xl);
     border-radius: var(--radius);
     border: 3px solid var(--secondary);
     box-shadow: var(--shadow);
     text-align: center;
     max-width: 600px;
-    position: relative;
-    z-index: 2;
-    /* FIXO - não rola com a página */
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    margin: 0 auto;
 }
 
 .hero-content h1 {
@@ -191,13 +170,10 @@ body {
     line-height: 1.6;
 }
 
-/* ========== FEATURES SIMPLES ========== */
+/* ========== FEATURES ========== */
 .features {
     padding: var(--space-xl) 0;
     background: var(--white);
-    position: relative;
-    z-index: 3;
-    margin-top: 100vh; /* Começa depois do hero */
 }
 
 .section-title {

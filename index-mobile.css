@@ -73,18 +73,18 @@
 
 /* Hero Mobile */
 .hero {
-    height: 100vh;
-    padding: 1rem;
+    padding: 2rem 0;
+    min-height: 70vh;
+    background: linear-gradient(135deg, rgba(114, 47, 55, 0.5), rgba(201, 162, 39, 0.4)), url('casal.jpg') center/cover no-repeat;
 }
 
 .hero-content {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    max-width: 400px;
+    background: rgba(255, 255, 255, 0.95);
     padding: 2rem 1.5rem;
+    margin: 0 1rem;
+    border-radius: var(--radius);
+    border: 2px solid var(--secondary);
+    box-shadow: var(--shadow);
 }
 
 .hero-content h1 {
@@ -97,7 +97,6 @@
 
 /* Features Mobile */
 .features {
-    margin-top: 100vh;
     padding: 2rem 0;
 }
 
