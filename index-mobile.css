@@ -1,34 +1,17 @@
 /* ========== MOBILE STYLES ========== */
 
 /* Header Mobile */
-.header {
-    padding: 1rem 0 0.5rem 0;
-}
-
 .header-content {
     flex-wrap: wrap;
-    gap: var(--space-sm);
+    gap: 1rem;
 }
 
-/* Logo Mobile - Ajustada */
 .logo {
-    position: relative;
-    left: auto;
-    top: auto;
-    transform: none;
-    margin: 0 auto;
     order: 1;
-    width: 100%;
-    text-align: center;
-    background: transparent;
-    padding: 0;
-    border: none;
-    box-shadow: none;
 }
 
 .logo img {
     height: 40px;
-    margin: 0 auto;
 }
 
 .menu-toggle {
@@ -46,7 +29,7 @@
     order: 4;
     width: 100%;
     display: none;
-    margin-top: var(--space-sm);
+    margin-top: 1rem;
 }
 
 .nav.active {
@@ -57,156 +40,127 @@
     flex-direction: column;
     gap: 0;
     background: var(--white);
-    border-radius: var(--radius);
-    padding: var(--space-sm);
-    box-shadow: var(--shadow-lg);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
 }
 
 .nav-list a {
     color: var(--primary);
     display: block;
-    padding: var(--space-sm);
+    padding: 1rem;
     margin: 2px 0;
     text-align: center;
 }
 
-.nav-list a:hover {
-    background: var(--secondary);
-    color: var(--white);
-}
-
 /* Hero Mobile */
 .hero {
-    padding: var(--space-lg) 0;
+    padding: 3rem 0;
     min-height: auto;
     text-align: center;
-    margin-top: 0;
-}
-
-.hero-content {
-    max-width: 100%;
-    margin-bottom: var(--space-lg);
 }
 
 .hero-content h1 {
-    font-size: 2.2rem;
+    font-size: 2rem;
 }
 
 .hero-content p {
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 .hero-image {
     position: relative;
     width: 100%;
-    height: 300px;
-    transform: none;
-    top: auto;
+    height: 250px;
+    margin-top: 2rem;
     right: auto;
+    top: auto;
+    transform: none;
 }
 
-.hero-image-frame {
-    padding: 12px;
-}
-
-.hero-image-frame::before {
-    top: 6px;
-    left: 6px;
-    right: 6px;
-    bottom: 6px;
+.hero-image img {
+    border: 4px solid var(--primary);
 }
 
 /* Features Mobile */
 .features {
-    padding: var(--space-lg) 0;
+    padding: 3rem 0;
 }
 
 .section-title h2 {
-    font-size: 2rem;
+    font-size: 1.8rem;
 }
 
 .features-grid {
     grid-template-columns: 1fr;
-    gap: var(--space-sm);
+    gap: 1rem;
 }
 
 .feature-card {
-    padding: var(--space-md);
+    padding: 1.5rem;
 }
 
 /* How It Works Mobile */
 .how-it-works {
-    padding: var(--space-lg) 0;
+    padding: 3rem 0;
 }
 
 .steps {
     grid-template-columns: 1fr;
-    gap: var(--space-md);
+    gap: 1rem;
 }
 
 .step {
-    padding: var(--space-md);
+    padding: 1.5rem;
 }
 
 /* Testimonials Mobile */
 .testimonials {
-    padding: var(--space-lg) 0;
+    padding: 3rem 0;
 }
 
 .testimonials-grid {
     grid-template-columns: 1fr;
-    gap: var(--space-md);
+    gap: 1rem;
 }
 
 .testimonial-card {
-    padding: var(--space-md);
+    padding: 1.5rem;
 }
 
 /* CTA Mobile */
 .cta {
-    padding: var(--space-lg) 0;
+    padding: 3rem 0;
 }
 
 .cta h2 {
-    font-size: 2rem;
+    font-size: 1.8rem;
 }
 
 .cta p {
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 /* Footer Mobile */
 .footer {
-    padding: var(--space-lg) 0 var(--space-md);
+    padding: 3rem 0 1.5rem;
 }
 
 .footer-content {
     grid-template-columns: 1fr;
-    gap: var(--space-lg);
+    gap: 2rem;
     text-align: center;
 }
 
-/* Container ajuste mobile */
+/* Container mobile */
 .container {
-    padding: 0 var(--space-sm);
+    padding: 0 1rem;
 }
 
 /* ========== TABLET ========== */
 @media (min-width: 481px) and (max-width: 768px) {
     .header-content {
         flex-wrap: nowrap;
-    }
-    
-    .logo {
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
-        width: auto;
-        background: var(--white);
-        padding: 8px 16px;
-        border: 2px solid var(--secondary);
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
     }
     
     .auth-buttons {
@@ -224,7 +178,6 @@
         display: block;
         width: auto;
         margin-top: 0;
-        margin-left: auto;
     }
     
     .nav-list {
@@ -236,12 +189,12 @@
     
     .nav-list a {
         color: var(--primary);
-        padding: var(--space-xs) var(--space-sm);
+        padding: 0.5rem 1rem;
         font-size: 0.9rem;
     }
     
     .hero-content h1 {
-        font-size: 2.8rem;
+        font-size: 2.5rem;
     }
     
     .features-grid {
