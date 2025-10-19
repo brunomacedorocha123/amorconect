@@ -3,18 +3,29 @@
 .header {
     height: 70px;
     padding: 0.5rem 0;
+    display: flex;
+    align-items: center;
 }
 
 .header-content {
     flex-wrap: wrap;
     gap: 1rem;
+    height: 100%;
+    align-items: center;
 }
 
-/* LOGO BEM GRANDE NO MOBILE */
+/* LOGO BEM GRANDE NO MOBILE - AUMENTADA SIGNIFICATIVAMENTE */
+.logo {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
 .logo img {
-    height: 55px; /* BEM GRANDE NO MOBILE */
+    height: 90px; /* AUMENTEI DE 55px PARA 90px - CRESCIMENTO SIGNIFICATIVO */
     width: auto;
     display: block;
+    object-fit: contain;
 }
 
 .menu-toggle {
@@ -180,12 +191,18 @@
     padding: 0 1rem;
 }
 
-/* LOGO DO FOOTER MAIOR NO MOBILE */
+/* LOGO DO FOOTER MAIOR NO MOBILE - AUMENTADA SIGNIFICATIVAMENTE */
+.footer-logo {
+    display: flex;
+    justify-content: center;
+}
+
 .footer-logo img {
-    height: 45px; /* Logo do footer maior no mobile */
+    height: 80px; /* AUMENTEI DE 45px PARA 80px - CRESCIMENTO SIGNIFICATIVO */
     width: auto;
     display: block;
     margin: 0 auto 1.5rem;
+    object-fit: contain;
 }
 
 .footer-section h3 {
@@ -243,7 +260,7 @@
     }
     
     .logo img {
-        height: 50px;
+        height: 85px; /* Mantém grande no tablet */
     }
     
     .auth-buttons {
@@ -303,6 +320,6 @@
     }
     
     .footer-logo img {
-        height: 40px;
+        height: 75px; /* Mantém grande no footer tablet */
     }
 }
