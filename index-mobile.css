@@ -10,12 +10,14 @@
     gap: 1rem;
 }
 
+/* LOGO MAIOR - Aumentei significativamente */
 .logo {
-    transform: scale(1.2);
+    transform: scale(1.8); /* Aumentei de 1.2 para 1.8 */
+    margin-left: 0.5rem;
 }
 
 .logo img {
-    height: 45px;
+    height: 50px; /* Aumentei de 45px para 50px */
 }
 
 .menu-toggle {
@@ -76,10 +78,11 @@
     text-align: center;
 }
 
+/* IMAGEM DO CASAL - Aumentada 30% e com posicionamento ajustado */
 .hero-image {
     position: relative;
-    width: 250px;
-    height: 300px;
+    width: 325px; /* Aumentei de 250px para 325px (30%) */
+    height: 390px; /* Aumentei de 300px para 390px (30%) */
     margin: 2rem auto;
     right: auto;
     top: auto;
@@ -157,9 +160,11 @@
     font-size: 1rem;
 }
 
-/* Footer Mobile */
+/* RODAPÉ - Fundo claro com texto em vinho */
 .footer {
     padding: 2rem 0 1rem;
+    background-color: var(--white); /* Fundo claro igual aos cards */
+    color: var(--primary); /* Texto em vinho */
 }
 
 .footer-content {
@@ -167,6 +172,17 @@
     gap: 2rem;
     text-align: center;
     padding: 0 1rem;
+}
+
+/* Garantir que todos os textos do footer fiquem em vinho */
+.footer h3,
+.footer p,
+.footer a {
+    color: var(--primary) !important;
+}
+
+.footer a:hover {
+    color: var(--secondary) !important; /* Cor diferente no hover para contraste */
 }
 
 .container {
@@ -210,6 +226,12 @@
     
     .hero-content h1 {
         font-size: 2.5rem;
+    }
+    
+    /* IMAGEM DO CASAL - Versão tablet também aumentada */
+    .hero-image {
+        width: 350px; /* Aumento proporcional para tablet */
+        height: 420px;
     }
     
     .features-grid {

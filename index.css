@@ -55,13 +55,15 @@ body {
     width: 100%;
 }
 
+/* LOGO BEM MAIOR - Aumentei significativamente */
 .logo {
-    transform: scale(1.5);
+    transform: scale(2); /* Aumentei de 1.5 para 2 */
     transform-origin: left center;
+    margin-left: 0.5rem;
 }
 
 .logo img {
-    height: 50px;
+    height: 60px; /* Aumentei de 50px para 60px */
     width: auto;
     display: block;
 }
@@ -136,19 +138,20 @@ body {
 .hero {
     padding: var(--space-xl) 0;
     position: relative;
-    min-height: 500px;
+    min-height: 600px; /* Aumentei a altura para acomodar a imagem maior */
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--background);
 }
 
+/* IMAGEM DO CASAL - Aumentada 30% e com posicionamento ajustado */
 .hero-image {
     position: absolute;
     top: 50%;
     right: 5%;
-    width: 300px;
-    height: 400px;
+    width: 390px; /* Aumentei de 300px para 390px (30%) */
+    height: 520px; /* Aumentei de 400px para 520px (30%) */
     transform: translateY(-50%);
 }
 
@@ -334,7 +337,7 @@ body {
 
 /* ========== FOOTER CLARO ========== */
 .footer {
-    background: var(--background); /* Fundo claro igual aos cards */
+    background: var(--background); /* Fundo claro igual ao background do site */
     color: var(--primary); /* Letras vinho forte */
     padding: var(--space-lg) 0 var(--space-md);
     border-top: 3px solid var(--secondary);
@@ -356,7 +359,7 @@ body {
 .footer-section p {
     color: var(--primary); /* Texto em vinho */
     margin-bottom: var(--space-sm);
-    opacity: 0.8;
+    opacity: 0.9;
 }
 
 .footer-section ul {
@@ -377,6 +380,7 @@ body {
 .footer-section ul a:hover {
     color: var(--primary);
     opacity: 1;
+    text-decoration: underline;
 }
 
 .footer-bottom {
@@ -386,4 +390,108 @@ body {
     color: var(--primary);
     font-size: 0.9rem;
     opacity: 0.8;
+}
+
+/* ========== RESPONSIVE DESIGN ========== */
+@media (max-width: 1024px) {
+    .hero-image {
+        width: 350px;
+        height: 460px;
+        right: 2%;
+    }
+    
+    .features-grid,
+    .testimonials-grid,
+    .steps {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .footer-content {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        height: 70px;
+    }
+    
+    .logo {
+        transform: scale(1.5);
+    }
+    
+    .logo img {
+        height: 45px;
+    }
+    
+    .nav {
+        display: none;
+    }
+    
+    .auth-buttons {
+        display: none;
+    }
+    
+    .menu-toggle {
+        display: flex;
+    }
+    
+    .hero {
+        min-height: auto;
+        padding: var(--space-lg) 0;
+        text-align: center;
+    }
+    
+    .hero-image {
+        position: relative;
+        width: 280px;
+        height: 360px;
+        margin: var(--space-md) auto;
+        right: auto;
+        top: auto;
+        transform: none;
+    }
+    
+    .hero-content {
+        text-align: center;
+        max-width: 100%;
+    }
+    
+    .hero-content h1 {
+        font-size: 2.2rem;
+    }
+    
+    .features-grid,
+    .testimonials-grid,
+    .steps,
+    .footer-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .section-title h2 {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0 var(--space-sm);
+    }
+    
+    .hero-content h1 {
+        font-size: 1.8rem;
+    }
+    
+    .hero-image {
+        width: 250px;
+        height: 320px;
+    }
+    
+    .logo {
+        transform: scale(1.3);
+    }
+    
+    .logo img {
+        height: 40px;
+    }
 }
