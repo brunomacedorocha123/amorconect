@@ -10,14 +10,15 @@
     gap: 1rem;
 }
 
-/* LOGO MAIOR - Aumentei significativamente */
+/* LOGO MAIOR PARA MOBILE */
 .logo {
-    transform: scale(1.8); /* Aumentei de 1.2 para 1.8 */
+    transform: scale(2.2);
+    transform-origin: left center;
     margin-left: 0.5rem;
 }
 
 .logo img {
-    height: 50px; /* Aumentei de 45px para 50px */
+    height: 35px;
 }
 
 .menu-toggle {
@@ -76,22 +77,35 @@
     padding: 2rem 0;
     min-height: auto;
     text-align: center;
+    flex-direction: column;
 }
 
-/* IMAGEM DO CASAL - Aumentada 30% e com posicionamento ajustado */
+/* IMAGEM DO CASAL PARA MOBILE */
 .hero-image {
     position: relative;
-    width: 325px; /* Aumentei de 250px para 325px (30%) */
-    height: 390px; /* Aumentei de 300px para 390px (30%) */
+    width: 300px;
+    height: 400px;
     margin: 2rem auto;
     right: auto;
     top: auto;
     transform: none;
+    order: 2;
+}
+
+.hero-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    border: 8px solid var(--primary);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
 }
 
 .hero-content {
     max-width: 100%;
     text-align: center;
+    order: 1;
 }
 
 .hero-content h1 {
@@ -160,29 +174,63 @@
     font-size: 1rem;
 }
 
-/* RODAPÉ - Fundo claro com texto em vinho */
+/* FOOTER GRANDE PARA MOBILE */
 .footer {
-    padding: 2rem 0 1rem;
-    background-color: var(--white); /* Fundo claro igual aos cards */
-    color: var(--primary); /* Texto em vinho */
+    padding: 3rem 0 1.5rem;
+    background: var(--background);
+    color: var(--primary);
 }
 
 .footer-content {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: 2.5rem;
     text-align: center;
     padding: 0 1rem;
 }
 
-/* Garantir que todos os textos do footer fiquem em vinho */
-.footer h3,
-.footer p,
-.footer a {
-    color: var(--primary) !important;
+.footer-section h3 {
+    color: var(--primary);
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
 }
 
-.footer a:hover {
-    color: var(--secondary) !important; /* Cor diferente no hover para contraste */
+.footer-section p {
+    color: var(--primary);
+    margin-bottom: 1rem;
+    opacity: 0.9;
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+
+.footer-section ul {
+    list-style: none;
+}
+
+.footer-section ul li {
+    margin-bottom: 0.8rem;
+}
+
+.footer-section ul a {
+    color: var(--primary);
+    text-decoration: none;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+    font-size: 1.05rem;
+}
+
+.footer-section ul a:hover {
+    color: var(--primary);
+    opacity: 1;
+    text-decoration: underline;
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 2px solid var(--secondary);
+    color: var(--primary);
+    font-size: 1rem;
+    opacity: 0.8;
 }
 
 .container {
@@ -228,10 +276,9 @@
         font-size: 2.5rem;
     }
     
-    /* IMAGEM DO CASAL - Versão tablet também aumentada */
     .hero-image {
-        width: 350px; /* Aumento proporcional para tablet */
-        height: 420px;
+        width: 350px;
+        height: 460px;
     }
     
     .features-grid {
@@ -248,5 +295,10 @@
     
     .footer-content {
         grid-template-columns: repeat(2, 1fr);
+        text-align: left;
+    }
+    
+    .footer {
+        padding: 3.5rem 0 2rem;
     }
 }

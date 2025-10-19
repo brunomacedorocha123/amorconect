@@ -55,15 +55,15 @@ body {
     width: 100%;
 }
 
-/* LOGO BEM MAIOR - Aumentei significativamente */
+/* LOGO ENORME - Aumentei 100% */
 .logo {
-    transform: scale(2); /* Aumentei de 1.5 para 2 */
+    transform: scale(3);
     transform-origin: left center;
     margin-left: 0.5rem;
 }
 
 .logo img {
-    height: 60px; /* Aumentei de 50px para 60px */
+    height: 30px;
     width: auto;
     display: block;
 }
@@ -138,21 +138,20 @@ body {
 .hero {
     padding: var(--space-xl) 0;
     position: relative;
-    min-height: 600px; /* Aumentei a altura para acomodar a imagem maior */
+    min-height: 650px;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     background: var(--background);
 }
 
-/* IMAGEM DO CASAL - Aumentada 30% e com posicionamento ajustado */
+/* IMAGEM DO CASAL - Aumentada e reposicionada */
 .hero-image {
-    position: absolute;
-    top: 50%;
-    right: 5%;
-    width: 390px; /* Aumentei de 300px para 390px (30%) */
-    height: 520px; /* Aumentei de 400px para 520px (30%) */
-    transform: translateY(-50%);
+    position: relative;
+    width: 420px;
+    height: 550px;
+    flex-shrink: 0;
+    margin-left: 2rem;
 }
 
 .hero-image img {
@@ -166,19 +165,20 @@ body {
 }
 
 .hero-content {
-    max-width: 500px;
+    max-width: 550px;
     text-align: left;
+    flex: 1;
 }
 
 .hero-content h1 {
-    font-size: 3rem;
+    font-size: 3.2rem;
     margin-bottom: var(--space-md);
     color: var(--primary);
     line-height: 1.2;
 }
 
 .hero-content p {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     margin-bottom: var(--space-lg);
     color: var(--text);
     line-height: 1.6;
@@ -335,31 +335,33 @@ body {
     color: var(--primary);
 }
 
-/* ========== FOOTER CLARO ========== */
+/* ========== FOOTER GRANDE ========== */
 .footer {
-    background: var(--background); /* Fundo claro igual ao background do site */
-    color: var(--primary); /* Letras vinho forte */
-    padding: var(--space-lg) 0 var(--space-md);
+    background: var(--background);
+    color: var(--primary);
+    padding: var(--space-xl) 0 var(--space-lg); /* Aumentei o padding */
     border-top: 3px solid var(--secondary);
 }
 
 .footer-content {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr;
-    gap: var(--space-lg);
-    margin-bottom: var(--space-md);
+    gap: var(--space-xl); /* Aumentei o gap */
+    margin-bottom: var(--space-lg);
 }
 
 .footer-section h3 {
-    color: var(--primary); /* Títulos em vinho */
-    margin-bottom: var(--space-sm);
-    font-size: 1.1rem;
+    color: var(--primary);
+    margin-bottom: var(--space-md);
+    font-size: 1.4rem; /* Aumentei o tamanho da fonte */
 }
 
 .footer-section p {
-    color: var(--primary); /* Texto em vinho */
+    color: var(--primary);
     margin-bottom: var(--space-sm);
     opacity: 0.9;
+    font-size: 1.1rem; /* Aumentei o tamanho da fonte */
+    line-height: 1.8;
 }
 
 .footer-section ul {
@@ -367,14 +369,15 @@ body {
 }
 
 .footer-section ul li {
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem; /* Aumentei o espaçamento */
 }
 
 .footer-section ul a {
-    color: var(--primary); /* Links em vinho */
+    color: var(--primary);
     text-decoration: none;
     opacity: 0.8;
     transition: all 0.3s ease;
+    font-size: 1.1rem; /* Aumentei o tamanho da fonte */
 }
 
 .footer-section ul a:hover {
@@ -385,19 +388,26 @@ body {
 
 .footer-bottom {
     text-align: center;
-    padding-top: var(--space-md);
-    border-top: 1px solid var(--secondary);
+    padding-top: var(--space-lg);
+    border-top: 2px solid var(--secondary);
     color: var(--primary);
-    font-size: 0.9rem;
+    font-size: 1.1rem;
     opacity: 0.8;
 }
 
 /* ========== RESPONSIVE DESIGN ========== */
 @media (max-width: 1024px) {
+    .hero {
+        min-height: 600px;
+    }
+    
     .hero-image {
-        width: 350px;
-        height: 460px;
-        right: 2%;
+        width: 380px;
+        height: 500px;
+    }
+    
+    .hero-content h1 {
+        font-size: 2.8rem;
     }
     
     .features-grid,
@@ -409,6 +419,10 @@ body {
     .footer-content {
         grid-template-columns: 1fr 1fr;
     }
+    
+    .logo {
+        transform: scale(2.5);
+    }
 }
 
 @media (max-width: 768px) {
@@ -417,11 +431,11 @@ body {
     }
     
     .logo {
-        transform: scale(1.5);
+        transform: scale(2);
     }
     
     .logo img {
-        height: 45px;
+        height: 25px;
     }
     
     .nav {
@@ -439,22 +453,21 @@ body {
     .hero {
         min-height: auto;
         padding: var(--space-lg) 0;
+        flex-direction: column;
         text-align: center;
     }
     
     .hero-image {
-        position: relative;
-        width: 280px;
-        height: 360px;
+        width: 320px;
+        height: 420px;
         margin: var(--space-md) auto;
-        right: auto;
-        top: auto;
-        transform: none;
+        order: 2;
     }
     
     .hero-content {
         text-align: center;
         max-width: 100%;
+        order: 1;
     }
     
     .hero-content h1 {
@@ -471,6 +484,10 @@ body {
     .section-title h2 {
         font-size: 2rem;
     }
+    
+    .footer {
+        padding: var(--space-lg) 0 var(--space-md);
+    }
 }
 
 @media (max-width: 480px) {
@@ -483,15 +500,24 @@ body {
     }
     
     .hero-image {
-        width: 250px;
-        height: 320px;
+        width: 280px;
+        height: 370px;
     }
     
     .logo {
-        transform: scale(1.3);
+        transform: scale(1.8);
     }
     
     .logo img {
-        height: 40px;
+        height: 22px;
+    }
+    
+    .footer-section h3 {
+        font-size: 1.2rem;
+    }
+    
+    .footer-section p,
+    .footer-section ul a {
+        font-size: 1rem;
     }
 }
