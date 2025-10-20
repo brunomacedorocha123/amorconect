@@ -5,7 +5,7 @@
     padding: 0.5rem 0;
     display: flex;
     align-items: center;
-    justify-content: center; /* CENTRALIZA O CONTEÚDO DO HEADER */
+    justify-content: center;
 }
 
 .header-content {
@@ -13,7 +13,7 @@
     gap: 1rem;
     height: 100%;
     align-items: center;
-    justify-content: center; /* CENTRALIZA O CONTEÚDO */
+    justify-content: center;
     width: 100%;
 }
 
@@ -21,18 +21,18 @@
 .logo {
     display: flex;
     align-items: center;
-    justify-content: center; /* CENTRALIZA A LOGO */
+    justify-content: center;
     height: 100%;
     width: 100%;
-    order: 1; /* GARANTE QUE FIQUE NO TOPO */
+    order: 1;
 }
 
 .logo img {
-    height: 110px; /* AUMENTEI DE 90px PARA 110px (+22%) */
+    height: 110px; /* AUMENTEI SIGNIFICATIVAMENTE */
     width: auto;
     display: block;
     object-fit: contain;
-    margin: 0 auto; /* CENTRALIZA HORIZONTALMENTE */
+    margin: 0 auto;
 }
 
 .menu-toggle {
@@ -46,7 +46,7 @@
     cursor: pointer;
     padding: 8px;
     position: absolute;
-    right: 20px; /* POSICIONA À DIREITA */
+    right: 20px;
 }
 
 .menu-toggle span {
@@ -191,7 +191,7 @@
     padding: 3rem 0 1.5rem;
     background: var(--background);
     color: var(--primary);
-    text-align: center; /* CENTRALIZA TODO O FOOTER */
+    text-align: center;
 }
 
 .footer-content {
@@ -201,26 +201,36 @@
     padding: 0 1rem;
 }
 
-/* LOGO DO FOOTER GRANDE NO MOBILE - CENTRALIZADA */
+/* LOGO DO FOOTER BEM GRANDE NO MOBILE - TAMANHO DE COELHO */
 .footer-logo {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    width: 100%;
+    justify-content: center;
+    text-align: center;
+    margin-bottom: 2rem;
 }
 
 .footer-logo img {
-    height: 110px; /* MESMO TAMANHO DA LOGO DO HEADER MOBILE - 110px */
+    height: 150px; /* AUMENTEI SIGNIFICATIVAMENTE - TAMANHO DE COELHO */
     width: auto;
     display: block;
-    margin: 0 auto 1.5rem;
     object-fit: contain;
+    margin: 0 auto 1rem;
+}
+
+.footer-logo-text {
+    color: var(--primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 0.5rem;
+    opacity: 0.9;
 }
 
 .footer-section {
     display: flex;
     flex-direction: column;
-    align-items: center; /* CENTRALIZA CONTEÚDO DAS SEÇÕES */
+    align-items: center;
 }
 
 .footer-section h3 {
@@ -279,18 +289,18 @@
 @media (min-width: 481px) and (max-width: 768px) {
     .header-content {
         flex-wrap: nowrap;
-        justify-content: space-between; /* VOLTA AO LAYOUT NORMAL NO TABLET */
+        justify-content: space-between;
     }
     
     .logo {
-        justify-content: flex-start; /* VOLTA À ESQUERDA NO TABLET */
+        justify-content: flex-start;
         width: auto;
         order: 0;
     }
     
     .logo img {
-        height: 105px; /* Mantém grande no tablet */
-        margin: 0; /* Remove centralização no tablet */
+        height: 105px;
+        margin: 0;
     }
     
     .menu-toggle {
@@ -356,24 +366,25 @@
     }
     
     .footer-logo {
-        justify-content: flex-start;
+        grid-column: 1 / -1;
+        text-align: center;
     }
     
     .footer-logo img {
-        height: 105px; /* Mantém grande no footer tablet */
-        margin: 0 0 1.5rem 0; /* Remove centralização no tablet */
+        height: 160px;
+        margin: 0 auto 1rem;
     }
     
     .footer-section {
-        align-items: flex-start; /* VOLTA À ESQUERDA NO TABLET */
+        align-items: flex-start;
     }
     
     .footer-section h3,
     .footer-section p {
-        text-align: left; /* VOLTA À ESQUERDA NO TABLET */
+        text-align: left;
     }
     
     .footer-section ul {
-        text-align: left; /* VOLTA À ESQUERDA NO TABLET */
+        text-align: left;
     }
 }

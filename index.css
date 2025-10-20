@@ -56,16 +56,16 @@ body {
     height: 100%;
 }
 
-/* LOGO BEM GRANDE - AUMENTO DE 40% */
+/* LOGO BEM GRANDE - AUMENTO SIGNIFICATIVO */
 .logo {
     display: flex;
     align-items: center;
     height: 100%;
-    padding: 5px 0; /* Espaço para a logo respirar */
+    padding: 5px 0;
 }
 
 .logo img {
-    height: 140px; /* AUMENTEI DE 120px PARA 140px (+40%) */
+    height: 140px; /* AUMENTEI SIGNIFICATIVAMENTE */
     width: auto;
     display: block;
     object-fit: contain;
@@ -148,7 +148,6 @@ body {
     background: var(--background);
 }
 
-/* IMAGEM DO CASAL - Lado direito, centralizada vertical */
 .hero-image {
     position: absolute;
     top: 50%;
@@ -353,25 +352,39 @@ body {
     margin-bottom: var(--space-lg);
 }
 
-/* LOGO DO FOOTER GRANDE - MESMO TAMANHO DO HEADER */
+/* LOGO DO FOOTER BEM GRANDE - TAMANHO DE COELHO 🐰 */
 .footer-logo {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
+    text-align: center;
+    grid-column: 1 / -1; /* OCUPA TODA A LINHA DO GRID */
+    margin-bottom: var(--space-lg);
+    padding: 2rem 0;
 }
 
 .footer-logo img {
-    height: 140px; /* MESMO TAMANHO DA LOGO DO HEADER - 140px */
+    height: 200px; /* AUMENTEI SIGNIFICATIVAMENTE - TAMANHO DE COELHO */
     width: auto;
     display: block;
-    margin-bottom: var(--space-md);
     object-fit: contain;
+    margin: 0 auto 1.5rem; /* Centraliza horizontalmente */
+}
+
+.footer-logo-text {
+    color: var(--primary);
+    font-size: 1.8rem; /* TEXTO MAIOR PARA COMBINAR COM A LOGO GRANDE */
+    font-weight: 700;
+    margin-top: 1rem;
+    opacity: 0.9;
 }
 
 .footer-section h3 {
     color: var(--primary);
     margin-bottom: var(--space-md);
     font-size: 1.4rem;
+    text-align: left;
 }
 
 .footer-section p {
@@ -380,10 +393,12 @@ body {
     opacity: 0.9;
     font-size: 1.1rem;
     line-height: 1.8;
+    text-align: left;
 }
 
 .footer-section ul {
     list-style: none;
+    text-align: left;
 }
 
 .footer-section ul li {
@@ -422,11 +437,11 @@ body {
     }
     
     .logo img {
-        height: 120px; /* Reduz um pouco mas mantém grande */
+        height: 120px;
     }
     
     .footer-logo img {
-        height: 120px; /* Reduz um pouco mas mantém grande */
+        height: 180px; /* Mantém grande em tablets */
     }
 }
 
@@ -436,7 +451,7 @@ body {
     }
     
     .logo img {
-        height: 100px; /* Mantém grande mesmo no mobile */
+        height: 100px;
     }
     
     .nav {
@@ -487,8 +502,24 @@ body {
         font-size: 2rem;
     }
     
+    .footer-logo {
+        grid-column: 1;
+        padding: 1rem 0;
+    }
+    
     .footer-logo img {
-        height: 100px; /* Mantém grande no footer mobile */
-        margin: 0 auto var(--space-md);
+        height: 150px; /* Mantém grande no mobile */
+        margin: 0 auto 1rem;
+    }
+    
+    .footer-logo-text {
+        font-size: 1.5rem;
+        text-align: center;
+    }
+    
+    .footer-section h3,
+    .footer-section p,
+    .footer-section ul {
+        text-align: center;
     }
 }
