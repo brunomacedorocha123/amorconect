@@ -585,3 +585,33 @@ body {
         font-size: 3rem !important;
     }
 }
+
+/* ========== LOGO GIGANTE DO FOOTER ========== */
+.footer-logo-container {
+    text-align: center;
+    margin: 4rem auto;
+    padding: 4rem;
+    background: var(--white);
+    border-radius: 20px;
+    border: 4px solid var(--secondary);
+    box-shadow: var(--shadow);
+}
+
+.footer-logo-container img {
+    width: 600px !important;
+    height: auto !important;
+    max-width: 80% !important;
+    display: block !important;
+    margin: 0 auto 2rem !important;
+}
+
+.footer-logo-text {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+/* Remove a logo pequena do footer */
+.footer .logo {
+    display: none;
+}
