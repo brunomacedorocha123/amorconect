@@ -54,17 +54,7 @@ async function loadProfileData() {
     try {
         console.log('📋 Carregando dados do perfil...');
         
-        // ✅ 1. PREENCHER EMAIL AUTOMATICAMENTE (SEMPRE)
-        const emailInput = document.getElementById('email');
-        if (emailInput && currentUser && currentUser.email) {
-            emailInput.value = currentUser.email;
-            emailInput.readOnly = true;
-            emailInput.style.backgroundColor = '#f5f5f5';
-            emailInput.style.color = '#666';
-            console.log('✅ Email preenchido:', currentUser.email);
-        }
-
-        // ✅ 2. BUSCAR DADOS DO CADASTRO (AUTH)
+        // ✅ 1. BUSCAR DADOS DO CADASTRO (AUTH) - FONTE PRINCIPAL
         console.log('🔍 Buscando dados do cadastro...');
         const { data: authData, error: authError } = await supabase.auth.getUser();
         
@@ -76,7 +66,7 @@ async function loadProfileData() {
         const authUser = authData.user;
         console.log('📦 Dados do auth:', authUser);
 
-        // ✅ 3. BUSCAR DADOS DO PERFIL (BANCO)
+        // ✅ 2. BUSCAR DADOS DO PERFIL (BANCO) - DADOS ADICIONAIS
         console.log('🔍 Buscando dados do perfil...');
         const [profileResult, detailsResult] = await Promise.all([
             supabase.from('profiles').select('*').eq('id', currentUser.id).single(),
@@ -86,7 +76,7 @@ async function loadProfileData() {
         console.log('📊 Resultado perfil:', profileResult);
         console.log('📊 Resultado detalhes:', detailsResult);
 
-        // ✅ 4. PREENCHER FORMULÁRIO COM TODOS OS DADOS
+        // ✅ 3. PREENCHER FORMULÁRIO COM DADOS DO CADASTRO + PERFIL
         await fillProfileForm(authUser, profileResult.data, detailsResult.data);
 
         console.log('✅ Dados do perfil carregados com sucesso!');
@@ -113,13 +103,20 @@ async function fillProfileForm(authUser, profile, userDetails) {
             emailInput.value = authUser.email || '';
             emailInput.readOnly = true;
             emailInput.style.backgroundColor = '#f5f5f5';
+            console.log('✅ Email preenchido:', authUser.email);
         }
 
         // ✅ Nome completo (do cadastro)
         const fullNameInput = document.getElementById('fullName');
-        if (fullNameInput && authUser.user_metadata?.full_name) {
-            fullNameInput.value = authUser.user_metadata.full_name;
-            console.log('✅ Nome completo do cadastro:', authUser.user_metadata.full_name);
+        if (fullNameInput) {
+            // Prioridade: 1. Perfil salvo, 2. Cadastro
+            if (profile?.full_name) {
+                fullNameInput.value = profile.full_name;
+                console.log('✅ Nome completo do perfil:', profile.full_name);
+            } else if (authUser.user_metadata?.full_name) {
+                fullNameInput.value = authUser.user_metadata.full_name;
+                console.log('✅ Nome completo do cadastro:', authUser.user_metadata.full_name);
+            }
         }
 
         // ✅ Nickname (do cadastro)
@@ -131,7 +128,7 @@ async function fillProfileForm(authUser, profile, userDetails) {
             } else if (authUser.user_metadata?.nickname) {
                 nicknameInput.value = authUser.user_metadata.nickname;
             } else {
-                nicknameInput.value = authUser.email.split('@')[0];
+                nicknameInput.value = authUser.email?.split('@')[0] || '';
             }
             console.log('✅ Nickname definido:', nicknameInput.value);
         }
@@ -696,6 +693,43 @@ async function updateProfileCompletion() {
         console.log(`📊 Progresso do perfil: ${percentage}%`);
     } catch (error) {
         console.error('❌ Erro ao atualizar progresso:', error);
+    }
+}
+
+// ==================== FUNÇÃO DE NOTIFICAÇÃO ====================
+function showNotification(message, type = 'info') {
+    // Remove notificações existentes
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notification => {
+        notification.remove();
+    });
+
+    // Cria nova notificação
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span>${message}</span>
+            <button class="notification-close">&times;</button>
+        </div>
+    `;
+
+    document.body.appendChild(notification);
+
+    // Auto-remove após 5 segundos
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+
+    // Fechar ao clicar no X
+    const closeBtn = notification.querySelector('.notification-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            notification.remove();
+        });
     }
 }
 
