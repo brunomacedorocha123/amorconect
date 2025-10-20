@@ -56,7 +56,6 @@ body {
     height: 100%;
 }
 
-/* LOGO BEM GRANDE */
 .logo {
     display: flex;
     align-items: center;
@@ -337,11 +336,11 @@ body {
     color: var(--primary);
 }
 
-/* ========== FOOTER ========== */
+/* ========== FOOTER - VERSÃO GIGANTE ========== */
 .footer {
     background: var(--background);
     color: var(--primary);
-    padding: var(--space-xl) 0 var(--space-lg);
+    padding: 6rem 0 2rem;
     border-top: 3px solid var(--secondary);
 }
 
@@ -352,7 +351,7 @@ body {
     margin-bottom: var(--space-lg);
 }
 
-/* LOGO DO FOOTER ENORME - AUMENTO MÁXIMO */
+/* LOGO DO FOOTER GIGANTE - AUMENTEI MUITO */
 .footer-logo {
     display: flex;
     flex-direction: column;
@@ -361,26 +360,21 @@ body {
     text-align: center;
     grid-column: 1 / -1;
     margin-bottom: var(--space-lg);
-    padding: 3rem 0;
+    padding: 4rem 0;
 }
 
 .footer-logo img {
-    height: 280px; /* TAMANHO GIGANTE */
-    width: auto;
+    height: 350px !important; /* AUMENTEI MUITO - FORÇADO */
+    width: auto !important;
     display: block;
     object-fit: contain;
     margin: 0 auto 2rem;
-    transition: transform 0.3s ease;
-}
-
-/* Efeito hover para a logo gigante */
-.footer-logo img:hover {
-    transform: scale(1.05);
+    max-width: 100%;
 }
 
 .footer-logo-text {
     color: var(--primary);
-    font-size: 2.5rem; /* TEXTO ENORME */
+    font-size: 3rem !important; /* AUMENTEI MUITO */
     font-weight: 800;
     margin-top: 1.5rem;
     opacity: 0.9;
@@ -448,11 +442,11 @@ body {
     }
     
     .footer-logo img {
-        height: 240px; /* Mantém grande em tablets */
+        height: 300px !important; /* MANTÉM GRANDE EM TABLETS */
     }
     
     .footer-logo-text {
-        font-size: 2.2rem;
+        font-size: 2.5rem !important;
     }
 }
 
@@ -515,16 +509,16 @@ body {
     
     .footer-logo {
         grid-column: 1;
-        padding: 2rem 0;
+        padding: 3rem 0;
     }
     
     .footer-logo img {
-        height: 200px; /* Mantém grande no mobile */
+        height: 280px !important; /* MANTÉM GIGANTE NO MOBILE */
         margin: 0 auto 1.5rem;
     }
     
     .footer-logo-text {
-        font-size: 1.8rem;
+        font-size: 2.2rem !important;
         text-align: center;
     }
     
