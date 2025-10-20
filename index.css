@@ -337,7 +337,7 @@ body {
     color: var(--primary);
 }
 
-/* ========== FOOTER - LOGO GIGANTE CORRIGIDA ========== */
+/* ========== FOOTER - LOGO GIGANTE RELATIVA ========== */
 .footer {
     background: var(--background);
     color: var(--primary);
@@ -352,32 +352,36 @@ body {
     margin-bottom: var(--space-lg);
 }
 
-/* LOGO DO FOOTER - AGORA GIGANTE E LEGÍVEL */
+/* LOGO DO FOOTER - AGORA RELATIVA E GIGANTE */
 .footer-logo-container {
     grid-column: 1 / -1;
     text-align: center;
     margin-bottom: var(--space-xl);
-    padding: 4rem 0;
+    padding: 6rem 0;
     background: var(--white);
     border-radius: var(--radius);
     border: 3px solid var(--secondary);
     box-shadow: var(--shadow);
+    position: relative;
+    overflow: visible;
 }
 
 .footer-logo-container img {
-    height: 400px !important;
-    width: auto !important;
-    max-width: 90% !important;
+    width: 80vw !important; /* LARGURA RELATIVA À TELA */
+    max-width: 1200px !important;
+    height: auto !important;
     display: block !important;
     object-fit: contain !important;
-    margin: 0 auto 2rem !important;
+    margin: 0 auto !important;
+    transform: scale(1.8) !important; /* AUMENTO RELATIVO */
+    transform-origin: center !important;
 }
 
 .footer-logo-text {
     color: var(--primary);
-    font-size: 3.5rem !important;
+    font-size: 4rem !important;
     font-weight: 800;
-    margin-top: 1rem;
+    margin-top: 3rem;
     text-align: center;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
 }
@@ -443,11 +447,12 @@ body {
     }
     
     .footer-logo-container img {
-        height: 350px !important;
+        width: 85vw !important;
+        transform: scale(1.6) !important;
     }
     
     .footer-logo-text {
-        font-size: 3rem !important;
+        font-size: 3.5rem !important;
     }
 }
 
@@ -510,16 +515,16 @@ body {
     
     .footer-logo-container {
         grid-column: 1;
-        padding: 3rem 0;
+        padding: 4rem 0;
     }
     
     .footer-logo-container img {
-        height: 300px !important;
-        margin: 0 auto 1.5rem;
+        width: 90vw !important;
+        transform: scale(1.4) !important;
     }
     
     .footer-logo-text {
-        font-size: 2.5rem !important;
+        font-size: 3rem !important;
         text-align: center;
     }
     
@@ -527,5 +532,16 @@ body {
     .footer-section p,
     .footer-section ul {
         text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-logo-container img {
+        width: 95vw !important;
+        transform: scale(1.2) !important;
+    }
+    
+    .footer-logo-text {
+        font-size: 2.5rem !important;
     }
 }
