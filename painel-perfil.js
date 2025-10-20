@@ -1,4 +1,4 @@
-// ==================== SISTEMA DE PERFIL COMPLETO ====================
+// ==================== SISTEMA DE PERFIL COMPLETO CORRIGIDO ====================
 console.log('📝 painel-perfil.js carregando...');
 
 let selectedAvatarFile = null;
@@ -31,6 +31,7 @@ function setupProfileFormEvents() {
     const profileForm = document.getElementById('profileForm');
     if (profileForm) {
         profileForm.addEventListener('submit', saveProfile);
+        console.log('✅ Evento de submit configurado');
     }
 
     const avatarButton = document.getElementById('avatarButton');
@@ -39,6 +40,7 @@ function setupProfileFormEvents() {
     if (avatarButton && avatarInput) {
         avatarButton.addEventListener('click', () => avatarInput.click());
         avatarInput.addEventListener('change', handleAvatarSelect);
+        console.log('✅ Eventos de avatar configurados');
     }
 
     // Eventos de validação
@@ -47,6 +49,8 @@ function setupProfileFormEvents() {
     
     const descriptionInput = document.getElementById('description');
     if (descriptionInput) descriptionInput.addEventListener('input', updateCharCount);
+
+    console.log('✅ Todos os eventos configurados');
 }
 
 // ==================== CARREGAR DADOS DO PERFIL ====================
@@ -97,16 +101,14 @@ async function fillProfileForm(authUser, profile, userDetails) {
             user_metadata: authUser.user_metadata
         });
 
-        // ✅ Email (SEMPRE do auth)
+        // ✅ Email (SEMPRE do auth) - TRAVADO
         const emailInput = document.getElementById('email');
         if (emailInput) {
             emailInput.value = authUser.email || '';
-            emailInput.readOnly = true;
-            emailInput.style.backgroundColor = '#f5f5f5';
             console.log('✅ Email preenchido:', authUser.email);
         }
 
-        // ✅ Nome completo (do cadastro)
+        // ✅ Nome completo (do cadastro) - TRAVADO
         const fullNameInput = document.getElementById('fullName');
         if (fullNameInput) {
             // Prioridade: 1. Perfil salvo, 2. Cadastro
@@ -119,7 +121,7 @@ async function fillProfileForm(authUser, profile, userDetails) {
             }
         }
 
-        // ✅ Nickname (do cadastro)
+        // ✅ Nickname (do cadastro) - TRAVADO
         const nicknameInput = document.getElementById('nickname');
         if (nicknameInput) {
             // Prioridade: 1. Perfil salvo, 2. Cadastro, 3. Email
@@ -133,17 +135,13 @@ async function fillProfileForm(authUser, profile, userDetails) {
             console.log('✅ Nickname definido:', nicknameInput.value);
         }
 
-        // ✅ Data de nascimento (do cadastro)
+        // ✅ Data de nascimento (do cadastro) - TRAVADA
         const birthDateInput = document.getElementById('birthDate');
         if (birthDateInput) {
             // Prioridade: 1. Perfil salvo, 2. Cadastro
             if (profile?.birth_date) {
                 birthDateInput.value = formatDateForInput(profile.birth_date);
-                // BLOQUEAR se já foi salva antes
-                birthDateInput.readOnly = true;
-                birthDateInput.style.backgroundColor = '#f5f5f5';
-                birthDateInput.style.color = '#666';
-                console.log('✅ Data nascimento do perfil (BLOQUEADA):', profile.birth_date);
+                console.log('✅ Data nascimento do perfil:', profile.birth_date);
             } else if (authUser.user_metadata?.birth_date) {
                 birthDateInput.value = formatDateForInput(authUser.user_metadata.birth_date);
                 console.log('✅ Data nascimento do cadastro:', authUser.user_metadata.birth_date);
@@ -151,7 +149,7 @@ async function fillProfileForm(authUser, profile, userDetails) {
         }
     }
 
-    // ✅ DADOS DO PERFIL SALVO (BANCO)
+    // ✅ DADOS DO PERFIL SALVO (BANCO) - EDITÁVEIS
     if (profile) {
         console.log('💾 Dados do perfil encontrados:', profile);
         
@@ -181,7 +179,7 @@ async function fillProfileForm(authUser, profile, userDetails) {
         }
     }
 
-    // ✅ DADOS DETALHADOS (USER_DETAILS)
+    // ✅ DADOS DETALHADOS (USER_DETAILS) - EDITÁVEIS
     if (userDetails) {
         console.log('📝 Dados detalhados encontrados:', userDetails);
         
@@ -273,15 +271,46 @@ function updateAvatarPreview(imageData) {
     }
     if (fallback) fallback.style.display = 'none';
     
-    // Atualizar todos os avatares
-    document.querySelectorAll('.user-avatar-img').forEach(img => {
-        img.src = imageData;
-        img.style.display = 'block';
-    });
-    
-    document.querySelectorAll('.user-avatar-fallback').forEach(fb => {
-        fb.style.display = 'none';
-    });
+    // Atualizar preview apenas - os avatares principais só após salvar
+    console.log('✅ Preview do avatar atualizado');
+}
+
+// ==================== UPLOAD DE AVATAR CORRIGIDO ====================
+async function uploadAvatar(file) {
+    try {
+        const fileExt = file.name.split('.').pop().toLowerCase();
+        const fileName = `${Date.now()}_avatar.${fileExt}`;
+        const filePath = `${currentUser.id}/${fileName}`;
+
+        console.log('📤 Upload para:', filePath);
+
+        // Fazer upload do arquivo
+        const { data, error } = await supabase.storage
+            .from('avatars')
+            .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: true
+            });
+
+        if (error) {
+            console.error('❌ Erro no upload:', error);
+            throw error;
+        }
+        
+        console.log('✅ Upload realizado:', data);
+        
+        // Obter URL pública
+        const { data: urlData } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(filePath);
+            
+        console.log('✅ URL pública obtida:', urlData.publicUrl);
+        return urlData.publicUrl;
+        
+    } catch (error) {
+        console.error('❌ Erro completo no upload:', error);
+        throw error;
+    }
 }
 
 // ==================== VALIDAÇÕES ====================
@@ -346,7 +375,7 @@ function getFieldLabel(fieldId) {
     return labels[fieldId] || fieldId;
 }
 
-// ==================== SALVAMENTO DO PERFIL ====================
+// ==================== SALVAMENTO DO PERFIL CORRIGIDO ====================
 async function saveProfile(event) {
     event.preventDefault();
     console.log('💾 Iniciando salvamento do perfil...');
@@ -363,7 +392,7 @@ async function saveProfile(event) {
         saveButton.innerHTML = '⏳ Salvando...';
         saveButton.disabled = true;
 
-        // Validações
+        // Validações básicas
         if (!validateRequiredFields()) {
             throw new Error('Por favor, preencha todos os campos obrigatórios');
         }
@@ -372,16 +401,16 @@ async function saveProfile(event) {
             throw new Error('Validação de idade falhou');
         }
 
-        let avatarPath = null;
+        let avatarUrl = null;
 
-        // Upload de avatar
+        // Upload de avatar se houver nova imagem
         if (selectedAvatarFile) {
             console.log('📤 Fazendo upload do avatar...');
             showNotification('📤 Enviando imagem...', 'info');
             try {
-                avatarPath = await uploadAvatar(selectedAvatarFile);
-                if (avatarPath) {
-                    console.log('✅ Upload do avatar realizado:', avatarPath);
+                avatarUrl = await uploadAvatar(selectedAvatarFile);
+                if (avatarUrl) {
+                    console.log('✅ Upload do avatar realizado:', avatarUrl);
                     showNotification('✅ Imagem enviada com sucesso!', 'success');
                 }
             } catch (uploadError) {
@@ -400,10 +429,10 @@ async function saveProfile(event) {
             userDetailsData
         });
 
-        // Adicionar avatar path se upload foi bem sucedido
-        if (avatarPath) {
-            profileData.avatar_url = avatarPath;
-            console.log('✅ Avatar URL adicionado aos dados:', avatarPath);
+        // Adicionar avatar URL se upload foi bem sucedido
+        if (avatarUrl) {
+            profileData.avatar_url = avatarUrl;
+            console.log('✅ Avatar URL adicionado aos dados:', avatarUrl);
         }
 
         console.log('💾 Salvando no banco de dados...');
@@ -441,13 +470,10 @@ async function saveProfile(event) {
         // ✅ SUCESSO - ATUALIZAR INTERFACE
         updateUserInterfaceAfterSave(profileData.nickname);
         
-        // ✅ BLOQUEAR data de nascimento após primeiro salvamento
-        const birthDateInput = document.getElementById('birthDate');
-        if (birthDateInput && profileData.birth_date) {
-            birthDateInput.readOnly = true;
-            birthDateInput.style.backgroundColor = '#f5f5f5';
-            birthDateInput.style.color = '#666';
-            console.log('✅ Data de nascimento bloqueada após salvamento');
+        // ✅ ATUALIZAR AVATAR NA INTERFACE SE FOI SALVO
+        if (avatarUrl) {
+            console.log('🔄 Atualizando avatar na interface...');
+            updateAvatarImages(avatarUrl);
         }
         
         // Resetar estado do formulário
@@ -461,14 +487,6 @@ async function saveProfile(event) {
         // Atualizar sistemas
         await updateProfileCompletion();
         
-        // Recarregar avatar se foi atualizado
-        if (avatarPath) {
-            console.log('🔄 Recarregando avatar atualizado...');
-            setTimeout(() => {
-                loadAvatar(avatarPath);
-            }, 1500);
-        }
-
     } catch (error) {
         console.error('❌ Erro ao salvar perfil:', error);
         showNotification('❌ Erro ao salvar perfil: ' + error.message, 'error');
@@ -538,34 +556,18 @@ function collectPersonalTraits() {
     return selectedTraits;
 }
 
-// ==================== UPLOAD DE AVATAR ====================
-async function uploadAvatar(file) {
-    const fileExt = file.name.split('.').pop().toLowerCase();
-    const fileName = `${Date.now()}_avatar.${fileExt}`;
-    const filePath = `${currentUser.id}/${fileName}`;
-
-    console.log('📤 Upload para:', filePath);
-
-    const { data, error } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: true
-        });
-
-    if (error) {
-        console.error('❌ Erro no upload:', error);
-        throw error;
-    }
-    
-    console.log('✅ Upload realizado:', data);
-    return filePath;
-}
-
+// ==================== CARREGAR E ATUALIZAR AVATAR ====================
 async function loadAvatar(avatarPath) {
     try {
         console.log('🔄 Carregando avatar:', avatarPath);
         
+        // Se já é uma URL completa, usar diretamente
+        if (avatarPath.startsWith('http')) {
+            updateAvatarImages(avatarPath);
+            return;
+        }
+        
+        // Se é um caminho do storage, obter URL pública
         const { data } = supabase.storage
             .from('avatars')
             .getPublicUrl(avatarPath);
@@ -584,6 +586,7 @@ async function loadAvatar(avatarPath) {
 }
 
 function updateAvatarImages(imageUrl) {
+    // Atualizar todos os avatares da interface
     document.querySelectorAll('.user-avatar-img').forEach(img => {
         img.src = imageUrl;
         img.style.display = 'block';
@@ -593,6 +596,7 @@ function updateAvatarImages(imageUrl) {
         };
     });
     
+    // Atualizar preview do formulário
     const previewImg = document.getElementById('avatarPreviewImg');
     if (previewImg) {
         previewImg.src = imageUrl;
@@ -605,13 +609,21 @@ function updateAvatarImages(imageUrl) {
         };
     }
     
+    // Esconder fallbacks
     document.querySelectorAll('.user-avatar-fallback').forEach(fb => {
+        fb.style.display = 'none';
+    });
+    
+    document.querySelectorAll('.avatar-fallback').forEach(fb => {
         fb.style.display = 'none';
     });
 }
 
 function showFallbackAvatars() {
     document.querySelectorAll('.user-avatar-fallback').forEach(fb => {
+        fb.style.display = 'flex';
+    });
+    document.querySelectorAll('.avatar-fallback').forEach(fb => {
         fb.style.display = 'flex';
     });
 }
@@ -708,9 +720,17 @@ function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: '💡'
+    };
+    
     notification.innerHTML = `
         <div class="notification-content">
-            <span>${message}</span>
+            <span class="notification-icon">${icons[type] || '💡'}</span>
+            <span class="notification-message">${message}</span>
             <button class="notification-close">&times;</button>
         </div>
     `;

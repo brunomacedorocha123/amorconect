@@ -7,7 +7,6 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ==================== VARIÁVEIS GLOBAIS ====================
 let currentUser = null;
 let userProfile = null;
-let selectedAvatarFile = null;
 
 // ==================== INICIALIZAÇÃO ====================
 document.addEventListener('DOMContentLoaded', async function() {
@@ -28,17 +27,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         await loadProfileData();
         
         // 5. Iniciar sistemas
-        await updatePremiumStatus();
         await updateProfileCompletion();
         await updatePlanStatus();
-        await loadInvisibleModeStatus();
         
-        // 6. Iniciar galeria se for premium
-        if (window.galeriaSystem) {
-            await window.galeriaSystem.initialize();
-        }
-        
-        // 7. Sistema online
+        // 6. Sistema online
         startOnlineStatusUpdater();
         
         console.log('✅ Painel inicializado com sucesso!');
@@ -212,18 +204,26 @@ function showNotification(message, type = 'info') {
         <div class="notification-content">
             <span class="notification-icon">${icons[type] || '💡'}</span>
             <span class="notification-message">${message}</span>
-            <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+            <button class="notification-close">&times;</button>
         </div>
     `;
 
     document.body.appendChild(notification);
 
-    // Auto-remover após 5 segundos
+    // Auto-remove após 5 segundos
     setTimeout(() => {
         if (notification.parentElement) {
             notification.remove();
         }
     }, 5000);
+
+    // Fechar ao clicar no X
+    const closeBtn = notification.querySelector('.notification-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            notification.remove();
+        });
+    }
 }
 
 // ==================== CARREGAR DADOS DO USUÁRIO ====================
@@ -233,7 +233,7 @@ async function loadUserData() {
         
         const { data: profile, error } = await supabase
             .from('profiles')
-            .select('nickname, avatar_url, is_premium')
+            .select('nickname, avatar_url, is_premium, full_name')
             .eq('id', currentUser.id)
             .single();
         
@@ -263,11 +263,9 @@ function updateUserInterface(displayName, profile) {
     // Atualizar nicknames
     const userNickname = document.getElementById('userNickname');
     const mobileUserNickname = document.getElementById('mobileUserNickname');
-    const welcomeNickname = document.getElementById('welcomeNickname');
     
     if (userNickname) userNickname.textContent = displayName;
     if (mobileUserNickname) mobileUserNickname.textContent = displayName;
-    if (welcomeNickname) welcomeNickname.textContent = displayName;
     
     // Atualizar avatar
     updateAvatar(profile.avatar_url, displayName);
@@ -297,25 +295,28 @@ async function updateAvatar(avatarUrl, displayName) {
         
         // Tentar carregar foto se existir
         if (avatarUrl) {
-            const photoUrl = await loadUserPhoto(avatarUrl);
-            if (photoUrl) {
-                img.src = photoUrl;
-                img.style.display = 'block';
-                fallback.style.display = 'none';
-                
-                // Configurar fallback em caso de erro
-                img.onerror = () => {
-                    img.style.display = 'none';
-                    fallback.style.display = 'flex';
-                };
+            try {
+                const photoUrl = await loadUserPhoto(avatarUrl);
+                if (photoUrl) {
+                    img.src = photoUrl;
+                    img.style.display = 'block';
+                    fallback.style.display = 'none';
+                    
+                    // Configurar fallback em caso de erro
+                    img.onerror = () => {
+                        console.log('❌ Erro ao carregar imagem do avatar');
+                        img.style.display = 'none';
+                        fallback.style.display = 'flex';
+                    };
+                }
+            } catch (error) {
+                console.log('❌ Erro ao carregar avatar:', error);
             }
         }
         
         // Atualizar fallback
-        if (fallback.classList.contains('user-avatar-fallback')) {
-            fallback.textContent = displayName.charAt(0).toUpperCase();
-        } else {
-            fallback.textContent = displayName.charAt(0).toUpperCase();
+        if (fallback) {
+            fallback.textContent = displayName ? displayName.charAt(0).toUpperCase() : 'U';
         }
     }
 }
@@ -323,6 +324,13 @@ async function updateAvatar(avatarUrl, displayName) {
 async function loadUserPhoto(avatarUrl) {
     try {
         if (!avatarUrl) return null;
+        
+        // Se já é uma URL completa, retornar diretamente
+        if (avatarUrl.startsWith('http')) {
+            return avatarUrl;
+        }
+        
+        // Se é um caminho do storage, obter URL pública
         const { data } = supabase.storage.from('avatars').getPublicUrl(avatarUrl);
         return data?.publicUrl || null;
     } catch (error) {
@@ -360,7 +368,10 @@ async function createUserProfile() {
             .from('profiles')
             .insert({
                 id: currentUser.id,
+                email: currentUser.email,
                 nickname: currentUser.email.split('@')[0],
+                full_name: currentUser.user_metadata?.full_name || currentUser.email.split('@')[0],
+                birth_date: currentUser.user_metadata?.birth_date || null,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             });
@@ -386,63 +397,78 @@ async function createUserProfile() {
     }
 }
 
-// ==================== CARREGAR DADOS DO PERFIL ====================
+// ==================== CARREGAR DADOS DO PERFIL CORRIGIDO ====================
 async function loadProfileData() {
     try {
         console.log('📋 Carregando dados do perfil...');
         
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', currentUser.id)
-            .single();
+        // ✅ BUSCAR DADOS DO AUTH PRIMEIRO (dados do cadastro)
+        const { data: authData } = await supabase.auth.getUser();
+        const authUser = authData?.user;
+        
+        console.log('👤 Dados do auth:', authUser);
 
-        if (profileError && profileError.code === 'PGRST116') {
-            await createUserProfile();
-            return;
-        }
+        // ✅ BUSCAR DADOS DO BANCO
+        const [profileResult, detailsResult] = await Promise.all([
+            supabase.from('profiles').select('*').eq('id', currentUser.id).single(),
+            supabase.from('user_details').select('*').eq('user_id', currentUser.id).single()
+        ]);
 
-        const { data: userDetails, error: detailsError } = await supabase
-            .from('user_details')
-            .select('*')
-            .eq('user_id', currentUser.id)
-            .single();
+        console.log('📊 Perfil do banco:', profileResult);
+        console.log('📊 Detalhes do banco:', detailsResult);
 
-        if (detailsError && detailsError.code === 'PGRST116') {
-            await supabase
-                .from('user_details')
-                .insert({
-                    user_id: currentUser.id,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                });
-            return;
-        }
+        const profile = profileResult.data;
+        const userDetails = detailsResult.data;
 
-        // ✅ CORREÇÃO CRÍTICA: Pré-preenher email e data de nascimento BLOQUEADOS
+        // ✅ PREENCHER CAMPOS TRAVADOS COM DADOS DO CADASTRO
         const emailInput = document.getElementById('email');
+        const fullNameInput = document.getElementById('fullName');
+        const nicknameInput = document.getElementById('nickname');
         const birthDateInput = document.getElementById('birthDate');
-        
-        if (emailInput) {
-            emailInput.value = currentUser.email || '';
-        }
-        
-        if (birthDateInput && profile?.birth_date) {
-            // Formatar data para o input type="date" (YYYY-MM-DD)
-            const birthDate = new Date(profile.birth_date);
-            const formattedDate = birthDate.toISOString().split('T')[0];
-            birthDateInput.value = formattedDate;
-            
-            // Aplicar readonly e estilo igual ao e-mail
-            birthDateInput.readOnly = true;
-            birthDateInput.style.backgroundColor = '#f5f5f5';
-            birthDateInput.style.color = '#666';
+
+        // Email (SEMPRE do auth)
+        if (emailInput && authUser) {
+            emailInput.value = authUser.email || '';
+            console.log('✅ Email preenchido:', authUser.email);
         }
 
-        // Preencher outros campos (editáveis)
+        // Nome completo (prioridade: 1. Perfil salvo, 2. Cadastro)
+        if (fullNameInput) {
+            if (profile?.full_name) {
+                fullNameInput.value = profile.full_name;
+                console.log('✅ Nome completo do perfil:', profile.full_name);
+            } else if (authUser?.user_metadata?.full_name) {
+                fullNameInput.value = authUser.user_metadata.full_name;
+                console.log('✅ Nome completo do cadastro:', authUser.user_metadata.full_name);
+            }
+        }
+
+        // Nickname (prioridade: 1. Perfil salvo, 2. Cadastro, 3. Email)
+        if (nicknameInput) {
+            if (profile?.nickname) {
+                nicknameInput.value = profile.nickname;
+            } else if (authUser?.user_metadata?.nickname) {
+                nicknameInput.value = authUser.user_metadata.nickname;
+            } else {
+                nicknameInput.value = authUser?.email?.split('@')[0] || '';
+            }
+            console.log('✅ Nickname definido:', nicknameInput.value);
+        }
+
+        // Data de nascimento (prioridade: 1. Perfil salvo, 2. Cadastro)
+        if (birthDateInput) {
+            if (profile?.birth_date) {
+                birthDateInput.value = formatDateForInput(profile.birth_date);
+                console.log('✅ Data nascimento do perfil:', profile.birth_date);
+            } else if (authUser?.user_metadata?.birth_date) {
+                birthDateInput.value = formatDateForInput(authUser.user_metadata.birth_date);
+                console.log('✅ Data nascimento do cadastro:', authUser.user_metadata.birth_date);
+            }
+        }
+
+        // ✅ PREENCHER CAMPOS EDITÁVEIS DO PERFIL
         if (profile) {
-            const fields = {
-                'fullName': profile.full_name,
+            const profileFields = {
                 'cpf': profile.cpf,
                 'phone': profile.phone,
                 'street': profile.street,
@@ -450,21 +476,19 @@ async function loadProfileData() {
                 'neighborhood': profile.neighborhood,
                 'city': profile.city,
                 'state': profile.state,
-                'zipCode': profile.zip_code,
-                'nickname': profile.nickname
+                'zipCode': profile.zip_code
             };
 
-            for (const [fieldId, value] of Object.entries(fields)) {
+            for (const [fieldId, value] of Object.entries(profileFields)) {
                 const element = document.getElementById(fieldId);
-                if (element) element.value = value || '';
-            }
-            
-            if (profile.city && profile.state && (!userDetails || !userDetails.display_city)) {
-                const displayCity = document.getElementById('displayCity');
-                if (displayCity) displayCity.value = `${profile.city}, ${profile.state}`;
+                if (element && value) {
+                    element.value = value;
+                    console.log(`✅ Campo ${fieldId} preenchido:`, value);
+                }
             }
         }
 
+        // ✅ PREENCHER DADOS DETALHADOS
         if (userDetails) {
             const detailFields = {
                 'displayCity': userDetails.display_city,
@@ -486,18 +510,23 @@ async function loadProfileData() {
 
             for (const [fieldId, value] of Object.entries(detailFields)) {
                 const element = document.getElementById(fieldId);
-                if (element) element.value = value || '';
+                if (element && value) {
+                    element.value = value;
+                    console.log(`✅ Campo ${fieldId} preenchido:`, value);
+                }
             }
             
-            // Preencir interesses
-            if (userDetails.interests) {
+            // Checkboxes - Interesses
+            if (userDetails.interests && userDetails.interests.length > 0) {
+                console.log('🎯 Preenchendo interesses:', userDetails.interests);
                 document.querySelectorAll('input[name="interests"]').forEach(checkbox => {
                     checkbox.checked = userDetails.interests.includes(checkbox.value);
                 });
             }
             
-            // ✅ NOVO: Preencher características pessoais
-            if (userDetails.personal_traits) {
+            // Checkboxes - Características pessoais
+            if (userDetails.personal_traits && userDetails.personal_traits.length > 0) {
+                console.log('🎭 Preenchendo características:', userDetails.personal_traits);
                 document.querySelectorAll('input[name="caracteristicas"]').forEach(checkbox => {
                     checkbox.checked = userDetails.personal_traits.includes(checkbox.value);
                 });
@@ -505,7 +534,7 @@ async function loadProfileData() {
         }
 
         updateCharCount();
-        console.log('✅ Dados do perfil carregados');
+        console.log('✅ Dados do perfil carregados com sucesso!');
 
     } catch (error) {
         console.error('❌ Erro ao carregar perfil:', error);
@@ -521,32 +550,111 @@ async function updateProfileCompletion() {
         
         if (error) {
             console.error('❌ Erro ao calcular completude:', error);
+            // Fallback: calcular manualmente se a função não existir
+            await calculateManualProfileCompletion();
             return;
         }
 
         const percentage = completion || 0;
-        const progressFill = document.getElementById('progressFill');
-        const completionPercentage = document.getElementById('completionPercentage');
-        const progressText = document.getElementById('progressText');
-
-        if (progressFill) progressFill.style.width = `${percentage}%`;
-        if (completionPercentage) completionPercentage.textContent = `${percentage}%`;
-        
-        if (progressText) {
-            if (percentage < 30) {
-                progressText.textContent = 'Complete seu perfil para melhorar suas conexões';
-            } else if (percentage < 70) {
-                progressText.textContent = 'Seu perfil está ficando interessante! Continue...';
-            } else if (percentage < 100) {
-                progressText.textContent = 'Quase lá! Complete os últimos detalhes';
-            } else {
-                progressText.textContent = '🎉 Perfil 100% completo!';
-            }
-        }
+        updateProgressUI(percentage);
 
         console.log(`📊 Progresso do perfil: ${percentage}%`);
     } catch (error) {
         console.error('❌ Erro ao atualizar progresso:', error);
+        await calculateManualProfileCompletion();
+    }
+}
+
+// Fallback para cálculo manual do progresso
+async function calculateManualProfileCompletion() {
+    try {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single();
+
+        const { data: userDetails } = await supabase
+            .from('user_details')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .single();
+
+        let filledFields = 0;
+        const totalFields = 15; // Ajuste conforme necessário
+
+        // Campos básicos obrigatórios
+        if (profile?.full_name) filledFields++;
+        if (profile?.nickname) filledFields++;
+        if (profile?.birth_date) filledFields++;
+        if (profile?.phone) filledFields++;
+        if (userDetails?.gender) filledFields++;
+        if (userDetails?.looking_for) filledFields++;
+        if (userDetails?.display_city) filledFields++;
+
+        // Campos adicionais
+        if (profile?.avatar_url) filledFields++;
+        if (userDetails?.description) filledFields++;
+        if (userDetails?.profession) filledFields++;
+        if (userDetails?.interests?.length > 0) filledFields++;
+        if (userDetails?.personal_traits?.length > 0) filledFields++;
+
+        const percentage = Math.round((filledFields / totalFields) * 100);
+        updateProgressUI(percentage);
+
+    } catch (error) {
+        console.error('❌ Erro no cálculo manual:', error);
+        updateProgressUI(10); // Valor mínimo
+    }
+}
+
+function updateProgressUI(percentage) {
+    const progressFill = document.getElementById('progressFill');
+    const completionPercentage = document.getElementById('completionPercentage');
+    const progressText = document.getElementById('progressText');
+
+    if (progressFill) progressFill.style.width = `${percentage}%`;
+    if (completionPercentage) completionPercentage.textContent = `${percentage}%`;
+    
+    if (progressText) {
+        if (percentage < 30) {
+            progressText.textContent = 'Complete seu perfil para melhorar suas conexões';
+        } else if (percentage < 70) {
+            progressText.textContent = 'Seu perfil está ficando interessante! Continue...';
+        } else if (percentage < 100) {
+            progressText.textContent = 'Quase lá! Complete os últimos detalhes';
+        } else {
+            progressText.textContent = '🎉 Perfil 100% completo!';
+        }
+    }
+}
+
+// ==================== ATUALIZAR STATUS DO PLANO ====================
+async function updatePlanStatus() {
+    try {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_premium')
+            .eq('id', currentUser.id)
+            .single();
+
+        if (profile) {
+            const planBadge = document.getElementById('planBadge');
+            const planDescription = document.getElementById('planDescription');
+            
+            if (planBadge) {
+                planBadge.textContent = profile.is_premium ? 'PREMIUM' : 'GRATUITO';
+                planBadge.style.background = profile.is_premium ? 'var(--secondary)' : '#6b7280';
+            }
+            
+            if (planDescription) {
+                planDescription.textContent = profile.is_premium 
+                    ? 'Plano Premium com todos os recursos liberados' 
+                    : 'Plano gratuito com funcionalidades básicas';
+            }
+        }
+    } catch (error) {
+        console.error('❌ Erro ao atualizar status do plano:', error);
     }
 }
 
@@ -586,7 +694,7 @@ function updateCharCount() {
 // ==================== SISTEMA ONLINE ====================
 function startOnlineStatusUpdater() {
     updateOnlineStatus();
-    setInterval(updateOnlineStatus, 120000);
+    setInterval(updateOnlineStatus, 120000); // 2 minutos
     
     document.addEventListener('visibilitychange', function() {
         if (!document.hidden) {
@@ -658,6 +766,17 @@ async function logout() {
     } catch (error) {
         console.error('❌ Erro ao fazer logout:', error);
         showNotification('❌ Erro ao sair', 'error');
+    }
+}
+
+// ==================== UTILITÁRIOS ====================
+function formatDateForInput(dateString) {
+    if (!dateString) return '';
+    try {
+        return new Date(dateString).toISOString().split('T')[0];
+    } catch (error) {
+        console.log('❌ Erro ao formatar data:', error);
+        return '';
     }
 }
 
