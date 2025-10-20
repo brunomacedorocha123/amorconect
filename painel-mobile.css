@@ -509,23 +509,34 @@
     --background: #1a1a1a;
     --text: #ffffff;
     --text-light: #a0a0a0;
+    --header-bg: #2d2d2d;
+    --header-border: #404040;
   }
 
   .form-section.section-public {
-    background: linear-gradient(135deg, #2d4a2d, #1e3b1e);
+    background: #2d2d2d;
   }
 
   .form-section.section-private {
-    background: linear-gradient(135deg, #4a2d2d, #3b1e1e);
+    background: #2d2d2d;
   }
 
   .form-control {
-    background: #2d2d2d;
+    background: #3d3d3d;
     color: var(--text);
     border-color: #555;
   }
 
   .form-control:read-only {
+    background: #4d4d4d;
+  }
+
+  .caracteristica-checkbox {
+    background: #3d3d3d;
+    border-color: #555;
+  }
+
+  .interest-checkbox {
     background: #3d3d3d;
   }
 }
