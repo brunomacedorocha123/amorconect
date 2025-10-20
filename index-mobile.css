@@ -28,7 +28,7 @@
 }
 
 .logo img {
-    height: 110px; /* AUMENTEI SIGNIFICATIVAMENTE */
+    height: 110px;
     width: auto;
     display: block;
     object-fit: contain;
@@ -186,9 +186,9 @@
     font-size: 1rem;
 }
 
-/* FOOTER MOBILE */
+/* FOOTER MOBILE COM LOGO GIGANTE */
 .footer {
-    padding: 3rem 0 1.5rem;
+    padding: 4rem 0 2rem;
     background: var(--background);
     color: var(--primary);
     text-align: center;
@@ -196,35 +196,38 @@
 
 .footer-content {
     grid-template-columns: 1fr;
-    gap: 2.5rem;
+    gap: 3rem;
     text-align: center;
     padding: 0 1rem;
 }
 
-/* LOGO DO FOOTER BEM GRANDE NO MOBILE - TAMANHO DE COELHO */
+/* LOGO DO FOOTER ENORME NO MOBILE - MÁXIMO TAMANHO */
 .footer-logo {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
+    padding: 2rem 0;
 }
 
 .footer-logo img {
-    height: 150px; /* AUMENTEI SIGNIFICATIVAMENTE - TAMANHO DE COELHO */
+    height: 220px; /* TAMANHO GIGANTE PARA MOBILE */
     width: auto;
     display: block;
     object-fit: contain;
-    margin: 0 auto 1rem;
+    margin: 0 auto 1.5rem;
+    max-width: 100%;
 }
 
 .footer-logo-text {
     color: var(--primary);
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-top: 0.5rem;
+    font-size: 2rem; /* TEXTO GRANDE */
+    font-weight: 800;
+    margin-top: 1rem;
     opacity: 0.9;
+    text-align: center;
 }
 
 .footer-section {
@@ -236,7 +239,7 @@
 .footer-section h3 {
     color: var(--primary);
     margin-bottom: 1.5rem;
-    font-size: 1.3rem;
+    font-size: 1.4rem;
     text-align: center;
 }
 
@@ -244,7 +247,7 @@
     color: var(--primary);
     margin-bottom: 1rem;
     opacity: 0.9;
-    font-size: 1.05rem;
+    font-size: 1.1rem;
     line-height: 1.7;
     text-align: center;
 }
@@ -256,7 +259,7 @@
 }
 
 .footer-section ul li {
-    margin-bottom: 0.8rem;
+    margin-bottom: 1rem;
 }
 
 .footer-section ul a {
@@ -264,7 +267,7 @@
     text-decoration: none;
     opacity: 0.8;
     transition: all 0.3s ease;
-    font-size: 1.05rem;
+    font-size: 1.1rem;
 }
 
 .footer-section ul a:hover {
@@ -275,11 +278,12 @@
 
 .footer-bottom {
     text-align: center;
-    padding-top: 2rem;
+    padding-top: 2.5rem;
     border-top: 2px solid var(--secondary);
     color: var(--primary);
-    font-size: 1rem;
+    font-size: 1.1rem;
     opacity: 0.8;
+    margin-top: 2rem;
 }
 
 .container {
@@ -368,11 +372,16 @@
     .footer-logo {
         grid-column: 1 / -1;
         text-align: center;
+        padding: 2.5rem 0;
     }
     
     .footer-logo img {
-        height: 160px;
-        margin: 0 auto 1rem;
+        height: 240px; /* Ainda maior em tablets */
+        margin: 0 auto 1.5rem;
+    }
+    
+    .footer-logo-text {
+        font-size: 2.2rem;
     }
     
     .footer-section {
@@ -386,5 +395,21 @@
     
     .footer-section ul {
         text-align: left;
+    }
+}
+
+/* Ajustes para telas muito pequenas */
+@media (max-width: 360px) {
+    .footer-logo img {
+        height: 180px; /* Ajuste para telas muito pequenas */
+    }
+    
+    .footer-logo-text {
+        font-size: 1.8rem;
+    }
+    
+    .hero-image {
+        width: 280px;
+        height: 360px;
     }
 }

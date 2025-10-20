@@ -43,7 +43,7 @@ body {
     z-index: 1000;
     box-shadow: var(--shadow);
     border-bottom: 3px solid var(--secondary);
-    height: 80px; /* MANTÉM A MESMA ALTURA */
+    height: 80px;
     display: flex;
     align-items: center;
 }
@@ -56,7 +56,7 @@ body {
     height: 100%;
 }
 
-/* LOGO BEM GRANDE - AUMENTO SIGNIFICATIVO */
+/* LOGO BEM GRANDE */
 .logo {
     display: flex;
     align-items: center;
@@ -65,7 +65,7 @@ body {
 }
 
 .logo img {
-    height: 140px; /* AUMENTEI SIGNIFICATIVAMENTE */
+    height: 140px;
     width: auto;
     display: block;
     object-fit: contain;
@@ -352,32 +352,39 @@ body {
     margin-bottom: var(--space-lg);
 }
 
-/* LOGO DO FOOTER BEM GRANDE - TAMANHO DE COELHO 🐰 */
+/* LOGO DO FOOTER ENORME - AUMENTO MÁXIMO */
 .footer-logo {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    grid-column: 1 / -1; /* OCUPA TODA A LINHA DO GRID */
+    grid-column: 1 / -1;
     margin-bottom: var(--space-lg);
-    padding: 2rem 0;
+    padding: 3rem 0;
 }
 
 .footer-logo img {
-    height: 200px; /* AUMENTEI SIGNIFICATIVAMENTE - TAMANHO DE COELHO */
+    height: 280px; /* TAMANHO GIGANTE */
     width: auto;
     display: block;
     object-fit: contain;
-    margin: 0 auto 1.5rem; /* Centraliza horizontalmente */
+    margin: 0 auto 2rem;
+    transition: transform 0.3s ease;
+}
+
+/* Efeito hover para a logo gigante */
+.footer-logo img:hover {
+    transform: scale(1.05);
 }
 
 .footer-logo-text {
     color: var(--primary);
-    font-size: 1.8rem; /* TEXTO MAIOR PARA COMBINAR COM A LOGO GRANDE */
-    font-weight: 700;
-    margin-top: 1rem;
+    font-size: 2.5rem; /* TEXTO ENORME */
+    font-weight: 800;
+    margin-top: 1.5rem;
     opacity: 0.9;
+    text-align: center;
 }
 
 .footer-section h3 {
@@ -441,7 +448,11 @@ body {
     }
     
     .footer-logo img {
-        height: 180px; /* Mantém grande em tablets */
+        height: 240px; /* Mantém grande em tablets */
+    }
+    
+    .footer-logo-text {
+        font-size: 2.2rem;
     }
 }
 
@@ -504,16 +515,16 @@ body {
     
     .footer-logo {
         grid-column: 1;
-        padding: 1rem 0;
+        padding: 2rem 0;
     }
     
     .footer-logo img {
-        height: 150px; /* Mantém grande no mobile */
-        margin: 0 auto 1rem;
+        height: 200px; /* Mantém grande no mobile */
+        margin: 0 auto 1.5rem;
     }
     
     .footer-logo-text {
-        font-size: 1.5rem;
+        font-size: 1.8rem;
         text-align: center;
     }
     
