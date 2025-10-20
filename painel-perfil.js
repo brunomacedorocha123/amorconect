@@ -8,6 +8,9 @@ let selectedAvatarFile = null;
 document.addEventListener('DOMContentLoaded', function() {
     // Configurar eventos específicos do formulário de perfil
     setupProfileFormEvents();
+    
+    // Carregar dados do perfil automaticamente
+    loadProfileData();
 });
 
 function setupProfileFormEvents() {
@@ -40,6 +43,147 @@ function setupProfileFormEvents() {
     if (birthDateInput) {
         birthDateInput.addEventListener('change', validateAge);
     }
+
+    // Character count para descrição
+    const descriptionInput = document.getElementById('description');
+    if (descriptionInput) {
+        descriptionInput.addEventListener('input', updateCharCount);
+    }
+}
+
+// ==================== CARREGAR DADOS DO PERFIL ====================
+async function loadProfileData() {
+    try {
+        console.log('📋 Carregando dados do perfil...');
+        
+        // ✅ SEMPRE preencher email do usuário logado
+        const emailInput = document.getElementById('email');
+        if (emailInput && currentUser && currentUser.email) {
+            emailInput.value = currentUser.email;
+            emailInput.readOnly = true;
+            emailInput.style.backgroundColor = '#f5f5f5';
+            emailInput.style.color = '#666';
+            console.log('✅ Email preenchido automaticamente:', currentUser.email);
+        }
+
+        // Buscar dados do perfil do Supabase
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single();
+
+        if (profileError && profileError.code !== 'PGRST116') {
+            console.error('❌ Erro ao carregar perfil:', profileError);
+            return;
+        }
+
+        // Buscar dados detalhados
+        const { data: userDetails, error: detailsError } = await supabase
+            .from('user_details')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .single();
+
+        if (detailsError && detailsError.code !== 'PGRST116') {
+            console.error('❌ Erro ao carregar detalhes:', detailsError);
+        }
+
+        // Preencher formulário com dados existentes
+        fillProfileForm(profile, userDetails);
+        
+        console.log('✅ Dados do perfil carregados');
+
+    } catch (error) {
+        console.error('❌ Erro ao carregar perfil:', error);
+        showNotification('Erro ao carregar dados do perfil', 'error');
+    }
+}
+
+function fillProfileForm(profile, userDetails) {
+    console.log('🔄 Preenchendo formulário com dados...');
+    
+    // ✅ Dados do perfil principal
+    if (profile) {
+        const fields = {
+            'fullName': profile.full_name,
+            'cpf': profile.cpf,
+            'birthDate': formatDateForInput(profile.birth_date),
+            'phone': profile.phone,
+            'street': profile.street,
+            'number': profile.number,
+            'neighborhood': profile.neighborhood,
+            'city': profile.city,
+            'state': profile.state,
+            'zipCode': profile.zip_code,
+            'nickname': profile.nickname
+        };
+
+        for (const [fieldId, value] of Object.entries(fields)) {
+            const element = document.getElementById(fieldId);
+            if (element && value) {
+                element.value = value;
+                console.log(`✅ Campo ${fieldId} preenchido:`, value);
+            }
+        }
+
+        // ✅ Data de nascimento - BLOQUEAR se já existir
+        const birthDateInput = document.getElementById('birthDate');
+        if (birthDateInput && profile.birth_date) {
+            birthDateInput.readOnly = true;
+            birthDateInput.style.backgroundColor = '#f5f5f5';
+            birthDateInput.style.color = '#666';
+            console.log('✅ Data de nascimento bloqueada (já cadastrada)');
+        }
+
+        // Carregar avatar se existir
+        if (profile.avatar_url) {
+            loadAvatar(profile.avatar_url);
+        }
+    }
+
+    // ✅ Dados detalhados
+    if (userDetails) {
+        const detailFields = {
+            'displayCity': userDetails.display_city,
+            'gender': userDetails.gender,
+            'sexualOrientation': userDetails.sexual_orientation,
+            'profession': userDetails.profession,
+            'education': userDetails.education,
+            'zodiac': userDetails.zodiac,
+            'lookingFor': userDetails.looking_for,
+            'description': userDetails.description,
+            'religion': userDetails.religion,
+            'drinking': userDetails.drinking,
+            'smoking': userDetails.smoking,
+            'exercise': userDetails.exercise,
+            'exerciseDetails': userDetails.exercise_details,
+            'hasPets': userDetails.has_pets,
+            'petsDetails': userDetails.pets_details
+        };
+
+        for (const [fieldId, value] of Object.entries(detailFields)) {
+            const element = document.getElementById(fieldId);
+            if (element && value) element.value = value;
+        }
+        
+        // Preencher interesses
+        if (userDetails.interests) {
+            document.querySelectorAll('input[name="interests"]').forEach(checkbox => {
+                checkbox.checked = userDetails.interests.includes(checkbox.value);
+            });
+        }
+        
+        // Preencher características pessoais
+        if (userDetails.personal_traits) {
+            document.querySelectorAll('input[name="caracteristicas"]').forEach(checkbox => {
+                checkbox.checked = userDetails.personal_traits.includes(checkbox.value);
+            });
+        }
+    }
+
+    updateCharCount();
+    console.log('✅ Formulário preenchido completamente');
 }
 
 // ==================== UPLOAD DE AVATAR ====================
@@ -273,6 +417,15 @@ async function saveProfile(event) {
         // ✅ Atualizar interface
         updateUserInterfaceAfterSave(profileData.nickname);
         
+        // ✅ BLOQUEAR data de nascimento após primeiro salvamento
+        const birthDateInput = document.getElementById('birthDate');
+        if (birthDateInput && profileData.birth_date) {
+            birthDateInput.readOnly = true;
+            birthDateInput.style.backgroundColor = '#f5f5f5';
+            birthDateInput.style.color = '#666';
+            console.log('✅ Data de nascimento bloqueada após salvamento');
+        }
+        
         // Resetar estado do formulário
         selectedAvatarFile = null;
         const avatarInput = document.getElementById('avatarInput');
@@ -490,6 +643,39 @@ function showFallbackAvatars() {
     });
 }
 
+// ==================== CONTADOR DE CARACTERES ====================
+function updateCharCount() {
+    const textarea = document.getElementById('description');
+    const charCount = document.getElementById('charCount');
+    
+    if (textarea && charCount) {
+        const count = textarea.value.length;
+        const maxLength = 100;
+        
+        charCount.textContent = `${count}/${maxLength}`;
+        
+        // Cores baseadas na quantidade
+        if (count === 0) {
+            charCount.style.color = 'var(--text-light)';
+        } else if (count < 50) {
+            charCount.style.color = '#48bb78';
+        } else if (count < 80) {
+            charCount.style.color = '#ed8936';
+        } else if (count < 100) {
+            charCount.style.color = '#f56565';
+        } else {
+            charCount.style.color = '#e53e3e';
+        }
+        
+        // Limitar caracteres se exceder
+        if (count > maxLength) {
+            textarea.value = textarea.value.substring(0, maxLength);
+            updateCharCount();
+            showNotification(`⚠️ Limite de ${maxLength} caracteres atingido!`, 'warning');
+        }
+    }
+}
+
 // ==================== FUNÇÕES DE UTILIDADE ====================
 function formatDateForInput(dateString) {
     if (!dateString) return '';
@@ -520,5 +706,6 @@ function formatPhone(phone) {
 window.handleAvatarSelect = handleAvatarSelect;
 window.saveProfile = saveProfile;
 window.validateAge = validateAge;
+window.updateCharCount = updateCharCount;
 
 console.log('✅ painel-perfil.js carregado e pronto!');
