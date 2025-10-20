@@ -1,54 +1,52 @@
 // ==================== SISTEMA DE PERFIL COMPLETO ====================
 console.log('📝 painel-perfil.js carregando...');
 
-// Variáveis globais do módulo perfil
 let selectedAvatarFile = null;
 
-// ==================== INICIALIZAÇÃO DO MÓDULO PERFIL ====================
+// ==================== INICIALIZAÇÃO ====================
 document.addEventListener('DOMContentLoaded', function() {
-    // Configurar eventos específicos do formulário de perfil
-    setupProfileFormEvents();
-    
-    // Carregar dados do perfil automaticamente
-    loadProfileData();
+    console.log('🚀 Inicializando módulo de perfil...');
+    initializeProfileModule();
 });
 
-function setupProfileFormEvents() {
-    console.log('⚙️ Configurando eventos do formulário de perfil...');
+async function initializeProfileModule() {
+    console.log('🔍 Verificando dependências...');
     
-    // Form submission
+    // Aguardar autenticação carregar
+    if (!window.currentUser || !window.supabase) {
+        console.log('⏳ Aguardando autenticação...');
+        setTimeout(initializeProfileModule, 1000);
+        return;
+    }
+    
+    console.log('✅ Usuário autenticado:', currentUser.email);
+    
+    setupProfileFormEvents();
+    await loadProfileData();
+}
+
+function setupProfileFormEvents() {
+    console.log('⚙️ Configurando eventos do formulário...');
+    
     const profileForm = document.getElementById('profileForm');
     if (profileForm) {
         profileForm.addEventListener('submit', saveProfile);
-        console.log('✅ Evento de submit configurado');
     }
 
-    // Avatar upload
     const avatarButton = document.getElementById('avatarButton');
     const avatarInput = document.getElementById('avatarInput');
     
     if (avatarButton && avatarInput) {
-        avatarButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('📷 Clicou no botão de avatar');
-            avatarInput.click();
-        });
-        
+        avatarButton.addEventListener('click', () => avatarInput.click());
         avatarInput.addEventListener('change', handleAvatarSelect);
-        console.log('✅ Eventos de avatar configurados');
     }
 
-    // Validação de idade em tempo real
+    // Eventos de validação
     const birthDateInput = document.getElementById('birthDate');
-    if (birthDateInput) {
-        birthDateInput.addEventListener('change', validateAge);
-    }
-
-    // Character count para descrição
+    if (birthDateInput) birthDateInput.addEventListener('change', validateAge);
+    
     const descriptionInput = document.getElementById('description');
-    if (descriptionInput) {
-        descriptionInput.addEventListener('input', updateCharCount);
-    }
+    if (descriptionInput) descriptionInput.addEventListener('input', updateCharCount);
 }
 
 // ==================== CARREGAR DADOS DO PERFIL ====================
@@ -56,43 +54,42 @@ async function loadProfileData() {
     try {
         console.log('📋 Carregando dados do perfil...');
         
-        // ✅ SEMPRE preencher email do usuário logado
+        // ✅ 1. PREENCHER EMAIL AUTOMATICAMENTE (SEMPRE)
         const emailInput = document.getElementById('email');
         if (emailInput && currentUser && currentUser.email) {
             emailInput.value = currentUser.email;
             emailInput.readOnly = true;
             emailInput.style.backgroundColor = '#f5f5f5';
             emailInput.style.color = '#666';
-            console.log('✅ Email preenchido automaticamente:', currentUser.email);
+            console.log('✅ Email preenchido:', currentUser.email);
         }
 
-        // Buscar dados do perfil do Supabase
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', currentUser.id)
-            .single();
-
-        if (profileError && profileError.code !== 'PGRST116') {
-            console.error('❌ Erro ao carregar perfil:', profileError);
-            return;
-        }
-
-        // Buscar dados detalhados
-        const { data: userDetails, error: detailsError } = await supabase
-            .from('user_details')
-            .select('*')
-            .eq('user_id', currentUser.id)
-            .single();
-
-        if (detailsError && detailsError.code !== 'PGRST116') {
-            console.error('❌ Erro ao carregar detalhes:', detailsError);
-        }
-
-        // Preencher formulário com dados existentes
-        fillProfileForm(profile, userDetails);
+        // ✅ 2. BUSCAR DADOS DO CADASTRO (AUTH)
+        console.log('🔍 Buscando dados do cadastro...');
+        const { data: authData, error: authError } = await supabase.auth.getUser();
         
-        console.log('✅ Dados do perfil carregados');
+        if (authError) {
+            console.error('❌ Erro ao buscar dados do auth:', authError);
+            throw authError;
+        }
+
+        const authUser = authData.user;
+        console.log('📦 Dados do auth:', authUser);
+
+        // ✅ 3. BUSCAR DADOS DO PERFIL (BANCO)
+        console.log('🔍 Buscando dados do perfil...');
+        const [profileResult, detailsResult] = await Promise.all([
+            supabase.from('profiles').select('*').eq('id', currentUser.id).single(),
+            supabase.from('user_details').select('*').eq('user_id', currentUser.id).single()
+        ]);
+
+        console.log('📊 Resultado perfil:', profileResult);
+        console.log('📊 Resultado detalhes:', detailsResult);
+
+        // ✅ 4. PREENCHER FORMULÁRIO COM TODOS OS DADOS
+        await fillProfileForm(authUser, profileResult.data, detailsResult.data);
+
+        console.log('✅ Dados do perfil carregados com sucesso!');
 
     } catch (error) {
         console.error('❌ Erro ao carregar perfil:', error);
@@ -100,26 +97,79 @@ async function loadProfileData() {
     }
 }
 
-function fillProfileForm(profile, userDetails) {
-    console.log('🔄 Preenchendo formulário com dados...');
+async function fillProfileForm(authUser, profile, userDetails) {
+    console.log('🔄 Preenchendo formulário...');
     
-    // ✅ Dados do perfil principal
+    // ✅ DADOS DO CADASTRO (AUTH) - SEMPRE USAR ESTES PRIMEIRO
+    if (authUser) {
+        console.log('👤 Dados do auth user:', {
+            email: authUser.email,
+            user_metadata: authUser.user_metadata
+        });
+
+        // ✅ Email (SEMPRE do auth)
+        const emailInput = document.getElementById('email');
+        if (emailInput) {
+            emailInput.value = authUser.email || '';
+            emailInput.readOnly = true;
+            emailInput.style.backgroundColor = '#f5f5f5';
+        }
+
+        // ✅ Nome completo (do cadastro)
+        const fullNameInput = document.getElementById('fullName');
+        if (fullNameInput && authUser.user_metadata?.full_name) {
+            fullNameInput.value = authUser.user_metadata.full_name;
+            console.log('✅ Nome completo do cadastro:', authUser.user_metadata.full_name);
+        }
+
+        // ✅ Nickname (do cadastro)
+        const nicknameInput = document.getElementById('nickname');
+        if (nicknameInput) {
+            // Prioridade: 1. Perfil salvo, 2. Cadastro, 3. Email
+            if (profile?.nickname) {
+                nicknameInput.value = profile.nickname;
+            } else if (authUser.user_metadata?.nickname) {
+                nicknameInput.value = authUser.user_metadata.nickname;
+            } else {
+                nicknameInput.value = authUser.email.split('@')[0];
+            }
+            console.log('✅ Nickname definido:', nicknameInput.value);
+        }
+
+        // ✅ Data de nascimento (do cadastro)
+        const birthDateInput = document.getElementById('birthDate');
+        if (birthDateInput) {
+            // Prioridade: 1. Perfil salvo, 2. Cadastro
+            if (profile?.birth_date) {
+                birthDateInput.value = formatDateForInput(profile.birth_date);
+                // BLOQUEAR se já foi salva antes
+                birthDateInput.readOnly = true;
+                birthDateInput.style.backgroundColor = '#f5f5f5';
+                birthDateInput.style.color = '#666';
+                console.log('✅ Data nascimento do perfil (BLOQUEADA):', profile.birth_date);
+            } else if (authUser.user_metadata?.birth_date) {
+                birthDateInput.value = formatDateForInput(authUser.user_metadata.birth_date);
+                console.log('✅ Data nascimento do cadastro:', authUser.user_metadata.birth_date);
+            }
+        }
+    }
+
+    // ✅ DADOS DO PERFIL SALVO (BANCO)
     if (profile) {
-        const fields = {
-            'fullName': profile.full_name,
+        console.log('💾 Dados do perfil encontrados:', profile);
+        
+        const profileFields = {
             'cpf': profile.cpf,
-            'birthDate': formatDateForInput(profile.birth_date),
             'phone': profile.phone,
             'street': profile.street,
             'number': profile.number,
             'neighborhood': profile.neighborhood,
             'city': profile.city,
             'state': profile.state,
-            'zipCode': profile.zip_code,
-            'nickname': profile.nickname
+            'zipCode': profile.zip_code
         };
 
-        for (const [fieldId, value] of Object.entries(fields)) {
+        for (const [fieldId, value] of Object.entries(profileFields)) {
             const element = document.getElementById(fieldId);
             if (element && value) {
                 element.value = value;
@@ -127,23 +177,17 @@ function fillProfileForm(profile, userDetails) {
             }
         }
 
-        // ✅ Data de nascimento - BLOQUEAR se já existir
-        const birthDateInput = document.getElementById('birthDate');
-        if (birthDateInput && profile.birth_date) {
-            birthDateInput.readOnly = true;
-            birthDateInput.style.backgroundColor = '#f5f5f5';
-            birthDateInput.style.color = '#666';
-            console.log('✅ Data de nascimento bloqueada (já cadastrada)');
-        }
-
-        // Carregar avatar se existir
+        // Avatar
         if (profile.avatar_url) {
+            console.log('🖼️ Carregando avatar...');
             loadAvatar(profile.avatar_url);
         }
     }
 
-    // ✅ Dados detalhados
+    // ✅ DADOS DETALHADOS (USER_DETAILS)
     if (userDetails) {
+        console.log('📝 Dados detalhados encontrados:', userDetails);
+        
         const detailFields = {
             'displayCity': userDetails.display_city,
             'gender': userDetails.gender,
@@ -164,18 +208,23 @@ function fillProfileForm(profile, userDetails) {
 
         for (const [fieldId, value] of Object.entries(detailFields)) {
             const element = document.getElementById(fieldId);
-            if (element && value) element.value = value;
+            if (element && value) {
+                element.value = value;
+                console.log(`✅ Campo ${fieldId} preenchido:`, value);
+            }
         }
         
-        // Preencher interesses
-        if (userDetails.interests) {
+        // Checkboxes - Interesses
+        if (userDetails.interests && userDetails.interests.length > 0) {
+            console.log('🎯 Preenchendo interesses:', userDetails.interests);
             document.querySelectorAll('input[name="interests"]').forEach(checkbox => {
                 checkbox.checked = userDetails.interests.includes(checkbox.value);
             });
         }
         
-        // Preencher características pessoais
-        if (userDetails.personal_traits) {
+        // Checkboxes - Características pessoais
+        if (userDetails.personal_traits && userDetails.personal_traits.length > 0) {
+            console.log('🎭 Preenchendo características:', userDetails.personal_traits);
             document.querySelectorAll('input[name="caracteristicas"]').forEach(checkbox => {
                 checkbox.checked = userDetails.personal_traits.includes(checkbox.value);
             });
@@ -183,12 +232,11 @@ function fillProfileForm(profile, userDetails) {
     }
 
     updateCharCount();
-    console.log('✅ Formulário preenchido completamente');
+    console.log('✅ Formulário preenchido completamente!');
 }
 
 // ==================== UPLOAD DE AVATAR ====================
 function handleAvatarSelect(event) {
-    console.log('📁 Arquivo selecionado:', event.target.files[0]);
     const file = event.target.files[0];
     if (!file) {
         console.log('❌ Nenhum arquivo selecionado');
@@ -209,17 +257,11 @@ function handleAvatarSelect(event) {
     selectedAvatarFile = file;
     console.log('✅ Arquivo validado:', file.name, file.size, 'bytes');
 
-    // Criar preview
+    // Preview
     const reader = new FileReader();
     reader.onload = function(e) {
-        console.log('🖼️ Criando preview da imagem...');
-        
         updateAvatarPreview(e.target.result);
-        showNotification('✅ Imagem selecionada! Clique em Salvar Perfil para confirmar.', 'success');
-    };
-    reader.onerror = function() {
-        console.error('❌ Erro ao ler arquivo');
-        showNotification('❌ Erro ao carregar imagem', 'error');
+        showNotification('✅ Imagem selecionada! Clique em Salvar Perfil.', 'success');
     };
     reader.readAsDataURL(file);
 }
@@ -227,8 +269,6 @@ function handleAvatarSelect(event) {
 function updateAvatarPreview(imageData) {
     const previewImg = document.getElementById('avatarPreviewImg');
     const fallback = document.getElementById('avatarFallback');
-    const avatarImgs = document.querySelectorAll('.user-avatar-img');
-    const headerFallbacks = document.querySelectorAll('.user-avatar-fallback');
     
     if (previewImg) {
         previewImg.src = imageData;
@@ -236,20 +276,21 @@ function updateAvatarPreview(imageData) {
     }
     if (fallback) fallback.style.display = 'none';
     
-    avatarImgs.forEach(img => {
+    // Atualizar todos os avatares
+    document.querySelectorAll('.user-avatar-img').forEach(img => {
         img.src = imageData;
         img.style.display = 'block';
     });
     
-    headerFallbacks.forEach(fb => {
+    document.querySelectorAll('.user-avatar-fallback').forEach(fb => {
         fb.style.display = 'none';
     });
 }
 
-// ==================== VALIDAÇÕES DE FORMULÁRIO ====================
+// ==================== VALIDAÇÕES ====================
 function validateAge() {
     const birthDateInput = document.getElementById('birthDate');
-    if (!birthDateInput || !birthDateInput.value) return true;
+    if (!birthDateInput?.value) return true;
     
     const birthDate = new Date(birthDateInput.value);
     const today = new Date();
@@ -271,19 +312,9 @@ function validateAge() {
 
 function validateRequiredFields() {
     const requiredFields = [
-        'nickname',
-        'fullName', 
-        'cpf',
-        'birthDate',
-        'phone',
-        'street',
-        'number',
-        'neighborhood', 
-        'city',
-        'state',
-        'zipCode',
-        'gender',
-        'lookingFor'
+        'nickname', 'fullName', 'cpf', 'birthDate', 'phone',
+        'street', 'number', 'neighborhood', 'city', 'state', 
+        'zipCode', 'gender', 'lookingFor'
     ];
     
     for (const fieldId of requiredFields) {
@@ -337,22 +368,18 @@ async function saveProfile(event) {
 
         // Validações
         if (!validateRequiredFields()) {
-            saveButton.innerHTML = originalText;
-            saveButton.disabled = false;
-            return;
+            throw new Error('Por favor, preencha todos os campos obrigatórios');
         }
         
         if (!validateAge()) {
-            saveButton.innerHTML = originalText;
-            saveButton.disabled = false;
-            return;
+            throw new Error('Validação de idade falhou');
         }
 
         let avatarPath = null;
 
-        // Upload da imagem se houver nova
+        // Upload de avatar
         if (selectedAvatarFile) {
-            console.log('📤 Fazendo upload da imagem...');
+            console.log('📤 Fazendo upload do avatar...');
             showNotification('📤 Enviando imagem...', 'info');
             try {
                 avatarPath = await uploadAvatar(selectedAvatarFile);
@@ -361,7 +388,7 @@ async function saveProfile(event) {
                     showNotification('✅ Imagem enviada com sucesso!', 'success');
                 }
             } catch (uploadError) {
-                console.error('❌ Upload falhou, continuando sem imagem:', uploadError);
+                console.error('❌ Upload falhou:', uploadError);
                 showNotification('⚠️ Imagem não enviada, mas perfil será salvo', 'warning');
             }
         }
@@ -369,9 +396,12 @@ async function saveProfile(event) {
         // Coletar dados do formulário
         const profileData = collectProfileData();
         const userDetailsData = collectUserDetailsData();
-
-        // ✅ NOVO: Coletar características pessoais
         userDetailsData.personal_traits = collectPersonalTraits();
+
+        console.log('📦 Dados coletados para salvar:', {
+            profileData,
+            userDetailsData
+        });
 
         // Adicionar avatar path se upload foi bem sucedido
         if (avatarPath) {
@@ -382,39 +412,36 @@ async function saveProfile(event) {
         console.log('💾 Salvando no banco de dados...');
         showNotification('💾 Salvando dados do perfil...', 'info');
 
-        // Salvar perfil principal
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .upsert({
+        // ✅ SALVAR NO BANCO - COM UPSERT
+        const [profileResult, detailsResult] = await Promise.all([
+            supabase.from('profiles').upsert({
                 id: currentUser.id,
-                ...profileData
-            }, { 
-                onConflict: 'id',
-                ignoreDuplicates: false
-            });
-
-        if (profileError) {
-            console.error('❌ Erro ao salvar perfil:', profileError);
-            throw new Error(`Erro no perfil: ${profileError.message}`);
-        }
-
-        // Salvar detalhes do usuário
-        const { error: detailsError } = await supabase
-            .from('user_details')
-            .upsert({
+                ...profileData,
+                updated_at: new Date().toISOString()
+            }),
+            supabase.from('user_details').upsert({
                 user_id: currentUser.id,
-                ...userDetailsData
-            }, { 
-                onConflict: 'user_id',
-                ignoreDuplicates: false
-            });
+                ...userDetailsData,
+                updated_at: new Date().toISOString()
+            })
+        ]);
 
-        if (detailsError) {
-            console.error('❌ Erro ao salvar detalhes:', detailsError);
-            throw new Error(`Erro nos detalhes: ${detailsError.message}`);
+        console.log('📊 Resultado do salvamento:', {
+            profile: profileResult,
+            details: detailsResult
+        });
+
+        if (profileResult.error) {
+            console.error('❌ Erro ao salvar perfil:', profileResult.error);
+            throw new Error(`Erro no perfil: ${profileResult.error.message}`);
         }
 
-        // ✅ Atualizar interface
+        if (detailsResult.error) {
+            console.error('❌ Erro ao salvar detalhes:', detailsResult.error);
+            throw new Error(`Erro nos detalhes: ${detailsResult.error.message}`);
+        }
+
+        // ✅ SUCESSO - ATUALIZAR INTERFACE
         updateUserInterfaceAfterSave(profileData.nickname);
         
         // ✅ BLOQUEAR data de nascimento após primeiro salvamento
@@ -455,61 +482,57 @@ async function saveProfile(event) {
 }
 
 function collectProfileData() {
-    const getFormValue = (id) => {
+    const getValue = (id) => {
         const element = document.getElementById(id);
         return element ? element.value.trim() : '';
     };
 
     return {
-        full_name: getFormValue('fullName'),
-        cpf: getFormValue('cpf').replace(/\D/g, ''),
-        birth_date: getFormValue('birthDate'),
-        phone: getFormValue('phone').replace(/\D/g, ''),
-        street: getFormValue('street'),
-        number: getFormValue('number'),
-        neighborhood: getFormValue('neighborhood'),
-        city: getFormValue('city'),
-        state: getFormValue('state'),
-        zip_code: getFormValue('zipCode').replace(/\D/g, ''),
-        nickname: getFormValue('nickname'),
-        updated_at: new Date().toISOString()
+        full_name: getValue('fullName'),
+        cpf: getValue('cpf').replace(/\D/g, ''),
+        birth_date: getValue('birthDate'),
+        phone: getValue('phone').replace(/\D/g, ''),
+        street: getValue('street'),
+        number: getValue('number'),
+        neighborhood: getValue('neighborhood'),
+        city: getValue('city'),
+        state: getValue('state'),
+        zip_code: getValue('zipCode').replace(/\D/g, ''),
+        nickname: getValue('nickname')
     };
 }
 
 function collectUserDetailsData() {
-    const getFormValue = (id) => {
+    const getValue = (id) => {
         const element = document.getElementById(id);
         return element ? element.value.trim() : '';
     };
 
-    // Coletar interesses
     const selectedInterests = [];
     document.querySelectorAll('input[name="interests"]:checked').forEach(checkbox => {
         selectedInterests.push(checkbox.value);
     });
 
     return {
-        display_city: getFormValue('displayCity'),
-        gender: getFormValue('gender'),
-        sexual_orientation: getFormValue('sexualOrientation'),
-        profession: getFormValue('profession'),
-        education: getFormValue('education'),
-        zodiac: getFormValue('zodiac'),
-        looking_for: getFormValue('lookingFor'),
-        description: getFormValue('description'),
-        religion: getFormValue('religion'),
-        drinking: getFormValue('drinking'),
-        smoking: getFormValue('smoking'),
-        exercise: getFormValue('exercise'),
-        exercise_details: getFormValue('exerciseDetails'),
-        has_pets: getFormValue('hasPets'),
-        pets_details: getFormValue('petsDetails'),
-        interests: selectedInterests,
-        updated_at: new Date().toISOString()
+        display_city: getValue('displayCity'),
+        gender: getValue('gender'),
+        sexual_orientation: getValue('sexualOrientation'),
+        profession: getValue('profession'),
+        education: getValue('education'),
+        zodiac: getValue('zodiac'),
+        looking_for: getValue('lookingFor'),
+        description: getValue('description'),
+        religion: getValue('religion'),
+        drinking: getValue('drinking'),
+        smoking: getValue('smoking'),
+        exercise: getValue('exercise'),
+        exercise_details: getValue('exerciseDetails'),
+        has_pets: getValue('hasPets'),
+        pets_details: getValue('petsDetails'),
+        interests: selectedInterests
     };
 }
 
-// ✅ NOVA FUNÇÃO: Coletar características pessoais
 function collectPersonalTraits() {
     const selectedTraits = [];
     document.querySelectorAll('input[name="caracteristicas"]:checked').forEach(checkbox => {
@@ -518,70 +541,28 @@ function collectPersonalTraits() {
     return selectedTraits;
 }
 
-function updateUserInterfaceAfterSave(nickname) {
-    // Atualizar nicknames na interface
-    const userNickname = document.getElementById('userNickname');
-    const mobileUserNickname = document.getElementById('mobileUserNickname');
-    
-    if (userNickname) userNickname.textContent = nickname;
-    if (mobileUserNickname) mobileUserNickname.textContent = nickname;
-}
-
 // ==================== UPLOAD DE AVATAR ====================
 async function uploadAvatar(file) {
-    try {
-        console.log('📤 Iniciando upload do avatar...');
-        
-        const fileExt = file.name.split('.').pop().toLowerCase();
-        const fileName = `${Date.now()}_avatar.${fileExt}`;
-        const filePath = `${currentUser.id}/${fileName}`;
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    const fileName = `${Date.now()}_avatar.${fileExt}`;
+    const filePath = `${currentUser.id}/${fileName}`;
 
-        console.log('📁 Fazendo upload para:', filePath);
+    console.log('📤 Upload para:', filePath);
 
-        // Verificar se a pasta existe
-        try {
-            await supabase.storage
-                .from('avatars')
-                .list(currentUser.id);
-        } catch (e) {
-            console.log('📁 Pasta não existe, será criada automaticamente');
-        }
+    const { data, error } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true
+        });
 
-        // Upload simples
-        const { data, error } = await supabase.storage
-            .from('avatars')
-            .upload(filePath, file, {
-                cacheControl: '3600',
-                upsert: false
-            });
-
-        if (error) {
-            console.error('❌ Erro no upload:', error);
-            
-            // Tentar com upsert true se falhar
-            const { data: retryData, error: retryError } = await supabase.storage
-                .from('avatars')
-                .upload(filePath, file, {
-                    upsert: true
-                });
-                
-            if (retryError) {
-                console.error('❌ Erro na segunda tentativa:', retryError);
-                throw new Error(`Falha no upload: ${retryError.message}`);
-            }
-            
-            console.log('✅ Upload realizado na segunda tentativa');
-            return filePath;
-        }
-
-        console.log('✅ Upload realizado com sucesso:', data);
-        return filePath;
-
-    } catch (error) {
-        console.error('❌ Erro completo no upload:', error);
-        showNotification('⚠️ Imagem não pôde ser enviada, mas o perfil será salvo.', 'warning');
-        return null;
+    if (error) {
+        console.error('❌ Erro no upload:', error);
+        throw error;
     }
+    
+    console.log('✅ Upload realizado:', data);
+    return filePath;
 }
 
 async function loadAvatar(avatarPath) {
@@ -592,7 +573,7 @@ async function loadAvatar(avatarPath) {
             .from('avatars')
             .getPublicUrl(avatarPath);
 
-        if (data && data.publicUrl) {
+        if (data?.publicUrl) {
             console.log('✅ URL pública do avatar:', data.publicUrl);
             updateAvatarImages(data.publicUrl);
         } else {
@@ -606,13 +587,7 @@ async function loadAvatar(avatarPath) {
 }
 
 function updateAvatarImages(imageUrl) {
-    const avatarImgs = document.querySelectorAll('.user-avatar-img');
-    const previewImg = document.getElementById('avatarPreviewImg');
-    const fallbacks = document.querySelectorAll('.user-avatar-fallback, .avatar-fallback');
-    
-    console.log('✅ Atualizando avatares com URL:', imageUrl);
-    
-    avatarImgs.forEach(img => {
+    document.querySelectorAll('.user-avatar-img').forEach(img => {
         img.src = imageUrl;
         img.style.display = 'block';
         img.onerror = () => {
@@ -621,6 +596,7 @@ function updateAvatarImages(imageUrl) {
         };
     });
     
+    const previewImg = document.getElementById('avatarPreviewImg');
     if (previewImg) {
         previewImg.src = imageUrl;
         previewImg.style.display = 'block';
@@ -632,77 +608,98 @@ function updateAvatarImages(imageUrl) {
         };
     }
     
-    fallbacks.forEach(fb => {
+    document.querySelectorAll('.user-avatar-fallback').forEach(fb => {
         fb.style.display = 'none';
     });
 }
 
 function showFallbackAvatars() {
-    document.querySelectorAll('.user-avatar-fallback, .avatar-fallback').forEach(fb => {
+    document.querySelectorAll('.user-avatar-fallback').forEach(fb => {
         fb.style.display = 'flex';
     });
 }
 
-// ==================== CONTADOR DE CARACTERES ====================
+// ==================== UTILITÁRIOS ====================
+function updateUserInterfaceAfterSave(nickname) {
+    console.log('👤 Atualizando interface com nickname:', nickname);
+    
+    const userNickname = document.getElementById('userNickname');
+    const mobileUserNickname = document.getElementById('mobileUserNickname');
+    
+    if (userNickname) {
+        userNickname.textContent = nickname;
+        console.log('✅ Header nickname atualizado:', nickname);
+    }
+    if (mobileUserNickname) {
+        mobileUserNickname.textContent = nickname;
+        console.log('✅ Mobile nickname atualizado:', nickname);
+    }
+}
+
 function updateCharCount() {
     const textarea = document.getElementById('description');
     const charCount = document.getElementById('charCount');
     
     if (textarea && charCount) {
         const count = textarea.value.length;
-        const maxLength = 100;
+        charCount.textContent = `${count}/100`;
         
-        charCount.textContent = `${count}/${maxLength}`;
-        
-        // Cores baseadas na quantidade
-        if (count === 0) {
-            charCount.style.color = 'var(--text-light)';
-        } else if (count < 50) {
-            charCount.style.color = '#48bb78';
-        } else if (count < 80) {
-            charCount.style.color = '#ed8936';
-        } else if (count < 100) {
-            charCount.style.color = '#f56565';
-        } else {
-            charCount.style.color = '#e53e3e';
-        }
-        
-        // Limitar caracteres se exceder
-        if (count > maxLength) {
-            textarea.value = textarea.value.substring(0, maxLength);
-            updateCharCount();
-            showNotification(`⚠️ Limite de ${maxLength} caracteres atingido!`, 'warning');
-        }
+        // Cor baseada na quantidade
+        if (count > 80) charCount.style.color = '#f56565';
+        else if (count > 50) charCount.style.color = '#ed8936';
+        else charCount.style.color = '#48bb78';
     }
 }
 
-// ==================== FUNÇÕES DE UTILIDADE ====================
 function formatDateForInput(dateString) {
     if (!dateString) return '';
     try {
-        const date = new Date(dateString);
-        return date.toISOString().split('T')[0];
+        return new Date(dateString).toISOString().split('T')[0];
     } catch (error) {
         return '';
     }
 }
 
-function formatCPF(cpf) {
-    if (!cpf) return '';
-    cpf = cpf.replace(/\D/g, '');
-    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-}
+// ==================== ATUALIZAR PROGRESSO ====================
+async function updateProfileCompletion() {
+    try {
+        console.log('📊 Atualizando progresso do perfil...');
+        
+        const { data: completion, error } = await supabase
+            .rpc('calculate_profile_completion', { user_uuid: currentUser.id });
+        
+        if (error) {
+            console.error('❌ Erro ao calcular completude:', error);
+            return;
+        }
 
-function formatPhone(phone) {
-    if (!phone) return '';
-    phone = phone.replace(/\D/g, '');
-    if (phone.length === 11) {
-        return phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+        const percentage = completion || 0;
+        const progressFill = document.getElementById('progressFill');
+        const completionPercentage = document.getElementById('completionPercentage');
+        const progressText = document.getElementById('progressText');
+
+        if (progressFill) progressFill.style.width = `${percentage}%`;
+        if (completionPercentage) completionPercentage.textContent = `${percentage}%`;
+        
+        if (progressText) {
+            if (percentage < 30) {
+                progressText.textContent = 'Complete seu perfil para melhorar suas conexões';
+            } else if (percentage < 70) {
+                progressText.textContent = 'Seu perfil está ficando interessante! Continue...';
+            } else if (percentage < 100) {
+                progressText.textContent = 'Quase lá! Complete os últimos detalhes';
+            } else {
+                progressText.textContent = '🎉 Perfil 100% completo!';
+            }
+        }
+
+        console.log(`📊 Progresso do perfil: ${percentage}%`);
+    } catch (error) {
+        console.error('❌ Erro ao atualizar progresso:', error);
     }
-    return phone;
 }
 
-// ==================== EXPORTAÇÕES GLOBAIS ====================
+// ==================== EXPORTAÇÕES ====================
 window.handleAvatarSelect = handleAvatarSelect;
 window.saveProfile = saveProfile;
 window.validateAge = validateAge;
