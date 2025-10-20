@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro Realizado - PulseLove</title>
+    <style>
+        /* ========== VARIÁVEIS GLOBAIS PULSELOVE ========== */
+        :root {
+            --primary: #722F37;
+            --secondary: #C9A227;
+            --gold-light: #F4D98C;
+            --background: #F9F5F0;
+            --white: #ffffff;
+            --text: #1f1f1f;
+            --text-light: #666;
+            --space-sm: 1rem;
+            --space-md: 2rem;
+            --space-lg: 3rem;
+            --radius: 12px;
+            --shadow: 0 8px 30px rgba(114, 42, 55, 0.15);
+            --transition: all 0.3s ease;
+            --success: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: var(--space-md);
+        }
+
+        .success-container {
+            background: var(--white);
+            padding: var(--space-lg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            max-width: 500px;
+            border: 2px solid var(--secondary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .success-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            color: var(--success);
+            margin-bottom: var(--space-sm);
+            animation: bounce 1s ease-in-out;
+        }
+
+        .success-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto var(--space-sm) auto;
+            display: block;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: var(--space-sm);
+            font-size: 2.2rem;
+        }
+
+        p {
+            margin-bottom: var(--space-md);
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .highlight {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .email-tip {
+            background: var(--background);
+            padding: var(--space-sm);
+            border-radius: var(--radius);
+            border-left: 4px solid var(--secondary);
+            margin: var(--space-md) 0;
+            text-align: left;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            background: var(--secondary);
+            color: var(--primary);
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: var(--transition);
+            border: 2px solid var(--secondary);
+        }
+
+        .btn:hover {
+            background: var(--primary);
+            color: var(--white);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border-color: var(--primary);
+            color: var(--primary);
+            margin-left: var(--space-sm);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        @keyframes bounce {
+            0%, 20%, 60%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            80% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .success-container {
+                padding: var(--space-md);
+                margin: var(--space-sm);
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .btn-container {
+                display: flex;
+                flex-direction: column;
+                gap: var(--space-sm);
+            }
+            
+            .btn-outline {
+                margin-left: 0;
+                margin-top: var(--space-sm);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .success-container {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 1.6rem;
+            }
+            
+            .success-icon {
+                font-size: 3rem;
+            }
+            
+            .success-logo {
+                width: 60px;
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <img src="pulselove.png" alt="PulseLove" class="success-logo">
+        <div class="success-icon">✅</div>
+        <h1>Cadastro Realizado com Sucesso!</h1>
+        <p>Enviamos um e-mail de confirmação para <strong class="highlight" id="userEmail"></strong>.</p>
+        <p>Por favor, verifique sua caixa de entrada e clique no link para ativar sua conta.</p>
+        
+        <div class="email-tip">
+            <strong>💡 Dica importante:</strong> Verifique também sua pasta de spam ou lixo eletrônico caso não encontre o e-mail em sua caixa de entrada.
+        </div>
+        
+        <p>Após confirmar seu e-mail, você poderá fazer login e começar a usar o PulseLove.</p>
+        
+        <div class="btn-container">
+            <a href="login.html" class="btn">Fazer Login</a>
+            <a href="index.html" class="btn btn-outline">Página Inicial</a>
+        </div>
+    </div>
+
+    <script>
+        // Mostrar o e-mail do usuário se disponível
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const email = urlParams.get('email');
+            
+            if (email) {
+                document.getElementById('userEmail').textContent = email;
+            }
+            
+            // Limpar dados temporários do cadastro
+            localStorage.removeItem('cadastro_temp');
+            sessionStorage.removeItem('cadastro_temp');
+        });
+    </script>
+</body>
+</html>
