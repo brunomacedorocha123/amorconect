@@ -5,72 +5,132 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home - PulseLove</title>
     <link rel="stylesheet" href="home.css">
+    <link rel="stylesheet" href="home-mobile.css" media="(max-width: 768px)">
 </head>
 <body>
     <!-- Header -->
     <header class="header">
         <div class="container">
             <div class="header-content">
-                <button id="hamburgerBtn">☰</button>
+                <!-- Menu Hamburger -->
+                <button class="menu-toggle" id="hamburgerBtn">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+
+                <!-- Logo -->
                 <div class="logo">
                     <img src="pulselove.png" alt="PulseLove">
                 </div>
-                
-                <!-- Notificações -->
-                <div class="notification-bell-container">
-                    <a href="notificacoes.html" class="notification-bell" id="notificationBell" title="Notificações">
-                        🔔
+
+                <!-- Navegação Principal -->
+                <nav class="nav">
+                    <a href="busca.html" class="nav-icon" title="Buscar">
+                        <span class="icon">🔍</span>
+                    </a>
+                    <a href="mensagens.html" class="nav-icon" title="Mensagens">
+                        <span class="icon">💌</span>
+                    </a>
+                    <a href="notificacoes.html" class="nav-icon notification-bell" title="Notificações">
+                        <span class="icon">🔔</span>
                         <span class="notification-badge" id="notificationBadge">0</span>
                     </a>
-                </div>
+                </nav>
 
+                <!-- User Menu -->
                 <div class="user-menu">
-                    <div class="user-info">
+                    <div class="user-avatar-dropdown">
                         <div class="user-avatar" id="userAvatar">
                             <img class="user-avatar-img" src="" alt="Avatar">
                             <div class="user-avatar-fallback">U</div>
                         </div>
-                        <span id="userNickname">Usuário</span>
+                        <div class="dropdown-content">
+                            <a href="painel.html" class="dropdown-item">
+                                <span class="dropdown-icon">👤</span>
+                                Meu Perfil
+                            </a>
+                            <a href="favoritos.html" class="dropdown-item">
+                                <span class="dropdown-icon">❤️</span>
+                                Favoritos
+                            </a>
+                            <a href="blocks.html" class="dropdown-item">
+                                <span class="dropdown-icon">🚫</span>
+                                Bloqueados
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="princing.html" class="dropdown-item premium-item">
+                                <span class="dropdown-icon">⭐</span>
+                                Virar Premium
+                            </a>
+                            <button class="dropdown-item logout-item" id="logoutBtn">
+                                <span class="dropdown-icon">🚪</span>
+                                Sair
+                            </button>
+                        </div>
                     </div>
-                    
-                    <div id="freeBadge" class="free-badge">Free</div>
-                    <a href="princing.html" id="premiumBtn" class="btn btn-premium">Premium</a>
-                    <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
-                    <a href="busca.html" class="btn btn-outline">Buscar</a>
-                    <a href="painel.html" class="btn btn-outline">Perfil</a>
-                    <a href="blocks.html" class="btn btn-outline">🚫 Bloqueados</a>
-                    <button class="btn btn-outline" id="logoutBtn">Sair</button>
                 </div>
             </div>
         </div>
     </header>
 
     <!-- Menu Mobile -->
-    <div id="mobileMenu">
-        <button id="closeMobileMenu">×</button>
-        
-        <div class="mobile-user-info">
-            <div class="user-avatar" id="mobileUserAvatar">
-                <img class="user-avatar-img" src="" alt="Avatar">
-                <div class="user-avatar-fallback">U</div>
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-header">
+            <div class="mobile-user-info">
+                <div class="user-avatar" id="mobileUserAvatar">
+                    <img class="user-avatar-img" src="" alt="Avatar">
+                    <div class="user-avatar-fallback">U</div>
+                </div>
+                <div class="mobile-user-details">
+                    <div id="mobileUserNickname" class="user-nickname">Usuário</div>
+                    <div id="mobileUserStatus" class="user-status">Free</div>
+                </div>
             </div>
-            <div id="mobileUserNickname">Usuário</div>
+            <button class="close-mobile-menu" id="closeMobileMenu">
+                <span>&times;</span>
+            </button>
         </div>
 
-        <div class="mobile-nav">
-            <a href="notificacoes.html" class="btn btn-outline notification-mobile-btn">
-                🔔 Notificações
-                <span class="notification-badge" id="mobileNotificationBadge">0</span>
+        <nav class="mobile-nav">
+            <a href="busca.html" class="mobile-nav-item">
+                <span class="nav-icon">🔍</span>
+                Buscar
+            </a>
+            <a href="mensagens.html" class="mobile-nav-item">
+                <span class="nav-icon">💌</span>
+                Mensagens
+            </a>
+            <a href="notificacoes.html" class="mobile-nav-item">
+                <span class="nav-icon">🔔</span>
+                Notificações
+                <span class="notification-badge-mobile" id="mobileNotificationBadge">0</span>
+            </a>
+            <a href="painel.html" class="mobile-nav-item">
+                <span class="nav-icon">👤</span>
+                Meu Perfil
+            </a>
+            <a href="favoritos.html" class="mobile-nav-item">
+                <span class="nav-icon">❤️</span>
+                Favoritos
+            </a>
+            <a href="blocks.html" class="mobile-nav-item">
+                <span class="nav-icon">🚫</span>
+                Bloqueados
+            </a>
+            <a href="princing.html" class="mobile-nav-item premium-item">
+                <span class="nav-icon">⭐</span>
+                Virar Premium
             </a>
             
-            <div id="mobileFreeBadge" class="free-badge">Free</div>
-            <a href="princing.html" id="mobilePremiumBtn" class="btn btn-premium">Premium</a>
-            <a href="busca.html" class="btn btn-outline">Buscar</a>
-            <a href="painel.html" class="btn btn-outline">Perfil</a>
-            <a href="mensagens.html" class="btn btn-outline">Mensagens</a>
-            <a href="blocks.html" class="btn btn-outline">🚫 Bloqueados</a>
-            <button class="btn btn-outline" id="mobileLogoutBtn">Sair</button>
-        </div>
+            <div class="mobile-nav-divider"></div>
+            
+            <button class="mobile-nav-item logout-item" id="mobileLogoutBtn">
+                <span class="nav-icon">🚪</span>
+                Sair
+            </button>
+        </nav>
     </div>
 
     <!-- Main Content -->
@@ -78,108 +138,130 @@
         <div class="container">
             <!-- Welcome Section -->
             <section class="welcome-section">
-                <h2><span id="welcomeNickname">Usuário</span>! ❤️</h2>
+                <h2>Olá, <span id="welcomeNickname">Usuário</span>! ❤️</h2>
                 <p>Encontre conexões genuínas e construa relacionamentos significativos</p>
             </section>
 
             <!-- User Stats -->
             <div class="user-stats">
                 <div class="stat-card">
-                    <div class="stat-number" id="newMatches">0</div>
-                    <div class="stat-label">Novos Matches</div>
+                    <div class="stat-icon">💝</div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="newMatches">0</div>
+                        <div class="stat-label">Novos Matches</div>
+                    </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="profileViews">0</div>
-                    <div class="stat-label">Visualizações</div>
+                    <div class="stat-icon">👀</div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="profileViews">0</div>
+                        <div class="stat-label">Visualizações</div>
+                    </div>
                 </div>
             </div>
 
             <!-- Visitantes -->
             <section class="visitors-section">
-                <div class="visitors-card">
-                    <div class="visitors-header">
+                <div class="section-card">
+                    <div class="section-header">
                         <h2>👀 Quem te visitou</h2>
                         <div class="visitors-count" id="visitorsCount">0 visitas</div>
                     </div>
 
                     <div class="free-content" id="freeVisitors">
-                        <div class="icon">🔒</div>
-                        <h3>Descubra quem se interessou por você!</h3>
-                        <p>Seja Premium para ver quem visitou seu perfil</p>
+                        <div class="free-content-icon">🔒</div>
+                        <div class="free-content-text">
+                            <h3>Descubra quem se interessou por você!</h3>
+                            <p>Seja Premium para ver quem visitou seu perfil</p>
+                        </div>
                         <a href="princing.html" class="btn btn-premium">Seja Premium</a>
+                    </div>
+
+                    <!-- Premium Content (hidden by default) -->
+                    <div class="premium-content" id="premiumVisitors" style="display: none;">
+                        <div class="visitors-grid" id="visitorsGrid">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <p>Carregando visitantes...</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
             <!-- Users Grid -->
             <section class="users-section">
-                <div class="section-header">
-                    <h2>Conheça Novas Pessoas</h2>
-                    <a href="princing.html" class="btn btn-premium btn-sm">Premium</a>
-                </div>
-                <div class="users-grid" id="usersGrid">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <p>Carregando usuários...</p>
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>Conheça Novas Pessoas</h2>
+                        <a href="busca.html" class="btn btn-outline">Ver Mais</a>
+                    </div>
+                    <div class="users-grid" id="usersGrid">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Carregando usuários...</p>
+                        </div>
                     </div>
                 </div>
             </section>
 
             <!-- Quick Actions -->
             <section class="quick-actions">
-                <h2>Ações Rápidas</h2>
-                <div class="actions-grid">
-                    <a href="painel.html" class="action-card">
-                        <div class="action-icon">👤</div>
-                        <h3>Completar Perfil</h3>
-                        <p>Adicione mais informações ao seu perfil</p>
-                    </a>
-                    <a href="busca.html" class="action-card">
-                        <div class="action-icon">🔍</div>
-                        <h3>Buscar Pessoas</h3>
-                        <p>Encontre pessoas com interesses similares</p>
-                    </a>
-                    <a href="mensagens.html" class="action-card">
-                        <div class="action-icon">💌</div>
-                        <h3>Minhas Mensagens</h3>
-                        <p>Ver e responder mensagens</p>
-                    </a>
-                    <a href="favoritos.html" class="action-card">
-                        <div class="action-icon">❤️</div>
-                        <h3>Meus Favoritos</h3>
-                        <p>Pessoas que você curtiu</p>
-                    </a>
+                <div class="section-card">
+                    <h2>Ações Rápidas</h2>
+                    <div class="actions-grid">
+                        <a href="painel.html" class="action-card">
+                            <div class="action-icon">👤</div>
+                            <h3>Completar Perfil</h3>
+                            <p>Adicione mais informações ao seu perfil</p>
+                        </a>
+                        <a href="busca.html" class="action-card">
+                            <div class="action-icon">🔍</div>
+                            <h3>Buscar Pessoas</h3>
+                            <p>Encontre pessoas com interesses similares</p>
+                        </a>
+                        <a href="mensagens.html" class="action-card">
+                            <div class="action-icon">💌</div>
+                            <h3>Minhas Mensagens</h3>
+                            <p>Ver e responder mensagens</p>
+                        </a>
+                        <a href="favoritos.html" class="action-card">
+                            <div class="action-icon">❤️</div>
+                            <h3>Meus Favoritos</h3>
+                            <p>Pessoas que você curtiu</p>
+                        </a>
+                    </div>
                 </div>
             </section>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer>
+    <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                <div class="footer-column">
+                <div class="footer-section">
                     <h3>PulseLove</h3>
                     <p>Conectando corações, criando histórias</p>
                 </div>
-                <div class="footer-column">
+                <div class="footer-section">
                     <h3>Links Rápidos</h3>
-                    <ul>
+                    <ul class="footer-links">
                         <li><a href="home.html">Home</a></li>
                         <li><a href="princing.html">Planos Premium</a></li>
                         <li><a href="busca.html">Buscar Pessoas</a></li>
                     </ul>
                 </div>
-                <div class="footer-column">
+                <div class="footer-section">
                     <h3>Suporte</h3>
-                    <ul>
+                    <ul class="footer-links">
                         <li><a href="#">Ajuda</a></li>
                         <li><a href="#">Privacidade</a></li>
                         <li><a href="#">Termos</a></li>
                     </ul>
                 </div>
             </div>
-            <div class="copyright">
+            <div class="footer-bottom">
                 <p>&copy; 2024 PulseLove. Todos os direitos reservados.</p>
             </div>
         </div>

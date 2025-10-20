@@ -29,6 +29,43 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 
+// ==================== SISTEMA DE MOBILE MENU ====================
+function setupMobileMenu() {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const closeMobileMenu = document.getElementById('closeMobileMenu');
+    const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    if (!hamburgerBtn || !mobileMenu) return;
+
+    // Abrir menu
+    hamburgerBtn.addEventListener('click', () => {
+        mobileMenu.classList.add('active');
+        mobileMenuOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    });
+
+    // Fechar menu
+    function closeMenu() {
+        mobileMenu.classList.remove('active');
+        mobileMenuOverlay.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+
+    closeMobileMenu.addEventListener('click', closeMenu);
+    mobileMenuOverlay.addEventListener('click', closeMenu);
+
+    // Fechar ao clicar em links
+    mobileMenu.querySelectorAll('.mobile-nav-item').forEach(item => {
+        item.addEventListener('click', closeMenu);
+    });
+
+    // Tecla ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeMenu();
+    });
+}
+
 // ==================== SISTEMA DE USUÁRIOS ====================
 async function loadUsers() {
     try {
@@ -116,7 +153,8 @@ async function createUserCard(user) {
             if (photoUrl) {
                 avatarHtml = `
                     <div class="user-card-avatar">
-                        <img class="user-card-avatar-img" src="${photoUrl}" alt="${nickname}">
+                        <img class="user-card-avatar-img" src="${photoUrl}" alt="${nickname}" 
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <div class="user-card-avatar-fallback" style="display: none;">${nickname.charAt(0).toUpperCase()}</div>
                         ${onlineBadge}
                     </div>
@@ -142,21 +180,21 @@ async function createUserCard(user) {
         return `
             <div class="user-card" data-user-id="${userId}">
                 ${avatarHtml}
-                <div class="user-card-name">${nickname}${age ? `, ${age}` : ''}</div>
+                <div class="user-card-name">${escapeHTML(nickname)}${age ? `, ${age}` : ''}</div>
                 
                 <div class="user-card-info">
                     ${zodiac ? `<div class="user-card-detail">${getZodiacIcon(zodiac)} ${formatZodiac(zodiac)}</div>` : ''}
-                    ${profession ? `<div class="user-card-detail">💼 ${profession}</div>` : ''}
+                    ${profession ? `<div class="user-card-detail">💼 ${escapeHTML(profession)}</div>` : ''}
                     ${lookingFor ? `<div class="user-card-detail">🎯 ${formatLookingFor(lookingFor)}</div>` : ''}
                 </div>
                 
-                <div class="user-card-bio">${bio}</div>
+                <div class="user-card-bio">${escapeHTML(bio)}</div>
                 
                 <div class="user-card-actions">
                     <button class="btn btn-primary btn-sm" onclick="sendMessage('${userId}')">
                         💌 Mensagem
                     </button>
-                    <button class="btn btn-secondary btn-sm" onclick="viewProfile('${userId}')">
+                    <button class="btn btn-outline btn-sm" onclick="viewProfile('${userId}')">
                         👀 Ver Perfil
                     </button>
                     <button class="btn-favorite ${isFavorited ? 'favorited' : ''}" onclick="toggleFavorite('${userId}', this)">
@@ -184,7 +222,7 @@ async function checkIfFavorited(userId) {
             .single();
 
         if (error) {
-            if (error.code === 'PGRST116') return false; // Não encontrado
+            if (error.code === 'PGRST116') return false;
             throw error;
         }
         
@@ -236,7 +274,7 @@ async function toggleFavorite(userId, button) {
             button.querySelector('.heart-icon').textContent = '❤️';
             showToast('Adicionado aos favoritos!');
             
-            // Verificar se é um match (o outro usuário também te favoritou)
+            // Verificar se é um match
             await checkForMatch(userId);
         }
         
@@ -256,15 +294,12 @@ async function checkForMatch(favoritedUserId) {
             .single();
 
         if (error) {
-            if (error.code === 'PGRST116') return; // Não é match
+            if (error.code === 'PGRST116') return;
             throw error;
         }
         
         if (data) {
-            // É um match!
             showToast('🎉 Novo match! Vocês se curtiram mutuamente!', 'success');
-            
-            // Aqui você pode criar uma conversa automática, etc.
             console.log('🎉 MATCH DETECTADO!');
         }
         
@@ -411,11 +446,18 @@ function formatLookingFor(lookingFor) {
     return lookingFor || 'Não informado';
 }
 
+function escapeHTML(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 function showEmptyState(message) {
     const usersGrid = document.getElementById('usersGrid');
     if (usersGrid) {
         usersGrid.innerHTML = `
-            <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+            <div class="empty-state" style="grid-column: 1 / -1;">
                 <h3>${message}</h3>
             </div>
         `;
@@ -430,51 +472,6 @@ function setupEventListeners() {
     
     if (logoutBtn) logoutBtn.addEventListener('click', logout);
     if (mobileLogoutBtn) mobileLogoutBtn.addEventListener('click', logout);
-}
-
-// ==================== MENU MOBILE ====================
-function setupMobileMenu() {
-    const hamburgerBtn = document.getElementById('hamburgerBtn');
-    const mobileMenu = document.getElementById('mobileMenu');
-    const closeMobileMenu = document.getElementById('closeMobileMenu');
-
-    if (!hamburgerBtn || !mobileMenu) return;
-
-    hamburgerBtn.addEventListener('click', () => {
-        mobileMenu.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    });
-
-    closeMobileMenu.addEventListener('click', () => {
-        mobileMenu.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    });
-
-    mobileMenu.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-            mobileMenu.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        });
-    });
-
-    function checkScreenSize() {
-        const userMenu = document.querySelector('.user-menu');
-        if (!userMenu) return;
-        
-        if (window.innerWidth <= 768) {
-            userMenu.style.display = 'none';
-            if (hamburgerBtn) hamburgerBtn.style.display = 'flex';
-        } else {
-            userMenu.style.display = 'flex';
-            if (hamburgerBtn) hamburgerBtn.style.display = 'none';
-            mobileMenu.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-    }
-
-    window.addEventListener('resize', checkScreenSize);
-    window.addEventListener('load', checkScreenSize);
-    checkScreenSize();
 }
 
 // ==================== EXPORTAR FUNÇÕES GLOBAIS ====================
