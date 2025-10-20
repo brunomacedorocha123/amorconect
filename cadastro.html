@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - PulseLove</title>
+    <link rel="stylesheet" href="cadastro.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="pulselove.png" alt="PulseLove">
+                </div>
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li><a href="index.html">Início</a></li>
+                        <li><a href="#como-funciona">Como Funciona</a></li>
+                        <li><a href="#sobre">Sobre</a></li>
+                    </ul>
+                </nav>
+                <div class="auth-buttons">
+                    <a href="login.html" class="btn btn-outline">Entrar</a>
+                    <a href="cadastro.html" class="btn btn-primary">Cadastre-se</a>
+                </div>
+                <button class="menu-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <img src="pulselove.png" alt="PulseLove" class="auth-logo">
+                    <h1>Criar Conta</h1>
+                    <p>Junte-se ao PulseLove e encontre sua conexão perfeita</p>
+                </div>
+
+                <!-- Alert Messages -->
+                <div id="errorAlert" class="alert alert-error"></div>
+                <div id="successAlert" class="alert alert-success"></div>
+                <div id="loading" class="loading">Processando cadastro...</div>
+
+                <form id="registerForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">Nome</label>
+                            <input type="text" id="firstName" class="form-control" required>
+                            <div id="firstNameError" class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Sobrenome</label>
+                            <input type="text" id="lastName" class="form-control" required>
+                            <div id="lastNameError" class="error-message"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nickname">Apelido/Nickname</label>
+                        <input type="text" id="nickname" class="form-control" required>
+                        <div id="nicknameError" class="error-message"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">E-mail</label>
+                        <input type="email" id="email" class="form-control" required>
+                        <div id="emailError" class="error-message"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="birthDate">Data de Nascimento</label>
+                        <input type="date" id="birthDate" class="form-control" required>
+                        <div id="birthDateError" class="error-message"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Senha</label>
+                        <input type="password" id="password" class="form-control" required>
+                        <div id="passwordError" class="error-message"></div>
+                        
+                        <!-- Password Requirements -->
+                        <div class="password-requirements">
+                            <h4>Requisitos da senha:</h4>
+                            <ul class="requirements-list">
+                                <li id="reqLength" class="requirement-unmet">
+                                    Mínimo 8 caracteres
+                                </li>
+                                <li id="reqUppercase" class="requirement-unmet">
+                                    Pelo menos 1 letra maiúscula (A-Z)
+                                </li>
+                                <li id="reqLowercase" class="requirement-unmet">
+                                    Pelo menos 1 letra minúscula (a-z)
+                                </li>
+                                <li id="reqNumber" class="requirement-unmet">
+                                    Pelo menos 1 número (0-9)
+                                </li>
+                                <li id="reqSpecial" class="requirement-unmet">
+                                    Pelo menos 1 símbolo (!@#$% etc.)
+                                </li>
+                            </ul>
+                            <div class="password-strength">
+                                <div id="strengthBar" class="strength-bar"></div>
+                            </div>
+                            <div id="strengthText" class="strength-text"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirmar Senha</label>
+                        <input type="password" id="confirmPassword" class="form-control" required>
+                        <div id="confirmPasswordError" class="error-message"></div>
+                    </div>
+
+                    <div class="terms-group">
+                        <input type="checkbox" id="terms" required>
+                        <label for="terms">
+                            Concordo com os <a href="#">Termos de Serviço</a> e 
+                            <a href="#">Política de Privacidade</a> do PulseLove
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">
+                        Criar Conta
+                    </button>
+
+                    <div class="auth-footer">
+                        <p>Já tem uma conta? <a href="login.html">Faça login aqui</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-logo-container">
+                <img src="pulselove.png" alt="PulseLove">
+                <div class="footer-logo-text">PulseLove</div>
+                <p class="footer-tagline">Conectando corações, criando histórias</p>
+            </div>
+            
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>PulseLove</h3>
+                    <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link">📘</a>
+                        <a href="#" class="social-link">📷</a>
+                        <a href="#" class="social-link">🐦</a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Links Rápidos</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Página Inicial</a></li>
+                        <li><a href="#como-funciona">Como Funciona</a></li>
+                        <li><a href="#sobre">Sobre Nós</a></li>
+                        <li><a href="#depoimentos">Depoimentos</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Suporte</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Central de Ajuda</a></li>
+                        <li><a href="#">Política de Privacidade</a></li>
+                        <li><a href="#">Termos de Uso</a></li>
+                        <li><a href="#">Contato</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Newsletter</h3>
+                    <p>Receba novidades e dicas de relacionamento.</p>
+                    <form class="newsletter-form">
+                        <input type="email" placeholder="Seu e-mail" required>
+                        <button type="submit" class="btn-newsletter">Inscrever</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div class="footer-bottom-content">
+                    <p>&copy; 2024 PulseLove. Todos os direitos reservados.</p>
+                    <div class="footer-legal">
+                        <a href="#">Privacidade</a>
+                        <a href="#">Termos</a>
+                        <a href="#">Cookies</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="cadastro.js"></script>
+</body>
+</html>
