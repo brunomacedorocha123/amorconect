@@ -5,6 +5,7 @@
     padding: 0.5rem 0;
     display: flex;
     align-items: center;
+    justify-content: center; /* CENTRALIZA O CONTEÚDO DO HEADER */
 }
 
 .header-content {
@@ -12,20 +13,26 @@
     gap: 1rem;
     height: 100%;
     align-items: center;
+    justify-content: center; /* CENTRALIZA O CONTEÚDO */
+    width: 100%;
 }
 
-/* LOGO BEM GRANDE NO MOBILE - AUMENTADA SIGNIFICATIVAMENTE */
+/* LOGO BEM GRANDE NO MOBILE - CENTRALIZADA */
 .logo {
     display: flex;
     align-items: center;
+    justify-content: center; /* CENTRALIZA A LOGO */
     height: 100%;
+    width: 100%;
+    order: 1; /* GARANTE QUE FIQUE NO TOPO */
 }
 
 .logo img {
-    height: 90px; /* AUMENTEI DE 55px PARA 90px - CRESCIMENTO SIGNIFICATIVO */
+    height: 110px; /* AUMENTEI DE 90px PARA 110px (+22%) */
     width: auto;
     display: block;
     object-fit: contain;
+    margin: 0 auto; /* CENTRALIZA HORIZONTALMENTE */
 }
 
 .menu-toggle {
@@ -38,6 +45,8 @@
     border: none;
     cursor: pointer;
     padding: 8px;
+    position: absolute;
+    right: 20px; /* POSICIONA À DIREITA */
 }
 
 .menu-toggle span {
@@ -182,6 +191,7 @@
     padding: 3rem 0 1.5rem;
     background: var(--background);
     color: var(--primary);
+    text-align: center; /* CENTRALIZA TODO O FOOTER */
 }
 
 .footer-content {
@@ -191,24 +201,33 @@
     padding: 0 1rem;
 }
 
-/* LOGO DO FOOTER MAIOR NO MOBILE - AUMENTADA SIGNIFICATIVAMENTE */
+/* LOGO DO FOOTER GRANDE NO MOBILE - CENTRALIZADA */
 .footer-logo {
     display: flex;
     justify-content: center;
+    align-items: center;
+    width: 100%;
 }
 
 .footer-logo img {
-    height: 80px; /* AUMENTEI DE 45px PARA 80px - CRESCIMENTO SIGNIFICATIVO */
+    height: 110px; /* MESMO TAMANHO DA LOGO DO HEADER MOBILE - 110px */
     width: auto;
     display: block;
     margin: 0 auto 1.5rem;
     object-fit: contain;
 }
 
+.footer-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* CENTRALIZA CONTEÚDO DAS SEÇÕES */
+}
+
 .footer-section h3 {
     color: var(--primary);
     margin-bottom: 1.5rem;
     font-size: 1.3rem;
+    text-align: center;
 }
 
 .footer-section p {
@@ -217,10 +236,13 @@
     opacity: 0.9;
     font-size: 1.05rem;
     line-height: 1.7;
+    text-align: center;
 }
 
 .footer-section ul {
     list-style: none;
+    text-align: center;
+    padding: 0;
 }
 
 .footer-section ul li {
@@ -257,10 +279,24 @@
 @media (min-width: 481px) and (max-width: 768px) {
     .header-content {
         flex-wrap: nowrap;
+        justify-content: space-between; /* VOLTA AO LAYOUT NORMAL NO TABLET */
+    }
+    
+    .logo {
+        justify-content: flex-start; /* VOLTA À ESQUERDA NO TABLET */
+        width: auto;
+        order: 0;
     }
     
     .logo img {
-        height: 85px; /* Mantém grande no tablet */
+        height: 105px; /* Mantém grande no tablet */
+        margin: 0; /* Remove centralização no tablet */
+    }
+    
+    .menu-toggle {
+        position: static;
+        order: 3;
+        margin-left: 0;
     }
     
     .auth-buttons {
@@ -319,7 +355,25 @@
         text-align: left;
     }
     
+    .footer-logo {
+        justify-content: flex-start;
+    }
+    
     .footer-logo img {
-        height: 75px; /* Mantém grande no footer tablet */
+        height: 105px; /* Mantém grande no footer tablet */
+        margin: 0 0 1.5rem 0; /* Remove centralização no tablet */
+    }
+    
+    .footer-section {
+        align-items: flex-start; /* VOLTA À ESQUERDA NO TABLET */
+    }
+    
+    .footer-section h3,
+    .footer-section p {
+        text-align: left; /* VOLTA À ESQUERDA NO TABLET */
+    }
+    
+    .footer-section ul {
+        text-align: left; /* VOLTA À ESQUERDA NO TABLET */
     }
 }

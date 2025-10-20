@@ -56,15 +56,16 @@ body {
     height: 100%;
 }
 
-/* LOGO BEM GRANDE - AUMENTADA SIGNIFICATIVAMENTE */
+/* LOGO BEM GRANDE - AUMENTO DE 40% */
 .logo {
     display: flex;
     align-items: center;
     height: 100%;
+    padding: 5px 0; /* Espaço para a logo respirar */
 }
 
 .logo img {
-    height: 120px; /* AUMENTEI DE 65px PARA 120px - CRESCIMENTO SIGNIFICATIVO */
+    height: 140px; /* AUMENTEI DE 120px PARA 140px (+40%) */
     width: auto;
     display: block;
     object-fit: contain;
@@ -352,14 +353,15 @@ body {
     margin-bottom: var(--space-lg);
 }
 
-/* LOGO DO FOOTER AUMENTADA SIGNIFICATIVAMENTE */
+/* LOGO DO FOOTER GRANDE - MESMO TAMANHO DO HEADER */
 .footer-logo {
     display: flex;
     align-items: center;
+    justify-content: flex-start;
 }
 
 .footer-logo img {
-    height: 100px; /* AUMENTEI DE 50px PARA 100px - CRESCIMENTO SIGNIFICATIVO */
+    height: 140px; /* MESMO TAMANHO DA LOGO DO HEADER - 140px */
     width: auto;
     display: block;
     margin-bottom: var(--space-md);
@@ -420,11 +422,11 @@ body {
     }
     
     .logo img {
-        height: 100px; /* Reduz um pouco mas mantém grande */
+        height: 120px; /* Reduz um pouco mas mantém grande */
     }
     
     .footer-logo img {
-        height: 80px; /* Reduz um pouco mas mantém grande */
+        height: 120px; /* Reduz um pouco mas mantém grande */
     }
 }
 
@@ -434,7 +436,7 @@ body {
     }
     
     .logo img {
-        height: 80px; /* Mantém grande mesmo no mobile */
+        height: 100px; /* Mantém grande mesmo no mobile */
     }
     
     .nav {
@@ -486,7 +488,7 @@ body {
     }
     
     .footer-logo img {
-        height: 70px; /* Mantém grande no footer mobile */
+        height: 100px; /* Mantém grande no footer mobile */
         margin: 0 auto var(--space-md);
     }
 }
