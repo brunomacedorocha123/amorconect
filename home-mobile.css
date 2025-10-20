@@ -52,6 +52,16 @@
         display: none;
     }
 
+    /* User Status */
+    .user-status-container {
+        margin: 0.8rem 0 1.2rem;
+    }
+
+    .user-status {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+
     /* Main Content */
     .main-content {
         padding: 1.5rem 0;
@@ -171,6 +181,12 @@
         left: 0;
     }
 
+    /* Mobile Status Section */
+    .mobile-status-section {
+        padding: 0.8rem;
+        font-size: 0.85rem;
+    }
+
     /* Buttons */
     .btn {
         padding: 0.7rem 1.5rem;
@@ -199,6 +215,12 @@
 
     .welcome-section p {
         font-size: 1rem;
+    }
+
+    /* User Status */
+    .user-status {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
     }
 
     /* User Avatar */
@@ -269,6 +291,10 @@
 
     .logo img {
         height: 90px;
+    }
+
+    .user-status-container {
+        margin: 0.5rem 0 1rem;
     }
 }
 

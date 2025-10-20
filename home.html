@@ -46,6 +46,13 @@
                             <div class="user-avatar-fallback">U</div>
                         </div>
                         <div class="dropdown-content">
+                            <div class="dropdown-user-info">
+                                <div id="dropdownUserNickname" class="user-nickname">Usuário</div>
+                                <div id="dropdownUserStatus" class="user-status-dropdown">
+                                    <!-- Status dinâmico -->
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
                             <a href="painel.html" class="dropdown-item">
                                 <span class="dropdown-icon">👤</span>
                                 Meu Perfil
@@ -85,7 +92,9 @@
                 </div>
                 <div class="mobile-user-details">
                     <div id="mobileUserNickname" class="user-nickname">Usuário</div>
-                    <div id="mobileUserStatus" class="user-status">Free</div>
+                    <div id="mobileUserStatus" class="user-status-mobile">
+                        <!-- Status dinâmico -->
+                    </div>
                 </div>
             </div>
             <button class="close-mobile-menu" id="closeMobileMenu">
@@ -119,12 +128,12 @@
                 <span class="nav-icon">🚫</span>
                 Bloqueados
             </a>
-            <a href="princing.html" class="mobile-nav-item premium-item">
-                <span class="nav-icon">⭐</span>
-                Virar Premium
-            </a>
             
             <div class="mobile-nav-divider"></div>
+            
+            <div id="mobileStatusSection" class="mobile-status-section">
+                <!-- Status dinâmico mobile -->
+            </div>
             
             <button class="mobile-nav-item logout-item" id="mobileLogoutBtn">
                 <span class="nav-icon">🚪</span>
@@ -139,6 +148,9 @@
             <!-- Welcome Section -->
             <section class="welcome-section">
                 <h2>Olá, <span id="welcomeNickname">Usuário</span>! ❤️</h2>
+                <div class="user-status-container" id="userStatusContainer">
+                    <!-- Status dinâmico será inserido aqui via JavaScript -->
+                </div>
                 <p>Encontre conexões genuínas e construa relacionamentos significativos</p>
             </section>
 

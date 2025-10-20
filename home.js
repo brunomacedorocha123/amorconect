@@ -29,6 +29,87 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 
+// ==================== SISTEMA DE STATUS FREE/PREMIUM ====================
+function updateUserStatus() {
+    const isPremium = userProfile?.is_premium || false;
+    const nickname = getDisplayName();
+    
+    // Welcome Section
+    updateWelcomeStatus(isPremium, nickname);
+    
+    // Dropdown Menu
+    updateDropdownStatus(isPremium);
+    
+    // Mobile Menu
+    updateMobileStatus(isPremium, nickname);
+}
+
+function updateWelcomeStatus(isPremium, nickname) {
+    const statusContainer = document.getElementById('userStatusContainer');
+    if (!statusContainer) return;
+    
+    if (isPremium) {
+        statusContainer.innerHTML = `
+            <a href="beneficios.html" class="user-status status-premium">
+                ⭐ Conta Premium | <span class="status-link">Ver benefícios</span>
+            </a>
+        `;
+    } else {
+        statusContainer.innerHTML = `
+            <a href="princing.html" class="user-status status-free">
+                🟢 Conta Free | <span class="status-link">Virar Premium</span>
+            </a>
+        `;
+    }
+}
+
+function updateDropdownStatus(isPremium) {
+    const dropdownStatus = document.getElementById('dropdownUserStatus');
+    if (!dropdownStatus) return;
+    
+    if (isPremium) {
+        dropdownStatus.innerHTML = `⭐ Conta Premium`;
+        dropdownStatus.style.color = 'var(--secondary)';
+        dropdownStatus.style.fontWeight = '600';
+    } else {
+        dropdownStatus.innerHTML = `🟢 Conta Free`;
+        dropdownStatus.style.color = '#22c55e';
+    }
+}
+
+function updateMobileStatus(isPremium, nickname) {
+    const mobileStatus = document.getElementById('mobileUserStatus');
+    const mobileStatusSection = document.getElementById('mobileStatusSection');
+    
+    if (mobileStatus) {
+        if (isPremium) {
+            mobileStatus.innerHTML = `⭐ Conta Premium`;
+            mobileStatus.style.color = 'var(--secondary)';
+        } else {
+            mobileStatus.innerHTML = `🟢 Conta Free`;
+            mobileStatus.style.color = '#22c55e';
+        }
+    }
+    
+    if (mobileStatusSection) {
+        if (isPremium) {
+            mobileStatusSection.innerHTML = `
+                <div class="mobile-status-premium">
+                    ⭐ Conta Premium
+                    <a href="beneficios.html" class="mobile-status-link">Ver benefícios</a>
+                </div>
+            `;
+        } else {
+            mobileStatusSection.innerHTML = `
+                <div class="mobile-status-free">
+                    🟢 Conta Free
+                    <a href="princing.html" class="mobile-status-link">Virar Premium</a>
+                </div>
+            `;
+        }
+    }
+}
+
 // ==================== SISTEMA DE MOBILE MENU ====================
 function setupMobileMenu() {
     const hamburgerBtn = document.getElementById('hamburgerBtn');
@@ -474,7 +555,42 @@ function setupEventListeners() {
     if (mobileLogoutBtn) mobileLogoutBtn.addEventListener('click', logout);
 }
 
+// ==================== ATUALIZAR AUTH.JS ====================
+// Adicionar esta função ao auth.js existente
+async function loadUserData() {
+    try {
+        if (!currentUser) return false;
+
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single();
+
+        if (error) throw error;
+
+        userProfile = profile;
+        
+        // Atualizar nickname em todos os elementos
+        const nickname = getDisplayName();
+        updateNicknameElements(nickname);
+        
+        // Atualizar avatar
+        await updateUserAvatar(nickname, profile);
+        
+        // ATUALIZAR STATUS FREE/PREMIUM (NOVO)
+        updateUserStatus();
+        
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Erro ao carregar dados do usuário:', error);
+        return false;
+    }
+}
+
 // ==================== EXPORTAR FUNÇÕES GLOBAIS ====================
 window.sendMessage = sendMessage;
 window.viewProfile = viewProfile;
 window.toggleFavorite = toggleFavorite;
+window.updateUserStatus = updateUserStatus;
