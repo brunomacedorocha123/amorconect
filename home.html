@@ -191,6 +191,32 @@
             font-size: 0.95rem;
         }
 
+        /* Botão de Preços */
+        .pricing-button {
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .btn-pricing {
+            background: transparent;
+            border: 2px solid var(--burgundy);
+            color: var(--burgundy);
+            padding: 0.7rem 1.5rem;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-pricing:hover {
+            background: var(--burgundy);
+            color: var(--white);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(166, 91, 91, 0.3);
+        }
+
         /* Footer */
         footer {
             background-color: var(--card-bg);
@@ -310,6 +336,11 @@
                         <p>Ajuste preferências e privacidade</p>
                     </div>
                 </div>
+                
+                <!-- Botão para página de preços -->
+                <div class="pricing-button">
+                    <button class="btn-pricing" onclick="goToPricing()">Ver Planos e Preços</button>
+                </div>
             </div>
         </div>
     </main>
@@ -366,6 +397,11 @@
 
         function goToConfiguracoes() {
             window.location.href = 'configuracoes.html';
+        }
+
+        // Nova função para página de preços
+        function goToPricing() {
+            window.location.href = 'pricing.html';
         }
 
         async function logout() {
