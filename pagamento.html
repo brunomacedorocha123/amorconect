@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento - PulseLove</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --gold: #C6A664;
+            --light-gold: #D4B978;
+            --burgundy: #A65B5B;
+            --dark-burgundy: #8A4A4A;
+            --section-bg: #F8F5F0;
+            --card-bg: #FFFFFF;
+            --white: #FFFFFF;
+            --beige: #E8DCC3;
+            --light-beige: #F0E9D8;
+            --text: #2A2A2A;
+            --text-light: #666666;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: var(--section-bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: var(--card-bg);
+            color: var(--text);
+            padding: 1rem 0;
+            box-shadow: var(--shadow);
+            border-bottom: 2px solid var(--gold);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo img {
+            height: 50px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .logo h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--burgundy);
+        }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--gold);
+            color: var(--gold);
+        }
+
+        .btn-primary {
+            background: var(--burgundy);
+            color: var(--white);
+            border: 2px solid var(--burgundy);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(198, 166, 100, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: var(--dark-burgundy);
+            border-color: var(--dark-burgundy);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 3rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .payment-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--gold);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .payment-header {
+            margin-bottom: 2rem;
+        }
+
+        .payment-header h1 {
+            font-size: 2rem;
+            color: var(--burgundy);
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .payment-header p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .plan-summary {
+            background: linear-gradient(135deg, var(--light-beige), var(--beige));
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            border: 2px solid var(--gold);
+        }
+
+        .plan-name {
+            font-size: 1.5rem;
+            color: var(--burgundy);
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .plan-price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-period {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .benefits-list {
+            text-align: left;
+            margin: 2rem 0;
+        }
+
+        .benefit-item {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid var(--beige);
+        }
+
+        .benefit-item:last-child {
+            border-bottom: none;
+        }
+
+        .benefit-icon {
+            margin-right: 1rem;
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+            color: var(--gold);
+        }
+
+        .payment-security {
+            background: var(--light-beige);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            border: 1px solid var(--gold);
+        }
+
+        .security-text {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--card-bg);
+            color: var(--text);
+            padding: 2rem 0 1rem;
+            border-top: 2px solid var(--gold);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-column h3 {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            color: var(--burgundy);
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-column a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: var(--transition);
+            font-size: 0.9rem;
+        }
+
+        .footer-column a:hover {
+            color: var(--burgundy);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--beige);
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        @media (max-width: 768px) {
+            .payment-container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+
+            .plan-price {
+                font-size: 2rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="logopulselove.png" alt="PulseLove">
+                    <h1>PulseLove</h1>
+                </div>
+                <a href="pricing.html" class="btn btn-outline">← Voltar para Planos</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="payment-container">
+                <div class="payment-header">
+                    <h1>Finalizar Assinatura</h1>
+                    <p>Último passo para desbloquear o Premium</p>
+                </div>
+
+                <div class="plan-summary">
+                    <div class="plan-name" id="planName">Plano Mensal</div>
+                    <div class="plan-price" id="planPrice">R$ 24,90</div>
+                    <div class="plan-period" id="planPeriod">por mês</div>
+                </div>
+
+                <div class="benefits-list">
+                    <div class="benefit-item">
+                        <span class="benefit-icon">💬</span>
+                        <span>Mensagens ilimitadas</span>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">🕒</span>
+                        <span>Histórico permanente</span>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">📸</span>
+                        <span>Galeria com 10MB</span>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">⭐</span>
+                        <span>Prioridade na lista VIP</span>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">👀</span>
+                        <span>Ver quem te visitou</span>
+                    </div>
+                </div>
+
+                <div class="payment-security">
+                    <div class="security-text">
+                        🔒 Pagamento 100% seguro via Mercado Pago
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="proceedToCheckout()" style="width: 100%; padding: 1.2rem; font-size: 1.1rem;">
+                    💳 Continuar para Pagamento
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>PulseLove</h3>
+                    <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Links Rápidos</h3>
+                    <ul>
+                        <li><a href="home.html">Página Inicial</a></li>
+                        <li><a href="pricing.html">Planos</a></li>
+                        <li><a href="mensagens.html">Mensagens</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Suporte</h3>
+                    <ul>
+                        <li><a href="#">Central de Ajuda</a></li>
+                        <li><a href="#">Política de Privacidade</a></li>
+                        <li><a href="#">Termos de Uso</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 PulseLove. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let selectedPlan = {};
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPlanFromURL();
+            checkAuth();
+        });
+
+        function loadPlanFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const planType = urlParams.get('plano');
+            
+            const plans = {
+                'weekly': { name: 'Semanal', price: 8.90, period: 'por semana' },
+                'monthly': { name: 'Mensal', price: 24.90, period: 'por mês' },
+                'semestral': { name: 'Semestral', price: 104.90, period: 'por 6 meses' },
+                'annual': { name: 'Anual', price: 179.90, period: 'por ano' }
+            };
+
+            selectedPlan = plans[planType] || plans['monthly'];
+            
+            document.getElementById('planName').textContent = `Plano ${selectedPlan.name}`;
+            document.getElementById('planPrice').textContent = `R$ ${selectedPlan.price.toFixed(2).replace('.', ',')}`;
+            document.getElementById('planPeriod').textContent = selectedPlan.period;
+        }
+
+        async function checkAuth() {
+            const { data: { user }, error } = await supabase.auth.getUser();
+            if (error || !user) {
+                window.location.href = 'login.html';
+            }
+        }
+
+        function proceedToCheckout() {
+            const planType = getPlanType();
+            window.location.href = `checkout.html?plano=${planType}`;
+        }
+
+        function getPlanType() {
+            for (const [key, value] of Object.entries({
+                'weekly': { name: 'Semanal', price: 8.90 },
+                'monthly': { name: 'Mensal', price: 24.90 },
+                'semestral': { name: 'Semestral', price: 104.90 },
+                'annual': { name: 'Anual', price: 179.90 }
+            })) {
+                if (value.price === selectedPlan.price) return key;
+            }
+            return 'monthly';
+        }
+    </script>
+</body>
+</html>
