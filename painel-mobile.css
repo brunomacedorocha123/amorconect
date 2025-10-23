@@ -1,0 +1,195 @@
+/* ========== MOBILE STYLES ========== */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 15px;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        height: auto;
+        padding: 15px 0;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .logo {
+        justify-content: center;
+    }
+    
+    .logo img {
+        height: 50px;
+    }
+    
+    .logo h1 {
+        font-size: 1.4rem;
+    }
+    
+    nav {
+        display: none;
+    }
+    
+    .user-menu {
+        justify-content: center;
+    }
+    
+    .user-info {
+        justify-content: center;
+    }
+    
+    .user-avatar {
+        width: 45px;
+        height: 45px;
+        font-size: 1.1rem;
+    }
+    
+    .main-content {
+        padding: 1rem 0;
+    }
+    
+    .page-header {
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .page-header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .page-header p {
+        font-size: 1rem;
+    }
+    
+    .form-section {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-section h3 {
+        font-size: 1.2rem;
+    }
+    
+    .section-description {
+        font-size: 0.9rem;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-control {
+        padding: 0.7rem 0.9rem;
+        font-size: 0.95rem;
+    }
+    
+    .characteristics-grid {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+    
+    .characteristic-checkbox {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+    }
+    
+    .interests-grid {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+    
+    .interest-checkbox {
+        padding: 0.7rem;
+        font-size: 0.9rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: 0.8rem;
+        margin-top: 2rem;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 1rem 1.5rem;
+    }
+    
+    footer {
+        padding: 2rem 0 1rem;
+    }
+    
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        text-align: center;
+    }
+    
+    .footer-column h3 {
+        font-size: 1.2rem;
+    }
+    
+    .notification {
+        top: 80px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+}
+
+/* ========== SMALL MOBILE ========== */
+@media (max-width: 480px) {
+    .container {
+        padding: 0 10px;
+    }
+    
+    .logo img {
+        height: 45px;
+    }
+    
+    .logo h1 {
+        font-size: 1.2rem;
+    }
+    
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    #userNickname {
+        font-size: 0.9rem;
+    }
+    
+    .page-header {
+        padding: 1.2rem;
+    }
+    
+    .page-header h1 {
+        font-size: 1.6rem;
+    }
+    
+    .form-section {
+        padding: 1.2rem;
+    }
+    
+    .form-section h3 {
+        font-size: 1.1rem;
+    }
+    
+    .btn {
+        padding: 0.9rem 1.2rem;
+        font-size: 0.95rem;
+    }
+    
+    footer {
+        padding: 1.5rem 0 1rem;
+    }
+    
+    .copyright {
+        font-size: 0.9rem;
+    }
+}
