@@ -29,6 +29,10 @@
                     <div class="user-info">
                         <div class="user-avatar">
                             <div class="user-avatar-fallback">U</div>
+                            <img class="avatar-image" style="display: none;" alt="Avatar do usuário">
+                            <div class="avatar-overlay">
+                                <i class="fas fa-camera"></i>
+                            </div>
                         </div>
                         <span id="userNickname">Usuário</span>
                     </div>
@@ -44,6 +48,41 @@
             <section class="page-header">
                 <h1><i class="fas fa-user-edit"></i> Meu Perfil</h1>
                 <p>Complete suas informações para melhorar suas conexões</p>
+            </section>
+
+            <!-- Seção de Avatar -->
+            <section class="form-section">
+                <h3><i class="fas fa-camera"></i> Foto do Perfil</h3>
+                <p class="section-description">Adicione uma foto para se destacar. Formatos: JPG, PNG, WebP (máx. 5MB)</p>
+                
+                <div class="avatar-upload-container">
+                    <div class="avatar-preview-large">
+                        <div class="user-avatar-large">
+                            <div class="user-avatar-fallback-large">U</div>
+                            <img class="avatar-image-large" style="display: none;" alt="Preview do avatar">
+                            <div class="avatar-overlay-large">
+                                <i class="fas fa-camera"></i>
+                                <span>Clique para alterar</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="avatar-upload-actions">
+                        <button type="button" class="btn btn-secondary" id="uploadAvatarBtn">
+                            <i class="fas fa-upload"></i> Escolher Foto
+                        </button>
+                        <button type="button" class="btn btn-outline" id="removeAvatarBtn" style="display: none;">
+                            <i class="fas fa-trash"></i> Remover Foto
+                        </button>
+                    </div>
+                    
+                    <div class="upload-progress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                        <span class="progress-text">Enviando...</span>
+                    </div>
+                </div>
             </section>
 
             <!-- Profile Form -->
@@ -489,6 +528,10 @@
         </div>
     </footer>
 
+    <!-- Input hidden para upload -->
+    <input type="file" id="avatarUpload" accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;">
+
     <script src="painel-perfil.js"></script>
+    <script src="avatar.js"></script>
 </body>
 </html>

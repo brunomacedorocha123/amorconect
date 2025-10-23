@@ -193,3 +193,374 @@
         font-size: 0.9rem;
     }
 }
+
+/* ========== MOBILE STYLES ========== */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 15px;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        height: auto;
+        padding: 15px 0;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .logo {
+        justify-content: center;
+    }
+    
+    .logo img {
+        height: 50px;
+    }
+    
+    .logo h1 {
+        font-size: 1.4rem;
+    }
+    
+    nav {
+        display: none;
+    }
+    
+    .user-menu {
+        justify-content: center;
+    }
+    
+    .user-info {
+        justify-content: center;
+    }
+    
+    .user-avatar {
+        width: 45px;
+        height: 45px;
+        font-size: 1.1rem;
+    }
+    
+    .main-content {
+        padding: 1rem 0;
+    }
+    
+    .page-header {
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .page-header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .page-header p {
+        font-size: 1rem;
+    }
+    
+    .form-section {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-section h3 {
+        font-size: 1.2rem;
+    }
+    
+    .section-description {
+        font-size: 0.9rem;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-control {
+        padding: 0.7rem 0.9rem;
+        font-size: 0.95rem;
+    }
+    
+    .characteristics-grid {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+    
+    .characteristic-checkbox {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+    }
+    
+    .interests-grid {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+    
+    .interest-checkbox {
+        padding: 0.7rem;
+        font-size: 0.9rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: 0.8rem;
+        margin-top: 2rem;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 1rem 1.5rem;
+    }
+    
+    footer {
+        padding: 2rem 0 1rem;
+    }
+    
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        text-align: center;
+    }
+    
+    .footer-column h3 {
+        font-size: 1.2rem;
+    }
+    
+    .notification {
+        top: 80px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+    
+    /* ========== UPLOAD DE AVATAR MOBILE ========== */
+    .avatar-upload-container {
+        padding: 1rem;
+        gap: 1rem;
+    }
+    
+    .user-avatar-large {
+        width: 120px;
+        height: 120px;
+        font-size: 2.5rem;
+    }
+    
+    .avatar-overlay-large {
+        opacity: 0.9;
+        background: rgba(0, 0, 0, 0.8);
+    }
+    
+    .avatar-overlay-large i {
+        font-size: 1.2rem;
+    }
+    
+    .avatar-overlay-large span {
+        font-size: 0.7rem;
+    }
+    
+    .avatar-upload-actions {
+        flex-direction: column;
+        width: 100%;
+        max-width: 250px;
+    }
+    
+    .avatar-upload-actions .btn {
+        width: 100%;
+    }
+    
+    .upload-progress {
+        max-width: 250px;
+    }
+    
+    /* Header avatar mobile */
+    .user-avatar .avatar-overlay {
+        opacity: 0.8;
+        font-size: 0.7rem;
+    }
+}
+
+/* ========== SMALL MOBILE ========== */
+@media (max-width: 480px) {
+    .container {
+        padding: 0 10px;
+    }
+    
+    .logo img {
+        height: 45px;
+    }
+    
+    .logo h1 {
+        font-size: 1.2rem;
+    }
+    
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    #userNickname {
+        font-size: 0.9rem;
+    }
+    
+    .page-header {
+        padding: 1.2rem;
+    }
+    
+    .page-header h1 {
+        font-size: 1.6rem;
+    }
+    
+    .form-section {
+        padding: 1.2rem;
+    }
+    
+    .form-section h3 {
+        font-size: 1.1rem;
+    }
+    
+    .btn {
+        padding: 0.9rem 1.2rem;
+        font-size: 0.95rem;
+    }
+    
+    footer {
+        padding: 1.5rem 0 1rem;
+    }
+    
+    .copyright {
+        font-size: 0.9rem;
+    }
+    
+    /* ========== UPLOAD DE AVATAR SMALL MOBILE ========== */
+    .avatar-upload-container {
+        padding: 0.8rem;
+    }
+    
+    .user-avatar-large {
+        width: 100px;
+        height: 100px;
+        font-size: 2rem;
+    }
+    
+    .avatar-overlay-large {
+        padding: 0.5rem;
+    }
+    
+    .avatar-overlay-large i {
+        font-size: 1rem;
+        margin-bottom: 0.3rem;
+    }
+    
+    .avatar-overlay-large span {
+        font-size: 0.65rem;
+        line-height: 1.2;
+    }
+    
+    .avatar-upload-actions {
+        max-width: 200px;
+    }
+    
+    .section-description {
+        text-align: center;
+    }
+    
+    /* Melhorar usabilidade em touch */
+    .user-avatar-large {
+        border-width: 3px;
+    }
+    
+    .characteristic-checkbox,
+    .interest-checkbox {
+        padding: 1rem;
+        margin: 0.2rem;
+    }
+    
+    .characteristic-checkbox input[type="checkbox"],
+    .interest-checkbox input[type="checkbox"] {
+        transform: scale(1.2);
+        margin-right: 0.5rem;
+    }
+}
+
+/* ========== TABLET ========== */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .avatar-upload-container {
+        padding: 1.5rem;
+    }
+    
+    .user-avatar-large {
+        width: 130px;
+        height: 130px;
+    }
+    
+    .avatar-upload-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    .avatar-upload-actions .btn {
+        width: auto;
+        min-width: 160px;
+    }
+}
+
+/* ========== ORIENTAÇÃO LANDSCAPE ========== */
+@media (max-width: 768px) and (orientation: landscape) {
+    .avatar-upload-container {
+        flex-direction: row;
+        justify-content: center;
+        text-align: left;
+    }
+    
+    .avatar-preview-large {
+        margin-right: 1.5rem;
+    }
+    
+    .user-avatar-large {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .avatar-upload-actions {
+        flex-direction: column;
+        width: auto;
+    }
+}
+
+/* ========== ALTA DENSIDADE DE PIXELS ========== */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .user-avatar-large {
+        border-width: 3px;
+    }
+    
+    .avatar-image,
+    .avatar-image-large {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
+
+/* ========== ACESSIBILIDADE ========== */
+@media (prefers-reduced-motion: reduce) {
+    .user-avatar,
+    .user-avatar-large,
+    .avatar-overlay,
+    .avatar-overlay-large {
+        transition: none;
+    }
+    
+    .user-avatar:hover,
+    .user-avatar-large:hover {
+        transform: none;
+    }
+}
+
+/* ========== MODO ESCURO (backup) ========== */
+@media (prefers-color-scheme: dark) {
+    .avatar-upload-container {
+        background: var(--card-bg);
+    }
+}

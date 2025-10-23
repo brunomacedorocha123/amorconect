@@ -548,3 +548,223 @@ footer {
         justify-content: center;
     }
 }
+
+/* Adicione ao painel.css */
+.user-avatar {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.user-avatar:hover .avatar-overlay {
+    opacity: 1;
+}
+
+.avatar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.avatar-image {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-avatar.drag-over {
+    border: 2px dashed var(--gold);
+    transform: scale(1.05);
+}
+
+/* Seção de Upload de Avatar */
+.avatar-upload-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 2rem;
+}
+
+.avatar-preview-large {
+    position: relative;
+}
+
+.user-avatar-large {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--burgundy), var(--gold));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-weight: bold;
+    font-size: 3rem;
+    border: 4px solid var(--gold);
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.user-avatar-large:hover {
+    transform: scale(1.05);
+    border-color: var(--light-gold);
+}
+
+.user-avatar-fallback-large {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.avatar-image-large {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.avatar-overlay-large {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: var(--transition);
+    color: white;
+    text-align: center;
+    padding: 1rem;
+}
+
+.user-avatar-large:hover .avatar-overlay-large {
+    opacity: 1;
+}
+
+.avatar-overlay-large i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.avatar-overlay-large span {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.avatar-upload-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid #dc2626;
+    color: #dc2626;
+}
+
+.btn-outline:hover {
+    background: #dc2626;
+    color: white;
+}
+
+/* Progress Bar */
+.upload-progress {
+    width: 100%;
+    max-width: 300px;
+    text-align: center;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--section-bg);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.progress-text {
+    font-size: 0.9rem;
+    color: var(--beige);
+}
+
+/* Avatar no Header */
+.user-avatar {
+    position: relative;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.user-avatar:hover {
+    transform: scale(1.05);
+}
+
+.user-avatar:hover .avatar-overlay {
+    opacity: 1;
+}
+
+.avatar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    color: white;
+    font-size: 0.8rem;
+}
+
+.avatar-image {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* Drag and Drop */
+.user-avatar-large.drag-over {
+    border: 3px dashed var(--gold);
+    background: rgba(198, 166, 100, 0.1);
+}
+
+.user-avatar-large.drag-over .avatar-overlay-large {
+    opacity: 1;
+    background: rgba(198, 166, 100, 0.3);
+}
