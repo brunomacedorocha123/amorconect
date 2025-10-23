@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - PulseLove</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <link rel="stylesheet" href="checkout.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="logopulselove.png" alt="PulseLove">
+                    <h1>PulseLove</h1>
+                </div>
+                <a href="pricing.html" class="btn btn-outline">← Voltar para Planos</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="checkout-grid">
+                <!-- Order Summary -->
+                <div class="order-summary">
+                    <h2 class="section-title">📋 Resumo do Pedido</h2>
+                    
+                    <div class="plan-selected">
+                        <div class="plan-name" id="planName">Plano Mensal</div>
+                        <div class="plan-price" id="planPrice">R$ 24,90</div>
+                        <div class="plan-period" id="planPeriod">por mês</div>
+                    </div>
+
+                    <h3 class="benefits-title">🎁 Benefícios Incluídos:</h3>
+                    <ul class="benefits-list">
+                        <li>💬 Mensagens ilimitadas</li>
+                        <li>🕒 Histórico permanente</li>
+                        <li>📸 Galeria com 10MB</li>
+                        <li>⭐ Prioridade na lista VIP</li>
+                        <li>👀 Ver quem te visitou</li>
+                        <li>🚫 Bloquear mensagens</li>
+                        <li>🛡️ Suporte prioritário</li>
+                    </ul>
+
+                    <div class="security-note">
+                        🔒 Pagamento 100% seguro via Mercado Pago
+                    </div>
+                </div>
+
+                <!-- Payment Methods -->
+                <div class="payment-methods">
+                    <h2 class="section-title">💳 Pagamento</h2>
+                    
+                    <div class="payment-options">
+                        <div class="payment-option selected" onclick="selectPayment('pix')">
+                            <div class="payment-icon">💰</div>
+                            <div class="payment-info">
+                                <div class="payment-title">PIX</div>
+                                <div class="payment-desc">Pagamento instantâneo • Aprovação imediata</div>
+                            </div>
+                        </div>
+
+                        <div class="payment-option" onclick="selectPayment('card')">
+                            <div class="payment-icon">💳</div>
+                            <div class="payment-info">
+                                <div class="payment-title">Cartão de Crédito</div>
+                                <div class="payment-desc">Até 12x sem juros • Débito também</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" id="continueButton" onclick="showPaymentSimulation()">
+                        ▶️ Continuar para Pagamento
+                    </button>
+
+                    <!-- PIX Simulation -->
+                    <div class="payment-simulation" id="pixSimulation">
+                        <div class="pix-container">
+                            <h3 class="simulation-title">💰 Pagamento PIX</h3>
+                            <p class="simulation-desc">Escaneie o QR Code ou copie o código PIX</p>
+                            
+                            <div class="pix-qr-code">
+                                <div class="qr-placeholder">📱</div>
+                                <div class="qr-text">QR CODE SIMULADO</div>
+                                <div class="qr-subtext">Abra seu app de banco e escaneie</div>
+                            </div>
+
+                            <div class="pix-code" id="pixCode">
+                                00020126580014br.gov.bcb.pix0136123e4567-e89b-12d3-a456-426614174000520400005303986540624.905802BR5910PULSELOVE6008BRASILIA62070503***6304A1A2
+                            </div>
+                            
+                            <button class="copy-btn" onclick="copyPixCode()">
+                                📋 Copiar Código PIX
+                            </button>
+
+                            <div class="timer" id="pixTimer">
+                                ⏳ Tempo restante: 29:59
+                            </div>
+
+                            <button class="btn btn-primary" onclick="simulatePixPayment()">
+                                ✅ Simular Pagamento Concluído
+                            </button>
+
+                            <div class="test-info">
+                                💡 <strong>Para teste:</strong> Clique no botão acima para simular pagamento PIX concluído
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Simulation -->
+                    <div class="payment-simulation" id="cardSimulation">
+                        <div class="card-container">
+                            <h3 class="simulation-title">💳 Pagamento com Cartão</h3>
+                            
+                            <div class="card-form">
+                                <div class="form-group">
+                                    <label>Número do Cartão</label>
+                                    <input type="text" class="form-control" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+                                </div>
+
+                                <div class="card-row">
+                                    <div class="form-group">
+                                        <label>Validade</label>
+                                        <input type="text" class="form-control" id="cardExpiry" placeholder="MM/AA" maxlength="5">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>CVV</label>
+                                        <input type="text" class="form-control" id="cardCvv" placeholder="123" maxlength="3">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Nome no Cartão</label>
+                                    <input type="text" class="form-control" id="cardName" placeholder="SEU NOME AQUI">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>CPF do Titular</label>
+                                    <input type="text" class="form-control" id="cardCpf" placeholder="123.456.789-00">
+                                </div>
+                            </div>
+
+                            <div class="test-cards">
+                                <strong>💳 Cartões para Teste (Mercado Pago Sandbox):</strong>
+                                • <strong>Cartão Aprovado:</strong> 5031 4332 1540 6351<br>
+                                • <strong>CVV:</strong> 123 | <strong>Validade:</strong> 11/25<br>
+                                • <strong>Nome:</strong> Qualquer | <strong>CPF:</strong> Qualquer
+                            </div>
+
+                            <button class="btn btn-primary" onclick="processCardPayment()">
+                                💳 Finalizar Pagamento
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <p>Processando seu pagamento...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>PulseLove</h3>
+                    <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Links Rápidos</h3>
+                    <ul>
+                        <li><a href="home.html">🏠 Home</a></li>
+                        <li><a href="pricing.html">💰 Planos</a></li>
+                        <li><a href="mensagens.html">💬 Mensagens</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Suporte</h3>
+                    <ul>
+                        <li><a href="#">❓ Central de Ajuda</a></li>
+                        <li><a href="#">🔒 Política de Privacidade</a></li>
+                        <li><a href="#">📝 Termos de Uso</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 PulseLove. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="checkout.js"></script>
+</body>
+</html>
