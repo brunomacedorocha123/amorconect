@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw new Error('Por favor, corrija os erros no formulário');
             }
 
-            // Registrar usuário no Supabase
+            // Registrar usuário no Supabase COM URL CORRETA
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: email,
                 password: password,
@@ -289,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         nickname: nickname,
                         birth_date: birthDate
                     },
-                    emailRedirectTo: `${window.location.origin}/verificacao.html`
+                    emailRedirectTo: 'https://amorconect.netlify.app/verificacao.html'
                 }
             });
 
