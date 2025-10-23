@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planos Premium - Amor Conect</title>
+    <title>Planos Premium - PulseLove</title>
     <style>
         * {
             margin: 0;
@@ -59,10 +59,22 @@
             align-items: center;
         }
 
-        .logo-text {
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo img {
+            height: 50px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .logo h1 {
             font-size: 1.8rem;
             font-weight: 700;
-            color: var(--gold);
+            color: var(--burgundy);
         }
 
         .btn {
@@ -464,7 +476,8 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <div class="logo-text">Amor Conect</div>
+                    <img src="logopulselove.png" alt="PulseLove">
+                    <h1>PulseLove</h1>
                 </div>
                 <a href="home.html" class="btn btn-outline">← Voltar para Home</a>
             </div>
@@ -636,7 +649,7 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-column">
-                    <h3>Amor Conect</h3>
+                    <h3>PulseLove</h3>
                     <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
                 </div>
                 <div class="footer-column">
@@ -657,18 +670,14 @@
                 </div>
             </div>
             <div class="copyright">
-                <p>&copy; 2024 Amor Conect. Todos os direitos reservados.</p>
+                <p>&copy; 2024 PulseLove. Todos os direitos reservados.</p>
             </div>
         </div>
     </footer>
 
     <script>
         function selectPlan(planType) {
-            // Simula o processamento do plano selecionado
-            console.log('Plano selecionado:', planType);
-            
-            // Redireciona para a página de checkout com o plano selecionado
-            window.location.href = `checkout.html?plano=${planType}`;
+            window.location.href = `pagamento.html?plano=${planType}`;
         }
     </script>
 </body>
