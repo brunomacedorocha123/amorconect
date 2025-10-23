@@ -488,7 +488,13 @@
         }
 
         function goToPlanos() {
-            window.location.href = 'planos.html';
+            // Método mais robusto para redirecionamento
+            const link = document.createElement('a');
+            link.href = 'pricing.html';
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         async function logout() {
@@ -525,7 +531,6 @@
                 await checkPremiumStatus();
 
             } catch (error) {
-                console.error('Erro ao carregar usuário:', error);
                 window.location.href = 'login.html';
             }
         });
