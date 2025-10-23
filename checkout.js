@@ -181,6 +181,7 @@ async function createSubscriptionInBothTables(userId, planType) {
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + realPlan.period_days);
 
+        // ✅ CORREÇÃO: Removido o onConflict que causava o erro
         const { data: subscription, error: subError } = await supabase
             .from('user_subscriptions')
             .upsert({
@@ -192,8 +193,6 @@ async function createSubscriptionInBothTables(userId, planType) {
                 auto_renew: false,
                 payment_method: selectedPayment,
                 payment_gateway: 'mercadopago'
-            }, {
-                onConflict: 'user_id'
             })
             .select()
             .single();
