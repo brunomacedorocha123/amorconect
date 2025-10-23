@@ -758,77 +758,20 @@
     </footer>
 
     <script>
-       // Configuração do Supabase
+   // Configuração do Supabase
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// FUNÇÕES DE NAVEGAÇÃO
-function goToPerfil() {
-    window.location.href = 'painel.html';
+// FUNÇÃO ÚNICA - SELECIONAR PLANO
+function selectPlan(planType) {
+    window.location.href = `checkout.html?plano=${planType}`;
 }
 
-function goToMensagens() {
-    window.location.href = 'mensagens.html';
-}
-
-function goToBusca() {
-    window.location.href = 'busca.html';
-}
-
-function goToConfiguracoes() {
-    window.location.href = 'configuracoes.html';
-}
-
-function goToPlanos() {
-    window.location.href = 'pricing.html';
-}
-
-async function logout() {
-    try {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-        window.location.href = 'login.html';
-    } catch (error) {
-        alert('Erro ao sair: ' + error.message);
-    }
-}
-
-// CARREGAR DADOS DO USUÁRIO
+// VERIFICAÇÃO SIMPLES - SEM LOOP
 document.addEventListener('DOMContentLoaded', async function() {
-    try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (error || !user) {
-            window.location.href = 'login.html';
-            return;
-        }
-
-        // Personalizar welcome message
-        const userName = user.user_metadata?.full_name || user.user_metadata?.nickname || user.email?.split('@')[0] || 'Amor Conect';
-        document.getElementById('welcomeMessage').textContent = `Olá, ${userName.split(' ')[0]}!`;
-        
-        // Atualizar avatar com iniciais
-        const initials = getUserInitials(userName);
-        document.getElementById('userAvatar').textContent = initials;
-
-    } catch (error) {
-        window.location.href = 'login.html';
-    }
-});
-
-function getUserInitials(name) {
-    return name
-        .split(' ')
-        .map(word => word.charAt(0))
-        .join('')
-        .toUpperCase()
-        .substring(0, 2);
-}
-
-// VERIFICAR AUTENTICAÇÃO EM TEMPO REAL
-supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_OUT') {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
         window.location.href = 'login.html';
     }
 });
