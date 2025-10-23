@@ -1,4 +1,4 @@
-// Configuração do Supabase - CHAVE ATUALIZADA E CORRIGIDA
+// Configuração do Supabase
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -293,19 +293,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            if (authError) throw authError;
+            if (authError) {
+                if (authError.message.includes('User already registered')) {
+                    throw new Error('Este e-mail já está cadastrado. Tente fazer login.');
+                }
+                throw authError;
+            }
 
             if (authData.user) {
-                if (authData.user.identities && authData.user.identities.length === 0) {
-                    showAlert(errorAlert, 'Este e-mail já está cadastrado. Tente fazer login.');
-                    submitBtn.disabled = false;
-                    loading.style.display = 'none';
-                    return;
-                }
-
-                // Sucesso - Redirecionar para página de sucesso
                 window.location.href = 'cadastro-sucesso.html';
-
             } else {
                 throw new Error('Falha ao criar usuário');
             }
@@ -313,8 +309,8 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             let errorMessage = 'Erro ao realizar cadastro. Tente novamente.';
             
-            if (error.message.includes('already registered') || error.message.includes('user already exists')) {
-                errorMessage = 'Este e-mail já está cadastrado. Tente fazer login.';
+            if (error.message.includes('já está cadastrado')) {
+                errorMessage = error.message;
             } else if (error.message.includes('password')) {
                 errorMessage = 'A senha deve atender a todos os requisitos de segurança.';
             } else if (error.message.includes('email')) {
