@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planos Premium - Amor Conect</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -28,8 +26,6 @@
             --text-light: #666666;
             --shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
             --transition: all 0.3s ease;
-            --success: #22c55e;
-            --error: #ef4444;
         }
 
         body {
@@ -52,11 +48,8 @@
         header {
             background: var(--card-bg);
             color: var(--text);
-            padding: 0.5rem 0;
+            padding: 1rem 0;
             box-shadow: var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 100;
             border-bottom: 2px solid var(--gold);
         }
 
@@ -64,13 +57,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            height: 70px;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            flex-shrink: 0;
         }
 
         .logo-text {
@@ -80,7 +66,7 @@
         }
 
         .btn {
-            padding: 0.6rem 1.2rem;
+            padding: 0.7rem 1.5rem;
             border-radius: 30px;
             border: none;
             font-weight: 600;
@@ -89,7 +75,6 @@
             text-decoration: none;
             display: inline-block;
             text-align: center;
-            font-size: 0.9rem;
         }
 
         .btn-outline {
@@ -123,8 +108,7 @@
         /* Main Content */
         .main-content {
             flex: 1;
-            padding: 2rem 0;
-            background: linear-gradient(135deg, var(--section-bg) 0%, var(--light-beige) 100%);
+            padding: 3rem 0;
         }
 
         .page-header {
@@ -144,28 +128,6 @@
             color: var(--text-light);
             max-width: 600px;
             margin: 0 auto;
-        }
-
-        /* Status Premium */
-        .premium-status {
-            background: linear-gradient(135deg, var(--gold), var(--burgundy));
-            color: var(--white);
-            border-radius: 15px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            text-align: center;
-            box-shadow: var(--shadow);
-            display: none;
-        }
-
-        .premium-badge {
-            background: var(--white);
-            color: var(--burgundy);
-            padding: 0.5rem 1.5rem;
-            border-radius: 20px;
-            font-weight: 700;
-            display: inline-block;
-            margin-bottom: 1rem;
         }
 
         /* Plans Container */
@@ -402,34 +364,6 @@
             font-size: 1rem;
         }
 
-        /* Notificações */
-        .notification {
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            background: var(--error);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 10000;
-            max-width: 300px;
-            animation: slideIn 0.3s ease;
-        }
-
-        .notification.success {
-            background: var(--success);
-        }
-
-        .notification.info {
-            background: var(--burgundy);
-        }
-
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
         /* Footer */
         footer {
             background-color: var(--card-bg);
@@ -480,13 +414,6 @@
 
         /* Responsividade */
         @media (max-width: 768px) {
-            .header-content {
-                flex-direction: row;
-                justify-content: space-between;
-                height: 70px;
-                padding: 0;
-            }
-
             .plans-container {
                 grid-template-columns: 1fr;
             }
@@ -551,15 +478,6 @@
             <div class="page-header">
                 <h1 class="page-title">Escolha seu Plano</h1>
                 <p class="page-subtitle">Encontre a opção perfeita para sua jornada no amor</p>
-            </div>
-
-            <!-- Status Premium -->
-            <div class="premium-status" id="premiumStatus">
-                <div class="premium-badge">⭐ VOCÊ JÁ É PREMIUM</div>
-                <p class="premium-info" id="premiumInfo">Sua assinatura está ativa e você tem acesso a todos os benefícios!</p>
-                <button class="btn btn-primary" onclick="window.location.href='mensagens.html'">
-                    🚀 Ir para Mensagens
-                </button>
             </div>
 
             <!-- Plans Comparison -->
@@ -745,103 +663,12 @@
     </footer>
 
     <script>
-        // Configuração do Supabase
-        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
-
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAuth();
-        });
-
-        async function checkAuth() {
-            try {
-                const { data: { user }, error } = await supabase.auth.getUser();
-                
-                if (error || !user) {
-                    window.location.href = 'login.html';
-                    return;
-                }
-                
-                checkUserPremiumStatus();
-                
-            } catch (error) {
-                window.location.href = 'login.html';
-            }
-        }
-
-        async function checkUserPremiumStatus() {
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) return;
-                
-                const { data, error } = await supabase
-                    .rpc('is_user_premium', { user_uuid: user.id });
-                
-                if (!error && data) {
-                    showPremiumStatus();
-                }
-            } catch (error) {
-                // Silencioso
-            }
-        }
-
-        function showPremiumStatus() {
-            const premiumStatus = document.getElementById('premiumStatus');
-            const premiumInfo = document.getElementById('premiumInfo');
-            
-            if (premiumStatus && premiumInfo) {
-                premiumStatus.style.display = 'block';
-                premiumInfo.textContent = 'Sua assinatura está ativa e você tem acesso a todos os benefícios!';
-                
-                document.querySelectorAll('.btn-primary').forEach(btn => {
-                    if (btn.textContent.includes('Assinar') || btn.textContent.includes('Escolher')) {
-                        btn.style.display = 'none';
-                    }
-                });
-            }
-        }
-
         function selectPlan(planType) {
-            const plans = {
-                'weekly': { name: 'Semanal', price: '8,90' },
-                'monthly': { name: 'Mensal', price: '24,90' },
-                'semestral': { name: 'Semestral', price: '104,90' },
-                'annual': { name: 'Anual', price: '179,90' }
-            };
+            // Simula o processamento do plano selecionado
+            console.log('Plano selecionado:', planType);
             
-            const selectedPlan = plans[planType];
-            
-            if (!selectedPlan) {
-                showNotification('Plano não encontrado!', 'error');
-                return;
-            }
-            
-            showNotification(`Redirecionando para checkout do plano ${selectedPlan.name}...`, 'info');
-            
-            setTimeout(() => {
-                window.location.href = `checkout.html?plano=${planType}`;
-            }, 1000);
-        }
-
-        function showNotification(message, type = 'info') {
-            const existingNotification = document.querySelector('.notification');
-            if (existingNotification) {
-                existingNotification.remove();
-            }
-
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-
-            document.body.appendChild(notification);
-
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.remove();
-                }
-            }, 4000);
+            // Redireciona para a página de checkout com o plano selecionado
+            window.location.href = `checkout.html?plano=${planType}`;
         }
     </script>
 </body>
