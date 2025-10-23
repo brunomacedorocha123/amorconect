@@ -86,7 +86,6 @@
             padding: 1.5rem;
             border-radius: 10px;
             margin: 1.5rem 0;
-            text-align: left;
         }
         
         .alert-success {
@@ -125,35 +124,31 @@
         .hidden {
             display: none;
         }
+        
+        .success-icon {
+            font-size: 4rem;
+            color: var(--success);
+            margin-bottom: 1rem;
+        }
+        
+        .tips {
+            background: #f7fafc;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            border-left: 4px solid var(--gold);
+            text-align: left;
+        }
+        
+        .tips h3 {
+            color: var(--burgundy);
+            margin-bottom: 0.5rem;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="logo">📧</div>
-        <h1>Verificando seu E-mail</h1>
-        
-        <!-- Verificação Automática -->
-        <div id="autoVerification">
-            <div class="alert alert-info">
-                <strong>⏳ Verificação em andamento...</strong>
-                <p>Estamos confirmando seu endereço de e-mail. Aguarde alguns instantes.</p>
-            </div>
-            <div class="spinner"></div>
-        </div>
-        
-        <!-- Sucesso -->
-        <div id="successMessage" class="alert alert-success hidden">
-            <strong>🎉 E-mail Verificado!</strong>
-            <p>Seu endereço de e-mail foi confirmado com sucesso.</p>
-            <a href="login.html" class="btn">🚀 Fazer Login</a>
-        </div>
-        
-        <!-- Erro -->
-        <div id="errorMessage" class="alert alert-error hidden">
-            <strong>❌ Erro na Verificação</strong>
-            <p id="errorText">Não foi possível verificar seu e-mail.</p>
-            <a href="login.html" class="btn">↩️ Voltar ao Login</a>
-        </div>
+        <!-- Conteúdo dinâmico será carregado aqui -->
     </div>
 
     <script>
@@ -164,6 +159,8 @@
 
         // Verificação automática
         async function attemptAutoVerification() {
+            showVerificationInProgress();
+            
             const urlParams = new URLSearchParams(window.location.hash.substring(1));
             const accessToken = urlParams.get('access_token');
             const type = urlParams.get('type');
@@ -177,7 +174,7 @@
                     
                     if (error) throw error;
                     
-                    showSuccess();
+                    showCadastroConcluido();
                     
                 } catch (error) {
                     showError('Link de verificação inválido ou expirado.');
@@ -188,15 +185,56 @@
         }
 
         // Funções de UI
-        function showSuccess() {
-            document.getElementById('autoVerification').classList.add('hidden');
-            document.getElementById('successMessage').classList.remove('hidden');
+        function showVerificationInProgress() {
+            const container = document.querySelector('.container');
+            container.innerHTML = `
+                <div class="logo">📧</div>
+                <h1>Verificando seu E-mail</h1>
+                <div class="alert alert-info">
+                    <strong>⏳ Verificação em andamento...</strong>
+                    <p>Estamos confirmando seu endereço de e-mail. Aguarde alguns instantes.</p>
+                </div>
+                <div class="spinner"></div>
+            `;
+        }
+
+        function showCadastroConcluido() {
+            const container = document.querySelector('.container');
+            container.innerHTML = `
+                <div class="success-icon">✅</div>
+                <h1>Cadastro Concluído com Sucesso!</h1>
+                <p>Seu e-mail foi verificado e sua conta está ativa.</p>
+                
+                <div class="tips">
+                    <h3>🎉 Bem-vindo ao Amor Conect!</h3>
+                    <p>Sua jornada para encontrar conexões especiais começa agora.</p>
+                </div>
+                
+                <p><strong>Faça login e comece a explorar!</strong></p>
+                
+                <a href="login.html" class="btn">🚀 Fazer Login</a>
+                <br>
+                <a href="index.html" style="display: inline-block; margin-top: 1rem; color: var(--burgundy); text-decoration: none;">
+                    ← Voltar para a Página Inicial
+                </a>
+            `;
         }
 
         function showError(mensagem) {
-            document.getElementById('autoVerification').classList.add('hidden');
-            document.getElementById('errorText').textContent = mensagem;
-            document.getElementById('errorMessage').classList.remove('hidden');
+            const container = document.querySelector('.container');
+            container.innerHTML = `
+                <div class="logo">❌</div>
+                <h1>Erro na Verificação</h1>
+                <div class="alert alert-error">
+                    <strong>Erro na Verificação</strong>
+                    <p>${mensagem}</p>
+                </div>
+                <a href="login.html" class="btn">↩️ Voltar ao Login</a>
+                <br>
+                <a href="cadastro.html" style="display: inline-block; margin-top: 1rem; color: var(--burgundy); text-decoration: none;">
+                    ⟳ Tentar Novamente
+                </a>
+            `;
         }
 
         // Inicialização
