@@ -73,14 +73,10 @@
             flex-shrink: 0;
         }
 
-        .logo img {
-            height: 160px;
-            width: auto;
-            object-fit: contain;
-            position: relative;
-            top: -25px;
-            margin-bottom: -50px;
-            z-index: 101;
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--gold);
         }
 
         .btn {
@@ -491,13 +487,6 @@
                 padding: 0;
             }
 
-            .logo img {
-                height: 160px;
-                position: relative;
-                top: -15px;
-                margin-bottom: -30px;
-            }
-
             .plans-container {
                 grid-template-columns: 1fr;
             }
@@ -528,10 +517,6 @@
         }
 
         @media (max-width: 480px) {
-            .logo img {
-                height: 140px;
-            }
-
             .plan-card, .premium-options, .faq-container {
                 padding: 1.5rem;
             }
@@ -552,7 +537,7 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <img src="assets/images/logo.png" alt="Amor Conect">
+                    <div class="logo-text">Amor Conect</div>
                 </div>
                 <a href="home.html" class="btn btn-outline">← Voltar para Home</a>
             </div>
@@ -765,26 +750,6 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
 
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let currentUser = null;
-
-        // Sistema Premium
-        const PremiumManager = {
-            async checkPremiumStatus() {
-                try {
-                    const { data: { user } } = await supabase.auth.getUser();
-                    if (!user) return false;
-                    
-                    const { data, error } = await supabase
-                        .rpc('is_user_premium', { user_uuid: user.id });
-                    
-                    if (error) return false;
-                    
-                    return data;
-                } catch (error) {
-                    return false;
-                }
-            }
-        };
 
         document.addEventListener('DOMContentLoaded', function() {
             checkAuth();
@@ -799,8 +764,7 @@
                     return;
                 }
                 
-                currentUser = user;
-                await checkUserPremiumStatus();
+                checkUserPremiumStatus();
                 
             } catch (error) {
                 window.location.href = 'login.html';
@@ -809,9 +773,13 @@
 
         async function checkUserPremiumStatus() {
             try {
-                const isPremium = await PremiumManager.checkPremiumStatus();
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
                 
-                if (isPremium) {
+                const { data, error } = await supabase
+                    .rpc('is_user_premium', { user_uuid: user.id });
+                
+                if (!error && data) {
                     showPremiumStatus();
                 }
             } catch (error) {
@@ -850,18 +818,11 @@
                 return;
             }
             
-            PremiumManager.checkPremiumStatus().then(isPremium => {
-                if (isPremium) {
-                    showNotification('Você já é usuário Premium!', 'success');
-                    return;
-                }
-                
-                showNotification(`Redirecionando para checkout do plano ${selectedPlan.name}...`, 'info');
-                
-                setTimeout(() => {
-                    window.location.href = `checkout.html?plano=${planType}`;
-                }, 1000);
-            });
+            showNotification(`Redirecionando para checkout do plano ${selectedPlan.name}...`, 'info');
+            
+            setTimeout(() => {
+                window.location.href = `checkout.html?plano=${planType}`;
+            }, 1000);
         }
 
         function showNotification(message, type = 'info') {
@@ -873,19 +834,6 @@
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
             notification.textContent = message;
-            notification.style.cssText = `
-                position: fixed;
-                top: 100px;
-                right: 20px;
-                background: ${type === 'error' ? '#f56565' : type === 'success' ? '#48bb78' : '#A65B5B'};
-                color: white;
-                padding: 12px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                z-index: 10000;
-                max-width: 300px;
-                animation: slideIn 0.3s ease;
-            `;
 
             document.body.appendChild(notification);
 
