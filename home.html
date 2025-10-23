@@ -758,83 +758,80 @@
     </footer>
 
     <script>
-        // Configuração do Supabase
-        const SUPABASE_URL = 'https://gcukalndarlgydmgmmmt.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjdWthbG5kYXJsZ3lkbWdtbW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2NzI1ODEsImV4cCI6MjA3NTI0ODU4MX0.S1Qt1UbmK-Jtq2dX7Aarf2rDLZhoLgEcSLkCrBfIhUU';
+       // Configuração do Supabase
+const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        let currentUser = null;
+// FUNÇÕES DE NAVEGAÇÃO
+function goToPerfil() {
+    window.location.href = 'painel.html';
+}
 
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAuth();
-        });
+function goToMensagens() {
+    window.location.href = 'mensagens.html';
+}
 
-        // VERIFICA SE USUÁRIO ESTÁ LOGADO
-        async function checkAuth() {
-            try {
-                const { data: { user }, error } = await supabase.auth.getUser();
-                
-                if (error || !user) {
-                    window.location.href = 'login.html';
-                    return;
-                }
-                
-                currentUser = user;
-                
-            } catch (error) {
-                window.location.href = 'login.html';
-            }
+function goToBusca() {
+    window.location.href = 'busca.html';
+}
+
+function goToConfiguracoes() {
+    window.location.href = 'configuracoes.html';
+}
+
+function goToPlanos() {
+    window.location.href = 'pricing.html';
+}
+
+async function logout() {
+    try {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        window.location.href = 'login.html';
+    } catch (error) {
+        alert('Erro ao sair: ' + error.message);
+    }
+}
+
+// CARREGAR DADOS DO USUÁRIO
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error || !user) {
+            window.location.href = 'login.html';
+            return;
         }
 
-        // SELECIONAR PLANO - SIMPLES E DIRETO
-        function selectPlan(planType) {
-            const plans = {
-                'weekly': { name: 'Semanal', price: '8,90' },
-                'monthly': { name: 'Mensal', price: '24,90' },
-                'semestral': { name: 'Semestral', price: '104,90' },
-                'annual': { name: 'Anual', price: '179,90' }
-            };
-            
-            const selectedPlan = plans[planType];
-            
-            if (!selectedPlan) return;
-            
-            // ✅ REDIRECIONAMENTO DIRETO - SEM VERIFICAÇÕES
-            window.location.href = `checkout.html?plano=${planType}`;
-        }
+        // Personalizar welcome message
+        const userName = user.user_metadata?.full_name || user.user_metadata?.nickname || user.email?.split('@')[0] || 'Amor Conect';
+        document.getElementById('welcomeMessage').textContent = `Olá, ${userName.split(' ')[0]}!`;
+        
+        // Atualizar avatar com iniciais
+        const initials = getUserInitials(userName);
+        document.getElementById('userAvatar').textContent = initials;
 
-        // MOSTRAR NOTIFICAÇÃO
-        function showNotification(message, type = 'info') {
-            const existingNotification = document.querySelector('.notification');
-            if (existingNotification) {
-                existingNotification.remove();
-            }
+    } catch (error) {
+        window.location.href = 'login.html';
+    }
+});
 
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            notification.style.cssText = `
-                position: fixed;
-                top: 100px;
-                right: 20px;
-                background: ${type === 'error' ? '#f56565' : type === 'success' ? '#48bb78' : '#A65B5B'};
-                color: white;
-                padding: 12px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                z-index: 10000;
-                max-width: 300px;
-                animation: slideIn 0.3s ease;
-            `;
+function getUserInitials(name) {
+    return name
+        .split(' ')
+        .map(word => word.charAt(0))
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+}
 
-            document.body.appendChild(notification);
-
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.remove();
-                }
-            }, 4000);
-        }
+// VERIFICAR AUTENTICAÇÃO EM TEMPO REAL
+supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT') {
+        window.location.href = 'login.html';
+    }
+});
     </script>
 </body>
 </html>
