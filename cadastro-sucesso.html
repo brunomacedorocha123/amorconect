@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro Realizado - Amor Conect</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --gold: #C6A664;
+            --burgundy: #A65B5B;
+            --section-bg: #F8F5F0;
+            --white: #FFFFFF;
+            --text: #2A2A2A;
+            --text-light: #666666;
+            --success: #22c55e;
+        }
+
+        body {
+            background-color: var(--section-bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .success-container {
+            background: var(--white);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 500px;
+            border: 2px solid var(--gold);
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            color: var(--success);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            color: var(--burgundy);
+            margin-bottom: 1rem;
+            font-size: 2.2rem;
+        }
+
+        p {
+            margin-bottom: 1.5rem;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            background: var(--burgundy);
+            color: var(--white);
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            background: var(--gold);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(166, 91, 91, 0.3);
+        }
+
+        .tips {
+            background: #f7fafc;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            border-left: 4px solid var(--gold);
+            text-align: left;
+        }
+
+        .tips h3 {
+            color: var(--burgundy);
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .success-container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <div class="success-icon">✅</div>
+        <h1>Cadastro Realizado com Sucesso!</h1>
+        <p>Enviamos um e-mail de confirmação para você. Por favor, verifique sua caixa de entrada e clique no link para ativar sua conta.</p>
+        
+        <div class="tips">
+            <h3>💡 Dica Importante:</h3>
+            <p>Verifique também sua pasta de spam ou lixo eletrônico caso não encontre o e-mail na caixa de entrada principal.</p>
+        </div>
+        
+        <p><strong>Após confirmar seu e-mail, você poderá fazer login e começar a usar o Amor Conect!</strong></p>
+        
+        <a href="login.html" class="btn">Fazer Login</a>
+        <br>
+        <a href="index.html" style="display: inline-block; margin-top: 1rem; color: var(--burgundy); text-decoration: none;">
+            ← Voltar para a Página Inicial
+        </a>
+    </div>
+</body>
+</html>

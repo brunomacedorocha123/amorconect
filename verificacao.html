@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar E-mail - Amor Conect</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        :root {
+            --gold: #C6A664;
+            --burgundy: #A65B5B;
+            --white: #FFFFFF;
+            --light-bg: #F8F5F0;
+            --text: #2A2A2A;
+            --text-light: #666666;
+            --success: #22c55e;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--light-bg), #f0e9d8);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .container {
+            background: var(--white);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            border: 2px solid var(--gold);
+        }
+        
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        h1 {
+            color: var(--burgundy);
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+        
+        p {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+        
+        .btn {
+            background: var(--burgundy);
+            color: var(--white);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin: 1rem 0;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .btn:hover {
+            background: var(--gold);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(166, 91, 91, 0.3);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--burgundy);
+            color: var(--burgundy);
+        }
+        
+        .btn-outline:hover {
+            background: var(--burgundy);
+            color: var(--white);
+        }
+        
+        .alert {
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            text-align: left;
+        }
+        
+        .alert-success {
+            background: #f0fff4;
+            border: 2px solid #9ae6b4;
+            color: #276749;
+        }
+        
+        .alert-error {
+            background: #fed7d7;
+            border: 2px solid #feb2b2;
+            color: #c53030;
+        }
+        
+        .alert-warning {
+            background: #fffaf0;
+            border: 2px solid #faf089;
+            color: #744210;
+        }
+        
+        .alert-info {
+            background: #ebf8ff;
+            border: 2px solid #90cdf4;
+            color: #2c5aa0;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--burgundy);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .input-token {
+            width: 100%;
+            padding: 1rem;
+            margin: 1rem 0;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            text-align: center;
+            letter-spacing: 3px;
+            font-weight: bold;
+        }
+        
+        .input-token:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(198, 166, 100, 0.1);
+        }
+        
+        .resend-section {
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: #f7fafc;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .step {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        
+        .step.active {
+            background: var(--burgundy);
+            transform: scale(1.2);
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">💌</div>
+        <h1>Verificação de E-mail</h1>
+        <p>Estamos quase lá! Verifique seu e-mail para ativar sua conta.</p>
+        
+        <!-- Indicador de Passos -->
+        <div class="step-indicator">
+            <div class="step active" id="step1"></div>
+            <div class="step" id="step2"></div>
+            <div class="step" id="step3"></div>
+        </div>
+        
+        <!-- Verificação Automática -->
+        <div id="autoVerification">
+            <div class="alert alert-info">
+                <strong>🔍 Verificando automaticamente...</strong>
+                <p>Aguarde enquanto verificamos a confirmação do seu e-mail.</p>
+            </div>
+            <div class="spinner"></div>
+        </div>
+        
+        <!-- Verificação Manual -->
+        <div id="manualVerification" class="hidden">
+            <div class="alert alert-warning">
+                <strong>📧 Verificação Manual</strong>
+                <p>Digite o código de 6 dígitos que enviamos para seu e-mail:</p>
+            </div>
+            
+            <input type="text" 
+                   id="tokenInput" 
+                   placeholder="000000" 
+                   maxlength="6"
+                   class="input-token">
+            
+            <button class="btn" onclick="verifyManual()">
+                ✅ Verificar E-mail
+            </button>
+            
+            <div class="resend-section">
+                <p>Não recebeu o código?</p>
+                <button class="btn btn-outline" onclick="resendVerification()">
+                    🔄 Reenviar Código
+                </button>
+            </div>
+        </div>
+        
+        <!-- Sucesso -->
+        <div id="successMessage" class="alert alert-success hidden">
+            <strong>🎉 Parabéns!</strong>
+            <p>Seu e-mail foi verificado com sucesso. Sua conta está ativa!</p>
+            <a href="login.html" class="btn">🚀 Fazer Login</a>
+        </div>
+        
+        <!-- Erro -->
+        <div id="errorMessage" class="alert alert-error hidden">
+            <strong>❌ Erro na Verificação</strong>
+            <p id="errorText">Ocorreu um erro ao verificar seu e-mail.</p>
+            <button class="btn btn-outline" onclick="showManualVerification()">
+                🛠️ Tentar Manualmente
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Configuração do Supabase - CHAVE ATUALIZADA E CORRIGIDA
+const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Funções Principais
+        async function verificarEmailBanido(email) {
+            try {
+                const { data, error } = await supabase.rpc('is_email_banned', {
+                    email_to_check: email
+                });
+                
+                if (error) return false;
+                return data;
+            } catch (erro) {
+                return false;
+            }
+        }
+
+        async function attemptAutoVerification() {
+            const urlParams = new URLSearchParams(window.location.hash.substring(1));
+            const accessToken = urlParams.get('access_token');
+            const type = urlParams.get('type');
+            
+            if (accessToken && type === 'email') {
+                try {
+                    const { data, error } = await supabase.auth.verifyOtp({
+                        token_hash: accessToken,
+                        type: 'email'
+                    });
+                    
+                    if (error) throw error;
+                    
+                    const userEmail = data.user?.email;
+                    if (userEmail) {
+                        const estaBanido = await verificarEmailBanido(userEmail);
+                        if (estaBanido) {
+                            showError('Este e-mail foi permanentemente banido do Amor Conect');
+                            return;
+                        }
+                    }
+                    
+                    showSuccess();
+                    updateSteps(3);
+                    
+                } catch (error) {
+                    showManualVerification();
+                }
+            } else {
+                showManualVerification();
+            }
+        }
+
+        async function verifyManual() {
+            const token = document.getElementById('tokenInput').value.trim();
+            
+            if (!token || token.length !== 6) {
+                showError('Por favor, digite um código de 6 dígitos');
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase.auth.verifyOtp({
+                    token_hash: token,
+                    type: 'email'
+                });
+                
+                if (error) throw error;
+                
+                const userEmail = data.user?.email;
+                if (userEmail) {
+                    const estaBanido = await verificarEmailBanido(userEmail);
+                    if (estaBanido) {
+                        showError('Este e-mail foi permanentemente banido do Amor Conect');
+                        return;
+                    }
+                }
+                
+                showSuccess();
+                updateSteps(3);
+                
+            } catch (error) {
+                showError('Código inválido ou expirado. Tente novamente.');
+            }
+        }
+
+        async function resendVerification() {
+            try {
+                const { data: { user }, error } = await supabase.auth.getUser();
+                
+                if (error || !user) {
+                    showError('Sessão expirada. Faça login novamente.');
+                    return;
+                }
+                
+                const { error: resendError } = await supabase.auth.resend({
+                    type: 'signup',
+                    email: user.email,
+                });
+                
+                if (resendError) throw resendError;
+                
+                showTemporaryMessage('📧 Código reenviado! Verifique sua caixa de entrada.', 'info');
+                
+            } catch (error) {
+                showError('Erro ao reenviar código. Tente novamente.');
+            }
+        }
+
+        // Funções de UI
+        function showManualVerification() {
+            hideAllSections();
+            document.getElementById('manualVerification').classList.remove('hidden');
+            updateSteps(2);
+            
+            setTimeout(() => {
+                document.getElementById('tokenInput').focus();
+            }, 100);
+        }
+
+        function showSuccess() {
+            hideAllSections();
+            document.getElementById('successMessage').classList.remove('hidden');
+        }
+
+        function showError(mensagem) {
+            hideAllSections();
+            document.getElementById('errorText').textContent = mensagem;
+            document.getElementById('errorMessage').classList.remove('hidden');
+        }
+
+        function showTemporaryMessage(mensagem, tipo) {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${tipo}`;
+            alert.innerHTML = `<strong>ℹ️</strong><p>${mensagem}</p>`;
+            alert.style.marginTop = '1rem';
+            
+            document.querySelector('.container').appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        function hideAllSections() {
+            document.getElementById('autoVerification').classList.add('hidden');
+            document.getElementById('manualVerification').classList.add('hidden');
+            document.getElementById('successMessage').classList.add('hidden');
+            document.getElementById('errorMessage').classList.add('hidden');
+        }
+
+        function updateSteps(stepAtivo) {
+            for (let i = 1; i <= 3; i++) {
+                const step = document.getElementById(`step${i}`);
+                if (i <= stepAtivo) {
+                    step.classList.add('active');
+                } else {
+                    step.classList.remove('active');
+                }
+            }
+        }
+
+        function formatToken(input) {
+            input.value = input.value.replace(/\D/g, '');
+            if (input.value.length > 6) {
+                input.value = input.value.slice(0, 6);
+            }
+        }
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            attemptAutoVerification();
+            
+            document.getElementById('tokenInput').addEventListener('input', function() {
+                formatToken(this);
+            });
+            
+            document.getElementById('tokenInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    verifyManual();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
