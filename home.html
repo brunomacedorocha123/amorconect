@@ -32,6 +32,8 @@
             color: var(--white);
             line-height: 1.6;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         .container {
@@ -55,10 +57,16 @@
             align-items: center;
         }
 
-        .logo img {
-            height: 80px;
-            width: auto;
-            object-fit: contain;
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--gold);
         }
 
         .user-menu {
@@ -116,6 +124,7 @@
             min-height: calc(100vh - 200px);
             display: flex;
             align-items: center;
+            flex: 1;
         }
 
         .welcome-section {
@@ -258,7 +267,7 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <img src="assets/images/logo.png" alt="Amor Conect">
+                    <div class="logo-text">Amor Conect</div>
                 </div>
                 <div class="user-menu">
                     <div class="user-avatar" id="userAvatar">U</div>
@@ -344,7 +353,7 @@
 
         // Funções de Navegação
         function goToPerfil() {
-            window.location.href = 'perfil.html';
+            window.location.href = 'painel.html';
         }
 
         function goToMensagens() {
@@ -382,7 +391,7 @@
                 }
 
                 // Personalizar welcome message
-                const userName = user.user_metadata?.full_name || user.user_metadata?.nickname || 'Amor Conect';
+                const userName = user.user_metadata?.full_name || user.user_metadata?.nickname || user.email?.split('@')[0] || 'Amor Conect';
                 document.getElementById('welcomeMessage').textContent = `Olá, ${userName.split(' ')[0]}!`;
                 
                 // Atualizar avatar com iniciais
