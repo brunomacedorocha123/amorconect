@@ -6,25 +6,27 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUser = null;
 let visitedUserId = null;
 
-// Botão X - FUNCIONA
+// Botão X
 document.getElementById('closeProfile').addEventListener('click', function() {
     window.history.back();
 });
 
-// Carregar perfil
+// Carregar perfil do usuário visitado
 document.addEventListener('DOMContentLoaded', async function() {
-    await loadProfile();
+    await loadVisitedUserProfile();
 });
 
-async function loadProfile() {
+async function loadVisitedUserProfile() {
     try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
+        // Verificar autenticação do usuário atual
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
             window.location.href = 'login.html';
             return;
         }
         currentUser = user;
 
+        // Pegar ID do usuário visitado da URL
         const urlParams = new URLSearchParams(window.location.search);
         visitedUserId = urlParams.get('id');
         
@@ -34,6 +36,7 @@ async function loadProfile() {
             return;
         }
 
+        // Carregar dados do usuário visitado
         await loadUserData();
 
     } catch (error) {
@@ -41,10 +44,10 @@ async function loadProfile() {
     }
 }
 
-// CONSULTA IGUAL À DA HOME
+// Carregar dados do usuário visitado
 async function loadUserData() {
     try {
-        // Buscar perfil IGUAL na home
+        // Buscar perfil do usuário visitado
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -53,23 +56,25 @@ async function loadUserData() {
 
         if (profileError) throw profileError;
 
-        // Buscar detalhes IGUAL na home  
-        const { data: details, error: detailsError } = await supabase
+        // Buscar detalhes públicos do usuário visitado
+        const { data: userDetails, error: detailsError } = await supabase
             .from('user_details')
             .select('*')
             .eq('user_id', visitedUserId)
             .single();
 
-        // Preencher dados
-        fillProfileData(profile, details || {});
+        // Preencher a página com os dados
+        fillProfilePage(profile, userDetails || {});
 
     } catch (error) {
         alert('Erro ao carregar dados do usuário');
     }
 }
 
-// Preencher dados COMPLETO
-function fillProfileData(profile, details) {
+// Preencher página com dados do usuário visitado
+function fillProfilePage(profile, userDetails) {
+    if (!profile) return;
+
     // Informações básicas
     document.getElementById('profileNickname').textContent = profile.nickname || 'Usuário';
     document.getElementById('profileLocation').textContent = profile.display_city || 'Cidade não informada';
@@ -109,27 +114,27 @@ function fillProfileData(profile, details) {
 
     // Seção Sobre
     document.getElementById('profileLookingFor').querySelector('span').textContent = 
-        formatLookingFor(details.looking_for) || 'Não informado';
+        formatLookingFor(userDetails.looking_for) || 'Não informado';
     document.getElementById('profileGender').querySelector('span').textContent = 
-        details.gender || 'Não informado';
+        userDetails.gender || 'Não informado';
     document.getElementById('profileOrientation').querySelector('span').textContent = 
-        details.sexual_orientation || 'Não informado';
+        userDetails.sexual_orientation || 'Não informado';
     document.getElementById('profileProfession').querySelector('span').textContent = 
-        details.profession || 'Não informado';
+        userDetails.profession || 'Não informado';
     document.getElementById('profileZodiac').querySelector('span').textContent = 
-        details.zodiac || 'Não informado';
+        userDetails.zodiac || 'Não informado';
 
     // Descrição
-    if (details.description) {
-        document.getElementById('profileDescription').textContent = details.description;
+    if (userDetails.description) {
+        document.getElementById('profileDescription').textContent = userDetails.description;
     } else {
         document.getElementById('descriptionSection').style.display = 'none';
     }
 
     // Características
-    if (details.characteristics && details.characteristics.length > 0) {
+    if (userDetails.characteristics && userDetails.characteristics.length > 0) {
         const container = document.getElementById('profileCharacteristics');
-        container.innerHTML = details.characteristics.map(char => `
+        container.innerHTML = userDetails.characteristics.map(char => `
             <div class="characteristic-item">
                 <i class="fas fa-check"></i>
                 <span>${char}</span>
@@ -140,9 +145,9 @@ function fillProfileData(profile, details) {
     }
 
     // Interesses
-    if (details.interests && details.interests.length > 0) {
+    if (userDetails.interests && userDetails.interests.length > 0) {
         const container = document.getElementById('profileInterests');
-        container.innerHTML = details.interests.map(interest => `
+        container.innerHTML = userDetails.interests.map(interest => `
             <div class="interest-item">
                 <i class="fas fa-star"></i>
                 <span>${interest}</span>
@@ -154,44 +159,45 @@ function fillProfileData(profile, details) {
 
     // Estilo de Vida
     document.getElementById('profileReligion').querySelector('span').textContent = 
-        details.religion || 'Não informado';
+        userDetails.religion || 'Não informado';
     document.getElementById('profileDrinking').querySelector('span').textContent = 
-        details.drinking || 'Não informado';
+        userDetails.drinking || 'Não informado';
     document.getElementById('profileSmoking').querySelector('span').textContent = 
-        details.smoking || 'Não informado';
+        userDetails.smoking || 'Não informado';
     document.getElementById('profileExercise').querySelector('span').textContent = 
-        details.exercise || 'Não informado';
+        userDetails.exercise || 'Não informado';
     document.getElementById('profilePets').querySelector('span').textContent = 
-        details.has_pets || 'Não informado';
+        userDetails.has_pets || 'Não informado';
 
-    // Verificar se todas as informações de estilo de vida estão vazias
+    // Verificar se seção de estilo de vida está vazia
     const lifestyleItems = ['religion', 'drinking', 'smoking', 'exercise', 'has_pets'];
-    const allLifestyleEmpty = lifestyleItems.every(item => !details[item]);
+    const allLifestyleEmpty = lifestyleItems.every(item => !userDetails[item]);
     if (allLifestyleEmpty) {
         document.getElementById('lifestyleSection').style.display = 'none';
     }
 
-    // Galeria - Verificar Premium
+    // Verificar galeria
     checkGalleryAccess(isPremium);
 }
 
 // Verificar acesso à galeria
 function checkGalleryAccess(isVisitedUserPremium) {
-    const gallerySection = document.getElementById('gallerySection');
     const galleryPremiumLock = document.getElementById('galleryPremiumLock');
     const galleryContainer = document.getElementById('galleryContainer');
     const noGalleryMessage = document.getElementById('noGalleryMessage');
 
     if (!isVisitedUserPremium) {
+        // Usuário visitado não é premium - não tem galeria
         galleryPremiumLock.style.display = 'none';
         galleryContainer.style.display = 'none';
         noGalleryMessage.style.display = 'block';
     } else {
+        // Usuário visitado é premium - verificar se currentUser pode ver
         checkCurrentUserPremiumStatus();
     }
 }
 
-// Verificar se currentUser é premium para ver galeria
+// Verificar se currentUser pode ver galeria premium
 async function checkCurrentUserPremiumStatus() {
     try {
         const { data: currentUserProfile } = await supabase
@@ -209,17 +215,24 @@ async function checkCurrentUserPremiumStatus() {
         const noGalleryMessage = document.getElementById('noGalleryMessage');
 
         if (isCurrentUserPremium) {
+            // CurrentUser é premium - pode ver galeria
             galleryPremiumLock.style.display = 'none';
             galleryContainer.style.display = 'block';
             noGalleryMessage.style.display = 'none';
             await loadVisitedUserGallery();
         } else {
+            // CurrentUser não é premium - mostrar bloqueio
             galleryPremiumLock.style.display = 'block';
             galleryContainer.style.display = 'none';
             noGalleryMessage.style.display = 'none';
         }
 
     } catch (error) {
+        // Em caso de erro, mostrar bloqueio
+        const galleryPremiumLock = document.getElementById('galleryPremiumLock');
+        const galleryContainer = document.getElementById('galleryContainer');
+        const noGalleryMessage = document.getElementById('noGalleryMessage');
+        
         galleryPremiumLock.style.display = 'block';
         galleryContainer.style.display = 'none';
         noGalleryMessage.style.display = 'none';
@@ -271,7 +284,7 @@ function displayVisitedUserGallery(images) {
     `).join('');
 }
 
-// Funções auxiliares da home
+// Funções auxiliares
 function calculateAge(birthDate) {
     const today = new Date();
     const birth = new Date(birthDate);
@@ -342,11 +355,4 @@ document.getElementById('sendMessageBtn').addEventListener('click', function() {
 
 document.getElementById('likeProfileBtn').addEventListener('click', function() {
     alert('Curtido! 💖');
-});
-
-// Verificar autenticação em tempo real
-supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_OUT') {
-        window.location.href = 'login.html';
-    }
 });
