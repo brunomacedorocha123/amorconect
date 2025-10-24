@@ -10,12 +10,15 @@ class GalleryManager {
     async init() {
         try {
             await this.checkAuthentication();
-            await this.checkPremiumStatus();
+            
+            // ✅ CORREÇÃO: Usar PremiumManager que já funciona
+            this.isPremium = await PremiumManager.checkPremiumStatus();
             
             if (this.isPremium) {
                 this.showGalleryForPremium();
                 await this.loadUserGallery();
                 this.setupGalleryEvents();
+                await this.updateStorageDisplay();
             } else {
                 this.hideGalleryForFree();
             }
@@ -28,21 +31,6 @@ class GalleryManager {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
             this.currentUser = user;
-        }
-    }
-
-    async checkPremiumStatus() {
-        try {
-            const { data: subscription } = await supabase
-                .from('user_subscriptions')
-                .select('status, plan_type')
-                .eq('user_id', this.currentUser.id)
-                .eq('status', 'active')
-                .single();
-
-            this.isPremium = subscription && subscription.plan_type === 'premium';
-        } catch (error) {
-            this.isPremium = false;
         }
     }
 
