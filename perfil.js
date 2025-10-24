@@ -110,6 +110,8 @@ function fillProfileData(profile, details) {
 
     if (details.description) {
         document.getElementById('profileDescription').textContent = details.description;
+    } else {
+        document.getElementById('descriptionSection').style.display = 'none';
     }
 
     if (details.characteristics && details.characteristics.length > 0) {
@@ -120,6 +122,8 @@ function fillProfileData(profile, details) {
                 <span>${char}</span>
             </div>
         `).join('');
+    } else {
+        document.getElementById('characteristicsSection').style.display = 'none';
     }
 
     if (details.interests && details.interests.length > 0) {
@@ -130,6 +134,8 @@ function fillProfileData(profile, details) {
                 <span>${interest}</span>
             </div>
         `).join('');
+    } else {
+        document.getElementById('interestsSection').style.display = 'none';
     }
 
     document.getElementById('profileReligion').querySelector('span').textContent = 
@@ -142,6 +148,109 @@ function fillProfileData(profile, details) {
         details.exercise || 'Não informado';
     document.getElementById('profilePets').querySelector('span').textContent = 
         details.has_pets || 'Não informado';
+
+    const lifestyleItems = ['religion', 'drinking', 'smoking', 'exercise', 'has_pets'];
+    const allLifestyleEmpty = lifestyleItems.every(item => !details[item]);
+    if (allLifestyleEmpty) {
+        document.getElementById('lifestyleSection').style.display = 'none';
+    }
+
+    checkGalleryAccess(isPremium);
+}
+
+function checkGalleryAccess(isVisitedUserPremium) {
+    const galleryPremiumLock = document.getElementById('galleryPremiumLock');
+    const galleryContainer = document.getElementById('galleryContainer');
+    const noGalleryMessage = document.getElementById('noGalleryMessage');
+
+    if (!isVisitedUserPremium) {
+        galleryPremiumLock.style.display = 'none';
+        galleryContainer.style.display = 'none';
+        noGalleryMessage.style.display = 'block';
+    } else {
+        checkCurrentUserPremiumStatus();
+    }
+}
+
+async function checkCurrentUserPremiumStatus() {
+    try {
+        const { data: currentUserProfile } = await supabase
+            .from('profiles')
+            .select('is_premium, premium_expires_at')
+            .eq('id', currentUser.id)
+            .single();
+
+        const isCurrentUserPremium = currentUserProfile?.is_premium && 
+                                   (!currentUserProfile.premium_expires_at || 
+                                    new Date(currentUserProfile.premium_expires_at) > new Date());
+
+        const galleryPremiumLock = document.getElementById('galleryPremiumLock');
+        const galleryContainer = document.getElementById('galleryContainer');
+        const noGalleryMessage = document.getElementById('noGalleryMessage');
+
+        if (isCurrentUserPremium) {
+            galleryPremiumLock.style.display = 'none';
+            galleryContainer.style.display = 'block';
+            noGalleryMessage.style.display = 'none';
+            await loadVisitedUserGallery();
+        } else {
+            galleryPremiumLock.style.display = 'block';
+            galleryContainer.style.display = 'none';
+            noGalleryMessage.style.display = 'none';
+        }
+
+    } catch (error) {
+        const galleryPremiumLock = document.getElementById('galleryPremiumLock');
+        const galleryContainer = document.getElementById('galleryContainer');
+        const noGalleryMessage = document.getElementById('noGalleryMessage');
+        
+        galleryPremiumLock.style.display = 'block';
+        galleryContainer.style.display = 'none';
+        noGalleryMessage.style.display = 'none';
+    }
+}
+
+async function loadVisitedUserGallery() {
+    try {
+        const { data: galleryImages, error } = await supabase
+            .from('user_gallery')
+            .select('*')
+            .eq('user_id', visitedUserId)
+            .eq('is_active', true)
+            .order('uploaded_at', { ascending: false });
+
+        if (error) throw error;
+
+        displayVisitedUserGallery(galleryImages || []);
+
+    } catch (error) {
+        displayVisitedUserGallery([]);
+    }
+}
+
+function displayVisitedUserGallery(images) {
+    const galleryGrid = document.getElementById('visitedUserGallery');
+    
+    if (!galleryGrid) return;
+    
+    if (!images || images.length === 0) {
+        galleryGrid.innerHTML = `
+            <div class="empty-gallery">
+                <i class="fas fa-images"></i>
+                <p>Este usuário não possui fotos na galeria</p>
+            </div>
+        `;
+        return;
+    }
+    
+    galleryGrid.innerHTML = images.map(image => `
+        <div class="gallery-item" onclick="openGalleryImage('${image.image_url}')">
+            <img src="${getImageUrl(image.image_url)}" 
+                 alt="${image.image_name}" 
+                 class="gallery-image"
+                 loading="lazy">
+        </div>
+    `).join('');
 }
 
 function calculateAge(birthDate) {
@@ -164,6 +273,42 @@ function formatLookingFor(value) {
     };
     return options[value] || value;
 }
+
+function getImageUrl(imagePath) {
+    const { data } = supabase.storage
+        .from('gallery-images')
+        .getPublicUrl(imagePath);
+    return data.publicUrl;
+}
+
+function openGalleryImage(imageUrl) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImageView');
+    
+    if (modal && modalImg) {
+        modalImg.src = getImageUrl(imageUrl);
+        modal.classList.add('active');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('imageModal');
+    const closeBtn = document.getElementById('closeModalBtn');
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            if (modal) modal.classList.remove('active');
+        });
+    }
+    
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+    }
+});
 
 document.getElementById('sendMessageBtn').addEventListener('click', function() {
     if (visitedUserId) {
