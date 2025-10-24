@@ -507,70 +507,66 @@
                     </div>
                 </form>
             </section>
-
-                                   <!-- ========== SEÇÃO GALERIA PREMIUM ========== -->
-            <section class="form-section" id="gallerySection">
-                <div class="gallery-header">
-                    <h3><i class="fas fa-crown"></i> Minha Galeria Premium</h3>
-                    <p class="section-description">Área exclusiva para assinantes premium - Armazene até 10MB em fotos</p>
-                    
-                    <div class="gallery-actions">
-                        <div class="gallery-stats">
-                            <i class="fas fa-images"></i>
-                            <span id="imageCount">0</span> imagens na galeria
-                        </div>
-                        <button type="button" class="btn btn-premium" id="uploadGalleryBtn">
-                            <i class="fas fa-plus"></i>
-                            Adicionar Fotos
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Área de Upload -->
-                <div class="gallery-upload-area" id="galleryUploadArea">
-                    <div class="gallery-upload-icon">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                    </div>
-                    <div class="gallery-upload-text">
-                        <strong>Arraste suas fotos aqui</strong>
-                        <span>ou clique para selecionar</span>
-                        <small>Máximo: 10MB por imagem • Formatos: JPG, PNG, WebP</small>
-                    </div>
-                    <input type="file" id="galleryFileInput" multiple accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;">
-                </div>
-
-                <!-- Progresso do Upload -->
-                <div class="gallery-progress" id="galleryProgress" style="display: none;">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="galleryProgressFill"></div>
-                    </div>
-                    <span class="progress-text" id="galleryProgressText">Enviando...</span>
-                </div>
-
-                <!-- Grid de Imagens -->
-                <div class="gallery-grid" id="galleryGrid">
-                    <div class="gallery-empty">
-                        <div class="gallery-empty-icon">
-                            <i class="fas fa-images"></i>
-                        </div>
-                        <div class="gallery-empty-text">Sua galeria está vazia</div>
-                        <div class="gallery-empty-subtext">Adicione suas primeiras fotos para começar</div>
-                    </div>
-                </div>
-
-                <!-- Modal de Visualização -->
-                <div class="gallery-modal" id="galleryModal">
-                    <div class="gallery-modal-content">
-                        <button class="gallery-modal-close" id="galleryModalClose">
-                            <i class="fas fa-times"></i>
-                        </button>
-                        <img class="gallery-modal-image" id="galleryModalImage" src="" alt="Visualização">
-                    </div>
-                </div>
-            </section>
+<!-- ========== SEÇÃO GALERIA PREMIUM ========== -->
+<section class="form-section" id="gallerySection" style="display: none;">
+    <div class="gallery-header">
+        <h3><i class="fas fa-crown"></i> Minha Galeria Premium</h3>
+        <p class="section-description">Área exclusiva para assinantes premium - Armazene até 10MB em fotos</p>
+        
+        <div class="gallery-actions">
+            <div class="gallery-stats">
+                <i class="fas fa-images"></i>
+                <span id="imageCount">0</span> imagens
+            </div>
+            <button type="button" class="btn btn-premium" id="uploadGalleryBtn">
+                <i class="fas fa-plus"></i>
+                Adicionar Fotos
+            </button>
         </div>
-    </main>
+    </div>
 
+    <!-- Área de Upload VISÍVEL -->
+    <div class="gallery-upload-area" id="galleryUploadArea">
+        <div class="gallery-upload-icon">
+            <i class="fas fa-cloud-upload-alt"></i>
+        </div>
+        <div class="gallery-upload-text">
+            <strong>Arraste suas fotos aqui</strong>
+            <span>ou clique para selecionar</span>
+            <small>Máximo: 10MB por imagem • Formatos: JPG, PNG, WebP</small>
+        </div>
+        <input type="file" id="galleryFileInput" multiple accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;">
+    </div>
+
+    <!-- Progresso do Upload -->
+    <div class="gallery-progress" id="galleryProgress" style="display: none;">
+        <div class="progress-bar">
+            <div class="progress-fill" id="galleryProgressFill"></div>
+        </div>
+        <span class="progress-text" id="galleryProgressText">Enviando...</span>
+    </div>
+
+    <!-- Grid de Imagens -->
+    <div class="gallery-grid" id="galleryGrid">
+        <div class="gallery-empty">
+            <div class="gallery-empty-icon">
+                <i class="fas fa-images"></i>
+            </div>
+            <div class="gallery-empty-text">Sua galeria está vazia</div>
+            <div class="gallery-empty-subtext">Adicione suas primeiras fotos para começar</div>
+        </div>
+    </div>
+
+    <!-- Modal de Visualização -->
+    <div class="gallery-modal" id="galleryModal">
+        <div class="gallery-modal-content">
+            <button class="gallery-modal-close" id="galleryModalClose">
+                <i class="fas fa-times"></i>
+            </button>
+            <img class="gallery-modal-image" id="galleryModalImage" src="" alt="Visualização">
+        </div>
+    </div>
+</section>
     <!-- Footer -->
     <footer>
         <div class="container">

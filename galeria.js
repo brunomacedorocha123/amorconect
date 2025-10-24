@@ -1,4 +1,3 @@
-// Sistema de Galeria Premium
 class GalleryManager {
     constructor() {
         this.currentUser = null;
@@ -12,30 +11,29 @@ class GalleryManager {
         try {
             await this.checkAuthentication();
             await this.checkPremiumStatus();
-            this.toggleGallerySection();
             
             if (this.isPremium) {
+                this.showGallerySection();
                 await this.loadGallery();
                 this.setupEventListeners();
             } else {
-                this.showUpgradeMessage();
+                this.hideGallerySection();
             }
         } catch (error) {
-            console.error('Erro na inicialização da galeria:', error);
+            this.hideGallerySection();
         }
     }
 
     async checkAuthentication() {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            return;
+        if (user) {
+            this.currentUser = user;
         }
-        this.currentUser = user;
     }
 
     async checkPremiumStatus() {
         try {
-            const { data: subscription, error } = await supabase
+            const { data: subscription } = await supabase
                 .from('user_subscriptions')
                 .select('status, plan_type')
                 .eq('user_id', this.currentUser.id)
@@ -48,36 +46,18 @@ class GalleryManager {
         }
     }
 
-    toggleGallerySection() {
+    showGallerySection() {
         const gallerySection = document.getElementById('gallerySection');
         if (gallerySection) {
             gallerySection.style.display = 'block';
         }
     }
 
-    showUpgradeMessage() {
-        const galleryGrid = document.getElementById('galleryGrid');
-        const uploadArea = document.getElementById('galleryUploadArea');
-        const uploadBtn = document.getElementById('uploadGalleryBtn');
-        
-        if (galleryGrid) {
-            galleryGrid.innerHTML = `
-                <div class="gallery-empty">
-                    <div class="gallery-empty-icon">
-                        <i class="fas fa-crown"></i>
-                    </div>
-                    <div class="gallery-empty-text">Galeria Premium</div>
-                    <div class="gallery-empty-subtext">Faça upgrade para desbloquear sua galeria de fotos</div>
-                    <a href="pricing.html" class="btn btn-premium" style="margin-top: 1rem;">
-                        <i class="fas fa-rocket"></i>
-                        Fazer Upgrade
-                    </a>
-                </div>
-            `;
+    hideGallerySection() {
+        const gallerySection = document.getElementById('gallerySection');
+        if (gallerySection) {
+            gallerySection.style.display = 'none';
         }
-        
-        if (uploadArea) uploadArea.style.display = 'none';
-        if (uploadBtn) uploadBtn.style.display = 'none';
     }
 
     setupEventListeners() {
@@ -85,22 +65,15 @@ class GalleryManager {
         const fileInput = document.getElementById('galleryFileInput');
         const uploadBtn = document.getElementById('uploadGalleryBtn');
         
-        // CONEXÃO CORRETA DO BOTÃO "Adicionar Fotos"
         if (uploadBtn) {
             uploadBtn.addEventListener('click', () => {
-                if (this.isPremium) {
-                    fileInput?.click();
-                } else {
-                    window.location.href = 'pricing.html';
-                }
+                fileInput?.click();
             });
         }
 
         if (uploadArea && fileInput) {
             uploadArea.addEventListener('click', () => {
-                if (this.isPremium) {
-                    fileInput.click();
-                }
+                fileInput.click();
             });
             
             uploadArea.addEventListener('dragover', (e) => {
@@ -115,16 +88,12 @@ class GalleryManager {
             uploadArea.addEventListener('drop', (e) => {
                 e.preventDefault();
                 uploadArea.classList.remove('drag-over');
-                if (this.isPremium) {
-                    this.handleFileUpload(e.dataTransfer.files);
-                }
+                this.handleFileUpload(e.dataTransfer.files);
             });
             
             fileInput.addEventListener('change', (e) => {
-                if (this.isPremium) {
-                    this.handleFileUpload(e.target.files);
-                    e.target.value = '';
-                }
+                this.handleFileUpload(e.target.files);
+                e.target.value = '';
             });
         }
 
@@ -146,10 +115,7 @@ class GalleryManager {
     }
 
     async handleFileUpload(files) {
-        if (!this.isPremium) {
-            this.showNotification('Acesso restrito a usuários premium', 'error');
-            return;
-        }
+        if (!this.isPremium) return;
 
         const validFiles = Array.from(files).filter(file => 
             file.type.startsWith('image/') && 
@@ -211,14 +177,12 @@ class GalleryManager {
         if (!this.isPremium) return;
 
         try {
-            const { data: images, error } = await supabase
+            const { data: images } = await supabase
                 .from('user_gallery')
                 .select('*')
                 .eq('user_id', this.currentUser.id)
                 .eq('is_active', true)
                 .order('uploaded_at', { ascending: false });
-
-            if (error) throw error;
 
             this.images = images || [];
             this.updateGalleryDisplay();
@@ -274,7 +238,6 @@ class GalleryManager {
     setupImageClickEvents() {
         document.querySelectorAll('.gallery-item').forEach(item => {
             item.addEventListener('click', (e) => {
-                // Só abre o modal se não clicou no botão de delete
                 if (!e.target.closest('.gallery-item-delete')) {
                     const imageId = item.dataset.imageId;
                     const image = this.images.find(img => img.id == imageId);
@@ -347,13 +310,11 @@ class GalleryManager {
     }
 
     showNotification(message, type = 'info') {
-        // Usar o sistema de notificação existente do painel
         if (window.showNotification) {
             window.showNotification(message, type);
             return;
         }
 
-        // Fallback
         const notification = document.createElement('div');
         notification.style.cssText = `
             position: fixed;
@@ -375,7 +336,6 @@ class GalleryManager {
     }
 }
 
-// Inicializar galeria quando o DOM estiver pronto
 let galleryManager;
 document.addEventListener('DOMContentLoaded', () => {
     galleryManager = new GalleryManager();
