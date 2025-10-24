@@ -227,29 +227,10 @@ nav a:hover {
     line-height: 1.5;
 }
 
-/* CORREÇÃO 1: Seção Galeria Premium com mais espaçamento */
-.gallery-section {
-    background: var(--card-bg);
-    padding: 2rem;
-    border-radius: 15px;
-    margin-bottom: 5rem; /* Aumentado significativamente */
-    box-shadow: var(--shadow);
-    border: 1px solid var(--gold);
-    transition: var(--transition);
-}
-
-.gallery-section:hover {
-    border-color: var(--light-gold);
-    transform: translateY(-2px);
-}
-
-.gallery-section h3 {
-    font-size: 1.4rem;
-    color: var(--gold);
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
+/* CORREÇÃO: Seção Galeria Premium com MUITO mais espaçamento */
+.form-section:has(h3:has(i.fa-images)) {
+    margin-bottom: 6rem !important;
+    padding-bottom: 3rem !important;
 }
 
 /* Form Grid */
@@ -462,20 +443,32 @@ select.form-control {
     color: white;
 }
 
-/* CORREÇÃO 2: Botão Gerenciar Assinatura específico */
-.manage-subscription-btn {
+/* CORREÇÃO: Botão Fazer Upgrade (Gerenciar Assinatura) */
+#upgradePlanBtn {
     background: var(--gold) !important;
     color: var(--dark-bg) !important;
     border: 2px solid var(--gold) !important;
     font-weight: 700;
-    margin-top: 1rem;
 }
 
-.manage-subscription-btn:hover {
+#upgradePlanBtn:hover {
     background: var(--light-gold) !important;
     border-color: var(--light-gold) !important;
     color: var(--dark-bg) !important;
-    transform: translateY(-2px);
+}
+
+/* Botão Premium */
+.btn-premium {
+    background: var(--gold);
+    color: var(--dark-bg);
+    border: 2px solid var(--gold);
+    font-weight: 700;
+}
+
+.btn-premium:hover {
+    background: var(--light-gold);
+    border-color: var(--light-gold);
+    color: var(--dark-bg);
 }
 
 /* Form Actions */
@@ -483,7 +476,8 @@ select.form-control {
     display: flex;
     gap: 1rem;
     justify-content: center;
-    margin-top: 3rem;
+    margin-top: 4rem !important;
+    padding-top: 2rem !important;
     flex-wrap: wrap;
 }
 
@@ -921,4 +915,35 @@ footer {
     background: var(--burgundy);
     border-radius: 4px;
     transition: width 0.3s ease;
+}
+
+/* Plan Info */
+.plan-info-container {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 10px;
+    border: 1px solid var(--gold);
+    margin-top: 1rem;
+}
+
+.premium-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.premium-badge.free {
+    background: var(--section-bg);
+    color: var(--beige);
+    border: 1px solid var(--beige);
+}
+
+.premium-badge.premium {
+    background: var(--gold);
+    color: var(--dark-bg);
+    border: 1px solid var(--gold);
 }
