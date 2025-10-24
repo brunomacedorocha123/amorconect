@@ -13,8 +13,12 @@ class GalleryManager {
         try {
             await this.checkAuthentication();
             
+            // Verificar status premium
             if (window.PremiumManager) {
                 this.isPremium = await PremiumManager.checkPremiumStatus();
+            } else {
+                // Fallback se PremiumManager não existir
+                this.isPremium = false;
             }
             
             if (this.isPremium) {
@@ -54,7 +58,7 @@ class GalleryManager {
         const galleryUpgradeCTA = document.getElementById('galleryUpgradeCTA');
         
         if (galleryManager) galleryManager.style.display = 'none';
-        if (galleryUpgradeCTA) galleryUpgradeCTA.style.display = 'flex';
+        if (galleryUpgradeCTA) galleryUpgradeCTA.style.display = 'block';
     }
 
     setupGalleryEvents() {
@@ -156,9 +160,25 @@ class GalleryManager {
         // Mostrar loading
         this.showNotification(`Enviando ${validFiles.length} imagem(ns)...`, 'info');
 
+        let successCount = 0;
+        let errorCount = 0;
+
         for (let i = 0; i < validFiles.length; i++) {
             const file = validFiles[i];
-            await this.uploadGalleryImage(file);
+            try {
+                await this.uploadGalleryImage(file);
+                successCount++;
+            } catch (error) {
+                console.error('Erro no upload:', error);
+                errorCount++;
+            }
+        }
+
+        if (successCount > 0) {
+            this.showNotification(`${successCount} imagem(ns) adicionada(s) com sucesso!`, 'success');
+        }
+        if (errorCount > 0) {
+            this.showNotification(`${errorCount} imagem(ns) falharam no upload`, 'error');
         }
 
         await this.loadUserGallery();
@@ -198,8 +218,10 @@ class GalleryManager {
                 throw dbError;
             }
 
+            return true;
+
         } catch (error) {
-            console.error('Erro no upload:', error);
+            console.error('Erro no upload da imagem:', error);
             throw error;
         }
     }
@@ -228,6 +250,8 @@ class GalleryManager {
     displayGallery(images) {
         const galleryGrid = document.getElementById('galleryGrid');
         
+        if (!galleryGrid) return;
+        
         if (!images || images.length === 0) {
             galleryGrid.innerHTML = `
                 <div class="empty-gallery">
@@ -252,9 +276,6 @@ class GalleryManager {
                         <i class="fas fa-image"></i>
                         <span>${image.image_name}</span>
                     </div>
-                    <div class="image-loading" style="display: none;">
-                        <i class="fas fa-spinner fa-spin"></i>
-                    </div>
                 </div>
                 <div class="gallery-actions">
                     <button class="delete-btn" onclick="galleryManager.deleteGalleryImage(${image.id}, '${image.image_url}')">
@@ -264,7 +285,7 @@ class GalleryManager {
             </div>
         `).join('');
 
-        // Pré-carregar imagens
+        // Pré-carregar imagens para melhor performance
         this.preloadImages(images);
     }
 
@@ -309,6 +330,7 @@ class GalleryManager {
         // Em caso de erro
         lightboxImage.onerror = () => {
             caption.textContent = 'Erro ao carregar imagem';
+            lightboxImage.style.opacity = '1';
         };
 
         // Mostrar lightbox
@@ -466,6 +488,16 @@ class GalleryManager {
         }, 4000);
     }
 
+    // Método para atualizar quando usuário faz upgrade
+    async onPremiumUpgrade() {
+        this.isPremium = true;
+        this.showGalleryForPremium();
+        await this.loadUserGallery();
+        this.setupGalleryEvents();
+        this.createLightbox();
+        await this.updateStorageDisplay();
+    }
+
     // Método para limpar a galeria (útil para logout)
     cleanup() {
         this.images = [];
@@ -486,3 +518,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Expor para uso global
 window.galleryManager = galleryManager;
+
+// Função global para ser chamada quando usuário fizer upgrade
+window.onPremiumUpgrade = function() {
+    if (galleryManager) {
+        galleryManager.onPremiumUpgrade();
+    }
+};
