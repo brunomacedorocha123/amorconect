@@ -44,14 +44,18 @@
         font-size: 1.1rem;
     }
     
-    /* CORREÇÃO: Avatar do cabeçalho - ícone da câmera menor */
+    /* CORREÇÃO: Remover câmera do avatar do cabeçalho */
     .user-avatar .avatar-overlay {
-        font-size: 0.5rem !important;
-        opacity: 0.7;
+        display: none !important;
     }
     
-    .user-avatar .avatar-overlay i {
-        font-size: 0.6rem !important;
+    /* Garantir que avatar do cabeçalho mostra imagem */
+    .user-avatar .avatar-image {
+        display: block !important;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        border-radius: 50% !important;
     }
     
     /* PREMIUM BADGE MOBILE */
@@ -205,22 +209,28 @@
         gap: 1rem;
     }
     
-    /* CORREÇÃO: Avatar grande da seção Foto do Perfil - APENAS TAMANHO */
+    /* Avatar grande da seção Foto do Perfil */
     .user-avatar-large {
-        width: 120px !important;
-        height: 120px !important;
-        font-size: 2.5rem !important;
+        width: 120px;
+        height: 120px;
+        font-size: 2.5rem;
     }
     
-    /* REMOVIDO: Linhas conflitantes com JavaScript */
-    /* .avatar-image-large { display: block !important; etc... } */
-    
-    .user-avatar-fallback-large {
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
+    /* Garantir que avatar grande mostra imagem */
+    .user-avatar-large .avatar-image-large {
+        display: block !important;
         width: 100% !important;
         height: 100% !important;
+        object-fit: cover !important;
+        border-radius: 50% !important;
+    }
+    
+    .user-avatar-fallback-large {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
     }
     
     .avatar-overlay-large {
@@ -314,15 +324,6 @@
         font-size: 1rem;
     }
     
-    /* CORREÇÃO: Ícone da câmera ainda menor no header */
-    .user-avatar .avatar-overlay {
-        font-size: 0.4rem !important;
-    }
-    
-    .user-avatar .avatar-overlay i {
-        font-size: 0.5rem !important;
-    }
-    
     #userNickname {
         font-size: 0.9rem;
     }
@@ -392,11 +393,11 @@
         padding: 0.8rem;
     }
     
-    /* CORREÇÃO: Avatar grande menor em mobile pequeno - APENAS TAMANHO */
+    /* Avatar grande menor em mobile pequeno */
     .user-avatar-large {
-        width: 100px !important;
-        height: 100px !important;
-        font-size: 2rem !important;
+        width: 100px;
+        height: 100px;
+        font-size: 2rem;
     }
     
     .avatar-overlay-large {
@@ -675,11 +676,11 @@
         padding: 0.8rem 1rem;
     }
     
-    /* CORREÇÃO: Avatar muito pequeno - APENAS TAMANHO */
+    /* Avatar muito pequeno */
     .user-avatar-large {
-        width: 90px !important;
-        height: 90px !important;
-        font-size: 1.8rem !important;
+        width: 90px;
+        height: 90px;
+        font-size: 1.8rem;
     }
     
     .gallery-grid {
@@ -697,12 +698,6 @@
         opacity: 1 !important;
     }
     
-    .user-avatar .avatar-image {
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: cover !important;
-    }
-    
     .user-avatar-fallback {
         display: flex !important;
         align-items: center;
@@ -710,7 +705,4 @@
         width: 100% !important;
         height: 100% !important;
     }
-    
-    /* REMOVIDO: Linhas conflitantes - JavaScript controla display */
-    /* .avatar-upload-container .user-avatar-large .avatar-image-large { display: block !important; } */
 }
