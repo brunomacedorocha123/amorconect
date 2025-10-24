@@ -1052,3 +1052,13 @@ footer {
         transform: scale(0.95);
     }
 }
+
+/* Garantir que a galeria tenha o mesmo estilo das seções */
+.gallery-section {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+    border: 2px solid var(--gold);
+}

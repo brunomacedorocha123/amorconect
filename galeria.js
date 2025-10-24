@@ -58,22 +58,26 @@ class GalleryManager {
     showUpgradeMessage() {
         const galleryGrid = document.getElementById('galleryGrid');
         const uploadArea = document.getElementById('galleryUploadArea');
+        const uploadBtn = document.getElementById('uploadGalleryBtn');
         
         if (galleryGrid) {
             galleryGrid.innerHTML = `
-                <div class="gallery-message info" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
-                    <i class="fas fa-crown" style="font-size: 3rem; margin-bottom: 1rem; color: var(--gold);"></i>
-                    <h4 style="color: var(--gold); margin-bottom: 1rem;">Galeria Exclusiva Premium</h4>
-                    <p style="margin-bottom: 1.5rem;">Faça upgrade para desbloquear o acesso à galeria de fotos</p>
-                    <a href="pricing.html" class="btn btn-premium">
+                <div class="gallery-empty">
+                    <div class="gallery-empty-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="gallery-empty-text">Galeria Premium</div>
+                    <div class="gallery-empty-subtext">Faça upgrade para desbloquear sua galeria de fotos</div>
+                    <a href="pricing.html" class="btn btn-premium" style="margin-top: 1rem;">
                         <i class="fas fa-rocket"></i>
-                        Fazer Upgrade para Premium
+                        Fazer Upgrade
                     </a>
                 </div>
             `;
         }
         
         if (uploadArea) uploadArea.style.display = 'none';
+        if (uploadBtn) uploadBtn.style.display = 'none';
     }
 
     setupEventListeners() {
@@ -81,8 +85,23 @@ class GalleryManager {
         const fileInput = document.getElementById('galleryFileInput');
         const uploadBtn = document.getElementById('uploadGalleryBtn');
         
+        // CONEXÃO CORRETA DO BOTÃO "Adicionar Fotos"
+        if (uploadBtn) {
+            uploadBtn.addEventListener('click', () => {
+                if (this.isPremium) {
+                    fileInput?.click();
+                } else {
+                    window.location.href = 'pricing.html';
+                }
+            });
+        }
+
         if (uploadArea && fileInput) {
-            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('click', () => {
+                if (this.isPremium) {
+                    fileInput.click();
+                }
+            });
             
             uploadArea.addEventListener('dragover', (e) => {
                 e.preventDefault();
@@ -96,18 +115,16 @@ class GalleryManager {
             uploadArea.addEventListener('drop', (e) => {
                 e.preventDefault();
                 uploadArea.classList.remove('drag-over');
-                this.handleFileUpload(e.dataTransfer.files);
+                if (this.isPremium) {
+                    this.handleFileUpload(e.dataTransfer.files);
+                }
             });
             
             fileInput.addEventListener('change', (e) => {
-                this.handleFileUpload(e.target.files);
-                e.target.value = '';
-            });
-        }
-
-        if (uploadBtn) {
-            uploadBtn.addEventListener('click', () => {
-                document.getElementById('galleryFileInput')?.click();
+                if (this.isPremium) {
+                    this.handleFileUpload(e.target.files);
+                    e.target.value = '';
+                }
             });
         }
 
@@ -140,7 +157,7 @@ class GalleryManager {
         );
 
         if (validFiles.length === 0) {
-            this.showNotification('Selecione imagens válidas (máx. 10MB)', 'error');
+            this.showNotification('Selecione imagens válidas (JPG, PNG, WebP - máx. 10MB)', 'error');
             return;
         }
 
@@ -182,6 +199,8 @@ class GalleryManager {
                 });
 
             if (dbError) throw dbError;
+
+            this.showNotification(`Imagem ${current}/${total} enviada com sucesso`, 'success');
 
         } catch (error) {
             this.showNotification(`Erro ao enviar imagem ${current}`, 'error');
@@ -244,7 +263,7 @@ class GalleryManager {
                 <img src="${image.image_url}" alt="${image.image_name}" class="gallery-image" loading="lazy">
                 <div class="gallery-item-overlay">
                     <span class="gallery-item-size">${this.formatFileSize(image.image_size)}</span>
-                    <button class="gallery-item-delete" onclick="galleryManager.deleteImage(${image.id})">
+                    <button class="gallery-item-delete" onclick="galleryManager.deleteImage(${image.id})" title="Excluir imagem">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -255,6 +274,7 @@ class GalleryManager {
     setupImageClickEvents() {
         document.querySelectorAll('.gallery-item').forEach(item => {
             item.addEventListener('click', (e) => {
+                // Só abre o modal se não clicou no botão de delete
                 if (!e.target.closest('.gallery-item-delete')) {
                     const imageId = item.dataset.imageId;
                     const image = this.images.find(img => img.id == imageId);
@@ -333,7 +353,7 @@ class GalleryManager {
             return;
         }
 
-        // Fallback caso não exista
+        // Fallback
         const notification = document.createElement('div');
         notification.style.cssText = `
             position: fixed;
@@ -345,7 +365,6 @@ class GalleryManager {
             border-radius: 10px;
             z-index: 10000;
             max-width: 300px;
-            animation: fadeIn 0.3s ease;
         `;
         notification.textContent = message;
         document.body.appendChild(notification);
