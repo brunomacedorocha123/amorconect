@@ -166,7 +166,15 @@ class GalleryManager {
         
         galleryGrid.innerHTML = images.map(image => `
             <div class="gallery-item">
-                <img src="${image.image_url}" alt="${image.image_name}" class="gallery-image">
+                <div class="gallery-image-container">
+                    <img src="${this.getImageUrl(image.image_url)}" alt="${image.image_name}" 
+                         class="gallery-image" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="image-fallback" style="display: none;">
+                        <i class="fas fa-image"></i>
+                        <span>Imagem</span>
+                    </div>
+                </div>
                 <div class="gallery-actions">
                     <button class="gallery-btn delete-btn" onclick="galleryManager.deleteGalleryImage(${image.id}, '${image.image_url}')">
                         <i class="fas fa-trash"></i>
@@ -174,6 +182,13 @@ class GalleryManager {
                 </div>
             </div>
         `).join('');
+    }
+
+    getImageUrl(imagePath) {
+        const { data } = supabase.storage
+            .from('gallery-images')
+            .getPublicUrl(imagePath);
+        return data.publicUrl;
     }
 
     async deleteGalleryImage(imageId, imagePath) {
