@@ -508,7 +508,7 @@
                 </form>
             </section>
 
-       <!-- SEÇÃO: Galeria Premium -->
+     <!-- SEÇÃO: Galeria Premium -->
 <section class="form-section">
     <h3><i class="fas fa-images"></i> Minha Galeria Premium</h3>
     
@@ -532,14 +532,15 @@
             <button type="button" class="btn btn-primary" id="uploadGalleryBtn">
                 <i class="fas fa-plus"></i> Adicionar Fotos
             </button>
-            <input type="file" id="galleryUpload" multiple accept="image/*" style="display: none;">
+            <input type="file" id="galleryUpload" multiple accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" style="display: none;">
             <small style="display: block; margin-top: 0.5rem; color: var(--beige);">
-                Formatos: JPG, PNG, GIF • Máximo 10MB por imagem
+                Formatos: JPG, PNG, GIF, WebP • Máximo 10MB por imagem
             </small>
         </div>
 
         <!-- Grid de Imagens -->
         <div id="galleryGrid" class="gallery-grid">
+            <!-- As imagens serão carregadas aqui dinamicamente -->
             <div class="empty-gallery">
                 <i class="fas fa-images"></i>
                 <p>Sua galeria está vazia</p>
@@ -558,6 +559,18 @@
         </a>
     </div>
 </section>
+
+<!-- MODAL PARA IMAGEM AMPLIADA - ADICIONE ISSO ANTES DO FOOTER -->
+<div id="imageModal" class="image-modal">
+    <div class="modal-overlay"></div>
+    <div class="modal-container">
+        <button class="modal-close-btn" id="closeModalBtn">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="modal-image-wrapper">
+            <img id="modalImageView" src="" alt="Imagem ampliada">
+        </div>
+    </div>
 </div>
 </main>
 
@@ -600,5 +613,6 @@
 <script src="premium-check.js"></script>
 <script src="avatar.js"></script>
 <script src="galeria.js"></script>
+<script src="modal-gallery.js"></script>
 </body>
 </html>

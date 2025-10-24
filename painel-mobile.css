@@ -38,10 +38,45 @@
         gap: 10px;
     }
     
+    /* CORREÇÃO DEFINITIVA DO AVATAR MOBILE */
     .user-avatar {
         width: 45px;
         height: 45px;
         font-size: 1.1rem;
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        min-width: 45px;
+        min-height: 45px;
+    }
+    
+    .user-avatar .avatar-image {
+        display: block !important;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+    }
+    
+    .user-avatar .avatar-overlay {
+        font-size: 0.6rem;
+        opacity: 0.8;
+    }
+    
+    .user-avatar-fallback {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 100% !important;
+        height: 100% !important;
+        font-size: 1rem !important;
+    }
+    
+    .header-content .user-avatar {
+        display: flex !important;
+    }
+    
+    .user-info .user-avatar {
+        display: flex !important;
     }
     
     /* PREMIUM BADGE MOBILE */
@@ -572,5 +607,58 @@
     .avatar-upload-actions .btn {
         font-size: 0.85rem;
         padding: 0.8rem 1rem;
+    }
+}
+
+/* ========== CORREÇÃO DEFINITIVA AVATAR MOBILE ========== */
+@media (max-width: 768px) {
+    .user-avatar {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 45px !important;
+        height: 45px !important;
+        min-width: 45px;
+        min-height: 45px;
+    }
+    
+    .user-avatar .avatar-image {
+        display: block !important;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+    }
+    
+    .user-avatar .avatar-overlay {
+        font-size: 0.6rem;
+        opacity: 0.8;
+    }
+    
+    .user-avatar-fallback {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 100% !important;
+        height: 100% !important;
+        font-size: 1rem !important;
+    }
+    
+    .header-content .user-avatar {
+        display: flex !important;
+    }
+    
+    .user-info .user-avatar {
+        display: flex !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .user-avatar {
+        width: 40px !important;
+        height: 40px !important;
+    }
+    
+    .user-avatar-fallback {
+        font-size: 0.9rem !important;
     }
 }
