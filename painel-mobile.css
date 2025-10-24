@@ -38,45 +38,20 @@
         gap: 10px;
     }
     
-    /* CORREÇÃO DEFINITIVA DO AVATAR MOBILE */
     .user-avatar {
         width: 45px;
         height: 45px;
         font-size: 1.1rem;
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        min-width: 45px;
-        min-height: 45px;
     }
     
-    .user-avatar .avatar-image {
-        display: block !important;
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: cover !important;
-    }
-    
+    /* CORREÇÃO: Avatar do cabeçalho - ícone da câmera menor */
     .user-avatar .avatar-overlay {
-        font-size: 0.6rem;
-        opacity: 0.8;
+        font-size: 0.5rem !important;
+        opacity: 0.7;
     }
     
-    .user-avatar-fallback {
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        width: 100% !important;
-        height: 100% !important;
-        font-size: 1rem !important;
-    }
-    
-    .header-content .user-avatar {
-        display: flex !important;
-    }
-    
-    .user-info .user-avatar {
-        display: flex !important;
+    .user-avatar .avatar-overlay i {
+        font-size: 0.6rem !important;
     }
     
     /* PREMIUM BADGE MOBILE */
@@ -199,7 +174,7 @@
     
     /* BOTÃO PREMIUM MOBILE */
     .btn-premium {
-        order: -1; /* Coloca o botão premium primeiro */
+        order: -1;
         margin-bottom: 10px;
     }
     
@@ -230,10 +205,22 @@
         gap: 1rem;
     }
     
+    /* CORREÇÃO: Avatar grande da seção Foto do Perfil - APENAS TAMANHO */
     .user-avatar-large {
-        width: 120px;
-        height: 120px;
-        font-size: 2.5rem;
+        width: 120px !important;
+        height: 120px !important;
+        font-size: 2.5rem !important;
+    }
+    
+    /* REMOVIDO: Linhas conflitantes com JavaScript */
+    /* .avatar-image-large { display: block !important; etc... } */
+    
+    .user-avatar-fallback-large {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 100% !important;
+        height: 100% !important;
     }
     
     .avatar-overlay-large {
@@ -264,10 +251,46 @@
         max-width: 250px;
     }
     
-    /* Header avatar mobile */
-    .user-avatar .avatar-overlay {
-        opacity: 0.8;
-        font-size: 0.7rem;
+    /* ========== GALERIA MOBILE ========== */
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 0.8rem;
+    }
+    
+    .gallery-item {
+        border-width: 2px;
+    }
+    
+    .empty-gallery {
+        padding: 2rem 1rem;
+    }
+    
+    .empty-gallery i {
+        font-size: 2.5rem;
+    }
+    
+    /* MODAL MOBILE */
+    .modal-container {
+        width: 100%;
+        height: 100%;
+        padding: 10px;
+    }
+    
+    .modal-close-btn {
+        top: 10px;
+        right: 10px;
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+    
+    .modal-image-wrapper {
+        max-width: 95%;
+        max-height: 95%;
+    }
+    
+    #modalImageView {
+        border-radius: 8px;
     }
 }
 
@@ -289,6 +312,15 @@
         width: 40px;
         height: 40px;
         font-size: 1rem;
+    }
+    
+    /* CORREÇÃO: Ícone da câmera ainda menor no header */
+    .user-avatar .avatar-overlay {
+        font-size: 0.4rem !important;
+    }
+    
+    .user-avatar .avatar-overlay i {
+        font-size: 0.5rem !important;
     }
     
     #userNickname {
@@ -360,10 +392,11 @@
         padding: 0.8rem;
     }
     
+    /* CORREÇÃO: Avatar grande menor em mobile pequeno - APENAS TAMANHO */
     .user-avatar-large {
-        width: 100px;
-        height: 100px;
-        font-size: 2rem;
+        width: 100px !important;
+        height: 100px !important;
+        font-size: 2rem !important;
     }
     
     .avatar-overlay-large {
@@ -386,6 +419,24 @@
     
     .section-description {
         text-align: center;
+    }
+    
+    /* ========== GALERIA SMALL MOBILE ========== */
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 0.6rem;
+    }
+    
+    .gallery-item {
+        border-width: 1px;
+    }
+    
+    .empty-gallery {
+        padding: 1.5rem 1rem;
+    }
+    
+    .empty-gallery i {
+        font-size: 2rem;
     }
     
     /* Melhorar usabilidade em touch */
@@ -426,6 +477,11 @@
     .avatar-upload-actions .btn {
         width: auto;
         min-width: 160px;
+    }
+    
+    /* GALERIA TABLET */
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     }
     
     /* PREMIUM BADGE TABLET */
@@ -477,6 +533,12 @@
         flex-direction: row;
         padding: 10px;
     }
+    
+    /* GALERIA LANDSCAPE */
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.6rem;
+    }
 }
 
 /* ========== ALTA DENSIDADE DE PIXELS ========== */
@@ -513,6 +575,10 @@
     
     .premium-badge,
     .btn-premium {
+        transition: none;
+    }
+    
+    .gallery-item {
         transition: none;
     }
 }
@@ -608,30 +674,33 @@
         font-size: 0.85rem;
         padding: 0.8rem 1rem;
     }
+    
+    /* CORREÇÃO: Avatar muito pequeno - APENAS TAMANHO */
+    .user-avatar-large {
+        width: 90px !important;
+        height: 90px !important;
+        font-size: 1.8rem !important;
+    }
+    
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 0.5rem;
+    }
 }
 
-/* ========== CORREÇÃO DEFINITIVA AVATAR MOBILE ========== */
+/* ========== GARANTIR QUE AVATARS APARECEM NO MOBILE ========== */
 @media (max-width: 768px) {
+    /* Avatar do header sempre visível */
     .user-avatar {
         display: flex !important;
         visibility: visible !important;
         opacity: 1 !important;
-        width: 45px !important;
-        height: 45px !important;
-        min-width: 45px;
-        min-height: 45px;
     }
     
     .user-avatar .avatar-image {
-        display: block !important;
         width: 100% !important;
         height: 100% !important;
         object-fit: cover !important;
-    }
-    
-    .user-avatar .avatar-overlay {
-        font-size: 0.6rem;
-        opacity: 0.8;
     }
     
     .user-avatar-fallback {
@@ -640,25 +709,8 @@
         justify-content: center;
         width: 100% !important;
         height: 100% !important;
-        font-size: 1rem !important;
     }
     
-    .header-content .user-avatar {
-        display: flex !important;
-    }
-    
-    .user-info .user-avatar {
-        display: flex !important;
-    }
-}
-
-@media (max-width: 480px) {
-    .user-avatar {
-        width: 40px !important;
-        height: 40px !important;
-    }
-    
-    .user-avatar-fallback {
-        font-size: 0.9rem !important;
-    }
+    /* REMOVIDO: Linhas conflitantes - JavaScript controla display */
+    /* .avatar-upload-container .user-avatar-large .avatar-image-large { display: block !important; } */
 }

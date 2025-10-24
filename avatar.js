@@ -173,20 +173,32 @@ class AvatarUpload {
                     if (!img) {
                         img = document.createElement('img');
                         img.className = avatar.classList.contains('user-avatar-large') ? 'avatar-image-large' : 'avatar-image';
+                        // CORREÇÃO: Estilo com !important para mobile
                         img.style.cssText = `
-                            width: 100%;
-                            height: 100%;
-                            border-radius: 50%;
-                            object-fit: cover;
+                            width: 100% !important;
+                            height: 100% !important;
+                            border-radius: 50% !important;
+                            object-fit: cover !important;
+                            display: block !important;
                         `;
                         avatar.appendChild(img);
                     }
                     
                     img.src = e.target.result;
-                    img.style.display = 'block';
+                    // CORREÇÃO: Garantir que mostra no mobile
+                    img.style.cssText = `
+                        width: 100% !important;
+                        height: 100% !important;
+                        border-radius: 50% !important;
+                        object-fit: cover !important;
+                        display: block !important;
+                    `;
                     
                     if (fallback) {
-                        fallback.style.display = 'none';
+                        // CORREÇÃO: Garantir que esconde no mobile
+                        fallback.style.cssText = `
+                            display: none !important;
+                        `;
                     }
                 });
 
@@ -260,17 +272,28 @@ class AvatarUpload {
 
     updateAllAvatars(avatarUrl) {
         const avatars = document.querySelectorAll('.user-avatar, .user-avatar-large');
+        
         avatars.forEach(avatar => {
             const img = avatar.querySelector('.avatar-image, .avatar-image-large');
             const fallback = avatar.querySelector('.user-avatar-fallback, .user-avatar-fallback-large, .avatar-fallback');
             
             if (img) {
                 img.src = avatarUrl;
-                img.style.display = 'block';
+                // CORREÇÃO: Estilo com !important para sobrepor CSS mobile
+                img.style.cssText = `
+                    width: 100% !important;
+                    height: 100% !important;
+                    border-radius: 50% !important;
+                    object-fit: cover !important;
+                    display: block !important;
+                `;
             }
             
             if (fallback) {
-                fallback.style.display = 'none';
+                // CORREÇÃO: Garantir que esconde no mobile
+                fallback.style.cssText = `
+                    display: none !important;
+                `;
             }
         });
 
@@ -308,18 +331,28 @@ class AvatarUpload {
                 })
                 .eq('id', this.currentUser.id);
 
-            // Restaurar fallbacks
+            // Restaurar fallbacks - CORREÇÃO PARA MOBILE
             const avatars = document.querySelectorAll('.user-avatar, .user-avatar-large');
             avatars.forEach(avatar => {
                 const img = avatar.querySelector('.avatar-image, .avatar-image-large');
                 const fallback = avatar.querySelector('.user-avatar-fallback, .user-avatar-fallback-large, .avatar-fallback');
                 
                 if (img) {
-                    img.style.display = 'none';
+                    // CORREÇÃO: Garantir que esconde no mobile
+                    img.style.cssText = `
+                        display: none !important;
+                    `;
                 }
                 
                 if (fallback) {
-                    fallback.style.display = 'flex';
+                    // CORREÇÃO: Garantir que mostra no mobile
+                    fallback.style.cssText = `
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        width: 100% !important;
+                        height: 100% !important;
+                    `;
                 }
             });
 
