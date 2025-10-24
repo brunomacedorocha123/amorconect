@@ -227,6 +227,31 @@ nav a:hover {
     line-height: 1.5;
 }
 
+/* CORREÇÃO: Seção Galeria com mais espaçamento */
+.gallery-section {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 15px;
+    margin-bottom: 4rem; /* Aumentado de 2rem para 4rem */
+    box-shadow: var(--shadow);
+    border: 1px solid var(--gold);
+    transition: var(--transition);
+}
+
+.gallery-section:hover {
+    border-color: var(--light-gold);
+    transform: translateY(-2px);
+}
+
+.gallery-section h3 {
+    font-size: 1.4rem;
+    color: var(--gold);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
 /* Form Grid */
 .form-grid {
     display: grid;
@@ -435,6 +460,21 @@ select.form-control {
 .btn-outline:hover {
     background: #dc2626;
     color: white;
+}
+
+/* CORREÇÃO: Botão Gerenciar Assinatura */
+.btn-primary.manage-subscription {
+    background: var(--gold);
+    color: var(--dark-bg);
+    border: 2px solid var(--gold);
+    font-weight: 700;
+}
+
+.btn-primary.manage-subscription:hover {
+    background: var(--light-gold);
+    border-color: var(--light-gold);
+    color: var(--dark-bg);
+    transform: translateY(-2px);
 }
 
 /* Form Actions */
@@ -746,7 +786,7 @@ footer {
     position: relative;
     width: 100%;
     height: 100%;
-    background: transparent; /* CORREÇÃO: fundo transparente */
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -760,8 +800,8 @@ footer {
     object-fit: cover;
     display: block;
     transition: opacity 0.3s ease;
-    position: relative; /* CORREÇÃO: garantir que fique na frente */
-    z-index: 2; /* CORREÇÃO: camada superior */
+    position: relative;
+    z-index: 2;
 }
 
 .gallery-image.loading {
@@ -781,7 +821,7 @@ footer {
     justify-content: center;
     color: white;
     border-radius: 8px;
-    z-index: 1; /* CORREÇÃO: camada inferior */
+    z-index: 1;
 }
 
 .image-fallback i {
@@ -801,7 +841,7 @@ footer {
     transform: translate(-50%, -50%);
     color: var(--gold);
     font-size: 1.5rem;
-    z-index: 3; /* CORREÇÃO: acima de tudo */
+    z-index: 3;
 }
 
 .gallery-actions {
@@ -810,7 +850,7 @@ footer {
     right: 8px;
     opacity: 0;
     transition: opacity 0.3s ease;
-    z-index: 10; /* CORREÇÃO: sempre na frente */
+    z-index: 10;
 }
 
 .gallery-item:hover .gallery-actions {
