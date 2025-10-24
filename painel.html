@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="painel-mobile.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- ADICIONE ESTA LINHA -->
+    <script src="premium-check.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -34,6 +36,10 @@
                             </div>
                         </div>
                         <span id="userNickname">Usuário</span>
+                        <!-- BADGE PREMIUM ADICIONADO -->
+                        <div id="premiumBadge" class="premium-badge free">
+                            <i class="fas fa-user"></i> Free
+                        </div>
                     </div>
                 </div>
             </div>
@@ -47,12 +53,32 @@
             <section class="page-header">
                 <h1><i class="fas fa-user-edit"></i> Meu Perfil</h1>
                 <p>Complete suas informações para melhorar suas conexões</p>
+                
+                <!-- STATUS DO PLANO ADICIONADO -->
+                <div id="planInfo" class="plan-info-container">
+                    <!-- Será preenchido automaticamente pelo JavaScript -->
+                </div>
             </section>
 
             <!-- Seção de Avatar -->
             <section class="form-section">
                 <h3><i class="fas fa-camera"></i> Foto do Perfil</h3>
                 <p class="section-description">Adicione uma foto para se destacar. Formatos: JPG, PNG, WebP (máx. 5MB)</p>
+                
+                <!-- INFORMAÇÕES PREMIUM ADICIONADAS -->
+                <div class="premium-status-info" data-free-only>
+                    <div class="free-limit-warning">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Plano Free: 1 foto permitida</span>
+                    </div>
+                </div>
+
+                <div class="premium-status-info" data-premium-only style="display: none;">
+                    <div class="premium-benefit">
+                        <i class="fas fa-crown"></i>
+                        <span>Premium: fotos ilimitadas!</span>
+                    </div>
+                </div>
                 
                 <div class="avatar-upload-container">
                     <div class="avatar-preview-large">
@@ -72,6 +98,11 @@
                         </button>
                         <button type="button" class="btn btn-outline" id="removeAvatarBtn" style="display: none;">
                             <i class="fas fa-trash"></i> Remover Foto
+                        </button>
+                        
+                        <!-- BOTÃO UPGRADE ADICIONADO -->
+                        <button type="button" class="btn btn-premium" id="upgradePlanBtn" style="display: none;">
+                            <i class="fas fa-crown"></i> Fazer Upgrade
                         </button>
                     </div>
                     

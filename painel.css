@@ -768,3 +768,175 @@ footer {
     opacity: 1;
     background: rgba(198, 166, 100, 0.3);
 }
+
+
+/* ============================================= */
+/* ESTILOS PREMIUM - ADICIONE AO painel.css */
+/* ============================================= */
+
+/* Premium Badge Styles */
+.premium-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 8px;
+    border: 1px solid;
+    transition: all 0.3s ease;
+}
+
+.premium-badge.free {
+    background: #6c757d;
+    color: white;
+    border-color: #5a6268;
+}
+
+.premium-badge.active {
+    background: linear-gradient(135deg, #ffd700, #ff6b00);
+    color: #000;
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+    border-color: #ffb300;
+}
+
+/* Premium Status Styles */
+.premium-status-info {
+    margin-bottom: 15px;
+    animation: fadeIn 0.5s ease;
+}
+
+.free-limit-warning {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 12px;
+    color: #856404;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+.premium-benefit {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border: 1px solid #90caf9;
+    border-radius: 8px;
+    padding: 12px;
+    color: #1565c0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.plan-info-container {
+    margin: 15px 0;
+}
+
+.plan-status {
+    padding: 15px;
+    border-radius: 10px;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideInDown 0.5s ease;
+}
+
+.plan-status.premium {
+    background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+    border: 2px solid #4caf50;
+    color: #2e7d32;
+}
+
+.plan-status.free {
+    background: #f8f9fa;
+    border: 2px solid #dee2e6;
+    color: #6c757d;
+}
+
+.upgrade-link {
+    color: #e91e63;
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: auto;
+    padding: 8px 16px;
+    border-radius: 6px;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.upgrade-link:hover {
+    text-decoration: none;
+    background: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(233, 30, 99, 0.2);
+}
+
+/* Botão Premium */
+.btn-premium {
+    background: linear-gradient(135deg, #ffd700, #ff6b00);
+    color: #000;
+    border: none;
+    font-weight: 600;
+}
+
+.btn-premium:hover {
+    background: linear-gradient(135deg, #ff6b00, #ffd700);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+}
+
+/* Premium locked items */
+.premium-locked {
+    position: relative;
+}
+
+.premium-locked::before {
+    content: "🔒 Premium";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    z-index: 10;
+}
+
+/* Animações */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsividade para elementos premium */
+@media (max-width: 768px) {
+    .premium-badge {
+        font-size: 10px;
+        padding: 3px 8px;
+    }
+    
+    .plan-status {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+    
+    .upgrade-link {
+        margin-left: 0;
+        margin-top: 8px;
+    }
+}

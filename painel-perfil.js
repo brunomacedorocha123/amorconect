@@ -16,6 +16,7 @@ async function initializeApp() {
     if (authenticated) {
         setupEventListeners();
         await loadUserProfile();
+        await initializePremiumFeatures(); // LINHA ADICIONADA
     }
 }
 
@@ -289,7 +290,86 @@ async function saveProfileToDatabase(profileData, userDetailsData) {
     if (detailsError) throw new Error(`Detalhes: ${detailsError.message}`);
 }
 
-// Funções auxiliares
+// =============================================
+// SISTEMA PREMIUM INTEGRADO - FUNÇÕES NOVAS
+// =============================================
+
+// Inicializar features premium
+async function initializePremiumFeatures() {
+    await PremiumManager.updateUIWithPremiumStatus();
+    
+    // Verificar limite de fotos
+    await checkPhotoLimit();
+    
+    // Adicionar eventos premium
+    setupPremiumEventListeners();
+}
+
+// Verificar limite de fotos
+async function checkPhotoLimit() {
+    const photoCheck = await PremiumManager.canAddPhoto();
+    const uploadBtn = document.getElementById('uploadAvatarBtn');
+    const upgradeBtn = document.getElementById('upgradePlanBtn');
+    
+    if (uploadBtn) {
+        if (!photoCheck.canAdd) {
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fas fa-lock"></i> Limite Free Atingido';
+            uploadBtn.title = photoCheck.reason;
+            
+            // Mostrar botão de upgrade
+            if (upgradeBtn) {
+                upgradeBtn.style.display = 'inline-block';
+            }
+        } else {
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Escolher Foto';
+            
+            // Esconder botão de upgrade
+            if (upgradeBtn) {
+                upgradeBtn.style.display = 'none';
+            }
+        }
+    }
+}
+
+// Configurar eventos premium
+function setupPremiumEventListeners() {
+    // Interceptar upload de foto para verificar limite
+    const uploadBtn = document.getElementById('uploadAvatarBtn');
+    if (uploadBtn) {
+        uploadBtn.addEventListener('click', async function(e) {
+            const photoCheck = await PremiumManager.canAddPhoto();
+            if (!photoCheck.canAdd) {
+                e.preventDefault();
+                const upgrade = await PremiumManager.redirectToUpgradeIfNeeded('Fotos Ilimitadas');
+                if (upgrade) return;
+            }
+        });
+    }
+
+    // Botão de upgrade
+    const upgradeBtn = document.getElementById('upgradePlanBtn');
+    if (upgradeBtn) {
+        upgradeBtn.addEventListener('click', function() {
+            window.location.href = 'pricing.html';
+        });
+    }
+
+    // Atualizar status premium quando o usuário interagir com a página
+    document.addEventListener('click', async function() {
+        // Atualizar a cada 30 segundos (opcional)
+        setTimeout(async () => {
+            await PremiumManager.updateUIWithPremiumStatus();
+            await checkPhotoLimit();
+        }, 30000);
+    });
+}
+
+// =============================================
+// FUNÇÕES AUXILIARES
+// =============================================
+
 function getValue(id) {
     const element = document.getElementById(id);
     return element ? element.value.trim() : '';

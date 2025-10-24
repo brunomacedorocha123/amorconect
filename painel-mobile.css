@@ -34,12 +34,21 @@
     
     .user-info {
         justify-content: center;
+        flex-direction: column;
+        gap: 10px;
     }
     
     .user-avatar {
         width: 45px;
         height: 45px;
         font-size: 1.1rem;
+    }
+    
+    /* PREMIUM BADGE MOBILE */
+    .premium-badge {
+        font-size: 10px;
+        padding: 3px 10px;
+        margin: 5px 0 0 0;
     }
     
     .main-content {
@@ -59,6 +68,25 @@
         font-size: 1rem;
     }
     
+    /* PLAN INFO MOBILE */
+    .plan-info-container {
+        margin: 10px 0;
+    }
+    
+    .plan-status {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+        padding: 12px;
+    }
+    
+    .upgrade-link {
+        margin-left: 0;
+        margin-top: 8px;
+        padding: 6px 12px;
+        font-size: 0.9rem;
+    }
+    
     .form-section {
         padding: 1.5rem;
         margin-bottom: 1.5rem;
@@ -69,6 +97,22 @@
     }
     
     .section-description {
+        font-size: 0.9rem;
+    }
+    
+    /* PREMIUM STATUS INFO MOBILE */
+    .premium-status-info {
+        margin-bottom: 12px;
+    }
+    
+    .free-limit-warning,
+    .premium-benefit {
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+    
+    .free-limit-warning i,
+    .premium-benefit i {
         font-size: 0.9rem;
     }
     
@@ -118,200 +162,10 @@
         padding: 1rem 1.5rem;
     }
     
-    footer {
-        padding: 2rem 0 1rem;
-    }
-    
-    .footer-content {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-        text-align: center;
-    }
-    
-    .footer-column h3 {
-        font-size: 1.2rem;
-    }
-    
-    .notification {
-        top: 80px;
-        right: 10px;
-        left: 10px;
-        max-width: none;
-    }
-}
-
-/* ========== SMALL MOBILE ========== */
-@media (max-width: 480px) {
-    .container {
-        padding: 0 10px;
-    }
-    
-    .logo img {
-        height: 45px;
-    }
-    
-    .logo h1 {
-        font-size: 1.2rem;
-    }
-    
-    .user-avatar {
-        width: 40px;
-        height: 40px;
-        font-size: 1rem;
-    }
-    
-    #userNickname {
-        font-size: 0.9rem;
-    }
-    
-    .page-header {
-        padding: 1.2rem;
-    }
-    
-    .page-header h1 {
-        font-size: 1.6rem;
-    }
-    
-    .form-section {
-        padding: 1.2rem;
-    }
-    
-    .form-section h3 {
-        font-size: 1.1rem;
-    }
-    
-    .btn {
-        padding: 0.9rem 1.2rem;
-        font-size: 0.95rem;
-    }
-    
-    footer {
-        padding: 1.5rem 0 1rem;
-    }
-    
-    .copyright {
-        font-size: 0.9rem;
-    }
-}
-
-/* ========== MOBILE STYLES ========== */
-@media (max-width: 768px) {
-    .container {
-        padding: 0 15px;
-    }
-    
-    .header-content {
-        flex-direction: column;
-        height: auto;
-        padding: 15px 0;
-        gap: 15px;
-        text-align: center;
-    }
-    
-    .logo {
-        justify-content: center;
-    }
-    
-    .logo img {
-        height: 50px;
-    }
-    
-    .logo h1 {
-        font-size: 1.4rem;
-    }
-    
-    nav {
-        display: none;
-    }
-    
-    .user-menu {
-        justify-content: center;
-    }
-    
-    .user-info {
-        justify-content: center;
-    }
-    
-    .user-avatar {
-        width: 45px;
-        height: 45px;
-        font-size: 1.1rem;
-    }
-    
-    .main-content {
-        padding: 1rem 0;
-    }
-    
-    .page-header {
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-    }
-    
-    .page-header h1 {
-        font-size: 1.8rem;
-    }
-    
-    .page-header p {
-        font-size: 1rem;
-    }
-    
-    .form-section {
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-    }
-    
-    .form-section h3 {
-        font-size: 1.2rem;
-    }
-    
-    .section-description {
-        font-size: 0.9rem;
-    }
-    
-    .form-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-    
-    .form-group {
-        margin-bottom: 1rem;
-    }
-    
-    .form-control {
-        padding: 0.7rem 0.9rem;
-        font-size: 0.95rem;
-    }
-    
-    .characteristics-grid {
-        grid-template-columns: 1fr;
-        gap: 0.8rem;
-    }
-    
-    .characteristic-checkbox {
-        padding: 0.8rem;
-        font-size: 0.9rem;
-    }
-    
-    .interests-grid {
-        grid-template-columns: 1fr;
-        gap: 0.8rem;
-    }
-    
-    .interest-checkbox {
-        padding: 0.7rem;
-        font-size: 0.9rem;
-    }
-    
-    .form-actions {
-        flex-direction: column;
-        gap: 0.8rem;
-        margin-top: 2rem;
-    }
-    
-    .btn {
-        width: 100%;
-        justify-content: center;
-        padding: 1rem 1.5rem;
+    /* BOTÃO PREMIUM MOBILE */
+    .btn-premium {
+        order: -1; /* Coloca o botão premium primeiro */
+        margin-bottom: 10px;
     }
     
     footer {
@@ -364,6 +218,7 @@
         flex-direction: column;
         width: 100%;
         max-width: 250px;
+        gap: 10px;
     }
     
     .avatar-upload-actions .btn {
@@ -405,6 +260,12 @@
         font-size: 0.9rem;
     }
     
+    /* PREMIUM BADGE SMALL MOBILE */
+    .premium-badge {
+        font-size: 9px;
+        padding: 2px 8px;
+    }
+    
     .page-header {
         padding: 1.2rem;
     }
@@ -413,12 +274,37 @@
         font-size: 1.6rem;
     }
     
+    /* PLAN INFO SMALL MOBILE */
+    .plan-status {
+        padding: 10px;
+    }
+    
+    .plan-status i {
+        font-size: 1.1rem;
+    }
+    
+    .plan-status strong {
+        font-size: 0.95rem;
+    }
+    
+    .upgrade-link {
+        font-size: 0.85rem;
+        padding: 5px 10px;
+    }
+    
     .form-section {
         padding: 1.2rem;
     }
     
     .form-section h3 {
         font-size: 1.1rem;
+    }
+    
+    /* PREMIUM STATUS SMALL MOBILE */
+    .free-limit-warning,
+    .premium-benefit {
+        padding: 8px;
+        font-size: 0.8rem;
     }
     
     .btn {
@@ -499,11 +385,29 @@
     .avatar-upload-actions {
         flex-direction: row;
         flex-wrap: wrap;
+        gap: 10px;
     }
     
     .avatar-upload-actions .btn {
         width: auto;
         min-width: 160px;
+    }
+    
+    /* PREMIUM BADGE TABLET */
+    .premium-badge {
+        font-size: 11px;
+        padding: 4px 12px;
+    }
+    
+    /* PLAN INFO TABLET */
+    .plan-status {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+    
+    .upgrade-link {
+        margin-left: auto;
+        margin-top: 0;
     }
 }
 
@@ -528,6 +432,16 @@
         flex-direction: column;
         width: auto;
     }
+    
+    /* PREMIUM INFO LANDSCAPE */
+    .premium-status-info {
+        text-align: center;
+    }
+    
+    .plan-status {
+        flex-direction: row;
+        padding: 10px;
+    }
 }
 
 /* ========== ALTA DENSIDADE DE PIXELS ========== */
@@ -540,6 +454,11 @@
     .avatar-image-large {
         image-rendering: -webkit-optimize-contrast;
         image-rendering: crisp-edges;
+    }
+    
+    /* PREMIUM BADGE HIGH DPI */
+    .premium-badge.active {
+        box-shadow: 0 2px 12px rgba(255, 215, 0, 0.4);
     }
 }
 
@@ -556,11 +475,102 @@
     .user-avatar-large:hover {
         transform: none;
     }
+    
+    .premium-badge,
+    .btn-premium {
+        transition: none;
+    }
 }
 
 /* ========== MODO ESCURO (backup) ========== */
 @media (prefers-color-scheme: dark) {
     .avatar-upload-container {
         background: var(--card-bg);
+    }
+    
+    /* PREMIUM ELEMENTS DARK MODE */
+    .free-limit-warning {
+        background: #332701;
+        border-color: #665004;
+        color: #e6c74d;
+    }
+    
+    .premium-benefit {
+        background: linear-gradient(135deg, #1a237e, #283593);
+        border-color: #3949ab;
+        color: #8c9eff;
+    }
+    
+    .plan-status.premium {
+        background: linear-gradient(135deg, #1b5e20, #2e7d32);
+        border-color: #4caf50;
+        color: #a5d6a7;
+    }
+    
+    .plan-status.free {
+        background: #37474f;
+        border-color: #546e7a;
+        color: #b0bec5;
+    }
+}
+
+/* ========== MOBILE SPECIFIC PREMIUM STYLES ========== */
+@media (max-width: 768px) {
+    /* Garantir que elementos premium sejam bem visíveis */
+    [data-premium-only] {
+        border-left: 3px solid #ffd700;
+        padding-left: 10px;
+    }
+    
+    [data-free-only] {
+        border-left: 3px solid #6c757d;
+        padding-left: 10px;
+    }
+    
+    /* Melhorar contraste para leitura */
+    .free-limit-warning {
+        border-left: 4px solid #ffc107;
+    }
+    
+    .premium-benefit {
+        border-left: 4px solid #2196f3;
+    }
+    
+    /* Botão de upgrade mais destacado */
+    .btn-premium {
+        box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+        font-weight: 700;
+    }
+}
+
+/* ========== VERY SMALL SCREENS ========== */
+@media (max-width: 360px) {
+    .premium-badge {
+        font-size: 8px;
+        padding: 2px 6px;
+    }
+    
+    .plan-status {
+        padding: 8px;
+    }
+    
+    .plan-status strong {
+        font-size: 0.9rem;
+    }
+    
+    .upgrade-link {
+        font-size: 0.8rem;
+        padding: 4px 8px;
+    }
+    
+    .free-limit-warning,
+    .premium-benefit {
+        font-size: 0.75rem;
+        padding: 6px;
+    }
+    
+    .avatar-upload-actions .btn {
+        font-size: 0.85rem;
+        padding: 0.8rem 1rem;
     }
 }

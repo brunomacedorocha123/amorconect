@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro Realizado - Amor Conect</title>
+    <title>Pagamento Aprovado - PulseLove</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -14,117 +15,325 @@
 
         :root {
             --gold: #C6A664;
+            --light-gold: #D4B978;
             --burgundy: #A65B5B;
+            --dark-burgundy: #8A4A4A;
             --section-bg: #F8F5F0;
+            --card-bg: #FFFFFF;
             --white: #FFFFFF;
+            --beige: #E8DCC3;
+            --light-beige: #F0E9D8;
             --text: #2A2A2A;
             --text-light: #666666;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            --transition: all 0.3s ease;
             --success: #22c55e;
         }
 
         body {
             background-color: var(--section-bg);
             color: var(--text);
-            line-height: 1.6;
-            min-height: 100vh;
             display: flex;
+            flex-direction: column;
+            min-height: 100vh;
             align-items: center;
             justify-content: center;
             text-align: center;
             padding: 2rem;
         }
 
-        .success-container {
-            background: var(--white);
-            padding: 3rem;
+        .success-card {
+            background: var(--card-bg);
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 3rem;
+            box-shadow: var(--shadow);
+            border: 3px solid var(--success);
             max-width: 500px;
-            border: 2px solid var(--gold);
+            width: 100%;
         }
 
         .success-icon {
             font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .success-title {
+            font-size: 2rem;
             color: var(--success);
             margin-bottom: 1rem;
+            font-weight: 700;
         }
 
-        h1 {
-            color: var(--burgundy);
-            margin-bottom: 1rem;
-            font-size: 2.2rem;
-        }
-
-        p {
-            margin-bottom: 1.5rem;
-            color: var(--text-light);
+        .success-text {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            color: var(--text);
             line-height: 1.6;
         }
 
         .btn {
             padding: 1rem 2rem;
-            background: var(--burgundy);
-            color: var(--white);
-            border: none;
             border-radius: 30px;
-            font-size: 1.1rem;
+            border: none;
+            font-weight: 600;
             cursor: pointer;
             text-decoration: none;
             display: inline-block;
-            transition: all 0.3s ease;
-            font-weight: 600;
+            font-size: 1.1rem;
+            margin: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background: var(--burgundy);
+            color: var(--white);
+            border: 2px solid var(--burgundy);
         }
 
         .btn:hover {
-            background: var(--gold);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(166, 91, 91, 0.3);
+            box-shadow: 0 5px 15px rgba(198, 166, 100, 0.3);
         }
 
-        .tips {
-            background: #f7fafc;
-            padding: 1.5rem;
-            border-radius: 10px;
+        .btn-primary:hover {
+            background: var(--dark-burgundy);
+            border-color: var(--dark-burgundy);
+        }
+
+        .loading {
+            text-align: center;
             margin: 2rem 0;
-            border-left: 4px solid var(--gold);
-            text-align: left;
+            display: none;
         }
 
-        .tips h3 {
+        .spinner {
+            border: 4px solid var(--beige);
+            border-top: 4px solid var(--success);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .benefits {
+            background: linear-gradient(135deg, var(--light-beige), var(--beige));
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+            text-align: left;
+            border: 2px solid var(--gold);
+        }
+
+        .benefits h3 {
             color: var(--burgundy);
-            margin-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .benefits ul {
+            list-style: none;
+        }
+
+        .benefits li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .plan-info {
+            background: var(--beige);
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            border: 1px solid var(--gold);
         }
 
         @media (max-width: 768px) {
-            .success-container {
+            .success-card {
                 padding: 2rem;
                 margin: 1rem;
             }
             
-            h1 {
-                font-size: 1.8rem;
+            .btn {
+                display: block;
+                width: 100%;
+                margin: 0.5rem 0;
             }
         }
     </style>
 </head>
 <body>
-    <div class="success-container">
-        <div class="success-icon">✅</div>
-        <h1>Cadastro Realizado com Sucesso!</h1>
-        <p>Enviamos um e-mail de confirmação para você. Por favor, verifique sua caixa de entrada e clique no link para ativar sua conta.</p>
+    <div class="success-card">
+        <div class="success-icon">🎉</div>
+        <h1 class="success-title">Pagamento Aprovado!</h1>
         
-        <div class="tips">
-            <h3>💡 Dica Importante:</h3>
-            <p>Verifique também sua pasta de spam ou lixo eletrônico caso não encontre o e-mail na caixa de entrada principal.</p>
+        <div class="loading" id="activatingLoading">
+            <div class="spinner"></div>
+            <p>Finalizando sua assinatura...</p>
         </div>
-        
-        <p><strong>Após confirmar seu e-mail, você poderá fazer login e começar a usar o Amor Conect!</strong></p>
-        
-        <a href="login.html" class="btn">Fazer Login</a>
-        <br>
-        <a href="index.html" style="display: inline-block; margin-top: 1rem; color: var(--burgundy); text-decoration: none;">
-            ← Voltar para a Página Inicial
-        </a>
+
+        <div id="successContent">
+            <p class="success-text">
+                <strong>Parabéns! Seu plano Premium foi ativado com sucesso.</strong><br>
+                Agora você tem acesso a todos os benefícios:
+            </p>
+
+            <div class="plan-info" id="planInfo">
+                <!-- Informações do plano serão preenchidas via JavaScript -->
+            </div>
+            
+            <div class="benefits">
+                <h3>🎁 Seus Benefícios Premium</h3>
+                <ul>
+                    <li>💬 <strong>Mensagens ilimitadas</strong></li>
+                    <li>🕒 Histórico permanente de conversas</li>
+                    <li>📸 Galeria com 10MB de fotos</li>
+                    <li>⭐ Prioridade na lista VIP</li>
+                    <li>👀 Ver visitantes do seu perfil</li>
+                    <li>🚫 Bloquear mensagens indesejadas</li>
+                </ul>
+            </div>
+            
+            <div>
+                <a href="mensagens.html" class="btn btn-primary" id="goToMessages">
+                    🚀 Ir para Mensagens Ilimitadas
+                </a>
+                <a href="home.html" class="btn btn-primary">
+                    🏠 Voltar para Home
+                </a>
+            </div>
+
+            <p style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-light);">
+                ✅ Sua assinatura foi processada com sucesso<br>
+                📧 Você receberá um e-mail de confirmação
+            </p>
+        </div>
     </div>
+
+    <script>
+        const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await processPremiumActivation();
+        });
+
+        async function processPremiumActivation() {
+            try {
+                document.getElementById('activatingLoading').style.display = 'block';
+                
+                const { data: { user } } = await supabase.auth.getUser();
+                
+                if (user) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const planType = urlParams.get('plano');
+                    const valor = urlParams.get('valor');
+                    const metodo = urlParams.get('metodo');
+
+                    displayPlanInfo(planType, valor, metodo);
+
+                    const { data: subscription } = await supabase
+                        .from('user_subscriptions')
+                        .select('*')
+                        .eq('user_id', user.id)
+                        .eq('status', 'active')
+                        .single();
+
+                    if (!subscription) {
+                        await createSubscription(user.id, planType, metodo);
+                    }
+
+                    await supabase
+                        .from('profiles')
+                        .update({ 
+                            is_premium: true,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', user.id);
+                }
+                
+                setTimeout(() => {
+                    document.getElementById('activatingLoading').style.display = 'none';
+                }, 2000);
+                
+            } catch (error) {
+                document.getElementById('activatingLoading').style.display = 'none';
+            }
+        }
+
+        function displayPlanInfo(planType, valor, metodo) {
+            const planNames = {
+                'weekly': 'Semanal',
+                'monthly': 'Mensal', 
+                'semestral': 'Semestral',
+                'annual': 'Anual'
+            };
+
+            const paymentMethods = {
+                'pix': 'PIX',
+                'cartao': 'Cartão de Crédito'
+            };
+
+            const planInfo = document.getElementById('planInfo');
+            planInfo.innerHTML = `
+                <strong>📋 Resumo da Assinatura:</strong><br>
+                • Plano: ${planNames[planType] || 'Premium'}<br>
+                • Valor: R$ ${valor || '24,90'}<br>
+                • Método: ${paymentMethods[metodo] || 'PIX'}
+            `;
+        }
+
+        async function createSubscription(userId, planType, paymentMethod) {
+            try {
+                const { data: realPlan } = await supabase
+                    .from('subscription_plans')
+                    .select('id, period_days')
+                    .eq('name', planType)
+                    .single();
+
+                if (realPlan) {
+                    const expiresAt = new Date();
+                    expiresAt.setDate(expiresAt.getDate() + realPlan.period_days);
+
+                    await supabase
+                        .from('user_subscriptions')
+                        .upsert({
+                            user_id: userId,
+                            plan_id: realPlan.id,
+                            status: 'active',
+                            starts_at: new Date().toISOString(),
+                            expires_at: expiresAt.toISOString(),
+                            auto_renew: false,
+                            payment_method: paymentMethod,
+                            payment_gateway: 'mercadopago'
+                        });
+
+                    await supabase
+                        .from('payment_transactions')
+                        .insert({
+                            user_id: userId,
+                            plan_id: realPlan.id,
+                            amount: parseFloat(document.getElementById('planInfo').textContent.match(/R\$\s*([\d,]+)/)[1].replace(',', '.')),
+                            payment_method: paymentMethod,
+                            payment_gateway: 'mercadopago',
+                            gateway_transaction_id: 'mp_' + Date.now(),
+                            gateway_status: 'approved',
+                            status: 'completed'
+                        });
+                }
+            } catch (error) {
+                // Silencioso - não mostra erro para o usuário
+            }
+        }
+    </script>
 </body>
 </html>
