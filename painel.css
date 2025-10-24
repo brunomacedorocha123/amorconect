@@ -227,9 +227,9 @@ nav a:hover {
     line-height: 1.5;
 }
 
-/* CORREÇÃO: Seção Galeria Premium com MUITO mais espaçamento */
-.form-section:has(h3:has(i.fa-images)) {
-    margin-bottom: 6rem !important;
+/* CORREÇÃO DEFINITIVA: Seção Galeria Premium com MUITO ESPAÇAMENTO */
+.form-section:nth-last-of-type(2) {
+    margin-bottom: 10rem !important;
     padding-bottom: 3rem !important;
 }
 
@@ -471,13 +471,13 @@ select.form-control {
     color: var(--dark-bg);
 }
 
-/* Form Actions */
+/* CORREÇÃO DEFINITIVA: Mais espaçamento antes dos botões de ação */
 .form-actions {
     display: flex;
     gap: 1rem;
     justify-content: center;
-    margin-top: 4rem !important;
-    padding-top: 2rem !important;
+    margin-top: 6rem !important;
+    padding-top: 3rem !important;
     flex-wrap: wrap;
 }
 
