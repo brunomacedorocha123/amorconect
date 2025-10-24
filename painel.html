@@ -59,46 +59,45 @@
             </section>
 
             <!-- Seção de Avatar -->
-<section class="form-section">
-    <h3><i class="fas fa-camera"></i> Foto do Perfil</h3>
-    <p class="section-description">Adicione uma foto para se destacar. Formatos: JPG, PNG, WebP (máx. 5MB)</p>
-    
-    <!-- REMOVI AS DUAS BARRAS DE INFORMAÇÃO -->
-    
-    <div class="avatar-upload-container">
-        <div class="avatar-preview-large">
-            <div class="user-avatar-large">
-                <div class="user-avatar-fallback-large">U</div>
-                <img class="avatar-image-large" style="display: none;" alt="Preview do avatar">
-                <div class="avatar-overlay-large">
-                    <i class="fas fa-camera"></i>
-                    <span>Clique para alterar</span>
+            <section class="form-section">
+                <h3><i class="fas fa-camera"></i> Foto do Perfil</h3>
+                <p class="section-description">Adicione uma foto para se destacar. Formatos: JPG, PNG, WebP (máx. 5MB)</p>
+                
+                <div class="avatar-upload-container">
+                    <div class="avatar-preview-large">
+                        <div class="user-avatar-large">
+                            <div class="user-avatar-fallback-large">U</div>
+                            <img class="avatar-image-large" style="display: none;" alt="Preview do avatar">
+                            <div class="avatar-overlay-large">
+                                <i class="fas fa-camera"></i>
+                                <span>Clique para alterar</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="avatar-upload-actions">
+                        <button type="button" class="btn btn-secondary" id="uploadAvatarBtn">
+                            <i class="fas fa-upload"></i> Escolher Foto
+                        </button>
+                        <button type="button" class="btn btn-outline" id="removeAvatarBtn" style="display: none;">
+                            <i class="fas fa-trash"></i> Remover Foto
+                        </button>
+                        
+                        <!-- BOTÃO UPGRADE - MANTIDO -->
+                        <a href="pricing.html" class="btn btn-premium" id="upgradePlanBtn">
+                            <i class="fas fa-crown"></i> Fazer Upgrade
+                        </a>
+                    </div>
+                    
+                    <div class="upload-progress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                        <span class="progress-text">Enviando...</span>
+                    </div>
                 </div>
-            </div>
-        </div>
-        
-        <div class="avatar-upload-actions">
-            <button type="button" class="btn btn-secondary" id="uploadAvatarBtn">
-                <i class="fas fa-upload"></i> Escolher Foto
-            </button>
-            <button type="button" class="btn btn-outline" id="removeAvatarBtn" style="display: none;">
-                <i class="fas fa-trash"></i> Remover Foto
-            </button>
-            
-            <!-- BOTÃO UPGRADE - MANTIDO -->
-            <a href="pricing.html" class="btn btn-premium" id="upgradePlanBtn">
-                <i class="fas fa-crown"></i> Fazer Upgrade
-            </a>
-        </div>
-        
-        <div class="upload-progress" style="display: none;">
-            <div class="progress-bar">
-                <div class="progress-fill"></div>
-            </div>
-            <span class="progress-text">Enviando...</span>
-        </div>
-    </div>
-</section>
+            </section>
+
             <!-- Profile Form -->
             <section class="profile-form">
                 <form id="profileForm">
@@ -508,6 +507,68 @@
                     </div>
                 </form>
             </section>
+
+            <!-- ========== SEÇÃO GALERIA PREMIUM ========== -->
+            <section class="gallery-section" id="gallerySection">
+                <div class="gallery-header">
+                    <h3 class="gallery-title">
+                        <i class="fas fa-crown"></i>
+                        Minha Galeria Premium
+                    </h3>
+                    <div class="gallery-actions">
+                        <div class="gallery-stats">
+                            <i class="fas fa-images"></i>
+                            <span id="imageCount">0</span> imagens
+                        </div>
+                        <button class="btn btn-premium" id="uploadGalleryBtn">
+                            <i class="fas fa-plus"></i>
+                            Adicionar Fotos
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Área de Upload -->
+                <div class="gallery-upload-area" id="galleryUploadArea">
+                    <div class="gallery-upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="gallery-upload-text">
+                        <strong>Arraste suas fotos aqui</strong>
+                        <div>ou clique para selecionar</div>
+                        <small>Máximo: 10MB por imagem • Formatos: JPG, PNG, WebP</small>
+                    </div>
+                    <input type="file" id="galleryFileInput" multiple accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;">
+                </div>
+
+                <!-- Progresso do Upload -->
+                <div class="gallery-progress" id="galleryProgress" style="display: none;">
+                    <div class="gallery-progress-bar">
+                        <div class="gallery-progress-fill" id="galleryProgressFill"></div>
+                    </div>
+                    <div class="gallery-progress-text" id="galleryProgressText">Enviando...</div>
+                </div>
+
+                <!-- Grid de Imagens -->
+                <div class="gallery-grid" id="galleryGrid">
+                    <div class="gallery-empty">
+                        <div class="gallery-empty-icon">
+                            <i class="fas fa-images"></i>
+                        </div>
+                        <div class="gallery-empty-text">Sua galeria está vazia</div>
+                        <div class="gallery-empty-subtext">Adicione suas primeiras fotos para começar</div>
+                    </div>
+                </div>
+
+                <!-- Modal de Visualização -->
+                <div class="gallery-modal" id="galleryModal">
+                    <div class="gallery-modal-content">
+                        <button class="gallery-modal-close" id="galleryModalClose">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <img class="gallery-modal-image" id="galleryModalImage" src="" alt="Visualização">
+                    </div>
+                </div>
+            </section>
         </div>
     </main>
 
@@ -542,12 +603,13 @@
         </div>
     </footer>
 
-    <!-- Input hidden para upload -->
+    <!-- Inputs hidden para upload -->
     <input type="file" id="avatarUpload" accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;">
 
     <!-- Scripts na ordem correta -->
     <script src="painel-perfil.js"></script>
     <script src="premium-check.js"></script>
     <script src="avatar.js"></script>
+    <script src="galeria.js"></script>
 </body>
 </html>
