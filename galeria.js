@@ -83,6 +83,7 @@ class GalleryManager {
     }
 
     createModal() {
+        // Criar modal se não existir
         if (!document.getElementById('imageModal')) {
             const modalHTML = `
                 <div id="imageModal" class="image-modal">
@@ -98,21 +99,37 @@ class GalleryManager {
                 </div>
             `;
             document.body.insertAdjacentHTML('beforeend', modalHTML);
-            this.setupModalEvents();
         }
         
+        // Garantir que os elementos são encontrados
         this.modal = document.getElementById('imageModal');
         this.modalImage = document.getElementById('modalImageView');
         this.closeBtn = document.getElementById('closeModalBtn');
+        
+        // Configurar eventos
+        this.setupModalEvents();
     }
 
     setupModalEvents() {
-        this.closeBtn.addEventListener('click', () => this.closeModal());
+        if (!this.closeBtn) {
+            console.error('Botão fechar não encontrado');
+            return;
+        }
         
+        // CORREÇÃO: Evento do botão X
+        this.closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.closeModal();
+        });
+        
+        // Fechar clicando fora
         this.modal.addEventListener('click', (e) => {
-            if (e.target === this.modal) this.closeModal();
+            if (e.target === this.modal) {
+                this.closeModal();
+            }
         });
 
+        // Fechar com ESC
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.modal.classList.contains('active')) {
                 this.closeModal();
@@ -121,15 +138,23 @@ class GalleryManager {
     }
 
     openModal(imageSrc) {
+        if (!this.modal || !this.modalImage) {
+            console.error('Modal não inicializado');
+            return;
+        }
+        
         this.modalImage.src = imageSrc;
         this.modal.classList.add('active');
-        // SEM travar o scroll - correção do bug
     }
 
     closeModal() {
+        if (!this.modal) return;
+        
         this.modal.classList.remove('active');
         setTimeout(() => {
-            this.modalImage.src = '';
+            if (this.modalImage) {
+                this.modalImage.src = '';
+            }
         }, 300);
     }
 
