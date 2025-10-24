@@ -232,7 +232,7 @@ nav a:hover {
     background: var(--card-bg);
     padding: 2rem;
     border-radius: 15px;
-    margin-bottom: 4rem; /* Aumentado de 2rem para 4rem */
+    margin-bottom: 4rem; /* Aumentado para dar mais espaço */
     box-shadow: var(--shadow);
     border: 1px solid var(--gold);
     transition: var(--transition);
@@ -424,10 +424,11 @@ select.form-control {
     font-size: 1rem;
 }
 
+/* CORREÇÃO: Botão Gerenciar Assinatura - Fundo dourado e letra preta */
 .btn-primary {
-    background: var(--burgundy);
-    color: var(--white);
-    border: 2px solid var(--burgundy);
+    background: var(--gold);
+    color: var(--dark-bg);
+    border: 2px solid var(--gold);
 }
 
 .btn-secondary {
@@ -442,8 +443,9 @@ select.form-control {
 }
 
 .btn-primary:hover {
-    background: var(--dark-burgundy);
-    border-color: var(--dark-burgundy);
+    background: var(--light-gold);
+    border-color: var(--light-gold);
+    color: var(--dark-bg);
 }
 
 .btn-secondary:hover {
@@ -460,21 +462,6 @@ select.form-control {
 .btn-outline:hover {
     background: #dc2626;
     color: white;
-}
-
-/* CORREÇÃO: Botão Gerenciar Assinatura */
-.btn-primary.manage-subscription {
-    background: var(--gold);
-    color: var(--dark-bg);
-    border: 2px solid var(--gold);
-    font-weight: 700;
-}
-
-.btn-primary.manage-subscription:hover {
-    background: var(--light-gold);
-    border-color: var(--light-gold);
-    color: var(--dark-bg);
-    transform: translateY(-2px);
 }
 
 /* Form Actions */
