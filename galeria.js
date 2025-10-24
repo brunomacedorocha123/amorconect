@@ -13,13 +13,14 @@ class GalleryManager {
             await this.checkPremiumStatus();
             
             if (this.isPremium) {
-                await this.loadGallery();
-                this.setupEventListeners();
+                this.showGalleryForPremium();
+                await this.loadUserGallery();
+                this.setupGalleryEvents();
             } else {
-                this.hideGallerySection();
+                this.hideGalleryForFree();
             }
         } catch (error) {
-            this.hideGallerySection();
+            this.hideGalleryForFree();
         }
     }
 
@@ -45,68 +46,39 @@ class GalleryManager {
         }
     }
 
-    hideGallerySection() {
-        const gallerySection = document.getElementById('gallerySection');
-        if (gallerySection) {
-            gallerySection.style.display = 'none';
-        }
+    showGalleryForPremium() {
+        const galleryManager = document.getElementById('galleryManager');
+        const galleryUpgradeCTA = document.getElementById('galleryUpgradeCTA');
+        
+        if (galleryManager) galleryManager.style.display = 'block';
+        if (galleryUpgradeCTA) galleryUpgradeCTA.style.display = 'none';
     }
 
-    setupEventListeners() {
-        const uploadArea = document.getElementById('galleryUploadArea');
-        const fileInput = document.getElementById('galleryFileInput');
-        const uploadBtn = document.getElementById('uploadGalleryBtn');
+    hideGalleryForFree() {
+        const galleryManager = document.getElementById('galleryManager');
+        const galleryUpgradeCTA = document.getElementById('galleryUpgradeCTA');
         
-        if (uploadBtn) {
-            uploadBtn.addEventListener('click', () => {
-                fileInput?.click();
-            });
-        }
+        if (galleryManager) galleryManager.style.display = 'none';
+        if (galleryUpgradeCTA) galleryUpgradeCTA.style.display = 'flex';
+    }
 
-        if (uploadArea && fileInput) {
-            uploadArea.addEventListener('click', () => {
-                fileInput.click();
+    setupGalleryEvents() {
+        const uploadBtn = document.getElementById('uploadGalleryBtn');
+        const galleryUpload = document.getElementById('galleryUpload');
+        
+        if (uploadBtn && galleryUpload) {
+            uploadBtn.addEventListener('click', () => {
+                galleryUpload.click();
             });
             
-            uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadArea.classList.add('drag-over');
-            });
-            
-            uploadArea.addEventListener('dragleave', () => {
-                uploadArea.classList.remove('drag-over');
-            });
-            
-            uploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadArea.classList.remove('drag-over');
-                this.handleFileUpload(e.dataTransfer.files);
-            });
-            
-            fileInput.addEventListener('change', (e) => {
-                this.handleFileUpload(e.target.files);
+            galleryUpload.addEventListener('change', (e) => {
+                this.handleGalleryUpload(e.target.files);
                 e.target.value = '';
             });
         }
-
-        const modal = document.getElementById('galleryModal');
-        const modalClose = document.getElementById('galleryModalClose');
-        
-        if (modal && modalClose) {
-            modalClose.addEventListener('click', () => this.closeModal());
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) this.closeModal();
-            });
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                this.closeModal();
-            }
-        });
     }
 
-    async handleFileUpload(files) {
+    async handleGalleryUpload(files) {
         if (!this.isPremium) return;
 
         const validFiles = Array.from(files).filter(file => 
@@ -115,190 +87,215 @@ class GalleryManager {
         );
 
         if (validFiles.length === 0) {
-            this.showNotification('Selecione imagens válidas (JPG, PNG, WebP - máx. 10MB)', 'error');
+            this.showNotification('Selecione imagens válidas (JPG, PNG - máx. 10MB)', 'error');
             return;
         }
 
-        this.showProgress(true);
-
         for (let i = 0; i < validFiles.length; i++) {
             const file = validFiles[i];
-            await this.uploadImage(file, i + 1, validFiles.length);
+            await this.uploadGalleryImage(file);
         }
 
-        this.showProgress(false);
-        await this.loadGallery();
+        await this.loadUserGallery();
+        await this.updateStorageDisplay();
     }
 
-    async uploadImage(file, current, total) {
+    async uploadGalleryImage(file) {
         try {
-            this.updateProgress(`Enviando ${current} de ${total}`, (current / total) * 100);
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+            const filePath = `${this.currentUser.id}/${fileName}`;
 
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${this.currentUser.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-            
             const { data, error } = await supabase.storage
-                .from('gallery-images')
-                .upload(fileName, file);
+                .from('gallery')
+                .upload(filePath, file);
 
             if (error) throw error;
 
-            const { data: { publicUrl } } = supabase.storage
-                .from('gallery-images')
-                .getPublicUrl(fileName);
+            const { data: urlData } = await supabase.storage
+                .from('gallery')
+                .getPublicUrl(filePath);
+
+            const galleryData = {
+                user_id: this.currentUser.id,
+                image_name: fileName,
+                image_url: filePath,
+                file_size_bytes: file.size,
+                mime_type: file.type,
+                public_url: urlData.publicUrl,
+                created_at: new Date().toISOString()
+            };
 
             const { error: dbError } = await supabase
                 .from('user_gallery')
-                .insert({
-                    user_id: this.currentUser.id,
-                    image_name: file.name,
-                    image_url: publicUrl,
-                    image_size: file.size
-                });
+                .insert([galleryData]);
 
-            if (dbError) throw dbError;
+            if (dbError) {
+                await supabase.storage.from('gallery').remove([filePath]);
+                throw dbError;
+            }
 
-            this.showNotification(`Imagem ${current}/${total} enviada com sucesso`, 'success');
+            this.showNotification('Imagem adicionada com sucesso', 'success');
 
         } catch (error) {
-            this.showNotification(`Erro ao enviar imagem ${current}`, 'error');
+            this.showNotification('Erro ao fazer upload da imagem', 'error');
         }
     }
 
-    async loadGallery() {
-        if (!this.isPremium) return;
-
+    async loadUserGallery() {
         try {
-            const { data: images } = await supabase
-                .from('user_gallery')
-                .select('*')
-                .eq('user_id', this.currentUser.id)
-                .eq('is_active', true)
-                .order('uploaded_at', { ascending: false });
+            const { data: files, error } = await supabase.storage
+                .from('gallery')
+                .list(this.currentUser.id + '/');
 
-            this.images = images || [];
-            this.updateGalleryDisplay();
+            if (error) {
+                if (error.message?.includes('not found')) {
+                    this.displayGallery([]);
+                    return;
+                }
+                throw error;
+            }
 
+            const images = files
+                .filter(file => file.name !== '.emptyFolderPlaceholder')
+                .map(file => ({
+                    id: file.id || file.name,
+                    image_url: `${this.currentUser.id}/${file.name}`,
+                    image_name: file.name,
+                    created_at: file.created_at
+                }));
+
+            this.images = images;
+            this.displayGallery(images);
+            
         } catch (error) {
-            this.showNotification('Erro ao carregar galeria', 'error');
+            this.images = [];
+            this.displayGallery([]);
         }
     }
 
-    updateGalleryDisplay() {
+    displayGallery(images) {
         const galleryGrid = document.getElementById('galleryGrid');
-        const imageCount = document.getElementById('imageCount');
         
-        if (galleryGrid) {
-            galleryGrid.innerHTML = this.images.length === 0 ? 
-                this.renderEmptyState() : 
-                this.renderImages();
-        }
-        
-        if (imageCount) {
-            imageCount.textContent = this.images.length;
-        }
-
-        this.setupImageClickEvents();
-    }
-
-    renderEmptyState() {
-        return `
-            <div class="gallery-empty">
-                <div class="gallery-empty-icon">
-                    <i class="fas fa-images"></i>
+        if (!images || images.length === 0) {
+            galleryGrid.innerHTML = `
+                <div class="empty-gallery">
+                    <i class="fas fa-images" style="font-size: 3rem; color: var(--lilas); margin-bottom: 1rem;"></i>
+                    <p>Sua galeria está vazia</p>
+                    <p style="font-size: 0.9rem; color: var(--text-light);">Adicione fotos para compartilhar momentos especiais</p>
                 </div>
-                <div class="gallery-empty-text">Sua galeria está vazia</div>
-                <div class="gallery-empty-subtext">Adicione suas primeiras fotos para começar</div>
-            </div>
-        `;
-    }
-
-    renderImages() {
-        return this.images.map(image => `
-            <div class="gallery-item" data-image-id="${image.id}">
-                <img src="${image.image_url}" alt="${image.image_name}" class="gallery-image" loading="lazy">
-                <div class="gallery-item-overlay">
-                    <span class="gallery-item-size">${this.formatFileSize(image.image_size)}</span>
-                    <button class="gallery-item-delete" onclick="galleryManager.deleteImage(${image.id})" title="Excluir imagem">
+            `;
+            return;
+        }
+        
+        galleryGrid.innerHTML = images.map((image, index) => `
+            <div class="gallery-item" data-index="${index}">
+                <div class="gallery-image-container">
+                    <img src="" data-src="${image.image_url}" alt="Imagem da galeria" class="gallery-image">
+                    <div class="image-loading">Carregando...</div>
+                </div>
+                <div class="gallery-actions">
+                    <button class="gallery-btn" onclick="galleryManager.deleteGalleryImage('${image.image_url}')" title="Excluir">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
         `).join('');
-    }
-
-    setupImageClickEvents() {
-        document.querySelectorAll('.gallery-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                if (!e.target.closest('.gallery-item-delete')) {
-                    const imageId = item.dataset.imageId;
-                    const image = this.images.find(img => img.id == imageId);
-                    if (image) this.openModal(image.image_url);
-                }
-            });
-        });
-    }
-
-    openModal(imageUrl) {
-        const modal = document.getElementById('galleryModal');
-        const modalImage = document.getElementById('galleryModalImage');
         
-        if (modal && modalImage) {
-            modalImage.src = imageUrl;
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
+        this.loadGalleryImages();
+    }
+
+    async loadGalleryImages() {
+        const images = document.querySelectorAll('.gallery-image[data-src]');
+        
+        for (const img of images) {
+            const imageUrl = img.getAttribute('data-src');
+            await this.loadGalleryImage(img, imageUrl);
         }
     }
 
-    closeModal() {
-        const modal = document.getElementById('galleryModal');
-        if (modal) {
-            modal.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-    }
-
-    async deleteImage(imageId) {
-        if (!confirm('Tem certeza que deseja excluir esta imagem?')) return;
-
+    async loadGalleryImage(imgElement, imageUrl) {
         try {
-            const { error } = await supabase
-                .from('user_gallery')
-                .update({ is_active: false })
-                .eq('id', imageId)
-                .eq('user_id', this.currentUser.id);
+            const { data, error } = await supabase.storage
+                .from('gallery')
+                .createSignedUrl(imageUrl, 3600);
+        
+            if (error) {
+                this.showFallbackImage(imgElement);
+                return;
+            }
+            
+            if (data && data.signedUrl) {
+                imgElement.src = data.signedUrl;
+                imgElement.removeAttribute('data-src');
+                imgElement.style.display = 'block';
+                
+                const loading = imgElement.parentElement.querySelector('.image-loading');
+                if (loading) loading.style.display = 'none';
+            }
+            
+        } catch (error) {
+            this.showFallbackImage(imgElement);
+        }
+    }
 
+    showFallbackImage(imgElement) {
+        imgElement.style.background = 'linear-gradient(135deg, var(--lilas), var(--vermelho-rosado))';
+        imgElement.style.display = 'flex';
+        imgElement.style.alignItems = 'center';
+        imgElement.style.justifyContent = 'center';
+        imgElement.style.color = 'white';
+        imgElement.style.fontSize = '2rem';
+        imgElement.innerHTML = '🖼️';
+        imgElement.removeAttribute('data-src');
+        
+        const loading = imgElement.parentElement.querySelector('.image-loading');
+        if (loading) loading.style.display = 'none';
+    }
+
+    async deleteGalleryImage(imagePath) {
+        if (!confirm('Tem certeza que deseja excluir esta imagem?')) return;
+        
+        try {
+            const { error } = await supabase.storage
+                .from('gallery')
+                .remove([imagePath]);
+            
             if (error) throw error;
-
+            
             this.showNotification('Imagem excluída com sucesso', 'success');
-            await this.loadGallery();
-
+            await this.loadUserGallery();
+            await this.updateStorageDisplay();
+            
         } catch (error) {
             this.showNotification('Erro ao excluir imagem', 'error');
         }
     }
 
-    showProgress(show) {
-        const progress = document.getElementById('galleryProgress');
-        if (progress) {
-            progress.style.display = show ? 'block' : 'none';
+    async getStorageUsage() {
+        try {
+            const { data: files, error } = await supabase.storage
+                .from('gallery')
+                .list(this.currentUser.id + '/');
+            
+            if (error) return 0;
+            
+            return files.reduce((total, file) => total + (file.metadata?.size || 0), 0);
+        } catch (error) {
+            return 0;
         }
     }
 
-    updateProgress(text, percent) {
-        const progressFill = document.getElementById('galleryProgressFill');
-        const progressText = document.getElementById('galleryProgressText');
+    async updateStorageDisplay() {
+        const storageUsed = await this.getStorageUsage();
+        const storageUsedMB = (storageUsed / (1024 * 1024)).toFixed(1);
+        const storagePercentage = (storageUsed / (10 * 1024 * 1024)) * 100;
         
-        if (progressFill) progressFill.style.width = `${percent}%`;
-        if (progressText) progressText.textContent = text;
-    }
-
-    formatFileSize(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        const storageUsedElement = document.getElementById('storageUsed');
+        const storageFillElement = document.getElementById('storageFill');
+        
+        if (storageUsedElement) storageUsedElement.textContent = `${storageUsedMB}MB`;
+        if (storageFillElement) storageFillElement.style.width = `${Math.min(storagePercentage, 100)}%`;
     }
 
     showNotification(message, type = 'info') {
