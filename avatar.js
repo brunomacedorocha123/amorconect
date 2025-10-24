@@ -3,7 +3,7 @@ class AvatarUpload {
     constructor() {
         this.supabase = supabase;
         this.currentUser = null;
-        this.MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+        this.MAX_FILE_SIZE = 5 * 1024 * 1024;
         this.ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
         this.STORAGE_BUCKET = 'avatars';
         this.initialize();
@@ -17,19 +17,13 @@ class AvatarUpload {
     }
 
     async checkAuth() {
-        try {
-            const { data: { user }, error } = await this.supabase.auth.getUser();
-            if (error || !user) {
-                return;
-            }
+        const { data: { user } } = await this.supabase.auth.getUser();
+        if (user) {
             this.currentUser = user;
-        } catch (error) {
-            // Silencioso - sem logs
         }
     }
 
     createUploadInterface() {
-        // Input de arquivo hidden
         if (!document.getElementById('avatarUpload')) {
             const fileInput = document.createElement('input');
             fileInput.type = 'file';
@@ -40,33 +34,28 @@ class AvatarUpload {
             document.body.appendChild(fileInput);
         }
 
-        // Tornar avatars clicáveis
-        const avatars = document.querySelectorAll('.user-avatar, .user-avatar-large');
-        avatars.forEach(avatar => {
-            avatar.style.cursor = 'pointer';
-            avatar.title = 'Clique para alterar a foto';
+        const avatarLarge = document.querySelector('.user-avatar-large');
+        if (avatarLarge) {
+            avatarLarge.style.cursor = 'pointer';
+            avatarLarge.title = 'Clique para alterar a foto';
             
-            if (!avatar.querySelector('.avatar-overlay')) {
+            if (!avatarLarge.querySelector('.avatar-overlay-large')) {
                 const overlay = document.createElement('div');
-                overlay.className = avatar.classList.contains('user-avatar-large') ? 'avatar-overlay-large' : 'avatar-overlay';
-                overlay.innerHTML = avatar.classList.contains('user-avatar-large') 
-                    ? '<i class="fas fa-camera"></i><span>Clique para alterar</span>' 
-                    : '<i class="fas fa-camera"></i>';
-                avatar.appendChild(overlay);
+                overlay.className = 'avatar-overlay-large';
+                overlay.innerHTML = '<i class="fas fa-camera"></i><span>Clique para alterar</span>';
+                avatarLarge.appendChild(overlay);
             }
-        });
+        }
     }
 
     setupEventListeners() {
-        // Click nos avatars
-        const avatars = document.querySelectorAll('.user-avatar, .user-avatar-large');
-        avatars.forEach(avatar => {
-            avatar.addEventListener('click', (e) => {
+        const avatarLarge = document.querySelector('.user-avatar-large');
+        if (avatarLarge) {
+            avatarLarge.addEventListener('click', (e) => {
                 this.triggerFileInput();
             });
-        });
+        }
 
-        // Botão de upload específico
         const uploadBtn = document.getElementById('uploadAvatarBtn');
         if (uploadBtn) {
             uploadBtn.addEventListener('click', (e) => {
@@ -75,7 +64,6 @@ class AvatarUpload {
             });
         }
 
-        // Botão de remover avatar
         const removeBtn = document.getElementById('removeAvatarBtn');
         if (removeBtn) {
             removeBtn.addEventListener('click', (e) => {
@@ -84,7 +72,6 @@ class AvatarUpload {
             });
         }
 
-        // Change no input de arquivo
         const fileInput = document.getElementById('avatarUpload');
         if (fileInput) {
             fileInput.addEventListener('change', (e) => {
@@ -92,7 +79,6 @@ class AvatarUpload {
             });
         }
 
-        // Drag and drop
         this.setupDragAndDrop();
     }
 
@@ -164,45 +150,8 @@ class AvatarUpload {
         return new Promise((resolve) => {
             const reader = new FileReader();
             reader.onload = (e) => {
-                // Atualizar todos os avatars
-                const avatars = document.querySelectorAll('.user-avatar, .user-avatar-large');
-                avatars.forEach(avatar => {
-                    let img = avatar.querySelector('.avatar-image, .avatar-image-large');
-                    let fallback = avatar.querySelector('.user-avatar-fallback, .user-avatar-fallback-large, .avatar-fallback');
-                    
-                    if (!img) {
-                        img = document.createElement('img');
-                        img.className = avatar.classList.contains('user-avatar-large') ? 'avatar-image-large' : 'avatar-image';
-                        // CORREÇÃO: Estilo com !important para mobile
-                        img.style.cssText = `
-                            width: 100% !important;
-                            height: 100% !important;
-                            border-radius: 50% !important;
-                            object-fit: cover !important;
-                            display: block !important;
-                        `;
-                        avatar.appendChild(img);
-                    }
-                    
-                    img.src = e.target.result;
-                    // CORREÇÃO: Garantir que mostra no mobile
-                    img.style.cssText = `
-                        width: 100% !important;
-                        height: 100% !important;
-                        border-radius: 50% !important;
-                        object-fit: cover !important;
-                        display: block !important;
-                    `;
-                    
-                    if (fallback) {
-                        // CORREÇÃO: Garantir que esconde no mobile
-                        fallback.style.cssText = `
-                            display: none !important;
-                        `;
-                    }
-                });
-
-                // Mostrar botão de remover
+                this.updateAllAvatarsWithData(e.target.result);
+                
                 const removeBtn = document.getElementById('removeAvatarBtn');
                 if (removeBtn) {
                     removeBtn.style.display = 'block';
@@ -212,6 +161,60 @@ class AvatarUpload {
             };
             reader.readAsDataURL(file);
         });
+    }
+
+    updateAllAvatarsWithData(imageData) {
+        const headerAvatar = document.querySelector('.user-avatar');
+        if (headerAvatar) {
+            let headerImg = headerAvatar.querySelector('.avatar-image');
+            let headerFallback = headerAvatar.querySelector('.user-avatar-fallback, .avatar-fallback');
+            
+            if (!headerImg) {
+                headerImg = document.createElement('img');
+                headerImg.className = 'avatar-image';
+                headerImg.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    border-radius: 50%;
+                    object-fit: cover;
+                    display: block;
+                `;
+                headerAvatar.appendChild(headerImg);
+            }
+            
+            headerImg.src = imageData;
+            headerImg.style.display = 'block';
+            
+            if (headerFallback) {
+                headerFallback.style.display = 'none';
+            }
+        }
+
+        const largeAvatar = document.querySelector('.user-avatar-large');
+        if (largeAvatar) {
+            let largeImg = largeAvatar.querySelector('.avatar-image-large');
+            let largeFallback = largeAvatar.querySelector('.user-avatar-fallback-large, .avatar-fallback');
+            
+            if (!largeImg) {
+                largeImg = document.createElement('img');
+                largeImg.className = 'avatar-image-large';
+                largeImg.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    border-radius: 50%;
+                    object-fit: cover;
+                    display: block;
+                `;
+                largeAvatar.appendChild(largeImg);
+            }
+            
+            largeImg.src = imageData;
+            largeImg.style.display = 'block';
+            
+            if (largeFallback) {
+                largeFallback.style.display = 'none';
+            }
+        }
     }
 
     async uploadToSupabase(file) {
@@ -226,7 +229,6 @@ class AvatarUpload {
             const fileName = `${this.currentUser.id}/${Date.now()}.${fileExt}`;
             const filePath = `${fileName}`;
 
-            // Upload para o Storage
             const { data, error } = await this.supabase.storage
                 .from(this.STORAGE_BUCKET)
                 .upload(filePath, file, {
@@ -238,12 +240,10 @@ class AvatarUpload {
                 throw new Error('Erro no upload');
             }
 
-            // Obter URL pública
             const { data: { publicUrl } } = this.supabase.storage
                 .from(this.STORAGE_BUCKET)
                 .getPublicUrl(filePath);
 
-            // Atualizar perfil
             await this.updateProfileWithAvatar(publicUrl);
 
             this.showNotification('Avatar atualizado com sucesso!', 'success');
@@ -271,33 +271,58 @@ class AvatarUpload {
     }
 
     updateAllAvatars(avatarUrl) {
-        const avatars = document.querySelectorAll('.user-avatar, .user-avatar-large');
-        
-        avatars.forEach(avatar => {
-            const img = avatar.querySelector('.avatar-image, .avatar-image-large');
-            const fallback = avatar.querySelector('.user-avatar-fallback, .user-avatar-fallback-large, .avatar-fallback');
+        const headerAvatar = document.querySelector('.user-avatar');
+        if (headerAvatar) {
+            let headerImg = headerAvatar.querySelector('.avatar-image');
+            let headerFallback = headerAvatar.querySelector('.user-avatar-fallback, .avatar-fallback');
             
-            if (img) {
-                img.src = avatarUrl;
-                // CORREÇÃO: Estilo com !important para sobrepor CSS mobile
-                img.style.cssText = `
-                    width: 100% !important;
-                    height: 100% !important;
-                    border-radius: 50% !important;
-                    object-fit: cover !important;
-                    display: block !important;
+            if (!headerImg) {
+                headerImg = document.createElement('img');
+                headerImg.className = 'avatar-image';
+                headerImg.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    border-radius: 50%;
+                    object-fit: cover;
+                    display: block;
                 `;
+                headerAvatar.appendChild(headerImg);
             }
             
-            if (fallback) {
-                // CORREÇÃO: Garantir que esconde no mobile
-                fallback.style.cssText = `
-                    display: none !important;
-                `;
+            headerImg.src = avatarUrl;
+            headerImg.style.display = 'block';
+            
+            if (headerFallback) {
+                headerFallback.style.display = 'none';
             }
-        });
+        }
 
-        // Mostrar botão de remover
+        const largeAvatar = document.querySelector('.user-avatar-large');
+        if (largeAvatar) {
+            let largeImg = largeAvatar.querySelector('.avatar-image-large');
+            let largeFallback = largeAvatar.querySelector('.user-avatar-fallback-large, .avatar-fallback');
+            
+            if (!largeImg) {
+                largeImg = document.createElement('img');
+                largeImg.className = 'avatar-image-large';
+                largeImg.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    border-radius: 50%;
+                    object-fit: cover;
+                    display: block;
+                `;
+                largeAvatar.appendChild(largeImg);
+            }
+            
+            largeImg.src = avatarUrl;
+            largeImg.style.display = 'block';
+            
+            if (largeFallback) {
+                largeFallback.style.display = 'none';
+            }
+        }
+
         const removeBtn = document.getElementById('removeAvatarBtn');
         if (removeBtn) {
             removeBtn.style.display = 'block';
@@ -308,7 +333,6 @@ class AvatarUpload {
         if (!this.currentUser) return;
 
         try {
-            // Remover do storage se existir
             const { data: profile } = await this.supabase
                 .from('profiles')
                 .select('avatar_url')
@@ -322,7 +346,6 @@ class AvatarUpload {
                     .remove([`${this.currentUser.id}/${fileName}`]);
             }
 
-            // Remover do perfil
             await this.supabase
                 .from('profiles')
                 .update({
@@ -331,32 +354,34 @@ class AvatarUpload {
                 })
                 .eq('id', this.currentUser.id);
 
-            // Restaurar fallbacks - CORREÇÃO PARA MOBILE
-            const avatars = document.querySelectorAll('.user-avatar, .user-avatar-large');
-            avatars.forEach(avatar => {
-                const img = avatar.querySelector('.avatar-image, .avatar-image-large');
-                const fallback = avatar.querySelector('.user-avatar-fallback, .user-avatar-fallback-large, .avatar-fallback');
+            const headerAvatar = document.querySelector('.user-avatar');
+            if (headerAvatar) {
+                const headerImg = headerAvatar.querySelector('.avatar-image');
+                const headerFallback = headerAvatar.querySelector('.user-avatar-fallback, .avatar-fallback');
                 
-                if (img) {
-                    // CORREÇÃO: Garantir que esconde no mobile
-                    img.style.cssText = `
-                        display: none !important;
-                    `;
+                if (headerImg) {
+                    headerImg.style.display = 'none';
                 }
                 
-                if (fallback) {
-                    // CORREÇÃO: Garantir que mostra no mobile
-                    fallback.style.cssText = `
-                        display: flex !important;
-                        align-items: center !important;
-                        justify-content: center !important;
-                        width: 100% !important;
-                        height: 100% !important;
-                    `;
+                if (headerFallback) {
+                    headerFallback.style.display = 'flex';
                 }
-            });
+            }
 
-            // Esconder botão de remover
+            const largeAvatar = document.querySelector('.user-avatar-large');
+            if (largeAvatar) {
+                const largeImg = largeAvatar.querySelector('.avatar-image-large');
+                const largeFallback = largeAvatar.querySelector('.user-avatar-fallback-large, .avatar-fallback');
+                
+                if (largeImg) {
+                    largeImg.style.display = 'none';
+                }
+                
+                if (largeFallback) {
+                    largeFallback.style.display = 'flex';
+                }
+            }
+
             const removeBtn = document.getElementById('removeAvatarBtn');
             if (removeBtn) {
                 removeBtn.style.display = 'none';
@@ -386,7 +411,6 @@ class AvatarUpload {
             }
 
         } catch (error) {
-            // Silencioso
         }
     }
 
@@ -409,13 +433,11 @@ class AvatarUpload {
     }
 
     showNotification(message, type = 'info') {
-        // Usar sistema de notificação existente se disponível
         if (typeof window.showNotification === 'function') {
             window.showNotification(message, type);
             return;
         }
 
-        // Fallback simples
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
         notification.innerHTML = `
@@ -435,7 +457,6 @@ class AvatarUpload {
     }
 }
 
-// Inicializar quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', function() {
     new AvatarUpload();
 });
