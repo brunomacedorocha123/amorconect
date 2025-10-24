@@ -32,10 +32,8 @@ async function checkAuthentication() {
             return false;
         }
         currentUser = user;
-        console.log('✅ Usuário autenticado:', user.id);
         return true;
     } catch (error) {
-        console.error('❌ Erro de autenticação:', error);
         window.location.href = 'login.html';
         return false;
     }
@@ -75,8 +73,6 @@ function setupEventListeners() {
 // Carregar perfil do usuário
 async function loadUserProfile() {
     try {
-        console.log('📥 Carregando perfil do usuário...');
-        
         // Carregar dados principais
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
@@ -85,7 +81,7 @@ async function loadUserProfile() {
             .single();
 
         if (profileError) {
-            console.error('❌ Erro ao carregar perfil:', profileError);
+            throw new Error('Erro ao carregar perfil');
         }
 
         // Carregar detalhes públicos
@@ -96,16 +92,13 @@ async function loadUserProfile() {
             .single();
 
         if (detailsError) {
-            console.error('❌ Erro ao carregar detalhes:', detailsError);
+            // Não é crítico se não houver detalhes ainda
         }
 
-        // Preencher formulário
+        // Preencher formulário E ATUALIZAR HEADER
         fillProfileForm(profile, userDetails);
         
-        console.log('✅ Perfil carregado com sucesso');
-        
     } catch (error) {
-        console.error('💥 Erro ao carregar perfil:', error);
         showNotification('Erro ao carregar perfil', 'error');
     }
 }
@@ -114,8 +107,6 @@ async function loadUserProfile() {
 function fillProfileForm(profile, userDetails) {
     if (!profile) return;
 
-    console.log('📝 Preenchendo formulário com dados...');
-
     // Dados principais
     setValue('email', currentUser.email);
     setValue('fullName', profile.full_name);
@@ -123,6 +114,12 @@ function fillProfileForm(profile, userDetails) {
     setValue('birthDate', profile.birth_date);
     setValue('cpf', profile.cpf);
     setValue('phone', profile.phone);
+    
+    // ATUALIZAR NICKNAME NO HEADER - CORREÇÃO PRINCIPAL
+    const userNicknameElement = document.getElementById('userNickname');
+    if (userNicknameElement && profile.nickname) {
+        userNicknameElement.textContent = profile.nickname;
+    }
     
     // Endereço
     setValue('street', profile.street);
@@ -168,7 +165,6 @@ function fillProfileForm(profile, userDetails) {
     }
 
     updateCharCount();
-    console.log('✅ Formulário preenchido com sucesso');
 }
 
 // Salvar perfil
@@ -198,10 +194,15 @@ async function handleProfileSave(event) {
         // Salvar no banco
         await saveProfileToDatabase(profileData, userDetailsData);
         
+        // ATUALIZAR NICKNAME NO HEADER APÓS SALVAR
+        const userNicknameElement = document.getElementById('userNickname');
+        if (userNicknameElement && profileData.nickname) {
+            userNicknameElement.textContent = profileData.nickname;
+        }
+        
         showNotification('Perfil salvo com sucesso!', 'success');
         
     } catch (error) {
-        console.error('💥 Erro ao salvar perfil:', error);
         showNotification('Erro ao salvar perfil: ' + error.message, 'error');
     } finally {
         saveButton.innerHTML = originalText;
@@ -297,8 +298,6 @@ function validateProfileData(profileData, userDetailsData) {
 
 // Salvar no banco
 async function saveProfileToDatabase(profileData, userDetailsData) {
-    console.log('💾 Salvando perfil no banco...');
-    
     // Atualizar perfil principal
     const { error: profileError } = await supabase
         .from('profiles')
@@ -320,8 +319,6 @@ async function saveProfileToDatabase(profileData, userDetailsData) {
         });
 
     if (detailsError) throw new Error(`Detalhes: ${detailsError.message}`);
-    
-    console.log('✅ Perfil salvo com sucesso');
 }
 
 // Funções auxiliares

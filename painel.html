@@ -59,56 +59,46 @@
             </section>
 
             <!-- Seção de Avatar -->
-            <section class="form-section">
-                <h3><i class="fas fa-camera"></i> Foto do Perfil</h3>
-                <p class="section-description">Adicione uma foto para se destacar. Formatos: JPG, PNG, WebP (máx. 5MB)</p>
-                
-                <!-- INFORMAÇÕES PREMIUM -->
-                <div class="premium-status-info free-limit-warning" data-free-only>
-                    <i class="fas fa-info-circle"></i>
-                    <span>Plano Free: 1 foto permitida</span>
+<section class="form-section">
+    <h3><i class="fas fa-camera"></i> Foto do Perfil</h3>
+    <p class="section-description">Adicione uma foto para se destacar. Formatos: JPG, PNG, WebP (máx. 5MB)</p>
+    
+    <!-- REMOVI AS DUAS BARRAS DE INFORMAÇÃO -->
+    
+    <div class="avatar-upload-container">
+        <div class="avatar-preview-large">
+            <div class="user-avatar-large">
+                <div class="user-avatar-fallback-large">U</div>
+                <img class="avatar-image-large" style="display: none;" alt="Preview do avatar">
+                <div class="avatar-overlay-large">
+                    <i class="fas fa-camera"></i>
+                    <span>Clique para alterar</span>
                 </div>
-
-                <div class="premium-status-info premium-benefit" data-premium-only style="display: none;">
-                    <i class="fas fa-crown"></i>
-                    <span>Premium: fotos ilimitadas!</span>
-                </div>
-                
-                <div class="avatar-upload-container">
-                    <div class="avatar-preview-large">
-                        <div class="user-avatar-large">
-                            <div class="user-avatar-fallback-large">U</div>
-                            <img class="avatar-image-large" style="display: none;" alt="Preview do avatar">
-                            <div class="avatar-overlay-large">
-                                <i class="fas fa-camera"></i>
-                                <span>Clique para alterar</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="avatar-upload-actions">
-                        <button type="button" class="btn btn-secondary" id="uploadAvatarBtn">
-                            <i class="fas fa-upload"></i> Escolher Foto
-                        </button>
-                        <button type="button" class="btn btn-outline" id="removeAvatarBtn" style="display: none;">
-                            <i class="fas fa-trash"></i> Remover Foto
-                        </button>
-                        
-                        <!-- BOTÃO UPGRADE -->
-                        <a href="pricing.html" class="btn btn-premium" id="upgradePlanBtn">
-                            <i class="fas fa-crown"></i> Fazer Upgrade
-                        </a>
-                    </div>
-                    
-                    <div class="upload-progress" style="display: none;">
-                        <div class="progress-bar">
-                            <div class="progress-fill"></div>
-                        </div>
-                        <span class="progress-text">Enviando...</span>
-                    </div>
-                </div>
-            </section>
-
+            </div>
+        </div>
+        
+        <div class="avatar-upload-actions">
+            <button type="button" class="btn btn-secondary" id="uploadAvatarBtn">
+                <i class="fas fa-upload"></i> Escolher Foto
+            </button>
+            <button type="button" class="btn btn-outline" id="removeAvatarBtn" style="display: none;">
+                <i class="fas fa-trash"></i> Remover Foto
+            </button>
+            
+            <!-- BOTÃO UPGRADE - MANTIDO -->
+            <a href="pricing.html" class="btn btn-premium" id="upgradePlanBtn">
+                <i class="fas fa-crown"></i> Fazer Upgrade
+            </a>
+        </div>
+        
+        <div class="upload-progress" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+            <span class="progress-text">Enviando...</span>
+        </div>
+    </div>
+</section>
             <!-- Profile Form -->
             <section class="profile-form">
                 <form id="profileForm">

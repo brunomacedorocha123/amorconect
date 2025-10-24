@@ -770,210 +770,6 @@ footer {
 }
 
 
-/* ESTILOS PREMIUM SIMPLIFICADOS */
-/* ============================================= */
-
-/* Premium Badge Styles */
-.premium-badge {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    margin-left: 8px;
-    border: 1px solid;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.3s ease;
-}
-
-.premium-badge.free {
-    background: #6c757d;
-    color: white;
-    border-color: #5a6268;
-}
-
-.premium-badge.active {
-    background: linear-gradient(135deg, #ffd700, #ff6b00);
-    color: #000;
-    border-color: #ffb300;
-    box-shadow: 0 2px 8px rgba(255, 107, 0, 0.3);
-}
-
-/* Plan Status Styles */
-.plan-info-container {
-    margin: 15px 0;
-}
-
-.plan-status {
-    padding: 12px 16px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    transition: all 0.3s ease;
-}
-
-.plan-status.premium {
-    background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
-    border: 2px solid #4caf50;
-    color: #2e7d32;
-}
-
-.plan-status.free {
-    background: #f8f9fa;
-    border: 2px solid #dee2e6;
-    color: #6c757d;
-}
-
-.plan-status i {
-    font-size: 1.2rem;
-    width: 20px;
-    text-align: center;
-}
-
-.plan-status div {
-    flex: 1;
-}
-
-.plan-status strong {
-    display: block;
-    margin-bottom: 4px;
-    font-size: 14px;
-}
-
-.plan-status span {
-    font-size: 12px;
-    opacity: 0.8;
-}
-
-.upgrade-link {
-    color: #e91e63;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 12px;
-    margin-top: 4px;
-    display: inline-block;
-}
-
-.upgrade-link:hover {
-    text-decoration: underline;
-    color: #c2185b;
-}
-
-/* Status Info Sections */
-.premium-status-info {
-    margin: 10px 0;
-    border-radius: 8px;
-    padding: 10px 15px;
-    font-size: 14px;
-}
-
-.free-limit-warning {
-    background: #fff3cd;
-    border: 1px solid #ffeaa7;
-    color: #856404;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.premium-benefit {
-    background: #d1ecf1;
-    border: 1px solid #bee5eb;
-    color: #0c5460;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* Botão Premium */
-.btn-premium {
-    background: linear-gradient(135deg, #ffd700, #ff6b00);
-    color: #000;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.btn-premium:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.4);
-    color: #000;
-}
-
-/* Estados de visualização baseados no plano */
-[data-free-only] {
-    transition: all 0.3s ease;
-}
-
-[data-premium-only] {
-    transition: all 0.3s ease;
-}
-
-/* Animações */
-@keyframes premiumPulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-.premium-badge.active {
-    animation: premiumPulse 2s infinite;
-}
-
-/* Responsividade para elementos premium */
-@media (max-width: 768px) {
-    .premium-badge {
-        font-size: 10px;
-        padding: 3px 8px;
-        margin-left: 5px;
-    }
-    
-    .plan-status {
-        flex-direction: column;
-        text-align: center;
-        gap: 8px;
-        padding: 10px 12px;
-    }
-    
-    .plan-status i {
-        font-size: 1.5rem;
-    }
-    
-    .upgrade-link {
-        margin-left: 0;
-        margin-top: 8px;
-    }
-    
-    .premium-status-info {
-        font-size: 12px;
-        padding: 8px 12px;
-    }
-}
-
-@media (max-width: 480px) {
-    .premium-badge {
-        font-size: 9px;
-        padding: 2px 6px;
-    }
-    
-    .plan-status {
-        padding: 8px 10px;
-    }
-    
-    .btn-premium {
-        padding: 8px 16px;
-        font-size: 14px;
-    }
-}
-
 /* ESTILOS PREMIUM */
 /* ============================================= */
 
@@ -1065,29 +861,6 @@ footer {
     color: #c2185b;
 }
 
-/* Status Info Sections */
-.premium-status-info {
-    margin: 10px 0;
-    border-radius: 8px;
-    padding: 10px 15px;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.free-limit-warning {
-    background: #fff3cd;
-    border: 1px solid #ffeaa7;
-    color: #856404;
-}
-
-.premium-benefit {
-    background: #d1ecf1;
-    border: 1px solid #bee5eb;
-    color: #0c5460;
-}
-
 /* Botão Premium */
 .btn-premium {
     background: linear-gradient(135deg, #ffd700, #ff6b00);
@@ -1109,6 +882,17 @@ footer {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(255, 107, 0, 0.4);
     color: #000;
+}
+
+/* Animações */
+@keyframes premiumPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.premium-badge.active {
+    animation: premiumPulse 2s infinite;
 }
 
 /* Responsividade para elementos premium */
@@ -1135,9 +919,20 @@ footer {
         margin-top: 8px;
     }
     
-    .premium-status-info {
-        font-size: 12px;
-        padding: 8px 12px;
+    .btn-premium {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .premium-badge {
+        font-size: 9px;
+        padding: 2px 6px;
+    }
+    
+    .plan-status {
+        padding: 8px 10px;
     }
     
     .btn-premium {
