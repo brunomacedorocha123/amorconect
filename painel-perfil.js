@@ -16,7 +16,10 @@ async function initializeApp() {
     if (authenticated) {
         setupEventListeners();
         await loadUserProfile();
-        await PremiumManager.updateUIWithPremiumStatus();
+        // AGUARDAR O PREMIUM MANAGER ATUALIZAR A UI
+        setTimeout(async () => {
+            await PremiumManager.updateUIWithPremiumStatus();
+        }, 500);
     }
 }
 
@@ -29,8 +32,10 @@ async function checkAuthentication() {
             return false;
         }
         currentUser = user;
+        console.log('✅ Usuário autenticado:', user.id);
         return true;
     } catch (error) {
+        console.error('❌ Erro de autenticação:', error);
         window.location.href = 'login.html';
         return false;
     }
@@ -57,17 +62,31 @@ function setupEventListeners() {
     if (description) {
         description.addEventListener('input', updateCharCount);
     }
+
+    // Botão de upgrade
+    const upgradeBtn = document.getElementById('upgradePlanBtn');
+    if (upgradeBtn) {
+        upgradeBtn.addEventListener('click', () => {
+            window.location.href = 'pricing.html';
+        });
+    }
 }
 
 // Carregar perfil do usuário
 async function loadUserProfile() {
     try {
+        console.log('📥 Carregando perfil do usuário...');
+        
         // Carregar dados principais
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', currentUser.id)
             .single();
+
+        if (profileError) {
+            console.error('❌ Erro ao carregar perfil:', profileError);
+        }
 
         // Carregar detalhes públicos
         const { data: userDetails, error: detailsError } = await supabase
@@ -76,10 +95,17 @@ async function loadUserProfile() {
             .eq('user_id', currentUser.id)
             .single();
 
+        if (detailsError) {
+            console.error('❌ Erro ao carregar detalhes:', detailsError);
+        }
+
         // Preencher formulário
         fillProfileForm(profile, userDetails);
         
+        console.log('✅ Perfil carregado com sucesso');
+        
     } catch (error) {
+        console.error('💥 Erro ao carregar perfil:', error);
         showNotification('Erro ao carregar perfil', 'error');
     }
 }
@@ -87,6 +113,8 @@ async function loadUserProfile() {
 // Preencher formulário com dados reais
 function fillProfileForm(profile, userDetails) {
     if (!profile) return;
+
+    console.log('📝 Preenchendo formulário com dados...');
 
     // Dados principais
     setValue('email', currentUser.email);
@@ -140,6 +168,7 @@ function fillProfileForm(profile, userDetails) {
     }
 
     updateCharCount();
+    console.log('✅ Formulário preenchido com sucesso');
 }
 
 // Salvar perfil
@@ -172,6 +201,7 @@ async function handleProfileSave(event) {
         showNotification('Perfil salvo com sucesso!', 'success');
         
     } catch (error) {
+        console.error('💥 Erro ao salvar perfil:', error);
         showNotification('Erro ao salvar perfil: ' + error.message, 'error');
     } finally {
         saveButton.innerHTML = originalText;
@@ -267,6 +297,8 @@ function validateProfileData(profileData, userDetailsData) {
 
 // Salvar no banco
 async function saveProfileToDatabase(profileData, userDetailsData) {
+    console.log('💾 Salvando perfil no banco...');
+    
     // Atualizar perfil principal
     const { error: profileError } = await supabase
         .from('profiles')
@@ -288,6 +320,8 @@ async function saveProfileToDatabase(profileData, userDetailsData) {
         });
 
     if (detailsError) throw new Error(`Detalhes: ${detailsError.message}`);
+    
+    console.log('✅ Perfil salvo com sucesso');
 }
 
 // Funções auxiliares
@@ -379,3 +413,6 @@ function showNotification(message, type = 'info') {
         if (notification.parentElement) notification.remove();
     }, 5000);
 }
+
+// Exportar para uso global
+window.supabase = supabase;
