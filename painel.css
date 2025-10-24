@@ -227,7 +227,7 @@ nav a:hover {
     line-height: 1.5;
 }
 
-/* CORREÇÃO DEFINITIVA: Seção Galeria Premium com MUITO ESPAÇAMENTO */
+/* CORREÇÃO: Seção Galeria Premium com espaçamento */
 .form-section:nth-last-of-type(2) {
     margin-bottom: 10rem !important;
     padding-bottom: 3rem !important;
@@ -443,7 +443,7 @@ select.form-control {
     color: white;
 }
 
-/* CORREÇÃO: Botão Fazer Upgrade (Gerenciar Assinatura) */
+/* Botão Fazer Upgrade */
 #upgradePlanBtn {
     background: var(--gold) !important;
     color: var(--dark-bg) !important;
@@ -471,7 +471,7 @@ select.form-control {
     color: var(--dark-bg);
 }
 
-/* CORREÇÃO DEFINITIVA: Mais espaçamento antes dos botões de ação */
+/* CORREÇÃO: Mais espaçamento antes dos botões de ação */
 .form-actions {
     display: flex;
     gap: 1rem;
@@ -728,226 +728,6 @@ footer {
     background: rgba(198, 166, 100, 0.3);
 }
 
-/* Gallery Styles */
-.gallery-upload {
-    margin-bottom: 2rem;
-    text-align: center;
-}
-
-#uploadGalleryBtn {
-    background: var(--burgundy);
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-#uploadGalleryBtn:hover {
-    background: var(--dark-burgundy);
-    transform: translateY(-2px);
-}
-
-/* Gallery Grid */
-.gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.gallery-item {
-    position: relative;
-    border-radius: 12px;
-    overflow: hidden;
-    aspect-ratio: 1;
-    background: var(--card-bg);
-    border: 2px solid var(--gold);
-    transition: all 0.3s ease;
-}
-
-.gallery-item:hover {
-    transform: translateY(-5px);
-    border-color: var(--light-gold);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-}
-
-.gallery-image-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    overflow: hidden;
-}
-
-.gallery-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: opacity 0.3s ease;
-    position: relative;
-    z-index: 2;
-}
-
-.gallery-image.loading {
-    opacity: 0;
-}
-
-.image-fallback {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, var(--burgundy), var(--gold));
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    border-radius: 8px;
-    z-index: 1;
-}
-
-.image-fallback i {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-}
-
-.image-fallback span {
-    font-size: 0.8rem;
-    opacity: 0.8;
-}
-
-.image-loading {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: var(--gold);
-    font-size: 1.5rem;
-    z-index: 3;
-}
-
-.gallery-actions {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 10;
-}
-
-.gallery-item:hover .gallery-actions {
-    opacity: 1;
-}
-
-.delete-btn {
-    background: #dc2626;
-    border: none;
-    color: white;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.3s ease;
-}
-
-.delete-btn:hover {
-    background: #b91c1c;
-    transform: scale(1.1);
-}
-
-/* Empty Gallery */
-.empty-gallery {
-    text-align: center;
-    padding: 3rem 2rem;
-    color: var(--beige);
-}
-
-.empty-gallery i {
-    font-size: 3rem;
-    color: var(--gold);
-    margin-bottom: 1rem;
-}
-
-.empty-gallery p {
-    margin-bottom: 0.5rem;
-}
-
-/* Storage Status */
-.storage-status {
-    background: var(--card-bg);
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-    border: 1px solid var(--gold);
-}
-
-.storage-info {
-    color: var(--beige);
-}
-
-.storage-bar {
-    width: 100%;
-    height: 8px;
-    background: var(--section-bg);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-top: 0.5rem;
-}
-
-.storage-fill {
-    height: 100%;
-    background: var(--burgundy);
-    border-radius: 4px;
-    transition: width 0.3s ease;
-}
-
-/* Plan Info */
-.plan-info-container {
-    background: var(--card-bg);
-    padding: 1.5rem;
-    border-radius: 10px;
-    border: 1px solid var(--gold);
-    margin-top: 1rem;
-}
-
-.premium-badge {
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.premium-badge.free {
-    background: var(--section-bg);
-    color: var(--beige);
-    border: 1px solid var(--beige);
-}
-
-.premium-badge.premium {
-    background: var(--gold);
-    color: var(--dark-bg);
-    border: 1px solid var(--gold);
-}
-
 /* ========== GALERIA PREMIUM ========== */
 .gallery-upload {
     margin-bottom: 2rem;
@@ -973,7 +753,6 @@ footer {
     transform: translateY(-2px);
 }
 
-/* Gallery Grid */
 .gallery-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -1015,52 +794,6 @@ footer {
     object-fit: cover;
     display: block;
     transition: all 0.3s ease;
-    position: relative;
-    z-index: 2;
-}
-
-.gallery-image:hover {
-    transform: scale(1.05);
-}
-
-.gallery-image.loading {
-    opacity: 0;
-}
-
-.image-fallback {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, var(--burgundy), var(--gold));
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    border-radius: 8px;
-    z-index: 1;
-}
-
-.image-fallback i {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-}
-
-.image-fallback span {
-    font-size: 0.8rem;
-    opacity: 0.8;
-}
-
-.image-loading {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: var(--gold);
-    font-size: 1.5rem;
-    z-index: 3;
 }
 
 .gallery-actions {
@@ -1095,7 +828,6 @@ footer {
     transform: scale(1.1);
 }
 
-/* Empty Gallery */
 .empty-gallery {
     text-align: center;
     padding: 3rem 2rem;
@@ -1109,11 +841,6 @@ footer {
     margin-bottom: 1rem;
 }
 
-.empty-gallery p {
-    margin-bottom: 0.5rem;
-}
-
-/* Storage Status */
 .storage-status {
     background: var(--card-bg);
     padding: 1rem;
@@ -1152,14 +879,12 @@ footer {
     height: 100%;
     z-index: 10000;
     background: rgba(0, 0, 0, 0.95);
-    backdrop-filter: blur(10px);
 }
 
 .image-modal.active {
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: fadeIn 0.3s ease;
 }
 
 .modal-overlay {
@@ -1168,7 +893,6 @@ footer {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
 }
 
 .modal-container {
@@ -1199,7 +923,6 @@ footer {
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .modal-close-btn:hover {
@@ -1220,36 +943,37 @@ footer {
     max-height: 100%;
     object-fit: contain;
     border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-    animation: zoomIn 0.4s ease;
 }
 
-/* Animações */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+/* Plan Info */
+.plan-info-container {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 10px;
+    border: 1px solid var(--gold);
+    margin-top: 1rem;
 }
 
-@keyframes zoomIn {
-    from { 
-        opacity: 0;
-        transform: scale(0.8);
-    }
-    to { 
-        opacity: 1;
-        transform: scale(1);
-    }
+.premium-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-@keyframes zoomOut {
-    from { 
-        opacity: 1;
-        transform: scale(1);
-    }
-    to { 
-        opacity: 0;
-        transform: scale(0.8);
-    }
+.premium-badge.free {
+    background: var(--section-bg);
+    color: var(--beige);
+    border: 1px solid var(--beige);
+}
+
+.premium-badge.premium {
+    background: var(--gold);
+    color: var(--dark-bg);
+    border: 1px solid var(--gold);
 }
 
 /* Mobile Styles para Galeria */
@@ -1273,60 +997,7 @@ footer {
         font-size: 1.2rem;
     }
     
-    .modal-image-wrapper {
-        max-width: 95%;
-        max-height: 95%;
-    }
-    
-    #modalImageView {
-        border-radius: 8px;
-    }
-    
     .empty-gallery {
         padding: 2rem 1rem;
     }
-    
-    .empty-gallery i {
-        font-size: 2.5rem;
-    }
-}
-
-/* Small Mobile */
-@media (max-width: 480px) {
-    .gallery-grid {
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-        gap: 0.6rem;
-    }
-    
-    .gallery-item {
-        border-width: 1px;
-    }
-    
-    .empty-gallery {
-        padding: 1.5rem 1rem;
-    }
-    
-    .empty-gallery i {
-        font-size: 2rem;
-    }
-}
-
-/* Tablet */
-@media (min-width: 769px) and (max-width: 1024px) {
-    .gallery-grid {
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    }
-}
-
-/* Garantir que o modal fique acima de tudo */
-.image-modal {
-    z-index: 10000;
-}
-
-.modal-container {
-    z-index: 10001;
-}
-
-.modal-close-btn {
-    z-index: 10002;
 }

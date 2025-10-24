@@ -508,15 +508,13 @@
                 </form>
             </section>
 
-     <!-- SEÇÃO: Galeria Premium -->
+   <!-- SEÇÃO: Galeria Premium -->
 <section class="form-section">
     <h3><i class="fas fa-images"></i> Minha Galeria Premium</h3>
     
-    <!-- Gestão da Galeria (aparece apenas para Premium) -->
     <div id="galleryManager" style="display: none;">
         <div class="section-description">
-            <p>Armazene e visualize suas fotos especiais (apenas para usuários Premium)</p>
-            <!-- Status do Espaço -->
+            <p>Armazene e visualize suas fotos especiais</p>
             <div class="storage-status">
                 <div class="storage-info">
                     <span id="storageUsed">0MB de 10MB usados</span>
@@ -527,40 +525,31 @@
             </div>
         </div>
 
-        <!-- Upload -->
         <div class="gallery-upload">
             <button type="button" class="btn btn-primary" id="uploadGalleryBtn">
                 <i class="fas fa-plus"></i> Adicionar Fotos
             </button>
             <input type="file" id="galleryUpload" multiple accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" style="display: none;">
-            <small style="display: block; margin-top: 0.5rem; color: var(--beige);">
-                Formatos: JPG, PNG, GIF, WebP • Máximo 10MB por imagem
-            </small>
         </div>
 
-        <!-- Grid de Imagens -->
         <div id="galleryGrid" class="gallery-grid">
-            <!-- As imagens serão carregadas aqui dinamicamente -->
             <div class="empty-gallery">
                 <i class="fas fa-images"></i>
                 <p>Sua galeria está vazia</p>
-                <p>Adicione fotos para compartilhar momentos especiais</p>
             </div>
         </div>
     </div>
 
-    <!-- Mensagem para usuários free -->
     <div id="galleryUpgradeCTA" class="empty-gallery" style="display: block;">
         <i class="fas fa-crown"></i>
         <p>Galeria Premium Bloqueada</p>
-        <p>Faça upgrade para acessar sua galeria exclusiva!</p>
         <a href="pricing.html" class="btn btn-premium" style="margin-top: 1rem;">
             <i class="fas fa-crown"></i> Tornar-se Premium
         </a>
     </div>
 </section>
 
-<!-- MODAL PARA IMAGEM AMPLIADA - ADICIONE ISSO ANTES DO FOOTER -->
+<!-- MODAL PARA IMAGEM AMPLIADA -->
 <div id="imageModal" class="image-modal">
     <div class="modal-overlay"></div>
     <div class="modal-container">
