@@ -6,11 +6,6 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUser = null;
 let visitedUserId = null;
 
-// Botão X
-document.getElementById('closeProfile').addEventListener('click', function() {
-    window.history.back();
-});
-
 // Carregar perfil
 document.addEventListener('DOMContentLoaded', async function() {
     await loadProfile();
@@ -30,7 +25,7 @@ async function loadProfile() {
         
         if (!visitedUserId) {
             alert('Perfil não encontrado');
-            window.history.back();
+            window.location.href = 'home.html';
             return;
         }
 
@@ -38,6 +33,7 @@ async function loadProfile() {
 
     } catch (error) {
         alert('Erro ao carregar perfil');
+        window.location.href = 'home.html';
     }
 }
 
@@ -45,19 +41,34 @@ async function loadUserData() {
     try {
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('*')
+            .select(`
+                *,
+                user_details (
+                    gender,
+                    sexual_orientation,
+                    profession,
+                    education,
+                    zodiac,
+                    religion,
+                    drinking,
+                    smoking,
+                    exercise,
+                    exercise_details,
+                    has_pets,
+                    pets_details,
+                    looking_for,
+                    description,
+                    interests,
+                    characteristics
+                )
+            `)
             .eq('id', visitedUserId)
             .single();
 
         if (profileError) throw profileError;
 
-        const { data: details, error: detailsError } = await supabase
-            .from('user_details')
-            .select('*')
-            .eq('user_id', visitedUserId)
-            .single();
-
-        fillProfileData(profile, details || {});
+        const details = profile.user_details || {};
+        fillProfileData(profile, details);
 
     } catch (error) {
         alert('Erro ao carregar dados do usuário');
@@ -316,6 +327,9 @@ document.getElementById('sendMessageBtn').addEventListener('click', function() {
     }
 });
 
-document.getElementById('likeProfileBtn').addEventListener('click', function() {
-    alert('Curtido! 💖');
+// Verificar autenticação em tempo real
+supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT') {
+        window.location.href = 'login.html';
+    }
 });

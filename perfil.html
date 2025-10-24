@@ -16,9 +16,9 @@
                 <div class="logo">
                     <img src="logopulselove.png" alt="Amor Conect">
                 </div>
-                <button class="close-btn" id="closeProfile">
-                    <i class="fas fa-times"></i>
-                </button>
+                <a href="home.html" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
             </div>
         </div>
     </header>
@@ -47,10 +47,6 @@
                                 <span class="stat-number" id="profileAge">--</span>
                                 <span class="stat-label">anos</span>
                             </div>
-                            <div class="stat">
-                                <span class="stat-number" id="profileDistance">--</span>
-                                <span class="stat-label">km</span>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -59,9 +55,6 @@
                 <div class="action-buttons">
                     <button class="btn btn-primary btn-message" id="sendMessageBtn">
                         <i class="fas fa-paper-plane"></i> Enviar Mensagem
-                    </button>
-                    <button class="btn btn-secondary" id="likeProfileBtn">
-                        <i class="fas fa-heart"></i> Curtir
                     </button>
                 </div>
             </section>
@@ -134,11 +127,10 @@
                 </div>
             </section>
 
-            <!-- GALERIA PREMIUM -->
+            <!-- Galeria -->
             <section class="profile-section" id="gallerySection">
                 <h3><i class="fas fa-images"></i> Galeria</h3>
                 
-                <!-- Para usuários Free tentando ver galeria Premium -->
                 <div id="galleryPremiumLock" class="premium-lock" style="display: none;">
                     <div class="premium-lock-content">
                         <i class="fas fa-crown"></i>
@@ -150,14 +142,12 @@
                     </div>
                 </div>
 
-                <!-- Galeria Visível (apenas para premium) -->
                 <div id="galleryContainer" style="display: none;">
                     <div class="gallery-grid" id="visitedUserGallery">
                         <!-- Fotos carregadas via JavaScript -->
                     </div>
                 </div>
 
-                <!-- Usuário Free não tem galeria -->
                 <div id="noGalleryMessage" class="empty-gallery" style="display: none;">
                     <i class="fas fa-images"></i>
                     <p>Este usuário não possui galeria</p>
@@ -166,7 +156,7 @@
         </div>
     </main>
 
-    <!-- MODAL PARA IMAGEM AMPLIADA -->
+    <!-- Modal para Imagem Ampliada -->
     <div id="imageModal" class="image-modal">
         <div class="modal-overlay"></div>
         <div class="modal-container">
@@ -179,14 +169,12 @@
         </div>
     </div>
 
-    <!-- Scripts -->
     <script>
         // Configuração Supabase
         const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     </script>
-    <script src="premium-check.js"></script>
     <script src="perfil.js"></script>
 </body>
 </html>
