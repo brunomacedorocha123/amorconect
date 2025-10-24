@@ -13,7 +13,6 @@ class GalleryManager {
             await this.checkPremiumStatus();
             
             if (this.isPremium) {
-                this.showGallerySection();
                 await this.loadGallery();
                 this.setupEventListeners();
             } else {
@@ -43,13 +42,6 @@ class GalleryManager {
             this.isPremium = subscription && subscription.plan_type === 'premium';
         } catch (error) {
             this.isPremium = false;
-        }
-    }
-
-    showGallerySection() {
-        const gallerySection = document.getElementById('gallerySection');
-        if (gallerySection) {
-            gallerySection.style.display = 'block';
         }
     }
 

@@ -507,8 +507,8 @@
                     </div>
                 </form>
             </section>
-<!-- ========== SEÇÃO GALERIA PREMIUM ========== -->
-<section class="form-section" id="gallerySection" style="display: none;">
+<<!-- ========== SEÇÃO GALERIA PREMIUM ========== -->
+<section class="form-section" id="gallerySection">
     <div class="gallery-header">
         <h3><i class="fas fa-crown"></i> Minha Galeria Premium</h3>
         <p class="section-description">Área exclusiva para assinantes premium - Armazene até 10MB em fotos</p>
@@ -525,7 +525,7 @@
         </div>
     </div>
 
-    <!-- Área de Upload VISÍVEL -->
+    <!-- Área de Upload -->
     <div class="gallery-upload-area" id="galleryUploadArea">
         <div class="gallery-upload-icon">
             <i class="fas fa-cloud-upload-alt"></i>
@@ -567,44 +567,47 @@
         </div>
     </div>
 </section>
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-column">
-                    <h3>Amor Conect</h3>
-                    <p>Conectando corações de forma segura e genuína.</p>
-                </div>
-                <div class="footer-column">
-                    <h3>Links Rápidos</h3>
-                    <ul>
-                        <li><a href="home.html">Home</a></li>
-                        <li><a href="mensagens.html">Mensagens</a></li>
-                        <li><a href="busca.html">Buscar</a></li>
-                    </ul>
-                </div>
-                <div class="footer-column">
-                    <h3>Suporte</h3>
-                    <ul>
-                        <li><a href="#">Ajuda</a></li>
-                        <li><a href="#">Privacidade</a></li>
-                        <li><a href="#">Termos</a></li>
-                    </ul>
-                </div>
+</div>
+</main>
+
+<!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>Amor Conect</h3>
+                <p>Conectando corações de forma segura e genuína.</p>
             </div>
-            <div class="copyright">
-                <p>&copy; 2024 Amor Conect. Todos os direitos reservados.</p>
+            <div class="footer-column">
+                <h3>Links Rápidos</h3>
+                <ul>
+                    <li><a href="home.html">Home</a></li>
+                    <li><a href="mensagens.html">Mensagens</a></li>
+                    <li><a href="busca.html">Buscar</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Suporte</h3>
+                <ul>
+                    <li><a href="#">Ajuda</a></li>
+                    <li><a href="#">Privacidade</a></li>
+                    <li><a href="#">Termos</a></li>
+                </ul>
             </div>
         </div>
-    </footer>
+        <div class="copyright">
+            <p>&copy; 2024 Amor Conect. Todos os direitos reservados.</p>
+        </div>
+    </div>
+</footer>
 
-    <!-- Inputs hidden para upload -->
-    <input type="file" id="avatarUpload" accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;">
+<!-- Inputs hidden para upload -->
+<input type="file" id="avatarUpload" accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;">
 
-    <!-- Scripts na ordem correta -->
-    <script src="painel-perfil.js"></script>
-    <script src="premium-check.js"></script>
-    <script src="avatar.js"></script>
-    <script src="galeria.js"></script>
+<!-- Scripts na ordem correta -->
+<script src="painel-perfil.js"></script>
+<script src="premium-check.js"></script>
+<script src="avatar.js"></script>
+<script src="galeria.js"></script>
 </body>
 </html>
