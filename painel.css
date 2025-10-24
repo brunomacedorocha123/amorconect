@@ -1062,3 +1062,29 @@ footer {
     box-shadow: var(--shadow);
     border: 2px solid var(--gold);
 }
+
+/* Garantir espaçamento entre seções */
+.form-section {
+    margin-bottom: 2rem;
+}
+
+/* Header da galeria organizado */
+.gallery-header {
+    margin-bottom: 1.5rem;
+}
+
+.gallery-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.gallery-stats {
+    background: var(--section-bg);
+    padding: 0.8rem 1.2rem;
+    border-radius: 10px;
+    border: 1px solid var(--gold);
+    font-size: 0.9rem;
+    color: var(--beige);
+}

@@ -508,17 +508,16 @@
                 </form>
             </section>
 
-                        <!-- ========== SEÇÃO GALERIA PREMIUM ========== -->
-            <section class="gallery-section" id="gallerySection">
+                                   <!-- ========== SEÇÃO GALERIA PREMIUM ========== -->
+            <section class="form-section" id="gallerySection">
                 <div class="gallery-header">
-                    <h3 class="gallery-title">
-                        <i class="fas fa-crown"></i>
-                        Minha Galeria Premium
-                    </h3>
+                    <h3><i class="fas fa-crown"></i> Minha Galeria Premium</h3>
+                    <p class="section-description">Área exclusiva para assinantes premium - Armazene até 10MB em fotos</p>
+                    
                     <div class="gallery-actions">
                         <div class="gallery-stats">
                             <i class="fas fa-images"></i>
-                            <span id="imageCount">0</span> imagens
+                            <span id="imageCount">0</span> imagens na galeria
                         </div>
                         <button type="button" class="btn btn-premium" id="uploadGalleryBtn">
                             <i class="fas fa-plus"></i>
@@ -534,7 +533,7 @@
                     </div>
                     <div class="gallery-upload-text">
                         <strong>Arraste suas fotos aqui</strong>
-                        <div>ou clique para selecionar</div>
+                        <span>ou clique para selecionar</span>
                         <small>Máximo: 10MB por imagem • Formatos: JPG, PNG, WebP</small>
                     </div>
                     <input type="file" id="galleryFileInput" multiple accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;">
@@ -542,10 +541,10 @@
 
                 <!-- Progresso do Upload -->
                 <div class="gallery-progress" id="galleryProgress" style="display: none;">
-                    <div class="gallery-progress-bar">
-                        <div class="gallery-progress-fill" id="galleryProgressFill"></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="galleryProgressFill"></div>
                     </div>
-                    <div class="gallery-progress-text" id="galleryProgressText">Enviando...</div>
+                    <span class="progress-text" id="galleryProgressText">Enviando...</span>
                 </div>
 
                 <!-- Grid de Imagens -->
