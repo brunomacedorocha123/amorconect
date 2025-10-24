@@ -8,20 +8,43 @@ let visitedUserId = null;
 let visitedUserIsPremium = false;
 let currentUserIsPremium = false;
 
-// Inicialização
+// CORREÇÃO: Configurar evento do botão X PRIMEIRO
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Carregado - Configurando botão X...');
+    
+    // Configurar botão X IMEDIATAMENTE
+    const closeBtn = document.getElementById('closeProfile');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            console.log('Botão X clicado - Voltando...');
+            if (document.referrer && document.referrer.includes(window.location.hostname)) {
+                window.history.back();
+            } else {
+                window.location.href = 'home.html';
+            }
+        });
+        console.log('Botão X configurado com sucesso');
+    } else {
+        console.error('Botão X não encontrado!');
+    }
+    
+    // Inicializar o resto da página
     initializeProfilePage();
 });
 
 // Sistema principal
 async function initializeProfilePage() {
     try {
+        console.log('Iniciando página de perfil...');
+        
         // Verificar autenticação do usuário atual
         const authenticated = await checkAuthentication();
         if (!authenticated) return;
 
         // Obter ID do usuário visitado da URL
         visitedUserId = getUserIdFromURL();
+        console.log('ID do usuário visitado:', visitedUserId);
+        
         if (!visitedUserId) {
             showNotification('Perfil não encontrado', 'error');
             setTimeout(() => window.location.href = 'home.html', 2000);
@@ -30,6 +53,7 @@ async function initializeProfilePage() {
 
         // Verificar status premium do usuário atual
         currentUserIsPremium = await checkCurrentUserPremiumStatus();
+        console.log('Usuário atual é premium:', currentUserIsPremium);
 
         // Configurar eventos
         setupEventListeners();
@@ -40,9 +64,11 @@ async function initializeProfilePage() {
         // Configurar galeria baseado nos status premium
         await setupGalleryAccess();
 
+        console.log('Página de perfil carregada com sucesso!');
+
     } catch (error) {
-        showNotification('Erro ao carregar perfil', 'error');
         console.error('Erro na inicialização:', error);
+        showNotification('Erro ao carregar perfil', 'error');
     }
 }
 
@@ -55,6 +81,7 @@ async function checkAuthentication() {
             return false;
         }
         currentUser = user;
+        console.log('Usuário autenticado:', user.id);
         return true;
     } catch (error) {
         window.location.href = 'login.html';
@@ -84,6 +111,7 @@ async function checkCurrentUserPremiumStatus() {
         return profile?.is_premium && 
                (!profile.premium_expires_at || new Date(profile.premium_expires_at) > new Date());
     } catch (error) {
+        console.error('Erro ao verificar premium:', error);
         return false;
     }
 }
@@ -100,30 +128,30 @@ async function checkVisitedUserPremiumStatus(userId) {
         return profile?.is_premium && 
                (!profile.premium_expires_at || new Date(profile.premium_expires_at) > new Date());
     } catch (error) {
+        console.error('Erro ao verificar premium visitado:', error);
         return false;
     }
 }
 
 // Configurar eventos
 function setupEventListeners() {
-    // Botão fechar - volta para página anterior
-    document.getElementById('closeProfile').addEventListener('click', function() {
-        if (document.referrer && document.referrer.includes(window.location.hostname)) {
-            window.history.back();
-        } else {
-            window.location.href = 'home.html';
-        }
-    });
+    console.log('Configurando eventos...');
 
     // Botão enviar mensagem
-    document.getElementById('sendMessageBtn').addEventListener('click', function() {
-        if (visitedUserId) {
-            window.location.href = `mensagens.html?user=${visitedUserId}`;
-        }
-    });
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    if (sendMessageBtn) {
+        sendMessageBtn.addEventListener('click', function() {
+            if (visitedUserId) {
+                window.location.href = `mensagens.html?user=${visitedUserId}`;
+            }
+        });
+    }
 
-    // Botão Pulse (antigo curtir)
-    document.getElementById('likeProfileBtn').addEventListener('click', handlePulseProfile);
+    // Botão Pulse
+    const pulseBtn = document.getElementById('likeProfileBtn');
+    if (pulseBtn) {
+        pulseBtn.addEventListener('click', handlePulseProfile);
+    }
 
     // Modal
     setupModalEvents();
@@ -157,6 +185,8 @@ function setupModalEvents() {
 // Carregar perfil do usuário visitado
 async function loadVisitedUserProfile() {
     try {
+        console.log('Carregando perfil do usuário:', visitedUserId);
+        
         // Carregar dados principais do perfil
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
@@ -168,8 +198,11 @@ async function loadVisitedUserProfile() {
             throw new Error('Perfil não encontrado');
         }
 
+        console.log('Perfil carregado:', profile);
+
         // Verificar se usuário visitado é premium
         visitedUserIsPremium = await checkVisitedUserPremiumStatus(visitedUserId);
+        console.log('Usuário visitado é premium:', visitedUserIsPremium);
 
         // Carregar detalhes públicos
         const { data: userDetails, error: detailsError } = await supabase
@@ -178,6 +211,10 @@ async function loadVisitedUserProfile() {
             .eq('user_id', visitedUserId)
             .single();
 
+        if (detailsError) {
+            console.log('Detalhes não encontrados, usando padrão');
+        }
+
         // Preencher dados no perfil
         fillProfileData(profile, userDetails || {});
 
@@ -185,13 +222,15 @@ async function loadVisitedUserProfile() {
         updateVisitedUserPremiumBadge(visitedUserIsPremium);
 
     } catch (error) {
-        showNotification('Erro ao carregar perfil do usuário', 'error');
         console.error('Erro carregando perfil:', error);
+        showNotification('Erro ao carregar perfil do usuário', 'error');
     }
 }
 
 // Preencher dados do perfil
 function fillProfileData(profile, userDetails) {
+    console.log('Preenchendo dados do perfil...');
+    
     // Informações básicas
     document.getElementById('profileNickname').textContent = profile.nickname || 'Usuário';
     document.getElementById('profileLocation').textContent = profile.display_city || 'Localização não informada';
@@ -203,6 +242,7 @@ function fillProfileData(profile, userDetails) {
         avatarImg.src = profile.avatar_url;
         avatarImg.style.display = 'block';
         avatarFallback.style.display = 'none';
+        console.log('Avatar carregado:', profile.avatar_url);
     }
 
     // Idade
@@ -228,7 +268,7 @@ function fillProfileData(profile, userDetails) {
 
     // Descrição
     const descriptionElement = document.getElementById('profileDescription');
-    if (userDetails.description) {
+    if (userDetails.description && userDetails.description.trim() !== '') {
         descriptionElement.textContent = userDetails.description;
     } else {
         document.getElementById('descriptionSection').style.display = 'none';
@@ -242,6 +282,8 @@ function fillProfileData(profile, userDetails) {
 
     // Estilo de Vida
     fillLifestyle(userDetails);
+
+    console.log('Dados do perfil preenchidos com sucesso!');
 }
 
 // Preencher características
@@ -297,6 +339,8 @@ function fillLifestyle(userDetails) {
 
 // Configurar acesso à galeria
 async function setupGalleryAccess() {
+    console.log('Configurando acesso à galeria...');
+    
     const gallerySection = document.getElementById('gallerySection');
     const galleryPremiumLock = document.getElementById('galleryPremiumLock');
     const galleryContainer = document.getElementById('galleryContainer');
@@ -304,6 +348,7 @@ async function setupGalleryAccess() {
 
     // Se usuário visitado NÃO é premium, não tem galeria
     if (!visitedUserIsPremium) {
+        console.log('Usuário visitado não é premium - ocultando galeria');
         galleryContainer.style.display = 'none';
         galleryPremiumLock.style.display = 'none';
         noGalleryMessage.style.display = 'block';
@@ -313,12 +358,14 @@ async function setupGalleryAccess() {
     // Se usuário visitado É premium, verificar se usuário atual pode ver
     if (currentUserIsPremium) {
         // Usuário premium pode ver galeria
+        console.log('Ambos são premium - mostrando galeria');
         galleryPremiumLock.style.display = 'none';
         noGalleryMessage.style.display = 'none';
         galleryContainer.style.display = 'block';
         await loadVisitedUserGallery();
     } else {
         // Usuário free não pode ver galeria premium
+        console.log('Usuário free tentando ver galeria premium - bloqueando');
         galleryContainer.style.display = 'none';
         noGalleryMessage.style.display = 'none';
         galleryPremiumLock.style.display = 'block';
@@ -328,6 +375,8 @@ async function setupGalleryAccess() {
 // Carregar galeria do usuário visitado (SUA ESTRUTURA)
 async function loadVisitedUserGallery() {
     try {
+        console.log('Carregando galeria do usuário...');
+        
         const { data: galleryImages, error } = await supabase
             .from('user_gallery')
             .select('*')
@@ -337,6 +386,7 @@ async function loadVisitedUserGallery() {
 
         if (error) throw error;
 
+        console.log('Galeria carregada:', galleryImages?.length || 0, 'imagens');
         displayVisitedUserGallery(galleryImages || []);
 
     } catch (error) {
@@ -448,11 +498,13 @@ async function handlePulseProfile() {
     if (!currentUser || !visitedUserId) return;
 
     try {
+        console.log('Enviando Pulse para:', visitedUserId);
+        
         const pulseData = {
             from_user_id: currentUser.id,
             to_user_id: visitedUserId,
             created_at: new Date().toISOString(),
-            type: 'pulse' // padrão
+            type: 'pulse'
         };
 
         // Tentar inserir pulse - se a tabela não existir, apenas mostrar sucesso
@@ -474,7 +526,7 @@ async function handlePulseProfile() {
             showNotification('Pulse enviado! 💖', 'success');
             updatePulseButton();
             
-            // FUTURO: Verificar match se o outro usuário também deu pulse
+            // Verificar match se o outro usuário também deu pulse
             await checkForMatch(visitedUserId);
         }
 
@@ -495,7 +547,7 @@ function updatePulseButton() {
     pulseBtn.disabled = true;
 }
 
-// FUTURO: Verificar se há match (quando ambos deram pulse)
+// Verificar se há match (quando ambos deram pulse)
 async function checkForMatch(targetUserId) {
     try {
         const { data: mutualPulse } = await supabase
@@ -508,34 +560,9 @@ async function checkForMatch(targetUserId) {
         if (mutualPulse) {
             // HOUVE MATCH!
             showNotification('🎉 Match! Vocês deram Pulse um no outro!', 'success');
-            // FUTURO: Criar conversa automática ou notificação
         }
     } catch (error) {
         // Silencioso - não é crítico se a tabela não existir
-    }
-}
-
-// Verificar se usuário já deu Pulse neste perfil (OPCIONAL)
-async function checkIfAlreadyPulsed() {
-    try {
-        const { data, error } = await supabase
-            .from('user_pulses')
-            .select('id')
-            .eq('from_user_id', currentUser.id)
-            .eq('to_user_id', visitedUserId)
-            .single();
-
-        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-            console.error('Erro verificando pulse:', error);
-        }
-
-        // Se encontrou pulse, atualizar botão
-        if (data) {
-            updatePulseButton();
-        }
-
-    } catch (error) {
-        // Silencioso - não é crítico
     }
 }
 
@@ -676,5 +703,4 @@ function showNotification(message, type = 'info') {
 window.openModal = openModal;
 window.closeModal = closeModal;
 
-// Inicializar verificação de Pulse se necessário
-// checkIfAlreadyPulsed();
+console.log('perfil.js carregado com sucesso!');
