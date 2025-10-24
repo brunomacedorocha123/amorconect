@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil - Amor Conect</title>
+    <link rel="stylesheet" href="perfil.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Header Simplificado -->
+    <header class="profile-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="logopulselove.png" alt="Amor Conect">
+                </div>
+                <button class="close-btn" id="closeProfile">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Perfil do Usuário Visitado -->
+            <section class="profile-hero">
+                <div class="profile-avatar-section">
+                    <div class="profile-avatar-large">
+                        <div class="user-avatar-fallback-large" id="profileAvatarFallback">U</div>
+                        <img class="avatar-image-large" id="profileAvatar" style="display: none;" alt="Avatar do usuário">
+                    </div>
+                    <div class="profile-basic-info">
+                        <h1 id="profileNickname">Usuário</h1>
+                        <div class="profile-premium-badge" id="visitedUserPremiumBadge">
+                            <i class="fas fa-user"></i> Free
+                        </div>
+                        <div class="profile-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span id="profileLocation">Cidade, Estado</span>
+                        </div>
+                        <div class="profile-stats">
+                            <div class="stat">
+                                <span class="stat-number" id="profileAge">--</span>
+                                <span class="stat-label">anos</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-number" id="profileDistance">--</span>
+                                <span class="stat-label">km</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botão Enviar Mensagem -->
+                <div class="action-buttons">
+                    <button class="btn btn-primary btn-message" id="sendMessageBtn">
+                        <i class="fas fa-paper-plane"></i> Enviar Mensagem
+                    </button>
+                    <button class="btn btn-secondary" id="likeProfileBtn">
+                        <i class="fas fa-heart"></i> Curtir
+                    </button>
+                </div>
+            </section>
+
+            <!-- Seção Sobre -->
+            <section class="profile-section">
+                <h3><i class="fas fa-user"></i> Sobre</h3>
+                <div class="about-content">
+                    <div class="about-item" id="profileLookingFor">
+                        <strong>Procura:</strong> <span>--</span>
+                    </div>
+                    <div class="about-item" id="profileGender">
+                        <strong>Gênero:</strong> <span>--</span>
+                    </div>
+                    <div class="about-item" id="profileOrientation">
+                        <strong>Orientação:</strong> <span>--</span>
+                    </div>
+                    <div class="about-item" id="profileProfession">
+                        <strong>Profissão:</strong> <span>--</span>
+                    </div>
+                    <div class="about-item" id="profileZodiac">
+                        <strong>Signo:</strong> <span>--</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Descrição Pessoal -->
+            <section class="profile-section" id="descriptionSection">
+                <h3><i class="fas fa-edit"></i> Sobre Mim</h3>
+                <div class="description-content">
+                    <p id="profileDescription">Este usuário ainda não adicionou uma descrição.</p>
+                </div>
+            </section>
+
+            <!-- Características -->
+            <section class="profile-section" id="characteristicsSection">
+                <h3><i class="fas fa-user-tag"></i> Características</h3>
+                <div class="characteristics-grid" id="profileCharacteristics">
+                    <!-- Carregado via JavaScript -->
+                </div>
+            </section>
+
+            <!-- Interesses -->
+            <section class="profile-section" id="interestsSection">
+                <h3><i class="fas fa-star"></i> Interesses</h3>
+                <div class="interests-grid" id="profileInterests">
+                    <!-- Carregado via JavaScript -->
+                </div>
+            </section>
+
+            <!-- Estilo de Vida -->
+            <section class="profile-section" id="lifestyleSection">
+                <h3><i class="fas fa-running"></i> Estilo de Vida</h3>
+                <div class="lifestyle-grid">
+                    <div class="lifestyle-item" id="profileReligion">
+                        <strong>Religião:</strong> <span>--</span>
+                    </div>
+                    <div class="lifestyle-item" id="profileDrinking">
+                        <strong>Bebida:</strong> <span>--</span>
+                    </div>
+                    <div class="lifestyle-item" id="profileSmoking">
+                        <strong>Fumo:</strong> <span>--</span>
+                    </div>
+                    <div class="lifestyle-item" id="profileExercise">
+                        <strong>Exercício:</strong> <span>--</span>
+                    </div>
+                    <div class="lifestyle-item" id="profilePets">
+                        <strong>Pets:</strong> <span>--</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- GALERIA PREMIUM -->
+            <section class="profile-section" id="gallerySection">
+                <h3><i class="fas fa-images"></i> Galeria</h3>
+                
+                <!-- Para usuários Free tentando ver galeria Premium -->
+                <div id="galleryPremiumLock" class="premium-lock" style="display: none;">
+                    <div class="premium-lock-content">
+                        <i class="fas fa-crown"></i>
+                        <h4>Galeria Premium Bloqueada</h4>
+                        <p>Esta galeria é exclusiva para membros Premium</p>
+                        <a href="pricing.html" class="btn btn-premium">
+                            <i class="fas fa-crown"></i> Tornar-se Premium
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Galeria Visível (apenas para premium) -->
+                <div id="galleryContainer" style="display: none;">
+                    <div class="gallery-grid" id="visitedUserGallery">
+                        <!-- Fotos carregadas via JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Usuário Free não tem galeria -->
+                <div id="noGalleryMessage" class="empty-gallery" style="display: none;">
+                    <i class="fas fa-images"></i>
+                    <p>Este usuário não possui galeria</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- MODAL PARA IMAGEM AMPLIADA -->
+    <div id="imageModal" class="image-modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-container">
+            <button class="modal-close-btn" id="closeModalBtn">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="modal-image-wrapper">
+                <img id="modalImageView" src="" alt="Imagem ampliada">
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Configuração Supabase
+        const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
+    <script src="perfil.js"></script>
+</body>
+</html>

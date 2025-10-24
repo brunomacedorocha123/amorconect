@@ -120,48 +120,170 @@
 
         /* Main Content */
         .main-content {
-            padding: 3rem 0;
-            min-height: calc(100vh - 200px);
-            display: flex;
-            align-items: center;
+            padding: 2rem 0;
             flex: 1;
         }
 
         .welcome-section {
             text-align: center;
-            max-width: 600px;
-            margin: 0 auto;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: var(--card-bg);
+            border-radius: 15px;
+            border: 2px solid var(--gold);
         }
 
         .welcome-icon {
-            font-size: 4rem;
-            margin-bottom: 1.5rem;
+            font-size: 3rem;
+            margin-bottom: 1rem;
             color: var(--gold);
         }
 
         .welcome-section h1 {
-            font-size: 2.5rem;
+            font-size: 2rem;
             margin-bottom: 1rem;
             color: var(--light-gold);
         }
 
         .welcome-section p {
-            font-size: 1.2rem;
-            margin-bottom: 2.5rem;
+            font-size: 1.1rem;
             color: var(--beige);
         }
 
+        /* Seção de Usuários */
+        .users-section {
+            margin-top: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: var(--gold);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .user-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 2px solid var(--gold);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .user-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--light-gold);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .user-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .user-avatar-small {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--burgundy), var(--gold));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: bold;
+            font-size: 1.1rem;
+            border: 2px solid var(--gold);
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--light-gold);
+            margin-bottom: 0.3rem;
+        }
+
+        .user-location {
+            color: var(--beige);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-premium-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: var(--gold);
+            color: var(--dark-bg);
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .user-premium-badge.free {
+            background: var(--section-bg);
+            color: var(--beige);
+        }
+
+        .user-details {
+            border-top: 1px solid var(--section-bg);
+            padding-top: 1rem;
+        }
+
+        .user-detail {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .user-detail strong {
+            color: var(--gold);
+        }
+
+        .view-profile-btn {
+            width: 100%;
+            padding: 0.8rem;
+            background: var(--burgundy);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 1rem;
+        }
+
+        .view-profile-btn:hover {
+            background: var(--dark-burgundy);
+            transform: translateY(-2px);
+        }
+
+        /* Quick Actions */
         .quick-actions {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-top: 3rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
         }
 
         .action-card {
             background: var(--card-bg);
-            padding: 2rem;
-            border-radius: 15px;
+            padding: 1.5rem;
+            border-radius: 12px;
             text-align: center;
             border: 2px solid var(--gold);
             transition: var(--transition);
@@ -169,52 +291,42 @@
         }
 
         .action-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-3px);
             border-color: var(--light-gold);
-            box-shadow: 0 10px 25px rgba(198, 166, 100, 0.2);
         }
 
         .action-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
+            font-size: 2rem;
+            margin-bottom: 0.8rem;
             color: var(--gold);
         }
 
         .action-card h3 {
             color: var(--light-gold);
             margin-bottom: 0.5rem;
-            font-size: 1.3rem;
+            font-size: 1.1rem;
         }
 
-        .action-card p {
-            color: var(--beige);
-            font-size: 0.95rem;
-        }
-
-        /* Botão de Preços */
-        .pricing-button {
-            margin-top: 2rem;
+        /* Loading */
+        .loading {
             text-align: center;
+            padding: 2rem;
+            color: var(--beige);
         }
 
-        .btn-pricing {
-            background: transparent;
-            border: 2px solid var(--burgundy);
-            color: var(--burgundy);
-            padding: 0.7rem 1.5rem;
-            border-radius: 30px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            text-decoration: none;
-            display: inline-block;
+        .loading-spinner {
+            border: 3px solid var(--section-bg);
+            border-top: 3px solid var(--gold);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
         }
 
-        .btn-pricing:hover {
-            background: var(--burgundy);
-            color: var(--white);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(166, 91, 91, 0.3);
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         /* Footer */
@@ -273,16 +385,16 @@
                 text-align: center;
             }
 
+            .users-grid {
+                grid-template-columns: 1fr;
+            }
+
             .quick-actions {
                 grid-template-columns: 1fr;
             }
 
             .welcome-section h1 {
-                font-size: 2rem;
-            }
-
-            .main-content {
-                padding: 2rem 0;
+                font-size: 1.8rem;
             }
         }
     </style>
@@ -306,40 +418,45 @@
     <!-- Main Content -->
     <main class="main-content">
         <div class="container">
+            <!-- Welcome Section -->
             <div class="welcome-section">
                 <div class="welcome-icon">👋</div>
                 <h1 id="welcomeMessage">Bem-vindo ao Amor Conect!</h1>
-                <p>Escolha para onde deseja ir:</p>
+                <p>Conheça outras pessoas da comunidade</p>
+            </div>
+
+            <!-- Seção de Usuários -->
+            <div class="users-section">
+                <h2 class="section-title">Pessoas na Comunidade</h2>
                 
-                <div class="quick-actions">
-                    <div class="action-card" onclick="goToPerfil()">
-                        <div class="action-icon">👤</div>
-                        <h3>Meu Perfil</h3>
-                        <p>Gerencie suas informações, fotos e configurações</p>
-                    </div>
-                    
-                    <div class="action-card" onclick="goToMensagens()">
-                        <div class="action-icon">💌</div>
-                        <h3>Mensagens</h3>
-                        <p>Veja suas conversas e conheça novas pessoas</p>
-                    </div>
-                    
-                    <div class="action-card" onclick="goToBusca()">
-                        <div class="action-icon">🔍</div>
-                        <h3>Encontrar Pessoas</h3>
-                        <p>Descubra pessoas compatíveis com você</p>
-                    </div>
-                    
-                    <div class="action-card" onclick="goToConfiguracoes()">
-                        <div class="action-icon">⚙️</div>
-                        <h3>Configurações</h3>
-                        <p>Ajuste preferências e privacidade</p>
+                <div id="usersContainer">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>Carregando usuários...</p>
                     </div>
                 </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <div class="action-card" onclick="goToPerfil()">
+                    <div class="action-icon">👤</div>
+                    <h3>Meu Perfil</h3>
+                </div>
                 
-                <!-- Botão para página de preços -->
-                <div class="pricing-button">
-                    <button class="btn-pricing" onclick="goToPricing()">Ver Planos e Preços</button>
+                <div class="action-card" onclick="goToMensagens()">
+                    <div class="action-icon">💌</div>
+                    <h3>Mensagens</h3>
+                </div>
+                
+                <div class="action-card" onclick="goToBusca()">
+                    <div class="action-icon">🔍</div>
+                    <h3>Buscar</h3>
+                </div>
+                
+                <div class="action-card" onclick="goToPricing()">
+                    <div class="action-icon">👑</div>
+                    <h3>Premium</h3>
                 </div>
             </div>
         </div>
@@ -382,6 +499,8 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        let currentUser = null;
+
         // Funções de Navegação
         function goToPerfil() {
             window.location.href = 'painel.html';
@@ -395,13 +514,12 @@
             window.location.href = 'busca.html';
         }
 
-        function goToConfiguracoes() {
-            window.location.href = 'configuracoes.html';
-        }
-
-        // Nova função para página de preços
         function goToPricing() {
             window.location.href = 'pricing.html';
+        }
+
+        function viewUserProfile(userId) {
+            window.location.href = `perfil.html?id=${userId}`;
         }
 
         async function logout() {
@@ -414,7 +532,7 @@
             }
         }
 
-        // Carregar dados do usuário
+        // Carregar dados do usuário e lista de usuários
         document.addEventListener('DOMContentLoaded', async function() {
             try {
                 const { data: { user }, error } = await supabase.auth.getUser();
@@ -426,6 +544,8 @@
                     return;
                 }
 
+                currentUser = user;
+
                 // Personalizar welcome message
                 const userName = user.user_metadata?.full_name || user.user_metadata?.nickname || user.email?.split('@')[0] || 'Amor Conect';
                 document.getElementById('welcomeMessage').textContent = `Olá, ${userName.split(' ')[0]}!`;
@@ -434,11 +554,112 @@
                 const initials = getUserInitials(userName);
                 document.getElementById('userAvatar').textContent = initials;
 
+                // Carregar lista de usuários
+                await loadUsers();
+
             } catch (error) {
                 console.error('Erro ao carregar usuário:', error);
                 window.location.href = 'login.html';
             }
         });
+
+        // Carregar lista de usuários
+        async function loadUsers() {
+            try {
+                // Buscar perfis de outros usuários (excluindo o usuário atual)
+                const { data: profiles, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .neq('id', currentUser.id)
+                    .limit(20);
+
+                if (error) throw error;
+
+                // Buscar detalhes dos usuários
+                const { data: userDetails, error: detailsError } = await supabase
+                    .from('user_details')
+                    .select('*')
+                    .in('user_id', profiles.map(p => p.id));
+
+                if (detailsError) {
+                    console.error('Erro ao carregar detalhes:', detailsError);
+                }
+
+                displayUsers(profiles, userDetails || []);
+
+            } catch (error) {
+                console.error('Erro ao carregar usuários:', error);
+                document.getElementById('usersContainer').innerHTML = `
+                    <div class="loading">
+                        <p>Erro ao carregar usuários. Tente novamente.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Exibir usuários na tela
+        function displayUsers(profiles, userDetails) {
+            const container = document.getElementById('usersContainer');
+            
+            if (!profiles || profiles.length === 0) {
+                container.innerHTML = `
+                    <div class="loading">
+                        <p>Nenhum usuário encontrado.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Criar mapa de detalhes para acesso rápido
+            const detailsMap = {};
+            userDetails.forEach(detail => {
+                detailsMap[detail.user_id] = detail;
+            });
+
+            container.innerHTML = `
+                <div class="users-grid">
+                    ${profiles.map(profile => {
+                        const details = detailsMap[profile.id] || {};
+                        const age = profile.birth_date ? calculateAge(profile.birth_date) : '--';
+                        const isPremium = profile.is_premium && 
+                                        (!profile.premium_expires_at || new Date(profile.premium_expires_at) > new Date());
+                        
+                        return `
+                            <div class="user-card" onclick="viewUserProfile('${profile.id}')">
+                                <div class="user-header">
+                                    <div class="user-avatar-small">
+                                        ${getUserInitials(profile.nickname || 'U')}
+                                    </div>
+                                    <div class="user-info">
+                                        <div class="user-name">${profile.nickname || 'Usuário'}</div>
+                                        <div class="user-location">
+                                            <i class="fas fa-map-marker-alt"></i> ${profile.display_city || 'Localização não informada'}
+                                        </div>
+                                        <div class="user-premium-badge ${isPremium ? 'premium' : 'free'}">
+                                            ${isPremium ? '👑 Premium' : '👤 Free'}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="user-details">
+                                    <div class="user-detail">
+                                        <strong>Idade:</strong> <span>${age} anos</span>
+                                    </div>
+                                    <div class="user-detail">
+                                        <strong>Procura:</strong> <span>${formatLookingFor(details.looking_for) || 'Não informado'}</span>
+                                    </div>
+                                    <div class="user-detail">
+                                        <strong>Interesses:</strong> <span>${details.interests ? details.interests.slice(0, 2).join(', ') : 'Não informado'}</span>
+                                    </div>
+                                </div>
+                                <button class="view-profile-btn" onclick="event.stopPropagation(); viewUserProfile('${profile.id}')">
+                                    Ver Perfil
+                                </button>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
 
         function getUserInitials(name) {
             return name
@@ -447,6 +668,29 @@
                 .join('')
                 .toUpperCase()
                 .substring(0, 2);
+        }
+
+        function calculateAge(birthDate) {
+            const today = new Date();
+            const birth = new Date(birthDate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            
+            return age;
+        }
+
+        function formatLookingFor(value) {
+            const options = {
+                'amizade': 'Amizade',
+                'namoro': 'Namoro',
+                'relacionamento_serio': 'Relacionamento Sério',
+                'conversa': 'Apenas Conversa'
+            };
+            return options[value] || value;
         }
 
         // Verificar autenticação em tempo real
