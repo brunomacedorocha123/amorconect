@@ -191,43 +191,56 @@ class GalleryManager {
             const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
             const filePath = `${this.currentUser.id}/${fileName}`;
 
+            console.log('📤 Fazendo upload:', { fileName, filePath, size: file.size });
+
             // Fazer upload para o storage
             const { data, error } = await supabase.storage
                 .from('gallery-images')
                 .upload(filePath, file);
 
-            if (error) throw error;
+            if (error) {
+                console.error('❌ Erro no upload storage:', error);
+                throw error;
+            }
 
-            // Salvar metadados no banco
+            console.log('✅ Upload storage OK:', data);
+
+            // CORREÇÃO CRÍTICA: Salvar o filePath COMPLETO no image_url
             const galleryData = {
                 user_id: this.currentUser.id,
-                image_name: file.name,
-                image_url: filePath,
+                image_name: file.name, // Nome original do arquivo
+                image_url: filePath,   // ✅ CORRIGIDO: Salvar path completo
                 image_size: file.size,
                 uploaded_at: new Date().toISOString(),
                 is_active: true
             };
+
+            console.log('💾 Salvando no banco:', galleryData);
 
             const { error: dbError } = await supabase
                 .from('user_gallery')
                 .insert([galleryData]);
 
             if (dbError) {
+                console.error('❌ Erro no banco:', dbError);
                 // Se der erro no banco, remove do storage
                 await supabase.storage.from('gallery-images').remove([filePath]);
                 throw dbError;
             }
 
+            console.log('✅ Imagem salva com sucesso!');
             return true;
 
         } catch (error) {
-            console.error('Erro no upload da imagem:', error);
+            console.error('❌ Erro completo no upload:', error);
             throw error;
         }
     }
 
     async loadUserGallery() {
         try {
+            console.log('🔄 Carregando galeria do usuário:', this.currentUser.id);
+            
             const { data: images, error } = await supabase
                 .from('user_gallery')
                 .select('*')
@@ -235,13 +248,17 @@ class GalleryManager {
                 .eq('is_active', true)
                 .order('uploaded_at', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                console.error('❌ Erro ao carregar galeria:', error);
+                throw error;
+            }
 
+            console.log('📷 Imagens carregadas:', images);
             this.images = images || [];
             this.displayGallery(this.images);
             
         } catch (error) {
-            console.error('Erro ao carregar galeria:', error);
+            console.error('❌ Erro ao carregar galeria:', error);
             this.images = [];
             this.displayGallery([]);
         }
@@ -250,7 +267,10 @@ class GalleryManager {
     displayGallery(images) {
         const galleryGrid = document.getElementById('galleryGrid');
         
-        if (!galleryGrid) return;
+        if (!galleryGrid) {
+            console.error('❌ Elemento galleryGrid não encontrado');
+            return;
+        }
         
         if (!images || images.length === 0) {
             galleryGrid.innerHTML = `
@@ -263,15 +283,25 @@ class GalleryManager {
             return;
         }
         
-        galleryGrid.innerHTML = images.map((image, index) => `
+        console.log('🎨 Exibindo galeria com', images.length, 'imagens');
+        
+        galleryGrid.innerHTML = images.map((image, index) => {
+            const imageUrl = this.getImageUrl(image.image_url);
+            console.log(`🖼️ Imagem ${index}:`, { 
+                name: image.image_name, 
+                url: image.image_url,
+                publicUrl: imageUrl 
+            });
+            
+            return `
             <div class="gallery-item">
                 <div class="gallery-image-container" onclick="galleryManager.openLightbox(${index})">
-                    <img src="${this.getImageUrl(image.image_url)}" 
+                    <img src="${imageUrl}" 
                          alt="${image.image_name}" 
                          class="gallery-image"
                          loading="lazy"
-                         onload="this.style.opacity='1'"
-                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                         onload="console.log('✅ Imagem carregada:', '${image.image_name}')"
+                         onerror="console.error('❌ Erro ao carregar imagem:', '${image.image_name}'); this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <div class="image-fallback" style="display: none;">
                         <i class="fas fa-image"></i>
                         <span>${image.image_name}</span>
@@ -283,16 +313,23 @@ class GalleryManager {
                     </button>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
 
         // Pré-carregar imagens para melhor performance
         this.preloadImages(images);
     }
 
     getImageUrl(imagePath) {
+        // ✅ CORREÇÃO CRÍTICA: Usar o image_path COMPLETO que foi salvo no banco
         const { data } = supabase.storage
             .from('gallery-images')
             .getPublicUrl(imagePath);
+        
+        console.log('🔗 Gerando URL pública:', {
+            path: imagePath,
+            publicUrl: data.publicUrl
+        });
+        
         return data.publicUrl;
     }
 
@@ -312,11 +349,14 @@ class GalleryManager {
         const lightboxImage = lightbox.querySelector('.lightbox-image');
         const caption = lightbox.querySelector('.lightbox-caption');
 
+        console.log('🔍 Abrindo lightbox:', image);
+
         // Mostrar loading
         lightboxImage.style.opacity = '0';
 
         // Carregar imagem
-        lightboxImage.src = this.getImageUrl(image.image_url);
+        const imageUrl = this.getImageUrl(image.image_url);
+        lightboxImage.src = imageUrl;
         lightboxImage.alt = image.image_name;
         
         // Configurar caption
@@ -324,11 +364,13 @@ class GalleryManager {
 
         // Quando a imagem carregar
         lightboxImage.onload = () => {
+            console.log('✅ Lightbox image loaded');
             lightboxImage.style.opacity = '1';
         };
 
         // Em caso de erro
         lightboxImage.onerror = () => {
+            console.error('❌ Erro ao carregar imagem no lightbox:', imageUrl);
             caption.textContent = 'Erro ao carregar imagem';
             lightboxImage.style.opacity = '1';
         };
