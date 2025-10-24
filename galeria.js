@@ -9,40 +9,71 @@ class GalleryManager {
     }
 
     async init() {
-        await this.checkAuthentication();
-        await this.checkPremiumStatus();
-        if (this.isPremium) {
-            await this.loadGallery();
-            this.setupEventListeners();
+        try {
+            await this.checkAuthentication();
+            await this.checkPremiumStatus();
+            this.toggleGallerySection();
+            
+            if (this.isPremium) {
+                await this.loadGallery();
+                this.setupEventListeners();
+            } else {
+                this.showUpgradeMessage();
+            }
+        } catch (error) {
+            console.error('Erro na inicialização da galeria:', error);
         }
     }
 
     async checkAuthentication() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-            window.location.href = 'login.html';
             return;
         }
         this.currentUser = user;
     }
 
     async checkPremiumStatus() {
-        const { data: subscription } = await supabase
-            .from('user_subscriptions')
-            .select('status, plan_type')
-            .eq('user_id', this.currentUser.id)
-            .eq('status', 'active')
-            .single();
+        try {
+            const { data: subscription, error } = await supabase
+                .from('user_subscriptions')
+                .select('status, plan_type')
+                .eq('user_id', this.currentUser.id)
+                .eq('status', 'active')
+                .single();
 
-        this.isPremium = subscription && subscription.plan_type === 'premium';
-        this.toggleGallerySection();
+            this.isPremium = subscription && subscription.plan_type === 'premium';
+        } catch (error) {
+            this.isPremium = false;
+        }
     }
 
     toggleGallerySection() {
         const gallerySection = document.getElementById('gallerySection');
         if (gallerySection) {
-            gallerySection.style.display = this.isPremium ? 'block' : 'none';
+            gallerySection.style.display = 'block';
         }
+    }
+
+    showUpgradeMessage() {
+        const galleryGrid = document.getElementById('galleryGrid');
+        const uploadArea = document.getElementById('galleryUploadArea');
+        
+        if (galleryGrid) {
+            galleryGrid.innerHTML = `
+                <div class="gallery-message info" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                    <i class="fas fa-crown" style="font-size: 3rem; margin-bottom: 1rem; color: var(--gold);"></i>
+                    <h4 style="color: var(--gold); margin-bottom: 1rem;">Galeria Exclusiva Premium</h4>
+                    <p style="margin-bottom: 1.5rem;">Faça upgrade para desbloquear o acesso à galeria de fotos</p>
+                    <a href="pricing.html" class="btn btn-premium">
+                        <i class="fas fa-rocket"></i>
+                        Fazer Upgrade para Premium
+                    </a>
+                </div>
+            `;
+        }
+        
+        if (uploadArea) uploadArea.style.display = 'none';
     }
 
     setupEventListeners() {
@@ -90,20 +121,9 @@ class GalleryManager {
             });
         }
 
-        this.setupPrintProtection();
-    }
-
-    setupPrintProtection() {
         document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
-                e.preventDefault();
-                this.showNotification('A galeria está protegida contra impressão', 'info');
-            }
-        });
-
-        document.addEventListener('contextmenu', (e) => {
-            if (e.target.closest('.gallery-section')) {
-                e.preventDefault();
+            if (e.key === 'Escape') {
+                this.closeModal();
             }
         });
     }
@@ -120,7 +140,7 @@ class GalleryManager {
         );
 
         if (validFiles.length === 0) {
-            this.showNotification('Nenhuma imagem válida selecionada', 'error');
+            this.showNotification('Selecione imagens válidas (máx. 10MB)', 'error');
             return;
         }
 
@@ -162,8 +182,6 @@ class GalleryManager {
                 });
 
             if (dbError) throw dbError;
-
-            this.showNotification(`Imagem ${current}/${total} enviada`, 'success');
 
         } catch (error) {
             this.showNotification(`Erro ao enviar imagem ${current}`, 'error');
@@ -309,25 +327,29 @@ class GalleryManager {
     }
 
     showNotification(message, type = 'info') {
+        // Usar o sistema de notificação existente do painel
+        if (window.showNotification) {
+            window.showNotification(message, type);
+            return;
+        }
+
+        // Fallback caso não exista
         const notification = document.createElement('div');
-        notification.className = `gallery-message ${type}`;
-        notification.textContent = message;
         notification.style.cssText = `
             position: fixed;
             top: 100px;
             right: 20px;
-            z-index: 10000;
-            animation: fadeIn 0.3s ease;
+            background: ${type === 'error' ? '#dc2626' : type === 'success' ? '#16a34a' : '#2563eb'};
+            color: white;
             padding: 1rem 1.5rem;
             border-radius: 10px;
-            color: white;
+            z-index: 10000;
             max-width: 300px;
-            ${type === 'error' ? 'background: #dc2626;' : 
-              type === 'success' ? 'background: #16a34a;' : 
-              'background: #2563eb;'}
+            animation: fadeIn 0.3s ease;
         `;
-
+        notification.textContent = message;
         document.body.appendChild(notification);
+        
         setTimeout(() => {
             if (notification.parentElement) notification.remove();
         }, 4000);
