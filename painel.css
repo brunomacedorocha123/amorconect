@@ -1223,3 +1223,120 @@ footer {
         transform: scale(0.95);
     }
 }
+
+/* BOTÃO DE UPLOAD DA GALERIA */
+.gallery-upload {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+#uploadGalleryBtn {
+    background: var(--vermelho-rosado);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#uploadGalleryBtn:hover {
+    background: var(--lilas);
+    transform: translateY(-2px);
+}
+
+/* GRID DA GALERIA */
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.gallery-item {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    aspect-ratio: 1;
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+}
+
+.gallery-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.gallery-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.gallery-item:hover .gallery-actions {
+    opacity: 1;
+}
+
+.delete-btn {
+    background: #dc2626;
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.delete-btn:hover {
+    background: #b91c1c;
+}
+
+/* GALERIA VAZIA */
+.empty-gallery {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-light);
+}
+
+.empty-gallery i {
+    font-size: 3rem;
+    color: var(--lilas);
+    margin-bottom: 1rem;
+}
+
+/* STATUS DO STORAGE */
+.storage-status {
+    background: var(--card-bg);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.storage-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.storage-fill {
+    height: 100%;
+    background: var(--vermelho-rosado);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}

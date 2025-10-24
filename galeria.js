@@ -4,15 +4,17 @@ class GalleryManager {
         this.images = [];
         this.maxSizeMB = 10;
         this.isPremium = false;
-        this.init();
+        
+        setTimeout(() => this.init(), 100);
     }
 
     async init() {
         try {
             await this.checkAuthentication();
             
-            // ✅ CORREÇÃO: Usar PremiumManager que já funciona
-            this.isPremium = await PremiumManager.checkPremiumStatus();
+            if (window.PremiumManager) {
+                this.isPremium = await PremiumManager.checkPremiumStatus();
+            }
             
             if (this.isPremium) {
                 this.showGalleryForPremium();
@@ -95,23 +97,21 @@ class GalleryManager {
             const filePath = `${this.currentUser.id}/${fileName}`;
 
             const { data, error } = await supabase.storage
-                .from('gallery')
+                .from('gallery-images')
                 .upload(filePath, file);
 
             if (error) throw error;
 
-            const { data: urlData } = await supabase.storage
-                .from('gallery')
+            const { data: urlData } = supabase.storage
+                .from('gallery-images')
                 .getPublicUrl(filePath);
 
             const galleryData = {
                 user_id: this.currentUser.id,
-                image_name: fileName,
+                image_name: file.name,
                 image_url: filePath,
-                file_size_bytes: file.size,
-                mime_type: file.type,
-                public_url: urlData.publicUrl,
-                created_at: new Date().toISOString()
+                image_size: file.size,
+                uploaded_at: new Date().toISOString()
             };
 
             const { error: dbError } = await supabase
@@ -119,7 +119,7 @@ class GalleryManager {
                 .insert([galleryData]);
 
             if (dbError) {
-                await supabase.storage.from('gallery').remove([filePath]);
+                await supabase.storage.from('gallery-images').remove([filePath]);
                 throw dbError;
             }
 
@@ -132,29 +132,17 @@ class GalleryManager {
 
     async loadUserGallery() {
         try {
-            const { data: files, error } = await supabase.storage
-                .from('gallery')
-                .list(this.currentUser.id + '/');
+            const { data: images, error } = await supabase
+                .from('user_gallery')
+                .select('*')
+                .eq('user_id', this.currentUser.id)
+                .eq('is_active', true)
+                .order('uploaded_at', { ascending: false });
 
-            if (error) {
-                if (error.message?.includes('not found')) {
-                    this.displayGallery([]);
-                    return;
-                }
-                throw error;
-            }
+            if (error) throw error;
 
-            const images = files
-                .filter(file => file.name !== '.emptyFolderPlaceholder')
-                .map(file => ({
-                    id: file.id || file.name,
-                    image_url: `${this.currentUser.id}/${file.name}`,
-                    image_name: file.name,
-                    created_at: file.created_at
-                }));
-
-            this.images = images;
-            this.displayGallery(images);
+            this.images = images || [];
+            this.displayGallery(this.images);
             
         } catch (error) {
             this.images = [];
@@ -168,89 +156,43 @@ class GalleryManager {
         if (!images || images.length === 0) {
             galleryGrid.innerHTML = `
                 <div class="empty-gallery">
-                    <i class="fas fa-images" style="font-size: 3rem; color: var(--lilas); margin-bottom: 1rem;"></i>
+                    <i class="fas fa-images"></i>
                     <p>Sua galeria está vazia</p>
-                    <p style="font-size: 0.9rem; color: var(--text-light);">Adicione fotos para compartilhar momentos especiais</p>
+                    <p>Adicione fotos para compartilhar momentos especiais</p>
                 </div>
             `;
             return;
         }
         
-        galleryGrid.innerHTML = images.map((image, index) => `
-            <div class="gallery-item" data-index="${index}">
-                <div class="gallery-image-container">
-                    <img src="" data-src="${image.image_url}" alt="Imagem da galeria" class="gallery-image">
-                    <div class="image-loading">Carregando...</div>
-                </div>
+        galleryGrid.innerHTML = images.map(image => `
+            <div class="gallery-item">
+                <img src="${image.image_url}" alt="${image.image_name}" class="gallery-image">
                 <div class="gallery-actions">
-                    <button class="gallery-btn" onclick="galleryManager.deleteGalleryImage('${image.image_url}')" title="Excluir">
+                    <button class="gallery-btn delete-btn" onclick="galleryManager.deleteGalleryImage(${image.id}, '${image.image_url}')">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
         `).join('');
-        
-        this.loadGalleryImages();
     }
 
-    async loadGalleryImages() {
-        const images = document.querySelectorAll('.gallery-image[data-src]');
-        
-        for (const img of images) {
-            const imageUrl = img.getAttribute('data-src');
-            await this.loadGalleryImage(img, imageUrl);
-        }
-    }
-
-    async loadGalleryImage(imgElement, imageUrl) {
-        try {
-            const { data, error } = await supabase.storage
-                .from('gallery')
-                .createSignedUrl(imageUrl, 3600);
-        
-            if (error) {
-                this.showFallbackImage(imgElement);
-                return;
-            }
-            
-            if (data && data.signedUrl) {
-                imgElement.src = data.signedUrl;
-                imgElement.removeAttribute('data-src');
-                imgElement.style.display = 'block';
-                
-                const loading = imgElement.parentElement.querySelector('.image-loading');
-                if (loading) loading.style.display = 'none';
-            }
-            
-        } catch (error) {
-            this.showFallbackImage(imgElement);
-        }
-    }
-
-    showFallbackImage(imgElement) {
-        imgElement.style.background = 'linear-gradient(135deg, var(--lilas), var(--vermelho-rosado))';
-        imgElement.style.display = 'flex';
-        imgElement.style.alignItems = 'center';
-        imgElement.style.justifyContent = 'center';
-        imgElement.style.color = 'white';
-        imgElement.style.fontSize = '2rem';
-        imgElement.innerHTML = '🖼️';
-        imgElement.removeAttribute('data-src');
-        
-        const loading = imgElement.parentElement.querySelector('.image-loading');
-        if (loading) loading.style.display = 'none';
-    }
-
-    async deleteGalleryImage(imagePath) {
+    async deleteGalleryImage(imageId, imagePath) {
         if (!confirm('Tem certeza que deseja excluir esta imagem?')) return;
         
         try {
-            const { error } = await supabase.storage
-                .from('gallery')
+            const { error: dbError } = await supabase
+                .from('user_gallery')
+                .update({ is_active: false })
+                .eq('id', imageId);
+
+            if (dbError) throw dbError;
+
+            const { error: storageError } = await supabase.storage
+                .from('gallery-images')
                 .remove([imagePath]);
-            
-            if (error) throw error;
-            
+
+            if (storageError) throw storageError;
+
             this.showNotification('Imagem excluída com sucesso', 'success');
             await this.loadUserGallery();
             await this.updateStorageDisplay();
@@ -262,13 +204,15 @@ class GalleryManager {
 
     async getStorageUsage() {
         try {
-            const { data: files, error } = await supabase.storage
-                .from('gallery')
-                .list(this.currentUser.id + '/');
-            
+            const { data: images, error } = await supabase
+                .from('user_gallery')
+                .select('image_size')
+                .eq('user_id', this.currentUser.id)
+                .eq('is_active', true);
+
             if (error) return 0;
             
-            return files.reduce((total, file) => total + (file.metadata?.size || 0), 0);
+            return images.reduce((total, image) => total + (image.image_size || 0), 0);
         } catch (error) {
             return 0;
         }
