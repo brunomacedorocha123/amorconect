@@ -1,29 +1,28 @@
+// Sistema Completo de Galeria
 class GalleryManager {
     constructor() {
         this.currentUser = null;
         this.images = [];
         this.maxSizeMB = 10;
         this.isPremium = false;
-        this.currentLightboxIndex = 0;
+        this.modal = null;
+        this.modalImage = null;
+        this.closeBtn = null;
+        this.clickTimer = null;
         
-        setTimeout(() => this.init(), 100);
+        this.init();
     }
 
     async init() {
         try {
             await this.checkAuthentication();
-            
-            if (window.PremiumManager) {
-                this.isPremium = await PremiumManager.checkPremiumStatus();
-            } else {
-                this.isPremium = false;
-            }
+            await this.checkPremiumStatus();
             
             if (this.isPremium) {
                 this.showGalleryForPremium();
                 await this.loadUserGallery();
                 this.setupGalleryEvents();
-                this.createLightbox();
+                this.createModal();
                 await this.updateStorageDisplay();
             } else {
                 this.hideGalleryForFree();
@@ -39,6 +38,15 @@ class GalleryManager {
             this.currentUser = user;
         } else {
             throw new Error('Usuário não autenticado');
+        }
+    }
+
+    async checkPremiumStatus() {
+        if (window.PremiumManager) {
+            this.isPremium = await PremiumManager.checkPremiumStatus();
+        } else {
+            const premiumBadge = document.querySelector('.premium-badge');
+            this.isPremium = premiumBadge?.classList.contains('premium') || false;
         }
     }
 
@@ -74,66 +82,55 @@ class GalleryManager {
         }
     }
 
-    createLightbox() {
-        if (!document.getElementById('lightboxOverlay')) {
-            const lightboxHTML = `
-                <div id="lightboxOverlay" class="lightbox-overlay">
-                    <div class="lightbox-content">
-                        <button class="lightbox-close">
+    createModal() {
+        if (!document.getElementById('imageModal')) {
+            const modalHTML = `
+                <div id="imageModal" class="image-modal">
+                    <div class="modal-overlay"></div>
+                    <div class="modal-container">
+                        <button class="modal-close-btn" id="closeModalBtn">
                             <i class="fas fa-times"></i>
                         </button>
-                        <div class="lightbox-nav">
-                            <button class="lightbox-prev">
-                                <i class="fas fa-chevron-left"></i>
-                            </button>
-                            <button class="lightbox-next">
-                                <i class="fas fa-chevron-right"></i>
-                            </button>
+                        <div class="modal-image-wrapper">
+                            <img id="modalImageView" src="" alt="Imagem ampliada">
                         </div>
-                        <img class="lightbox-image" src="" alt="">
-                        <div class="lightbox-caption"></div>
                     </div>
                 </div>
             `;
-            document.body.insertAdjacentHTML('beforeend', lightboxHTML);
-            this.setupLightboxEvents();
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            this.setupModalEvents();
         }
+        
+        this.modal = document.getElementById('imageModal');
+        this.modalImage = document.getElementById('modalImageView');
+        this.closeBtn = document.getElementById('closeModalBtn');
     }
 
-    setupLightboxEvents() {
-        const lightbox = document.getElementById('lightboxOverlay');
-        const closeBtn = lightbox.querySelector('.lightbox-close');
-        const prevBtn = lightbox.querySelector('.lightbox-prev');
-        const nextBtn = lightbox.querySelector('.lightbox-next');
-        const lightboxImage = lightbox.querySelector('.lightbox-image');
-
-        closeBtn.addEventListener('click', () => this.closeLightbox());
-        lightbox.addEventListener('click', (e) => {
-            if (e.target === lightbox) this.closeLightbox();
+    setupModalEvents() {
+        this.closeBtn.addEventListener('click', () => this.closeModal());
+        
+        this.modal.addEventListener('click', (e) => {
+            if (e.target === this.modal) this.closeModal();
         });
-
-        prevBtn.addEventListener('click', () => this.showPreviousImage());
-        nextBtn.addEventListener('click', () => this.showNextImage());
 
         document.addEventListener('keydown', (e) => {
-            if (!lightbox.classList.contains('active')) return;
-            
-            switch(e.key) {
-                case 'Escape':
-                    this.closeLightbox();
-                    break;
-                case 'ArrowLeft':
-                    this.showPreviousImage();
-                    break;
-                case 'ArrowRight':
-                    this.showNextImage();
-                    break;
+            if (e.key === 'Escape' && this.modal.classList.contains('active')) {
+                this.closeModal();
             }
         });
+    }
 
-        lightboxImage.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
+    openModal(imageSrc) {
+        this.modalImage.src = imageSrc;
+        this.modal.classList.add('active');
+        // SEM travar o scroll - correção do bug
+    }
+
+    closeModal() {
+        this.modal.classList.remove('active');
+        setTimeout(() => {
+            this.modalImage.src = '';
+        }, 300);
     }
 
     async handleGalleryUpload(files) {
@@ -250,7 +247,7 @@ class GalleryManager {
         
         galleryGrid.innerHTML = images.map((image, index) => `
             <div class="gallery-item">
-                <div class="gallery-image-container" onclick="galleryManager.openLightbox(${index})">
+                <div class="gallery-image-container">
                     <img src="${this.getImageUrl(image.image_url)}" 
                          alt="${image.image_name}" 
                          class="gallery-image"
@@ -262,12 +259,55 @@ class GalleryManager {
                     </div>
                 </div>
                 <div class="gallery-actions">
-                    <button class="delete-btn" onclick="galleryManager.deleteGalleryImage(${image.id}, '${image.image_url}')">
+                    <button class="delete-btn">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
         `).join('');
+
+        // Adicionar eventos após criar os elementos
+        this.addImageEvents();
+    }
+
+    addImageEvents() {
+        const galleryItems = document.querySelectorAll('.gallery-item');
+        
+        galleryItems.forEach((item, index) => {
+            const imgElement = item.querySelector('.gallery-image');
+            const deleteBtn = item.querySelector('.delete-btn');
+            const imageSrc = imgElement.src;
+
+            // Clique único
+            imgElement.addEventListener('click', (e) => {
+                if (this.clickTimer) {
+                    clearTimeout(this.clickTimer);
+                    this.clickTimer = null;
+                }
+                this.clickTimer = setTimeout(() => {
+                    this.openModal(imageSrc);
+                }, 300);
+            });
+
+            // Duplo clique
+            imgElement.addEventListener('dblclick', (e) => {
+                if (this.clickTimer) {
+                    clearTimeout(this.clickTimer);
+                    this.clickTimer = null;
+                }
+                this.openModal(imageSrc);
+            });
+
+            // Botão deletar
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const imageId = this.images[index]?.id;
+                const imagePath = this.images[index]?.image_url;
+                if (imageId && imagePath) {
+                    this.deleteGalleryImage(imageId, imagePath);
+                }
+            });
+        });
     }
 
     getImageUrl(imagePath) {
@@ -275,74 +315,6 @@ class GalleryManager {
             .from('gallery-images')
             .getPublicUrl(imagePath);
         return data.publicUrl;
-    }
-
-    openLightbox(index) {
-        if (index < 0 || index >= this.images.length) return;
-        
-        this.currentLightboxIndex = index;
-        const image = this.images[index];
-        const lightbox = document.getElementById('lightboxOverlay');
-        const lightboxImage = lightbox.querySelector('.lightbox-image');
-        const caption = lightbox.querySelector('.lightbox-caption');
-
-        lightboxImage.style.opacity = '0';
-        lightboxImage.src = this.getImageUrl(image.image_url);
-        lightboxImage.alt = image.image_name;
-        caption.textContent = image.image_name;
-
-        lightboxImage.onload = () => {
-            lightboxImage.style.opacity = '1';
-        };
-
-        lightboxImage.onerror = () => {
-            caption.textContent = 'Erro ao carregar imagem';
-            lightboxImage.style.opacity = '1';
-        };
-
-        lightbox.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        this.updateNavigationButtons();
-    }
-
-    closeLightbox() {
-        const lightbox = document.getElementById('lightboxOverlay');
-        const lightboxImage = lightbox.querySelector('.lightbox-image');
-        
-        lightbox.classList.remove('active');
-        document.body.style.overflow = '';
-        
-        setTimeout(() => {
-            lightboxImage.src = '';
-        }, 300);
-    }
-
-    showPreviousImage() {
-        if (this.images.length <= 1) return;
-        
-        this.currentLightboxIndex = (this.currentLightboxIndex - 1 + this.images.length) % this.images.length;
-        this.openLightbox(this.currentLightboxIndex);
-    }
-
-    showNextImage() {
-        if (this.images.length <= 1) return;
-        
-        this.currentLightboxIndex = (this.currentLightboxIndex + 1) % this.images.length;
-        this.openLightbox(this.currentLightboxIndex);
-    }
-
-    updateNavigationButtons() {
-        const lightbox = document.getElementById('lightboxOverlay');
-        const prevBtn = lightbox.querySelector('.lightbox-prev');
-        const nextBtn = lightbox.querySelector('.lightbox-next');
-
-        if (this.images.length <= 1) {
-            prevBtn.style.display = 'none';
-            nextBtn.style.display = 'none';
-        } else {
-            prevBtn.style.display = 'flex';
-            nextBtn.style.display = 'flex';
-        }
     }
 
     async deleteGalleryImage(imageId, imagePath) {
@@ -442,20 +414,12 @@ class GalleryManager {
         this.showGalleryForPremium();
         await this.loadUserGallery();
         this.setupGalleryEvents();
-        this.createLightbox();
+        this.createModal();
         await this.updateStorageDisplay();
-    }
-
-    cleanup() {
-        this.images = [];
-        this.currentLightboxIndex = 0;
-        const galleryGrid = document.getElementById('galleryGrid');
-        if (galleryGrid) {
-            galleryGrid.innerHTML = '';
-        }
     }
 }
 
+// Inicializar quando o DOM estiver pronto
 let galleryManager;
 
 document.addEventListener('DOMContentLoaded', () => {
