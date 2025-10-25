@@ -6,8 +6,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
 let currentFilter = 'all';
-let currentPage = 0;
-const usersPerPage = 12;
+const maxHomeCards = 8;
 
 // ========== INICIALIZAÇÃO ==========
 document.addEventListener('DOMContentLoaded', function() {
@@ -20,7 +19,6 @@ async function initializeApp() {
         setupEventListeners();
         await loadUserProfile();
         await loadUsers();
-        await updateQuickStats();
     }
 }
 
@@ -56,11 +54,6 @@ function setupEventListeners() {
             setActiveFilter(filter);
         });
     });
-
-    const loadMoreBtn = document.getElementById('loadMoreBtn');
-    if (loadMoreBtn) {
-        loadMoreBtn.addEventListener('click', loadMoreUsers);
-    }
 
     const navLinks = document.querySelectorAll('.nav-link');
     navLinks.forEach(link => {
@@ -145,7 +138,7 @@ async function fetchUsers() {
         .neq('id', currentUser.id)
         .eq('is_invisible', false)
         .order('last_online_at', { ascending: false })
-        .range(currentPage * usersPerPage, (currentPage + 1) * usersPerPage - 1);
+        .limit(50);
 
     if (currentFilter === 'online') {
         const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
@@ -159,7 +152,9 @@ async function fetchUsers() {
     if (error) return [];
 
     const filteredProfiles = await filterBySexualCompatibility(profiles);
-    return filteredProfiles;
+    const prioritizedUsers = prioritizeUsers(filteredProfiles);
+    
+    return prioritizedUsers.slice(0, maxHomeCards);
 }
 
 async function filterBySexualCompatibility(profiles) {
@@ -190,11 +185,7 @@ function isSexuallyCompatible(currentGender, currentOrientation, profileGender, 
     }
 
     if (currentOrientation === 'heterossexual') {
-        if (currentGender === 'masculino') {
-            return profileGender === 'feminino';
-        } else if (currentGender === 'feminino') {
-            return profileGender === 'masculino';
-        }
+        return profileGender !== currentGender;
     } else if (currentOrientation === 'homossexual') {
         return profileGender === currentGender;
     } else if (currentOrientation === 'bissexual') {
@@ -204,39 +195,36 @@ function isSexuallyCompatible(currentGender, currentOrientation, profileGender, 
     return true;
 }
 
+function prioritizeUsers(users) {
+    return users.sort((a, b) => {
+        const aPremium = a.is_premium && (!a.premium_expires_at || new Date(a.premium_expires_at) > new Date());
+        const bPremium = b.is_premium && (!b.premium_expires_at || new Date(b.premium_expires_at) > new Date());
+        
+        if (aPremium && !bPremium) return -1;
+        if (!aPremium && bPremium) return 1;
+        
+        const aOnline = isUserOnline(a.last_online_at);
+        const bOnline = isUserOnline(b.last_online_at);
+        if (aOnline && !bOnline) return -1;
+        if (!aOnline && bOnline) return 1;
+        
+        return 0;
+    });
+}
+
 function displayUsers(profiles) {
     const usersGrid = document.getElementById('usersGrid');
     
     if (!profiles || profiles.length === 0) {
-        if (currentPage === 0) {
-            usersGrid.innerHTML = `
-                <div class="loading-state">
-                    <p>Nenhuma pessoa encontrada no momento.</p>
-                </div>
-            `;
-        } else {
-            usersGrid.innerHTML += `
-                <div class="loading-state">
-                    <p>Não há mais pessoas para carregar.</p>
-                </div>
-            `;
-        }
-        document.getElementById('loadMoreBtn').style.display = 'none';
+        usersGrid.innerHTML = `
+            <div class="loading-state">
+                <p>Nenhuma pessoa encontrada no momento.</p>
+            </div>
+        `;
         return;
     }
 
-    if (currentPage === 0) {
-        usersGrid.innerHTML = '';
-    }
-
-    usersGrid.innerHTML += profiles.map(profile => createUserCard(profile)).join('');
-
-    const loadMoreBtn = document.getElementById('loadMoreBtn');
-    if (profiles.length < usersPerPage) {
-        loadMoreBtn.style.display = 'none';
-    } else {
-        loadMoreBtn.style.display = 'block';
-    }
+    usersGrid.innerHTML = profiles.map(profile => createUserCard(profile)).join('');
 }
 
 function createUserCard(profile) {
@@ -291,7 +279,6 @@ function createUserCard(profile) {
 // ========== FILTROS ==========
 function setActiveFilter(filter) {
     currentFilter = filter;
-    currentPage = 0;
     
     document.querySelectorAll('.btn-filter').forEach(btn => {
         btn.classList.remove('active');
@@ -299,27 +286,6 @@ function setActiveFilter(filter) {
     document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
     
     loadUsers();
-}
-
-// ========== CARREGAR MAIS ==========
-async function loadMoreUsers() {
-    currentPage++;
-    await loadUsers();
-}
-
-// ========== ATUALIZAR ESTATÍSTICAS ==========
-async function updateQuickStats() {
-    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-    const { count: onlineCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .gte('last_online_at', fifteenMinutesAgo)
-        .neq('id', currentUser.id)
-        .eq('is_invisible', false);
-
-    document.getElementById('onlineUsers').textContent = onlineCount || 0;
-    document.getElementById('profileViews').textContent = '0';
-    document.getElementById('pulseCount').textContent = '0';
 }
 
 // ========== NAVEGAÇÃO ==========

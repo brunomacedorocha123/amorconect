@@ -189,18 +189,6 @@
         font-size: 1.1rem;
     }
 
-    /* QUICK STATS MOBILE */
-    .quick-stats {
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .stat-card {
-        width: 100%;
-        max-width: 300px;
-        margin: 0 auto;
-    }
-
     /* USERS GRID MOBILE */
     .users-grid {
         grid-template-columns: 1fr;
