@@ -60,10 +60,34 @@ function fillProfileData(profile, details) {
     document.getElementById('profileNickname').textContent = profile.nickname || 'Usuário';
     document.getElementById('profileLocation').textContent = profile.display_city || 'Cidade não informada';
     
+    // ✅ INDICADOR ONLINE/OFFLINE
+    const isOnline = isUserOnline(profile.last_online_at);
+    updateOnlineStatusIndicator(isOnline);
+    
     if (profile.avatar_url) {
         document.getElementById('profileAvatar').src = profile.avatar_url;
         document.getElementById('profileAvatar').style.display = 'block';
         document.getElementById('profileAvatarFallback').style.display = 'none';
+        
+        // ✅ Atualizar indicador no avatar com imagem
+        const avatarContainer = document.querySelector('.profile-avatar-large');
+        if (avatarContainer) {
+            if (isOnline) {
+                avatarContainer.classList.add('online');
+            } else {
+                avatarContainer.classList.add('offline');
+            }
+        }
+    } else {
+        // ✅ Atualizar indicador no avatar sem imagem
+        const avatarFallback = document.getElementById('profileAvatarFallback');
+        if (avatarFallback) {
+            if (isOnline) {
+                avatarFallback.classList.add('online');
+            } else {
+                avatarFallback.classList.add('offline');
+            }
+        }
     }
 
     if (profile.birth_date) {
@@ -73,7 +97,12 @@ function fillProfileData(profile, details) {
 
     updatePremiumBadge(profile);
 
-    // ATUALIZADO: Inclui status de relacionamento
+    // ✅ Verificar se usuário está invisível
+    if (profile.is_invisible) {
+        document.getElementById('profileLocation').textContent = 'Localização oculta';
+        hideSensitiveInfo();
+    }
+
     updateField('profileRelationshipStatus', details.relationship_status);
     updateField('profileLookingFor', details.looking_for);
     updateField('profileGender', details.gender);
@@ -98,24 +127,50 @@ function fillProfileData(profile, details) {
     checkGalleryAccess();
 }
 
-// ==================== FUNÇÕES DE FORMATAÇÃO PARA PORTUGUÊS ====================
-
-// NOVA FUNÇÃO: Formatar Status de Relacionamento
-function formatRelationshipStatus(value) {
-    const options = {
-        'solteiro': 'Solteiro',
-        'solteira': 'Solteira',
-        'divorciado': 'Divorciado',
-        'divorciada': 'Divorciada',
-        'casado': 'Casado',
-        'casada': 'Casada',
-        'viúvo': 'Viúvo',
-        'viúva': 'Viúva',
-        'noivo': 'Noivo',
-        'noiva': 'Noiva'
-    };
-    return options[value] || value;
+// ✅ FUNÇÃO PARA ATUALIZAR INDICADOR ONLINE/OFFLINE
+function updateOnlineStatusIndicator(isOnline) {
+    const onlineIndicator = document.getElementById('onlineStatusIndicator');
+    
+    if (!onlineIndicator) {
+        // Criar indicador se não existir
+        const avatarContainer = document.querySelector('.profile-avatar-large');
+        if (avatarContainer) {
+            const indicator = document.createElement('div');
+            indicator.id = 'onlineStatusIndicator';
+            indicator.className = `online-status-indicator ${isOnline ? 'online' : 'offline'}`;
+            indicator.title = isOnline ? 'Online agora' : 'Offline';
+            avatarContainer.appendChild(indicator);
+        }
+        return;
+    }
+    
+    // Atualizar indicador existente
+    onlineIndicator.className = `online-status-indicator ${isOnline ? 'online' : 'offline'}`;
+    onlineIndicator.title = isOnline ? 'Online agora' : 'Offline';
 }
+
+// ✅ FUNÇÃO PARA OCULTAR INFORMAÇÕES SENSÍVEIS (MODO INVISÍVEL)
+function hideSensitiveInfo() {
+    // Ocultar informações detalhadas de localização
+    const locationElements = document.querySelectorAll('.profile-location, [data-location]');
+    locationElements.forEach(el => {
+        if (el.id !== 'profileLocation') {
+            el.style.display = 'none';
+        }
+    });
+    
+    // Adicionar aviso de modo invisível
+    const profileHeader = document.querySelector('.profile-basic-info');
+    if (profileHeader && !document.getElementById('invisibleWarning')) {
+        const warning = document.createElement('div');
+        warning.id = 'invisibleWarning';
+        warning.className = 'invisible-warning';
+        warning.innerHTML = '<i class="fas fa-eye-slash"></i> Modo invisível ativado';
+        profileHeader.appendChild(warning);
+    }
+}
+
+// ==================== FUNÇÕES DE FORMATAÇÃO PARA PORTUGUÊS ====================
 
 function formatLookingFor(value) {
     const options = {
@@ -231,9 +286,7 @@ function updateField(elementId, value) {
             let displayValue = value;
             
             // APLICA FORMATAÇÃO PARA PORTUGUÊS
-            if (elementId === 'profileRelationshipStatus') {
-                displayValue = formatRelationshipStatus(value);
-            } else if (elementId === 'profileLookingFor') {
+            if (elementId === 'profileLookingFor') {
                 displayValue = formatLookingFor(value);
             } else if (elementId === 'profileGender') {
                 displayValue = formatGender(value);
@@ -320,14 +373,14 @@ async function checkGalleryAccess() {
     const isCurrentUserPremium = await checkCurrentUserPremium();
     
     if (isCurrentUserPremium) {
-        if (premiumLock) premiumLock.style.display = 'none';
-        if (galleryContainer) galleryContainer.style.display = 'block';
-        if (noGallery) noGallery.style.display = 'none';
+        premiumLock.style.display = 'none';
+        galleryContainer.style.display = 'block';
+        noGallery.style.display = 'none';
         await loadUserGallery();
     } else {
-        if (premiumLock) premiumLock.style.display = 'block';
-        if (galleryContainer) galleryContainer.style.display = 'none';
-        if (noGallery) noGallery.style.display = 'none';
+        premiumLock.style.display = 'block';
+        galleryContainer.style.display = 'none';
+        noGallery.style.display = 'none';
     }
 }
 
@@ -405,6 +458,12 @@ function calculateAge(birthDate) {
     return age;
 }
 
+function isUserOnline(lastOnlineAt) {
+    if (!lastOnlineAt) return false;
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+    return new Date(lastOnlineAt) > fifteenMinutesAgo;
+}
+
 function getImageUrl(imagePath) {
     const { data } = supabase.storage
         .from('gallery-images')
@@ -462,5 +521,7 @@ supabase.auth.onAuthStateChange((event, session) => {
 window.profileViewer = {
     initializeProfile,
     loadUserData,
-    openGalleryImage
+    openGalleryImage,
+    isUserOnline,
+    updateOnlineStatusIndicator
 };
