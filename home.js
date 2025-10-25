@@ -1,4 +1,4 @@
-// home.js - VERSÃO REAL
+// home.js - VERSÃO CORRIGIDA
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -248,10 +248,8 @@ window.closeUserActionsModal = function() {
 
 window.blockUser = function() {
     if (!currentBlockingUser) return;
-    showBlockConfirmationModal();
-}
-
-window.showBlockConfirmationModal = function() {
+    
+    // Configura o modal de confirmação
     const isPremium = window.PremiumManager ? window.PremiumManager.userPlanInfo?.is_premium : false;
     
     const freeWarning = document.getElementById('freeBlockWarning');
@@ -269,6 +267,8 @@ window.showBlockConfirmationModal = function() {
     const userName = currentBlockingUser.name || 'este usuário';
     message.textContent = `Tem certeza que deseja bloquear ${userName}?`;
 
+    // Fecha o modal atual e abre o de confirmação
+    closeAllModals();
     showModal('blockConfirmModal');
 }
 
@@ -295,8 +295,10 @@ window.confirmBlockUser = async function() {
         showNotification('Usuário bloqueado com sucesso!');
         closeAllModals();
         
+        // Recarrega a lista para remover o usuário bloqueado
         await loadUsers();
 
+        // Se for free, recarrega a página
         const isPremium = window.PremiumManager ? window.PremiumManager.userPlanInfo?.is_premium : false;
         if (!isPremium) {
             setTimeout(() => {
