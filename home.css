@@ -361,7 +361,7 @@ nav a.active {
     transition: var(--transition);
     border: 1px solid rgba(0, 0, 0, 0.05);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     cursor: pointer;
 }
 
@@ -380,35 +380,36 @@ nav a.active {
     background: linear-gradient(90deg, var(--gold), var(--burgundy));
 }
 
-/* Botão de 3 pontos */
+/* Botão de 3 pontos - POSIÇÃO CORRIGIDA */
 .user-actions-btn {
     position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: rgba(255, 255, 255, 0.9);
+    top: 0.8rem;
+    left: 0.8rem;
+    background: rgba(255, 255, 255, 0.95);
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 50%;
-    width: 35px;
-    height: 35px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: var(--transition);
     backdrop-filter: blur(10px);
-    z-index: 10;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .user-actions-btn:hover {
     background: var(--white);
     border-color: var(--gold);
     transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .user-actions-btn i {
     color: var(--text-light);
-    font-size: 0.9rem;
+    font-size: 0.8rem;
 }
 
 .user-actions-btn:hover i {
@@ -1003,5 +1004,16 @@ footer {
     .modal-content {
         width: 95%;
         margin: 1rem;
+    }
+    
+    .user-actions-btn {
+        top: 0.6rem;
+        left: 0.6rem;
+        width: 30px;
+        height: 30px;
+    }
+    
+    .user-actions-btn i {
+        font-size: 0.7rem;
     }
 }

@@ -5,7 +5,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
 let currentFilter = 'all';
-const maxHomeCards = 8;
+let currentBlockingUser = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
@@ -46,6 +46,18 @@ function setupEventListeners() {
             const filter = this.getAttribute('data-filter');
             setActiveFilter(filter);
         });
+    });
+
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal')) {
+            closeAllModals();
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeAllModals();
+        }
     });
 }
 
@@ -117,17 +129,26 @@ async function loadUsers() {
         return;
     }
 
-    // Filtrar usuários bloqueados
     const filteredProfiles = await filterBlockedUsers(profiles);
     displayUsers(filteredProfiles);
 }
 
 function displayUsers(profiles) {
     const usersGrid = document.getElementById('usersGrid');
-    usersGrid.innerHTML = profiles.map(profile => `
+    
+    usersGrid.innerHTML = profiles.map(profile => {
+        const safeProfile = {
+            id: profile.id,
+            nickname: profile.nickname || 'Usuário',
+            avatar_url: profile.avatar_url,
+            display_city: profile.display_city,
+            is_premium: profile.is_premium,
+            last_online_at: profile.last_online_at
+        };
+        
+        return `
         <div class="user-card" onclick="viewUserProfile('${profile.id}')">
-            <!-- Botão de 3 pontos para ações -->
-            <div class="user-actions-btn" onclick="event.stopPropagation(); openUserActions('${profile.id}', ${JSON.stringify(profile).replace(/'/g, "\\'")})">
+            <div class="user-actions-btn" onclick="event.stopPropagation(); openUserActions('${profile.id}', ${JSON.stringify(safeProfile).replace(/'/g, "\\'")})">
                 <i class="fas fa-ellipsis-v"></i>
             </div>
             
@@ -162,22 +183,20 @@ function displayUsers(profiles) {
                 <i class="fas fa-user"></i> Ver Perfil
             </button>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
-// Função para filtrar usuários bloqueados
 async function filterBlockedUsers(users) {
     try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return users;
 
-        // Buscar IDs de usuários que bloqueei
         const { data: blockedByMe } = await supabase
             .from('user_blocks')
             .select('blocked_id')
             .eq('blocker_id', user.id);
 
-        // Buscar IDs de usuários que me bloquearam
         const { data: blockedMe } = await supabase
             .from('user_blocks')
             .select('blocker_id')
@@ -186,10 +205,8 @@ async function filterBlockedUsers(users) {
         const blockedByMeIds = (blockedByMe || []).map(item => item.blocked_id);
         const blockedMeIds = (blockedMe || []).map(item => item.blocker_id);
 
-        // Combinar ambas as listas
         const allBlockedIds = [...new Set([...blockedByMeIds, ...blockedMeIds])];
 
-        // Filtrar usuários
         return users.filter(user => !allBlockedIds.includes(user.id));
 
     } catch (error) {
@@ -219,77 +236,28 @@ function viewUserProfile(userId) {
     window.location.href = `perfil.html?id=${userId}`;
 }
 
-// Funções de Navegação
-function goToPerfil() { window.location.href = 'painel.html'; }
-function goToMensagens() { window.location.href = 'mensagens.html'; }
-function goToBusca() { window.location.href = 'busca.html'; }
-function goToBloqueados() { window.location.href = 'bloqueados.html'; }
-function goToPricing() { window.location.href = 'pricing.html'; }
-
-async function logout() {
-    const { error } = await supabase.auth.signOut();
-    if (!error) window.location.href = 'login.html';
-}
-
-// Sistema de Bloqueios - Funções Globais
-let currentBlockingUser = null;
-
-// Abrir modal de ações do usuário
-async function openUserActions(userId, userData) {
+// SISTEMA DE BLOQUEIO - FUNCIONAMENTO DOS 3 PONTOS
+function openUserActions(userId, userData) {
     currentBlockingUser = { id: userId, ...userData };
-    
-    // Verificar se já está bloqueado
-    const isBlocked = await checkIfBlocked(userId);
     
     const blockBtn = document.getElementById('blockBtnText');
     if (blockBtn) {
-        blockBtn.textContent = isBlocked ? 'Desbloquear Usuário' : 'Bloquear Usuário';
+        blockBtn.textContent = 'Bloquear Usuário';
     }
 
     showModal('userActionsModal');
 }
 
-// Verificar se usuário está bloqueado
-async function checkIfBlocked(userId) {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return false;
-
-        const { data } = await supabase
-            .from('user_blocks')
-            .select('id')
-            .eq('blocker_id', user.id)
-            .eq('blocked_id', userId)
-            .single();
-
-        return data !== null;
-    } catch (error) {
-        return false;
-    }
-}
-
-// Fechar modal de ações
 function closeUserActionsModal() {
     closeAllModals();
 }
 
-// Iniciar processo de bloqueio
-async function blockUser() {
+function blockUser() {
     if (!currentBlockingUser) return;
-
-    const isBlocked = await checkIfBlocked(currentBlockingUser.id);
-    
-    if (isBlocked) {
-        await unblockUser();
-        return;
-    }
-
     showBlockConfirmationModal();
 }
 
-// Mostrar modal de confirmação de bloqueio
 function showBlockConfirmationModal() {
-    // Verificar se usuário é premium
     const isPremium = window.PremiumManager ? window.PremiumManager.userPlanInfo?.is_premium : false;
     
     const freeWarning = document.getElementById('freeBlockWarning');
@@ -310,12 +278,10 @@ function showBlockConfirmationModal() {
     showModal('blockConfirmModal');
 }
 
-// Fechar modal de confirmação
 function closeBlockConfirmModal() {
     closeAllModals();
 }
 
-// Confirmar bloqueio do usuário
 async function confirmBlockUser() {
     if (!currentBlockingUser) return;
 
@@ -335,10 +301,8 @@ async function confirmBlockUser() {
         showNotification('Usuário bloqueado com sucesso!');
         closeAllModals();
         
-        // Recarregar a lista de usuários para remover o bloqueado
         await loadUsers();
 
-        // Se for usuário free, recarregar a página para garantir
         const isPremium = window.PremiumManager ? window.PremiumManager.userPlanInfo?.is_premium : false;
         if (!isPremium) {
             setTimeout(() => {
@@ -351,40 +315,11 @@ async function confirmBlockUser() {
     }
 }
 
-// Desbloquear usuário
-async function unblockUser() {
-    if (!currentBlockingUser) return;
-
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { error } = await supabase
-            .from('user_blocks')
-            .delete()
-            .eq('blocker_id', user.id)
-            .eq('blocked_id', currentBlockingUser.id);
-
-        if (error) throw error;
-
-        showNotification('Usuário desbloqueado com sucesso!');
-        closeAllModals();
-
-        // Recarregar lista de usuários
-        await loadUsers();
-
-    } catch (error) {
-        showNotification('Erro ao desbloquear usuário. Tente novamente.');
-    }
-}
-
-// Denunciar usuário
 function reportUser() {
     showNotification('Funcionalidade de denúncia em desenvolvimento');
     closeAllModals();
 }
 
-// Ver perfil a partir do modal
 function viewProfileFromModal() {
     if (currentBlockingUser) {
         closeAllModals();
@@ -392,7 +327,7 @@ function viewProfileFromModal() {
     }
 }
 
-// Sistema de Modais
+// SISTEMA DE MODAIS
 function showModal(modalId) {
     closeAllModals();
     const modal = document.getElementById(modalId);
@@ -410,21 +345,21 @@ function closeAllModals() {
     currentBlockingUser = null;
 }
 
-// Sistema de Notificações Simples
+// SISTEMA DE NOTIFICAÇÕES
 function showNotification(message) {
-    // Criar notificação temporária
     const notification = document.createElement('div');
     notification.style.cssText = `
         position: fixed;
         top: 20px;
         right: 20px;
-        background: var(--burgundy);
+        background: var(--success);
         color: white;
         padding: 1rem 1.5rem;
         border-radius: var(--border-radius-sm);
         z-index: 3000;
         box-shadow: var(--shadow-hover);
         animation: slideInRight 0.3s ease-out;
+        max-width: 300px;
     `;
     notification.textContent = message;
     
@@ -433,12 +368,14 @@ function showNotification(message) {
     setTimeout(() => {
         notification.style.animation = 'slideOutRight 0.3s ease-in';
         setTimeout(() => {
-            document.body.removeChild(notification);
+            if (document.body.contains(notification)) {
+                document.body.removeChild(notification);
+            }
         }, 300);
     }, 3000);
 }
 
-// Adicionar estilos de animação para notificações
+// ESTILOS DE ANIMAÇÃO PARA NOTIFICAÇÕES
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideInRight {
@@ -465,23 +402,18 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Fechar modais ao clicar fora
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('modal')) {
-        closeAllModals();
-    }
-});
+// FUNÇÕES DE NAVEGAÇÃO
+function goToPerfil() { window.location.href = 'painel.html'; }
+function goToMensagens() { window.location.href = 'mensagens.html'; }
+function goToBusca() { window.location.href = 'busca.html'; }
+function goToBloqueados() { window.location.href = 'bloqueados.html'; }
+function goToPricing() { window.location.href = 'pricing.html'; }
 
-// Fechar modais com ESC
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeAllModals();
-    }
-});
+async function logout() {
+    const { error } = await supabase.auth.signOut();
+    if (!error) window.location.href = 'login.html';
+}
 
-// Monitorar estado de autenticação
 supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_OUT') {
-        window.location.href = 'login.html';
-    }
+    if (event === 'SIGNED_OUT') window.location.href = 'login.html';
 });
