@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Pessoas - Amor Conect</title>
+    <link rel="stylesheet" href="busca.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="logopulselove.png" alt="Amor Conect">
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="home.html"><i class="fas fa-home"></i> Home</a></li>
+                        <li><a href="mensagens.html"><i class="fas fa-envelope"></i> Mensagens</a></li>
+                        <li><a href="busca.html" class="active"><i class="fas fa-search"></i> Buscar</a></li>
+                    </ul>
+                </nav>
+                <div class="user-menu">
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            <div class="user-avatar-fallback">U</div>
+                            <img class="avatar-image" style="display: none;" alt="Avatar do usuário">
+                        </div>
+                        <span id="userNickname">Usuário</span>
+                        <div id="premiumBadge" class="premium-badge free">
+                            <i class="fas fa-user"></i> Free
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <section class="page-header">
+                <h1><i class="fas fa-search"></i> Encontrar Pessoas</h1>
+                <p>Use os filtros para encontrar matches perfeitos</p>
+            </section>
+
+            <!-- Search Content -->
+            <div class="search-container">
+                <!-- Filters Sidebar -->
+                <aside class="filters-sidebar">
+                    <div class="filters-header">
+                        <h3><i class="fas fa-filter"></i> Filtros</h3>
+                        <button class="btn btn-outline btn-sm" id="clearFilters">
+                            <i class="fas fa-times"></i> Limpar
+                        </button>
+                    </div>
+
+                    <form id="searchForm" class="filters-form">
+                        <!-- O QUE VOCÊ PROCURA -->
+                        <div class="filter-group">
+                            <h4><i class="fas fa-heart"></i> O que você procura</h4>
+                            
+                            <div class="form-group">
+                                <label for="searchGender">Gênero</label>
+                                <select id="searchGender" class="form-control">
+                                    <option value="">Todos</option>
+                                    <option value="homem">Homem</option>
+                                    <option value="mulher">Mulher</option>
+                                    <option value="ambos">Ambos</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="searchOrientation">Orientação Sexual</label>
+                                <select id="searchOrientation" class="form-control">
+                                    <option value="">Todas</option>
+                                    <option value="heterossexual">Heterossexual</option>
+                                    <option value="homossexual">Homossexual</option>
+                                    <option value="bissexual">Bissexual</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- FILTROS DE PERFIL -->
+                        <div class="filter-group">
+                            <h4><i class="fas fa-user"></i> Perfil</h4>
+                            
+                            <div class="form-group">
+                                <label for="searchPlan">Tipo de Plano</label>
+                                <select id="searchPlan" class="form-control">
+                                    <option value="">Todos</option>
+                                    <option value="free">Free</option>
+                                    <option value="premium">Premium</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="searchAge">Faixa Etária</label>
+                                <select id="searchAge" class="form-control">
+                                    <option value="">Todas</option>
+                                    <option value="18-25">18-25 anos</option>
+                                    <option value="26-35">26-35 anos</option>
+                                    <option value="36-45">36-45 anos</option>
+                                    <option value="45+">+45 anos</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="searchStatus">Status de Relacionamento</label>
+                                <select id="searchStatus" class="form-control">
+                                    <option value="">Todos</option>
+                                    <option value="solteiro">Solteiro</option>
+                                    <option value="solteira">Solteira</option>
+                                    <option value="divorciado">Divorciado</option>
+                                    <option value="divorciada">Divorciada</option>
+                                    <option value="casado">Casado</option>
+                                    <option value="casada">Casada</option>
+                                    <option value="viúvo">Viúvo</option>
+                                    <option value="viúva">Viúva</option>
+                                    <option value="noivo">Noivo</option>
+                                    <option value="noiva">Noiva</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- LOCALIZAÇÃO -->
+                        <div class="filter-group">
+                            <h4><i class="fas fa-map-marker-alt"></i> Localização</h4>
+                            
+                            <div class="form-group">
+                                <label for="searchCity">Cidade</label>
+                                <input type="text" id="searchCity" class="form-control" placeholder="Ex: São Paulo">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="searchState">Estado</label>
+                                <select id="searchState" class="form-control">
+                                    <option value="">Todos</option>
+                                    <option value="AC">Acre</option>
+                                    <option value="AL">Alagoas</option>
+                                    <option value="AP">Amapá</option>
+                                    <option value="AM">Amazonas</option>
+                                    <option value="BA">Bahia</option>
+                                    <option value="CE">Ceará</option>
+                                    <option value="DF">Distrito Federal</option>
+                                    <option value="ES">Espírito Santo</option>
+                                    <option value="GO">Goiás</option>
+                                    <option value="MA">Maranhão</option>
+                                    <option value="MT">Mato Grosso</option>
+                                    <option value="MS">Mato Grosso do Sul</option>
+                                    <option value="MG">Minas Gerais</option>
+                                    <option value="PA">Pará</option>
+                                    <option value="PB">Paraíba</option>
+                                    <option value="PR">Paraná</option>
+                                    <option value="PE">Pernambuco</option>
+                                    <option value="PI">Piauí</option>
+                                    <option value="RJ">Rio de Janeiro</option>
+                                    <option value="RN">Rio Grande do Norte</option>
+                                    <option value="RS">Rio Grande do Sul</option>
+                                    <option value="RO">Rondônia</option>
+                                    <option value="RR">Roraima</option>
+                                    <option value="SC">Santa Catarina</option>
+                                    <option value="SP">São Paulo</option>
+                                    <option value="SE">Sergipe</option>
+                                    <option value="TO">Tocantins</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- INTERESSES E ESTILO -->
+                        <div class="filter-group">
+                            <h4><i class="fas fa-star"></i> Interesses</h4>
+                            
+                            <div class="form-group">
+                                <label for="searchLookingFor">Intenção</label>
+                                <select id="searchLookingFor" class="form-control">
+                                    <option value="">Todas</option>
+                                    <option value="amizade">Amizade</option>
+                                    <option value="namoro">Namoro</option>
+                                    <option value="relacionamento_serio">Relacionamento Sério</option>
+                                    <option value="conversa">Apenas Conversa</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="searchInterests">Interesses</label>
+                                <select id="searchInterests" class="form-control">
+                                    <option value="">Qualquer interesse</option>
+                                    <option value="Cinema">Cinema</option>
+                                    <option value="Música">Música</option>
+                                    <option value="Esportes">Esportes</option>
+                                    <option value="Viagens">Viagens</option>
+                                    <option value="Leitura">Leitura</option>
+                                    <option value="Culinária">Culinária</option>
+                                    <option value="Jogos">Jogos</option>
+                                    <option value="Arte">Arte</option>
+                                    <option value="Tecnologia">Tecnologia</option>
+                                    <option value="Natureza">Natureza</option>
+                                    <option value="Fotografia">Fotografia</option>
+                                    <option value="Dança">Dança</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="searchZodiac">Signo</label>
+                                <select id="searchZodiac" class="form-control">
+                                    <option value="">Todos</option>
+                                    <option value="aries">Áries</option>
+                                    <option value="touro">Touro</option>
+                                    <option value="gemeos">Gêmeos</option>
+                                    <option value="cancer">Câncer</option>
+                                    <option value="leao">Leão</option>
+                                    <option value="virgem">Virgem</option>
+                                    <option value="libra">Libra</option>
+                                    <option value="escorpiao">Escorpião</option>
+                                    <option value="sagitario">Sagitário</option>
+                                    <option value="capricornio">Capricórnio</option>
+                                    <option value="aquario">Aquário</option>
+                                    <option value="peixes">Peixes</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- FILTROS EXTRAS -->
+                        <div class="filter-group">
+                            <h4><i class="fas fa-sliders-h"></i> Extras</h4>
+                            
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="searchOnline">
+                                    <span class="checkmark"></span>
+                                    <i class="fas fa-circle online-dot"></i>
+                                    Online agora
+                                </label>
+                            </div>
+
+                            <div class="checkbox-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="searchWithPhoto">
+                                    <span class="checkmark"></span>
+                                    <i class="fas fa-camera"></i>
+                                    Com foto
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Botão Buscar -->
+                        <button type="submit" class="btn btn-primary btn-block" id="searchButton">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                    </form>
+                </aside>
+
+                <!-- Results Section -->
+                <section class="results-section">
+                    <div class="results-header">
+                        <h3>Resultados da Busca</h3>
+                        <div class="results-count">
+                            <span id="resultsCount">0</span> pessoas encontradas
+                        </div>
+                    </div>
+
+                    <div class="results-grid" id="resultsGrid">
+                        <!-- Loading State -->
+                        <div class="empty-state" id="loadingState">
+                            <i class="fas fa-search fa-spin"></i>
+                            <p>Buscando pessoas...</p>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div class="empty-state" id="emptyState" style="display: none;">
+                            <i class="fas fa-users"></i>
+                            <p>Nenhuma pessoa encontrada</p>
+                            <small>Tente ajustar os filtros da busca</small>
+                        </div>
+
+                        <!-- Results will be inserted here -->
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Amor Conect</h3>
+                    <p>Conectando corações de forma segura e genuína.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Links Rápidos</h3>
+                    <ul>
+                        <li><a href="home.html">Home</a></li>
+                        <li><a href="mensagens.html">Mensagens</a></li>
+                        <li><a href="busca.html">Buscar</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Suporte</h3>
+                    <ul>
+                        <li><a href="#">Ajuda</a></li>
+                        <li><a href="#">Privacidade</a></li>
+                        <li><a href="#">Termos</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 Amor Conect. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Configuração Supabase
+        const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
+    <script src="premium-check.js"></script>
+    <script src="busca.js"></script>
+</body>
+</html>
