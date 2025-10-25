@@ -451,7 +451,7 @@
                 
                 <div class="action-card" onclick="goToBusca()">
                     <div class="action-icon">🔍</div>
-                    <h3>Buscar</h3>
+                    <h3>Buscar Pessoas</h3>
                 </div>
                 
                 <div class="action-card" onclick="goToPricing()">
@@ -501,7 +501,7 @@
 
         let currentUser = null;
 
-        // Funções de Navegação
+        // ========== FUNÇÕES DE NAVEGAÇÃO ==========
         function goToPerfil() {
             window.location.href = 'painel.html';
         }
@@ -532,7 +532,7 @@
             }
         }
 
-        // Carregar dados do usuário e lista de usuários
+        // ========== INICIALIZAÇÃO ==========
         document.addEventListener('DOMContentLoaded', async function() {
             try {
                 const { data: { user }, error } = await supabase.auth.getUser();
@@ -563,7 +563,7 @@
             }
         });
 
-        // Carregar lista de usuários
+        // ========== CARREGAR USUÁRIOS ==========
         async function loadUsers() {
             try {
                 // Buscar perfis de outros usuários (excluindo o usuário atual)
@@ -576,10 +576,11 @@
                 if (error) throw error;
 
                 // Buscar detalhes dos usuários
+                const userIds = profiles.map(p => p.id);
                 const { data: userDetails, error: detailsError } = await supabase
                     .from('user_details')
                     .select('*')
-                    .in('user_id', profiles.map(p => p.id));
+                    .in('user_id', userIds);
 
                 if (detailsError) {
                     console.error('Erro ao carregar detalhes:', detailsError);
@@ -597,7 +598,7 @@
             }
         }
 
-        // Exibir usuários na tela
+        // ========== EXIBIR USUÁRIOS ==========
         function displayUsers(profiles, userDetails) {
             const container = document.getElementById('usersContainer');
             
@@ -633,7 +634,7 @@
                                     <div class="user-info">
                                         <div class="user-name">${profile.nickname || 'Usuário'}</div>
                                         <div class="user-location">
-                                            <i class="fas fa-map-marker-alt"></i> ${profile.display_city || 'Localização não informada'}
+                                            ${profile.display_city || 'Localização não informada'}
                                         </div>
                                         <div class="user-premium-badge ${isPremium ? 'premium' : 'free'}">
                                             ${isPremium ? '👑 Premium' : '👤 Free'}
@@ -661,6 +662,7 @@
             `;
         }
 
+        // ========== FUNÇÕES AUXILIARES ==========
         function getUserInitials(name) {
             return name
                 .split(' ')
@@ -693,7 +695,7 @@
             return options[value] || value;
         }
 
-        // Verificar autenticação em tempo real
+        // ========== MONITORAR AUTENTICAÇÃO ==========
         supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_OUT') {
                 window.location.href = 'login.html';
