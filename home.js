@@ -1,5 +1,4 @@
-// home.js
-// Configuração do Supabase
+// home.js - VERSÃO CORRIGIDA
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -8,7 +7,6 @@ let currentUser = null;
 let currentFilter = 'all';
 const maxHomeCards = 8;
 
-// ========== INICIALIZAÇÃO ==========
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
@@ -22,7 +20,6 @@ async function initializeApp() {
     }
 }
 
-// ========== AUTENTICAÇÃO ==========
 async function checkAuthentication() {
     const { data: { user }, error } = await supabase.auth.getUser();
     
@@ -35,7 +32,6 @@ async function checkAuthentication() {
     return true;
 }
 
-// ========== CONFIGURAÇÃO DE EVENTOS ==========
 function setupEventListeners() {
     const menuToggle = document.getElementById('menuToggle');
     const mainNav = document.getElementById('mainNav');
@@ -64,7 +60,6 @@ function setupEventListeners() {
     });
 }
 
-// ========== CARREGAR PERFIL DO USUÁRIO ==========
 async function loadUserProfile() {
     const { data: profile, error } = await supabase
         .from('profiles')
@@ -109,7 +104,6 @@ function updateUserHeader(profile) {
     }
 }
 
-// ========== CARREGAR USUÁRIOS ==========
 async function loadUsers() {
     const usersGrid = document.getElementById('usersGrid');
     usersGrid.innerHTML = `
@@ -174,6 +168,10 @@ async function filterBySexualCompatibility(profiles) {
     return profiles.filter(profile => {
         const profileGender = profile.user_details?.[0]?.gender;
         const profileOrientation = profile.user_details?.[0]?.sexual_orientation;
+
+        if (!profileGender || !profileOrientation) {
+            return true;
+        }
 
         return isSexuallyCompatible(currentGender, currentOrientation, profileGender, profileOrientation);
     });
@@ -276,7 +274,6 @@ function createUserCard(profile) {
     `;
 }
 
-// ========== FILTROS ==========
 function setActiveFilter(filter) {
     currentFilter = filter;
     
@@ -288,7 +285,6 @@ function setActiveFilter(filter) {
     loadUsers();
 }
 
-// ========== NAVEGAÇÃO ==========
 function goToPerfil() {
     window.location.href = 'painel.html';
 }
@@ -316,7 +312,6 @@ async function logout() {
     }
 }
 
-// ========== FUNÇÕES AUXILIARES ==========
 function getUserInitials(name) {
     if (!name) return 'U';
     return name
@@ -377,7 +372,6 @@ function formatRelationshipStatus(value) {
     return options[value] || value;
 }
 
-// ========== MONITORAR AUTENTICAÇÃO ==========
 supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
         window.location.href = 'login.html';
