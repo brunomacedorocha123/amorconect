@@ -7,9 +7,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function initializeProfile() {
     try {
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
         
-        if (authError || !user) {
+        if (!user) {
             window.location.href = 'login.html';
             return;
         }
@@ -34,6 +34,7 @@ async function initializeProfile() {
 
 async function loadUserData() {
     try {
+        // CONSULTA SIMPLES E DIRETA - SEM JOIN COMPLEXO
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -42,13 +43,16 @@ async function loadUserData() {
 
         if (profileError) throw profileError;
 
+        // CONSULTA SEPARADA PARA user_details
         const { data: userDetails, error: detailsError } = await supabase
             .from('user_details')
             .select('*')
             .eq('user_id', visitedUserId)
             .single();
 
+        // Se não encontrar detalhes, usa objeto vazio
         const details = userDetails || {};
+
         fillProfileData(profile, details);
 
     } catch (error) {
@@ -57,67 +61,91 @@ async function loadUserData() {
 }
 
 function fillProfileData(profile, details) {
+    // DADOS BÁSICOS
     document.getElementById('profileNickname').textContent = profile.nickname || 'Usuário';
     document.getElementById('profileLocation').textContent = profile.display_city || 'Cidade não informada';
     
+    // AVATAR
     if (profile.avatar_url) {
         document.getElementById('profileAvatar').src = profile.avatar_url;
         document.getElementById('profileAvatar').style.display = 'block';
         document.getElementById('profileAvatarFallback').style.display = 'none';
-    } else {
-        const initials = getInitials(profile.nickname || 'U');
-        document.getElementById('avatarInitials').textContent = initials;
     }
 
+    // IDADE
     if (profile.birth_date) {
         const age = calculateAge(profile.birth_date);
         document.getElementById('profileAge').textContent = age;
     }
 
+    // PREMIUM BADGE
     updatePremiumBadge(profile);
 
-    document.getElementById('profileLookingFor').querySelector('span').textContent = formatLookingFor(details.looking_for) || 'Não informado';
-    document.getElementById('profileGender').querySelector('span').textContent = details.gender || 'Não informado';
-    document.getElementById('profileOrientation').querySelector('span').textContent = details.sexual_orientation || 'Não informado';
-    document.getElementById('profileProfession').querySelector('span').textContent = details.profession || 'Não informado';
-    document.getElementById('profileZodiac').querySelector('span').textContent = details.zodiac || 'Não informado';
-    document.getElementById('profileReligion').querySelector('span').textContent = details.religion || 'Não informado';
-    document.getElementById('profileDrinking').querySelector('span').textContent = details.drinking || 'Não informado';
-    document.getElementById('profileSmoking').querySelector('span').textContent = details.smoking || 'Não informado';
-    document.getElementById('profileExercise').querySelector('span').textContent = details.exercise || 'Não informado';
-    document.getElementById('profilePets').querySelector('span').textContent = details.has_pets || 'Não informado';
+    // DADOS DETALHADOS - CORRIGIDOS
+    updateField('profileLookingFor', details.looking_for);
+    updateField('profileGender', details.gender);
+    updateField('profileOrientation', details.sexual_orientation);
+    updateField('profileProfession', details.profession);
+    updateField('profileZodiac', details.zodiac);
+    updateField('profileReligion', details.religion);
+    updateField('profileDrinking', details.drinking);
+    updateField('profileSmoking', details.smoking);
+    updateField('profileExercise', details.exercise);
+    updateField('profilePets', details.has_pets);
 
+    // DESCRIÇÃO
     if (details.description) {
         document.getElementById('profileDescription').textContent = details.description;
     } else {
         document.getElementById('descriptionSection').style.display = 'none';
     }
 
-    if (details.characteristics && details.characteristics.length > 0) {
-        const container = document.getElementById('profileCharacteristics');
-        container.innerHTML = details.characteristics.map(char => `
+    // CARACTERÍSTICAS
+    updateList('profileCharacteristics', details.characteristics, 'characteristicsSection');
+
+    // INTERESSES
+    updateList('profileInterests', details.interests, 'interestsSection');
+
+    // GALERIA
+    checkGalleryAccess();
+}
+
+// FUNÇÃO AUXILIAR PARA ATUALIZAR CAMPOS
+function updateField(elementId, value) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        const span = element.querySelector('span');
+        if (span) {
+            span.textContent = value || 'Não informado';
+        }
+    }
+}
+
+// FUNÇÃO AUXILIAR PARA LISTAS
+function updateList(containerId, items, sectionId) {
+    const container = document.getElementById(containerId);
+    const section = document.getElementById(sectionId);
+    
+    if (!items || items.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+
+    if (containerId === 'profileCharacteristics') {
+        container.innerHTML = items.map(item => `
             <div class="characteristic-item">
                 <i class="fas fa-check"></i>
-                <span>${char}</span>
+                <span>${item}</span>
             </div>
         `).join('');
-    } else {
-        document.getElementById('characteristicsSection').style.display = 'none';
-    }
-
-    if (details.interests && details.interests.length > 0) {
-        const container = document.getElementById('profileInterests');
-        container.innerHTML = details.interests.map(interest => `
+    } else if (containerId === 'profileInterests') {
+        container.innerHTML = items.map(item => `
             <div class="interest-item">
                 <i class="fas fa-star"></i>
-                <span>${interest}</span>
+                <span>${item}</span>
             </div>
         `).join('');
-    } else {
-        document.getElementById('interestsSection').style.display = 'none';
     }
-
-    checkGalleryAccess();
 }
 
 async function updatePremiumBadge(profile) {
@@ -241,30 +269,11 @@ function calculateAge(birthDate) {
     return age;
 }
 
-function formatLookingFor(value) {
-    const options = {
-        'amizade': 'Amizade',
-        'namoro': 'Namoro', 
-        'relacionamento_serio': 'Relacionamento Sério',
-        'conversa': 'Apenas Conversa'
-    };
-    return options[value] || value;
-}
-
 function getImageUrl(imagePath) {
     const { data } = supabase.storage
         .from('gallery-images')
         .getPublicUrl(imagePath);
     return data.publicUrl;
-}
-
-function getInitials(name) {
-    return name
-        .split(' ')
-        .map(word => word.charAt(0))
-        .join('')
-        .toUpperCase()
-        .substring(0, 2);
 }
 
 function openGalleryImage(imageUrl) {
@@ -277,6 +286,7 @@ function openGalleryImage(imageUrl) {
     }
 }
 
+// EVENT LISTENERS
 document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('imageModal');
     const closeBtn = document.getElementById('closeModalBtn');
