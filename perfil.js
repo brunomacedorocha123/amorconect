@@ -60,35 +60,12 @@ function fillProfileData(profile, details) {
     document.getElementById('profileNickname').textContent = profile.nickname || 'Usuário';
     document.getElementById('profileLocation').textContent = profile.display_city || 'Cidade não informada';
     
-    // ✅ INDICADOR ONLINE/OFFLINE
+    // ✅ INDICADOR ONLINE/OFFLINE - CORREÇÃO COMPLETA
     const isOnline = isUserOnline(profile.last_online_at);
-    updateOnlineStatusIndicator(isOnline);
+    console.log('🟢 Status online:', isOnline, 'Último online:', profile.last_online_at);
     
-    if (profile.avatar_url) {
-        document.getElementById('profileAvatar').src = profile.avatar_url;
-        document.getElementById('profileAvatar').style.display = 'block';
-        document.getElementById('profileAvatarFallback').style.display = 'none';
-        
-        // ✅ Atualizar indicador no avatar com imagem
-        const avatarContainer = document.querySelector('.profile-avatar-large');
-        if (avatarContainer) {
-            if (isOnline) {
-                avatarContainer.classList.add('online');
-            } else {
-                avatarContainer.classList.add('offline');
-            }
-        }
-    } else {
-        // ✅ Atualizar indicador no avatar sem imagem
-        const avatarFallback = document.getElementById('profileAvatarFallback');
-        if (avatarFallback) {
-            if (isOnline) {
-                avatarFallback.classList.add('online');
-            } else {
-                avatarFallback.classList.add('offline');
-            }
-        }
-    }
+    // Processar avatar e adicionar indicador
+    processAvatarAndStatus(profile.avatar_url, isOnline);
 
     if (profile.birth_date) {
         const age = calculateAge(profile.birth_date);
@@ -127,26 +104,38 @@ function fillProfileData(profile, details) {
     checkGalleryAccess();
 }
 
-// ✅ FUNÇÃO PARA ATUALIZAR INDICADOR ONLINE/OFFLINE
-function updateOnlineStatusIndicator(isOnline) {
-    const onlineIndicator = document.getElementById('onlineStatusIndicator');
+// ✅ FUNÇÃO CORRIGIDA: Processar avatar e status
+function processAvatarAndStatus(avatarUrl, isOnline) {
+    const avatarImg = document.getElementById('profileAvatar');
+    const avatarFallback = document.getElementById('profileAvatarFallback');
+    const avatarContainer = document.querySelector('.profile-avatar-large');
     
-    if (!onlineIndicator) {
-        // Criar indicador se não existir
-        const avatarContainer = document.querySelector('.profile-avatar-large');
-        if (avatarContainer) {
-            const indicator = document.createElement('div');
-            indicator.id = 'onlineStatusIndicator';
-            indicator.className = `online-status-indicator ${isOnline ? 'online' : 'offline'}`;
-            indicator.title = isOnline ? 'Online agora' : 'Offline';
-            avatarContainer.appendChild(indicator);
-        }
+    if (!avatarContainer) {
+        console.error('❌ Container do avatar não encontrado');
         return;
     }
+
+    // Limpar indicadores existentes
+    const existingIndicators = avatarContainer.querySelectorAll('.online-status-indicator');
+    existingIndicators.forEach(indicator => indicator.remove());
+
+    // Criar novo indicador
+    const indicator = document.createElement('div');
+    indicator.className = `online-status-indicator ${isOnline ? 'online' : 'offline'}`;
+    indicator.title = isOnline ? 'Online agora' : 'Offline';
     
-    // Atualizar indicador existente
-    onlineIndicator.className = `online-status-indicator ${isOnline ? 'online' : 'offline'}`;
-    onlineIndicator.title = isOnline ? 'Online agora' : 'Offline';
+    // Adicionar ao container
+    avatarContainer.appendChild(indicator);
+
+    // Processar imagem do avatar
+    if (avatarUrl) {
+        avatarImg.src = avatarUrl;
+        avatarImg.style.display = 'block';
+        avatarFallback.style.display = 'none';
+    } else {
+        avatarImg.style.display = 'none';
+        avatarFallback.style.display = 'flex';
+    }
 }
 
 // ✅ FUNÇÃO PARA OCULTAR INFORMAÇÕES SENSÍVEIS (MODO INVISÍVEL)
@@ -522,6 +511,5 @@ window.profileViewer = {
     initializeProfile,
     loadUserData,
     openGalleryImage,
-    isUserOnline,
-    updateOnlineStatusIndicator
+    isUserOnline
 };
