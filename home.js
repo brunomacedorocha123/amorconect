@@ -147,8 +147,8 @@ function displayUsers(profiles) {
         };
         
         return `
-        <div class="user-card" onclick="viewUserProfile('${profile.id}')">
-            <div class="user-actions-btn" onclick="event.stopPropagation(); event.preventDefault(); openUserActions('${profile.id}', ${JSON.stringify(safeProfile).replace(/'/g, "\\'")})">
+        <div class="user-card">
+            <div class="user-actions-btn" onclick="openUserActions('${profile.id}', ${JSON.stringify(safeProfile).replace(/'/g, "\\'")})">
                 <i class="fas fa-ellipsis-v"></i>
             </div>
             
@@ -179,7 +179,7 @@ function displayUsers(profiles) {
                     <span>${isUserOnline(profile.last_online_at) ? 'Online agora' : 'Offline'}</span>
                 </div>
             </div>
-            <button class="view-profile-btn" onclick="event.stopPropagation(); viewUserProfile('${profile.id}')">
+            <button class="view-profile-btn" onclick="viewUserProfile('${profile.id}')">
                 <i class="fas fa-user"></i> Ver Perfil
             </button>
         </div>

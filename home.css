@@ -362,7 +362,6 @@ nav a.active {
     border: 1px solid rgba(0, 0, 0, 0.05);
     position: relative;
     overflow: visible;
-    cursor: pointer;
 }
 
 .user-card:hover {
