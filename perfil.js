@@ -58,14 +58,25 @@ async function loadUserData() {
 
 function fillProfileData(profile, details) {
     document.getElementById('profileNickname').textContent = profile.nickname || 'Usuário';
-    document.getElementById('profileLocation').textContent = profile.display_city || 'Cidade não informada';
     
-    // ✅ INDICADOR ONLINE/OFFLINE - CORREÇÃO COMPLETA
+    // ✅ STATUS ONLINE/OFFLINE VISÍVEL
     const isOnline = isUserOnline(profile.last_online_at);
-    console.log('🟢 Status online:', isOnline, 'Último online:', profile.last_online_at);
+    createOnlineStatusDisplay(isOnline);
     
-    // Processar avatar e adicionar indicador
-    processAvatarAndStatus(profile.avatar_url, isOnline);
+    // Localização (respeitando modo invisível)
+    if (profile.is_invisible) {
+        document.getElementById('profileLocation').textContent = 'Localização oculta';
+        hideSensitiveInfo();
+    } else {
+        document.getElementById('profileLocation').textContent = profile.display_city || 'Cidade não informada';
+    }
+
+    // Avatar
+    if (profile.avatar_url) {
+        document.getElementById('profileAvatar').src = profile.avatar_url;
+        document.getElementById('profileAvatar').style.display = 'block';
+        document.getElementById('profileAvatarFallback').style.display = 'none';
+    }
 
     if (profile.birth_date) {
         const age = calculateAge(profile.birth_date);
@@ -73,12 +84,6 @@ function fillProfileData(profile, details) {
     }
 
     updatePremiumBadge(profile);
-
-    // ✅ Verificar se usuário está invisível
-    if (profile.is_invisible) {
-        document.getElementById('profileLocation').textContent = 'Localização oculta';
-        hideSensitiveInfo();
-    }
 
     updateField('profileRelationshipStatus', details.relationship_status);
     updateField('profileLookingFor', details.looking_for);
@@ -104,37 +109,41 @@ function fillProfileData(profile, details) {
     checkGalleryAccess();
 }
 
-// ✅ FUNÇÃO CORRIGIDA: Processar avatar e status
-function processAvatarAndStatus(avatarUrl, isOnline) {
-    const avatarImg = document.getElementById('profileAvatar');
-    const avatarFallback = document.getElementById('profileAvatarFallback');
-    const avatarContainer = document.querySelector('.profile-avatar-large');
-    
-    if (!avatarContainer) {
-        console.error('❌ Container do avatar não encontrado');
-        return;
+// ✅ FUNÇÃO NOVA: Criar display de status visível
+function createOnlineStatusDisplay(isOnline) {
+    const profileBasicInfo = document.querySelector('.profile-basic-info');
+    if (!profileBasicInfo) return;
+
+    // Remover status anterior se existir
+    const existingStatus = document.getElementById('onlineStatusDisplay');
+    if (existingStatus) {
+        existingStatus.remove();
     }
 
-    // Limpar indicadores existentes
-    const existingIndicators = avatarContainer.querySelectorAll('.online-status-indicator');
-    existingIndicators.forEach(indicator => indicator.remove());
-
-    // Criar novo indicador
-    const indicator = document.createElement('div');
-    indicator.className = `online-status-indicator ${isOnline ? 'online' : 'offline'}`;
-    indicator.title = isOnline ? 'Online agora' : 'Offline';
+    // Criar novo elemento de status
+    const statusElement = document.createElement('div');
+    statusElement.id = 'onlineStatusDisplay';
+    statusElement.className = `online-status-display ${isOnline ? 'online' : 'offline'}`;
     
-    // Adicionar ao container
-    avatarContainer.appendChild(indicator);
-
-    // Processar imagem do avatar
-    if (avatarUrl) {
-        avatarImg.src = avatarUrl;
-        avatarImg.style.display = 'block';
-        avatarFallback.style.display = 'none';
+    if (isOnline) {
+        statusElement.innerHTML = `
+            <i class="fas fa-circle online-dot"></i>
+            <span>Online agora</span>
+        `;
     } else {
-        avatarImg.style.display = 'none';
-        avatarFallback.style.display = 'flex';
+        statusElement.innerHTML = `
+            <i class="fas fa-circle offline-dot"></i>
+            <span>Offline</span>
+        `;
+    }
+
+    // Inserir após o elemento de localização
+    const locationElement = document.getElementById('profileLocation');
+    if (locationElement && locationElement.parentNode) {
+        locationElement.parentNode.insertBefore(statusElement, locationElement.nextSibling);
+    } else {
+        // Fallback: inserir no profile-basic-info
+        profileBasicInfo.appendChild(statusElement);
     }
 }
 

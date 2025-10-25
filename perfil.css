@@ -626,3 +626,59 @@ body {
 .profile-hero .profile-avatar-large.offline-status {
     opacity: 0.9;
 }
+
+/* ========== STATUS ONLINE/OFFLINE VISÍVEL ========== */
+.online-status-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    animation: fadeIn 0.5s ease;
+}
+
+.online-status-display.online {
+    background: rgba(72, 187, 120, 0.1);
+    border: 1px solid #48bb78;
+    color: #48bb78;
+}
+
+.online-status-display.offline {
+    background: rgba(160, 174, 192, 0.1);
+    border: 1px solid #a0aec0;
+    color: #a0aec0;
+}
+
+.online-dot {
+    color: #48bb78;
+    font-size: 0.7rem;
+    animation: pulse-online 2s infinite;
+}
+
+.offline-dot {
+    color: #a0aec0;
+    font-size: 0.7rem;
+}
+
+/* Posicionamento no perfil */
+.profile-basic-info .online-status-display {
+    display: block;
+    margin-left: 0;
+    margin-top: 0.3rem;
+}
+
+/* ========== MOBILE ========== */
+@media (max-width: 768px) {
+    .online-status-display {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.6rem;
+    }
+    
+    .online-dot,
+    .offline-dot {
+        font-size: 0.6rem;
+    }
+}
