@@ -40,13 +40,15 @@ function setupEventListeners() {
         });
     }
 
-    document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('modal')) {
+    // CORREÇÃO: Prevenir fechamento automático
+    document.addEventListener('click', function(e) {
+        // Fechar apenas quando clicar EXATAMENTE no backdrop do modal
+        if (e.target.classList.contains('modal') && !e.target.closest('.modal-content')) {
             closeAllModals();
         }
     });
 
-    document.addEventListener('keydown', (e) => {
+    document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeAllModals();
         }
@@ -224,6 +226,7 @@ function displayBlockedUsers(users) {
     }).join('');
 }
 
+// CORREÇÃO PRINCIPAL: Modal não fecha automaticamente
 function openUnblockConfirm(userId, userName) {
     currentUnblockingUser = { id: userId, name: userName };
     
@@ -231,11 +234,26 @@ function openUnblockConfirm(userId, userName) {
     const safeUserName = userName.replace(/\\'/g, "'");
     message.textContent = `Tem certeza que deseja desbloquear ${safeUserName}?`;
     
-    showModal('unblockConfirmModal');
+    // CORREÇÃO: Não fechar outros modais antes de abrir
+    const modal = document.getElementById('unblockConfirmModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }, 10);
+    }
 }
 
 function closeUnblockConfirmModal() {
-    hideModal('unblockConfirmModal');
+    const modal = document.getElementById('unblockConfirmModal');
+    if (modal) {
+        modal.classList.remove('active');
+        setTimeout(() => {
+            modal.style.display = 'none';
+            restorePageScroll();
+        }, 300);
+    }
 }
 
 async function confirmUnblockUser() {
@@ -254,7 +272,7 @@ async function confirmUnblockUser() {
         if (error) throw error;
 
         showNotification(`${currentUnblockingUser.name} foi desbloqueado com sucesso!`);
-        hideModal('unblockConfirmModal');
+        closeUnblockConfirmModal();
         
         await loadBlockedUsers();
 
@@ -272,11 +290,25 @@ function clearAllBlocks() {
     const countElement = document.getElementById('clearAllCount');
     countElement.textContent = blockedUsers.length;
     
-    showModal('clearAllConfirmModal');
+    const modal = document.getElementById('clearAllConfirmModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        setTimeout(() => {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }, 10);
+    }
 }
 
 function closeClearAllConfirmModal() {
-    hideModal('clearAllConfirmModal');
+    const modal = document.getElementById('clearAllConfirmModal');
+    if (modal) {
+        modal.classList.remove('active');
+        setTimeout(() => {
+            modal.style.display = 'none';
+            restorePageScroll();
+        }, 300);
+    }
 }
 
 async function confirmClearAllBlocks() {
@@ -289,7 +321,7 @@ async function confirmClearAllBlocks() {
         if (error) throw error;
 
         showNotification('Todos os usuários foram desbloqueados!');
-        hideModal('clearAllConfirmModal');
+        closeClearAllConfirmModal();
         
         await loadBlockedUsers();
 
@@ -320,9 +352,8 @@ function formatDate(dateString) {
     });
 }
 
-// === SISTEMA DE MODAIS CORRIGIDO (SCROLL FUNCIONANDO) ===
+// CORREÇÃO: Sistema de modais simplificado
 function showModal(modalId) {
-    closeAllModals();
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.style.display = 'flex';
@@ -339,7 +370,6 @@ function hideModal(modalId) {
         modal.classList.remove('active');
         setTimeout(() => {
             modal.style.display = 'none';
-            // RESTAURA O SCROLL DA PÁGINA
             restorePageScroll();
         }, 300);
     }
@@ -353,7 +383,6 @@ function closeAllModals() {
             modal.style.display = 'none';
         }, 300);
     });
-    // RESTAURA O SCROLL DA PÁGINA
     restorePageScroll();
     currentUnblockingUser = null;
 }
