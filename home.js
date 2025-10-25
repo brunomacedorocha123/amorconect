@@ -1,4 +1,4 @@
-// home.js - VERSÃO CORRIGIDA E FUNCIONAL
+// home.js - VERSÃO COMPLETA COM FILTRO DE ORIENTAÇÃO SEXUAL
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -103,6 +103,18 @@ async function loadUsers() {
     const usersGrid = document.getElementById('usersGrid');
     usersGrid.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>Carregando pessoas...</p></div>';
 
+    // Carrega o perfil do usuário atual para saber a orientação sexual
+    const { data: currentUserProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('sexual_orientation, gender')
+        .eq('id', currentUser.id)
+        .single();
+
+    if (profileError) {
+        usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar perfil.</p></div>';
+        return;
+    }
+
     let query = supabase
         .from('profiles')
         .select('*')
@@ -110,6 +122,26 @@ async function loadUsers() {
         .eq('is_invisible', false)
         .limit(8);
 
+    // FILTRO POR ORIENTAÇÃO SEXUAL
+    const userOrientation = currentUserProfile.sexual_orientation;
+    const userGender = currentUserProfile.gender;
+
+    if (userOrientation === 'heterossexual') {
+        if (userGender === 'homem') {
+            query = query.eq('gender', 'mulher');
+        } else if (userGender === 'mulher') {
+            query = query.eq('gender', 'homem');
+        }
+    } else if (userOrientation === 'homossexual') {
+        if (userGender === 'homem') {
+            query = query.eq('gender', 'homem');
+        } else if (userGender === 'mulher') {
+            query = query.eq('gender', 'mulher');
+        }
+    }
+    // Para bissexual, não aplica filtro de gênero
+
+    // Aplica filtros adicionais (online, premium)
     if (currentFilter === 'online') {
         const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
         query = query.gte('last_online_at', fifteenMinutesAgo);
@@ -153,7 +185,6 @@ async function filterBlockedUsers(users) {
         return users.filter(user => !allBlockedIds.includes(user.id));
 
     } catch (error) {
-        console.error('Erro ao filtrar usuários bloqueados:', error);
         return users;
     }
 }
@@ -231,7 +262,7 @@ function viewUserProfile(userId) {
     window.location.href = `perfil.html?id=${userId}`;
 }
 
-// === SISTEMA DE BLOQUEIO CORRIGIDO ===
+// === SISTEMA DE BLOQUEIO ===
 function openUserActions(userId, userName) {
     currentBlockingUser = { id: userId, name: userName };
     showModal('userActionsModal');
@@ -316,7 +347,6 @@ async function confirmBlockUser() {
         }
 
     } catch (error) {
-        console.error('Erro ao bloquear usuário:', error);
         showNotification('Erro ao bloquear usuário. Tente novamente.');
     }
 }
@@ -333,7 +363,7 @@ function viewProfileFromModal() {
     }
 }
 
-// === SISTEMA DE MODAIS CORRIGIDO ===
+// === SISTEMA DE MODAIS ===
 function showModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
