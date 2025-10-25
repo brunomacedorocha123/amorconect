@@ -187,17 +187,30 @@ async function updateInvisibleModeUI() {
     const invisibleControl = document.getElementById('invisibleModeControl');
     const upgradeCTA = document.getElementById('invisibleUpgradeCTA');
     const featureStatus = document.getElementById('invisibleFeatureStatus');
+    const invisibleCheckbox = document.getElementById('isInvisible');
 
     if (isPremium) {
         // Usuário Premium - mostrar controle
         if (invisibleControl) invisibleControl.style.display = 'block';
         if (upgradeCTA) upgradeCTA.style.display = 'none';
+        
+        // ✅ CORREÇÃO: Mostrar status baseado no checkbox
+        const isCurrentlyInvisible = invisibleCheckbox ? invisibleCheckbox.checked : false;
+        
         if (featureStatus) {
-            featureStatus.innerHTML = `
-                <span class="premium-feature-active">
-                    <i class="fas fa-check-circle"></i> Ativo
-                </span>
-            `;
+            if (isCurrentlyInvisible) {
+                featureStatus.innerHTML = `
+                    <span class="premium-feature-active">
+                        <i class="fas fa-eye-slash"></i> Modo Ativo
+                    </span>
+                `;
+            } else {
+                featureStatus.innerHTML = `
+                    <span class="premium-feature-inactive">
+                        <i class="fas fa-eye"></i> Modo Inativo
+                    </span>
+                `;
+            }
         }
     } else {
         // Usuário Free - mostrar CTA de upgrade
@@ -227,6 +240,9 @@ async function handleInvisibleToggle(event) {
             .eq('id', currentUser.id);
 
         if (error) throw error;
+
+        // ✅ CORREÇÃO: Atualizar UI imediatamente após mudança
+        await updateInvisibleModeUI();
 
         showNotification(
             `Modo invisível ${isInvisible ? 'ativado' : 'desativado'} com sucesso!`,
