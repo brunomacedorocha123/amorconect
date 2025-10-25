@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home - PulseLove</title>
+    <title>Usuários Bloqueados - PulseLove</title>
     <link rel="stylesheet" href="home.css">
-    <link rel="stylesheet" href="home-mobile.css" media="(max-width: 768px)">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="bloqueados.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <!-- Header -->
@@ -29,11 +29,11 @@
                 <!-- Navegação -->
                 <nav id="mainNav">
                     <ul>
-                        <li><a href="#" class="nav-link active"><i class="fas fa-home"></i> Home</a></li>
+                        <li><a href="home.html" class="nav-link"><i class="fas fa-home"></i> Home</a></li>
                         <li><a href="busca.html" class="nav-link"><i class="fas fa-search"></i> Buscar</a></li>
                         <li><a href="mensagens.html" class="nav-link"><i class="fas fa-envelope"></i> Mensagens</a></li>
                         <li><a href="painel.html" class="nav-link"><i class="fas fa-user"></i> Meu Perfil</a></li>
-                        <li><a href="bloqueados.html" class="nav-link"><i class="fas fa-shield-alt"></i> Bloqueados</a></li>
+                        <li><a href="bloqueados.html" class="nav-link active"><i class="fas fa-shield-alt"></i> Bloqueados</a></li>
                         <li><a href="pricing.html" class="nav-link premium-link"><i class="fas fa-crown"></i> Premium</a></li>
                     </ul>
                 </nav>
@@ -59,83 +59,89 @@
     <!-- Main Content -->
     <main class="main-content">
         <div class="container">
-            <!-- Welcome Section -->
+            <!-- Header Section -->
             <section class="welcome-section">
                 <div class="welcome-content">
                     <div class="welcome-icon">
-                        <i class="fas fa-heart"></i>
+                        <i class="fas fa-shield-alt"></i>
                     </div>
-                    <h1 id="welcomeMessage">Bem-vindo ao PulseLove!</h1>
-                    <p>Conheça pessoas incríveis e faça conexões genuínas</p>
+                    <h1 id="welcomeMessage">Usuários Bloqueados</h1>
+                    <p>Gerencie sua lista de usuários bloqueados</p>
                 </div>
             </section>
 
-            <!-- Users Section -->
-            <section class="users-section">
-                <div class="section-header">
-                    <h2 class="section-title">Pessoas para Conhecer</h2>
-                    <div class="section-actions">
-                        <button class="btn-filter active" data-filter="all">Todos</button>
-                        <button class="btn-filter" data-filter="online">Online</button>
-                        <button class="btn-filter" data-filter="premium">Premium</button>
+            <!-- Free User Message -->
+            <div id="freeUserMessage" class="premium-upsell-section" style="display: none;">
+                <div class="upsell-content">
+                    <div class="upsell-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="upsell-text">
+                        <h3>Recurso Exclusivo Premium</h3>
+                        <p>Usuários do plano Free não podem gerenciar bloqueios. Faça upgrade para Premium para desbloquear este e outros recursos exclusivos!</p>
+                    </div>
+                    <button class="btn btn-primary upsell-btn" onclick="goToPricing()">
+                        <i class="fas fa-crown"></i> Virar Premium
+                    </button>
+                </div>
+            </div>
+
+            <!-- Premium Content -->
+            <div id="premiumContent" style="display: none;">
+                <!-- Stats -->
+                <div class="blocked-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-ban"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="totalBlocked">0</span>
+                            <span class="stat-label">Usuários Bloqueados</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="oldestBlock">-</span>
+                            <span class="stat-label">Bloqueio Mais Antigo</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Users Grid -->
-                <div class="users-grid" id="usersGrid">
-                    <div class="loading-state">
-                        <div class="loading-spinner"></div>
-                        <p>Carregando pessoas...</p>
+                <!-- Blocked Users List -->
+                <section class="blocked-users-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Sua Lista de Bloqueados</h2>
+                        <div class="section-actions">
+                            <button class="btn btn-outline" onclick="clearAllBlocks()" id="clearAllBtn">
+                                <i class="fas fa-trash"></i> Limpar Todos
+                            </button>
+                        </div>
                     </div>
-                </div>
-            </section>
 
-            <!-- Quick Actions -->
-            <section class="quick-actions-section">
-                <h2 class="section-title">Acesso Rápido</h2>
-                <div class="quick-actions-grid">
-                    <div class="action-card" onclick="goToPerfil()">
-                        <div class="action-icon">
-                            <i class="fas fa-user-edit"></i>
+                    <!-- Blocked Users Grid -->
+                    <div class="users-grid" id="blockedUsersGrid">
+                        <div class="loading-state">
+                            <div class="loading-spinner"></div>
+                            <p>Carregando usuários bloqueados...</p>
                         </div>
-                        <h3>Meu Perfil</h3>
-                        <p>Atualize suas informações</p>
                     </div>
-                    
-                    <div class="action-card" onclick="goToBusca()">
-                        <div class="action-icon">
-                            <i class="fas fa-search-plus"></i>
+
+                    <!-- Empty State -->
+                    <div id="emptyBlockedState" class="empty-state" style="display: none;">
+                        <div class="empty-icon">
+                            <i class="fas fa-user-check"></i>
                         </div>
-                        <h3>Busca Avançada</h3>
-                        <p>Encontre pessoas específicas</p>
+                        <h3>Nenhum usuário bloqueado</h3>
+                        <p>Você não bloqueou nenhum usuário ainda. Os usuários que você bloquear aparecerão aqui.</p>
+                        <button class="btn btn-primary" onclick="goToHome()">
+                            <i class="fas fa-home"></i> Voltar para Home
+                        </button>
                     </div>
-                    
-                    <div class="action-card" onclick="goToMensagens()">
-                        <div class="action-icon">
-                            <i class="fas fa-comments"></i>
-                        </div>
-                        <h3>Mensagens</h3>
-                        <p>Veja suas conversas</p>
-                    </div>
-                    
-                    <div class="action-card" onclick="goToBloqueados()">
-                        <div class="action-icon">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                        <h3>Usuários Bloqueados</h3>
-                        <p>Gerencie sua lista</p>
-                    </div>
-                    
-                    <div class="action-card premium-action" onclick="goToPricing()">
-                        <div class="action-icon">
-                            <i class="fas fa-crown"></i>
-                        </div>
-                        <h3>Virar Premium</h3>
-                        <p>Desbloqueie recursos exclusivos</p>
-                        <span class="premium-badge">Premium</span>
-                    </div>
-                </div>
-            </section>
+                </section>
+            </div>
         </div>
     </main>
 
@@ -196,70 +202,62 @@
         </div>
     </footer>
 
-    <!-- Modal de Ações do Usuário -->
-    <div id="userActionsModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Ações do Usuário</h3>
-                <button class="modal-close" onclick="closeUserActionsModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="user-actions-list">
-                    <button class="action-btn view-profile-btn" onclick="viewProfileFromModal()">
-                        <i class="fas fa-user"></i>
-                        Ver Perfil Completo
-                    </button>
-                    <button class="action-btn block-btn" onclick="blockUser()">
-                        <i class="fas fa-ban"></i>
-                        <span id="blockBtnText">Bloquear Usuário</span>
-                    </button>
-                    <button class="action-btn report-btn" onclick="reportUser()">
-                        <i class="fas fa-flag"></i>
-                        Denunciar Usuário
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Confirmação de Bloqueio -->
-    <div id="blockConfirmModal" class="modal">
+    <!-- Modal de Confirmação de Desbloqueio -->
+    <div id="unblockConfirmModal" class="modal">
         <div class="modal-content confirm-modal">
             <div class="modal-header">
-                <h3>Confirmar Bloqueio</h3>
+                <h3>Confirmar Desbloqueio</h3>
             </div>
             <div class="modal-body">
                 <div class="confirmation-message">
-                    <i class="fas fa-exclamation-triangle warning-icon"></i>
-                    <p id="blockConfirmMessage">Tem certeza que deseja bloquear este usuário?</p>
-                    <div class="block-consequences">
-                        <p><strong>Após o bloqueio:</strong></p>
+                    <i class="fas fa-user-check success-icon"></i>
+                    <p id="unblockConfirmMessage">Tem certeza que deseja desbloquear este usuário?</p>
+                    <div class="unblock-consequences">
+                        <p><strong>Após o desbloqueio:</strong></p>
                         <ul>
-                            <li>O usuário não aparecerá mais na sua busca</li>
-                            <li>O usuário não aparecerá mais na sua home</li>
-                            <li>Vocês não poderão trocar mensagens</li>
-                            <li id="freeBlockWarning" style="display: none;">
-                                <strong>Atenção (Plano Free):</strong> Esta ação é irreversível!
-                            </li>
-                            <li id="premiumBlockInfo" style="display: none;">
-                                <strong>Vantagem Premium:</strong> Você pode desbloquear depois na sua lista de bloqueados
-                            </li>
+                            <li>O usuário voltará a aparecer na sua busca</li>
+                            <li>O usuário voltará a aparecer na sua home</li>
+                            <li>Vocês poderão trocar mensagens novamente</li>
                         </ul>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-outline" onclick="closeBlockConfirmModal()">Cancelar</button>
-                <button class="btn btn-primary" onclick="confirmBlockUser()">Confirmar Bloqueio</button>
+                <button class="btn btn-outline" onclick="closeUnblockConfirmModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="confirmUnblockUser()">Confirmar Desbloqueio</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação Limpar Todos -->
+    <div id="clearAllConfirmModal" class="modal">
+        <div class="modal-content confirm-modal">
+            <div class="modal-header">
+                <h3>Limpar Todos os Bloqueios</h3>
+            </div>
+            <div class="modal-body">
+                <div class="confirmation-message">
+                    <i class="fas fa-exclamation-triangle warning-icon"></i>
+                    <p>Tem certeza que deseja desbloquear TODOS os usuários?</p>
+                    <div class="block-consequences">
+                        <p><strong>Esta ação:</strong></p>
+                        <ul>
+                            <li>Desbloqueará <strong id="clearAllCount">0</strong> usuários</li>
+                            <li>É irreversível</li>
+                            <li>Todos os usuários voltarão a aparecer na sua home e busca</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeClearAllConfirmModal()">Cancelar</button>
+                <button class="btn btn-primary" onclick="confirmClearAllBlocks()">Sim, Limpar Todos</button>
             </div>
         </div>
     </div>
 
     <!-- Scripts -->
     <script src="premium-check.js"></script>
-    <script src="bloqueio.js"></script>
-    <script src="home.js"></script>
+    <script src="bloqueados.js"></script>
 </body>
 </html>

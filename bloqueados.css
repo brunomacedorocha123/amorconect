@@ -1,0 +1,521 @@
+/* bloqueados.css - Estilos específicos para a página de usuários bloqueados */
+
+/* ===== ESTILOS DA PÁGINA DE BLOQUEADOS ===== */
+
+/* Seção de Upsell para Free Users */
+.premium-upsell-section {
+    background: linear-gradient(135deg, rgba(198, 166, 100, 0.1), rgba(166, 91, 91, 0.05));
+    border: 2px solid var(--gold);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.upsell-content {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.upsell-icon {
+    font-size: 3rem;
+    color: var(--gold);
+    flex-shrink: 0;
+}
+
+.upsell-text {
+    flex: 1;
+    text-align: left;
+}
+
+.upsell-text h3 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+}
+
+.upsell-text p {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.upsell-btn {
+    flex-shrink: 0;
+}
+
+/* Estatísticas */
+.blocked-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-card);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid rgba(198, 166, 100, 0.2);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--burgundy), var(--gold));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-white);
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Cards de Usuários Bloqueados */
+.blocked-user-card {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-card);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    position: relative;
+    transition: var(--transition);
+}
+
+.blocked-user-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+}
+
+.blocked-user-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--error), var(--burgundy));
+}
+
+.blocked-user-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.blocked-user-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--burgundy), var(--gold));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-white);
+    font-weight: bold;
+    font-size: 1.2rem;
+    border: 3px solid var(--error);
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.blocked-user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.blocked-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.blocked-user-name {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.3rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.blocked-user-location {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.blocked-user-premium-badge {
+    display: inline-block;
+    padding: 0.3rem 0.8rem;
+    background: var(--gold);
+    color: var(--dark-bg);
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.blocked-user-premium-badge.free {
+    background: var(--section-bg);
+    color: var(--text-light);
+}
+
+.blocked-user-details {
+    border-top: 1px solid #f1f3f5;
+    padding-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.blocked-user-detail {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.blocked-user-detail strong {
+    color: var(--text-secondary);
+}
+
+.blocked-user-detail span {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.block-date {
+    color: var(--error) !important;
+    font-weight: 600 !important;
+}
+
+.online-status {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+}
+
+.status-online {
+    color: var(--online);
+}
+
+.status-offline {
+    color: var(--offline);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-online .status-dot {
+    background: var(--online);
+}
+
+.status-offline .status-dot {
+    background: var(--offline);
+}
+
+.unblock-btn {
+    width: 100%;
+    padding: 0.8rem;
+    background: var(--success);
+    color: var(--text-white);
+    border: none;
+    border-radius: var(--border-radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.unblock-btn:hover {
+    background: #38a169;
+    transform: translateY(-2px);
+}
+
+/* Estado Vazio */
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-card);
+    border: 2px dashed rgba(198, 166, 100, 0.3);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: var(--gold);
+    margin-bottom: 1.5rem;
+}
+
+.empty-state h3 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.empty-state p {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Ícones de Confirmação */
+.success-icon {
+    color: var(--success);
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.unblock-consequences {
+    text-align: left;
+    background: rgba(72, 187, 120, 0.05);
+    padding: 1.5rem;
+    border-radius: var(--border-radius-sm);
+    border-left: 4px solid var(--success);
+    margin-top: 1rem;
+}
+
+.unblock-consequences p {
+    margin-bottom: 0.8rem;
+    font-size: 1rem;
+}
+
+.unblock-consequences ul {
+    list-style: none;
+    padding: 0;
+}
+
+.unblock-consequences li {
+    padding: 0.3rem 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.unblock-consequences li:before {
+    content: "•";
+    color: var(--success);
+    font-weight: bold;
+}
+
+/* ===== RESPONSIVO ===== */
+@media (max-width: 768px) {
+    .premium-upsell-section {
+        padding: 1.5rem;
+    }
+    
+    .upsell-content {
+        flex-direction: column;
+        gap: 1.5rem;
+        text-align: center;
+    }
+    
+    .upsell-text {
+        text-align: center;
+    }
+    
+    .upsell-icon {
+        font-size: 2.5rem;
+    }
+    
+    .blocked-stats {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        padding: 1.2rem;
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.3rem;
+    }
+    
+    .stat-number {
+        font-size: 1.7rem;
+    }
+    
+    .blocked-user-card {
+        padding: 1.2rem;
+    }
+    
+    .blocked-user-header {
+        gap: 0.8rem;
+    }
+    
+    .blocked-user-avatar {
+        width: 50px;
+        height: 50px;
+        font-size: 1rem;
+    }
+    
+    .blocked-user-name {
+        font-size: 1.1rem;
+    }
+    
+    .empty-state {
+        padding: 2rem 1rem;
+    }
+    
+    .empty-icon {
+        font-size: 3rem;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .section-actions {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .section-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .premium-upsell-section {
+        padding: 1.2rem;
+    }
+    
+    .upsell-content {
+        gap: 1.2rem;
+    }
+    
+    .upsell-icon {
+        font-size: 2rem;
+    }
+    
+    .upsell-text h3 {
+        font-size: 1.3rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .blocked-user-card {
+        padding: 1rem;
+    }
+    
+    .blocked-user-avatar {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .blocked-user-name {
+        font-size: 1rem;
+    }
+    
+    .blocked-user-detail {
+        font-size: 0.85rem;
+    }
+    
+    .empty-state {
+        padding: 1.5rem 1rem;
+    }
+    
+    .empty-icon {
+        font-size: 2.5rem;
+    }
+    
+    .empty-state h3 {
+        font-size: 1.3rem;
+    }
+}
+
+/* Orientação Landscape em Mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+    .premium-upsell-section {
+        padding: 1.2rem;
+    }
+    
+    .upsell-content {
+        flex-direction: row;
+        gap: 1.5rem;
+    }
+    
+    .upsell-text {
+        text-align: left;
+    }
+    
+    .blocked-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Animações */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.blocked-user-card {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.stat-card {
+    animation: fadeInUp 0.5s ease-out 0.1s both;
+}
+
+.premium-upsell-section {
+    animation: fadeInUp 0.5s ease-out 0.2s both;
+}
