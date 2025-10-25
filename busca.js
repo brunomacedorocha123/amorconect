@@ -1,11 +1,10 @@
-// busca.js - Sistema completo de busca - CORRIGIDO
+// busca.js - Sistema completo de busca
 const SearchManager = {
     currentUser: null,
     currentFilters: {},
     searchResults: [],
     isLoading: false,
 
-    // Inicialização
     async initialize() {
         try {
             await this.checkAuthentication();
@@ -13,12 +12,10 @@ const SearchManager = {
             await this.loadInitialData();
             await PremiumManager.updateUIWithPremiumStatus();
         } catch (error) {
-            console.error('Erro na inicialização:', error);
             this.showNotification('Erro ao carregar a busca', 'error');
         }
     },
 
-    // Verificar autenticação
     async checkAuthentication() {
         const { data: { user }, error } = await supabase.auth.getUser();
         if (error || !user) {
@@ -28,7 +25,6 @@ const SearchManager = {
         this.currentUser = user;
     },
 
-    // Configurar eventos
     setupEventListeners() {
         const searchForm = document.getElementById('searchForm');
         const clearFilters = document.getElementById('clearFilters');
@@ -41,7 +37,6 @@ const SearchManager = {
             clearFilters.addEventListener('click', () => this.clearAllFilters());
         }
 
-        // Busca automática ao alterar filtros
         const autoSearchInputs = document.querySelectorAll('#searchForm select, #searchForm input[type="text"]');
         autoSearchInputs.forEach(input => {
             input.addEventListener('change', () => {
@@ -51,7 +46,6 @@ const SearchManager = {
             });
         });
 
-        // Checkboxes - busca imediata
         const checkboxes = document.querySelectorAll('#searchForm input[type="checkbox"]');
         checkboxes.forEach(checkbox => {
             checkbox.addEventListener('change', () => {
@@ -62,16 +56,12 @@ const SearchManager = {
         });
     },
 
-    // Carregar dados iniciais
     async loadInitialData() {
         await this.loadCurrentUserData();
         this.setDefaultFilters();
-        
-        // Busca inicial com alguns usuários
         await this.performInitialSearch();
     },
 
-    // Carregar dados do usuário atual
     async loadCurrentUserData() {
         try {
             const { data: profile } = await supabase
@@ -98,38 +88,26 @@ const SearchManager = {
         }
     },
 
-    // Busca inicial
     async performInitialSearch() {
         try {
-            // Buscar alguns usuários aleatórios para mostrar
             const { data: profiles, error } = await supabase
                 .from('profiles')
-                .select(`
-                    *,
-                    user_details (
-                        gender,
-                        sexual_orientation,
-                        relationship_status,
-                        looking_for,
-                        interests
-                    )
-                `)
+                .select('*')
                 .neq('id', this.currentUser.id)
                 .limit(12);
 
             if (error) throw error;
 
-            this.searchResults = profiles || [];
+            const profilesWithDetails = await this.enrichProfilesWithDetails(profiles || []);
+            this.searchResults = profilesWithDetails;
             this.displayResults(this.searchResults);
             this.updateResultsCount(this.searchResults.length);
 
         } catch (error) {
-            console.error('Erro na busca inicial:', error);
             this.displayResults([]);
         }
     },
 
-    // Definir filtros padrão
     setDefaultFilters() {
         this.currentFilters = {
             plan: '',
@@ -147,7 +125,6 @@ const SearchManager = {
         };
     },
 
-    // Verificar se tem filtros mínimos para busca
     hasMinimumFilters() {
         const filters = this.getCurrentFormFilters();
         return Object.keys(filters).some(key => {
@@ -156,7 +133,6 @@ const SearchManager = {
         });
     },
 
-    // Manipular busca
     async handleSearch(event) {
         if (event) event.preventDefault();
         
@@ -168,7 +144,6 @@ const SearchManager = {
         await this.performSearch();
     },
 
-    // Executar busca
     async performSearch() {
         if (this.isLoading) return;
         
@@ -186,15 +161,13 @@ const SearchManager = {
             this.updateResultsCount(results.length);
             
         } catch (error) {
-            console.error('Erro na busca:', error);
-            this.showNotification('Erro ao realizar busca: ' + error.message, 'error');
+            this.showNotification('Erro ao realizar busca', 'error');
             this.displayResults([]);
         } finally {
             this.isLoading = false;
         }
     },
 
-    // Obter filtros do formulário
     getCurrentFormFilters() {
         return {
             plan: document.getElementById('searchPlan')?.value || '',
@@ -212,75 +185,64 @@ const SearchManager = {
         };
     },
 
-    // Executar query no Supabase - CORRIGIDO (sem invisibilidade)
     async executeSearchQuery(filters) {
-        console.log('🔍 Executando busca com filtros:', filters);
-        
-        // QUERY BASE - SEM FILTRO DE INVISIBILIDADE
         let query = supabase
             .from('profiles')
-            .select(`
-                *,
-                user_details (
-                    gender,
-                    sexual_orientation,
-                    profession,
-                    education,
-                    zodiac,
-                    relationship_status,
-                    religion,
-                    drinking,
-                    smoking,
-                    exercise,
-                    looking_for,
-                    description,
-                    interests,
-                    characteristics
-                )
-            `)
-            .neq('id', this.currentUser.id); // REMOVIDO: .eq('is_invisible', false)
+            .select('*')
+            .neq('id', this.currentUser.id);
 
-        // Aplicar filtros
         query = this.applyFilters(query, filters);
 
         const { data, error } = await query;
 
-        if (error) {
-            console.error('Erro na query:', error);
-            throw error;
-        }
+        if (error) throw error;
 
-        console.log('📊 Dados brutos encontrados:', data?.length || 0);
-        
-        // FILTRAGEM DE FAIXA ETÁRIA NO CLIENTE (usando birth_date)
-        return this.applyClientSideFilters(data || [], filters);
+        const profilesWithDetails = await this.enrichProfilesWithDetails(data || []);
+        return this.applyClientSideFilters(profilesWithDetails, filters);
     },
 
-    // Aplicar filtros na query - CORRIGIDO
+    async enrichProfilesWithDetails(profiles) {
+        if (!profiles.length) return [];
+
+        const userIds = profiles.map(p => p.id);
+        
+        const { data: userDetails, error } = await supabase
+            .from('user_details')
+            .select('*')
+            .in('user_id', userIds);
+
+        if (error) return profiles.map(profile => ({ ...profile, user_details: {} }));
+
+        const detailsMap = {};
+        userDetails.forEach(detail => {
+            detailsMap[detail.user_id] = detail;
+        });
+
+        return profiles.map(profile => ({
+            ...profile,
+            user_details: detailsMap[profile.id] || {}
+        }));
+    },
+
     applyFilters(query, filters) {
-        // Filtro de plano
         if (filters.plan === 'premium') {
             query = query.eq('is_premium', true);
         } else if (filters.plan === 'free') {
             query = query.eq('is_premium', false);
         }
 
-        // Filtro de cidade
         if (filters.city) {
             query = query.ilike('city', `%${filters.city}%`);
         }
 
-        // Filtro de estado
         if (filters.state) {
             query = query.eq('state', filters.state);
         }
 
-        // Filtro de foto
         if (filters.with_photo) {
             query = query.not('avatar_url', 'is', null);
         }
 
-        // Filtro online (últimas 15 minutos)
         if (filters.online_only) {
             const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
             query = query.gte('last_online_at', fifteenMinutesAgo);
@@ -289,12 +251,10 @@ const SearchManager = {
         return query;
     },
 
-    // Aplicar filtros no client-side - CORRIGIDO (com faixa etária)
     applyClientSideFilters(profiles, filters) {
         return profiles.filter(profile => {
             const details = profile.user_details || {};
 
-            // ✅ FILTRO DE FAIXA ETÁRIA (usando birth_date do perfil)
             if (filters.age_range && profile.birth_date) {
                 const age = this.calculateAge(profile.birth_date);
                 if (!this.isInAgeRange(age, filters.age_range)) {
@@ -302,7 +262,6 @@ const SearchManager = {
                 }
             }
 
-            // Filtro de gênero
             if (filters.gender && details.gender) {
                 if (filters.gender === 'homem' && !['masculino'].includes(details.gender)) {
                     return false;
@@ -312,35 +271,30 @@ const SearchManager = {
                 }
             }
 
-            // Filtro de orientação sexual
             if (filters.orientation && details.sexual_orientation) {
                 if (filters.orientation !== details.sexual_orientation) {
                     return false;
                 }
             }
 
-            // Filtro de status de relacionamento
             if (filters.relationship_status && details.relationship_status) {
                 if (filters.relationship_status !== details.relationship_status) {
                     return false;
                 }
             }
 
-            // Filtro de intenção
             if (filters.looking_for && details.looking_for) {
                 if (filters.looking_for !== details.looking_for) {
                     return false;
                 }
             }
 
-            // Filtro de interesses
             if (filters.interests && details.interests) {
                 if (!details.interests.includes(filters.interests)) {
                     return false;
                 }
             }
 
-            // Filtro de signo
             if (filters.zodiac && details.zodiac) {
                 if (filters.zodiac !== details.zodiac) {
                     return false;
@@ -351,7 +305,6 @@ const SearchManager = {
         });
     },
 
-    // Calcular idade a partir da data de nascimento
     calculateAge(birthDate) {
         const today = new Date();
         const birth = new Date(birthDate);
@@ -365,7 +318,6 @@ const SearchManager = {
         return age;
     },
 
-    // Verificar se está na faixa etária
     isInAgeRange(age, ageRange) {
         switch (ageRange) {
             case '18-25': return age >= 18 && age <= 25;
@@ -376,12 +328,11 @@ const SearchManager = {
         }
     },
 
-    // Mostrar estado de carregamento
     showLoadingState() {
         const resultsGrid = document.getElementById('resultsGrid');
         if (resultsGrid) {
             resultsGrid.innerHTML = `
-                <div class="empty-state" id="loadingState">
+                <div class="empty-state">
                     <i class="fas fa-search fa-spin"></i>
                     <p>Buscando pessoas...</p>
                 </div>
@@ -389,14 +340,13 @@ const SearchManager = {
         }
     },
 
-    // Exibir resultados
     displayResults(results) {
         const resultsGrid = document.getElementById('resultsGrid');
         if (!resultsGrid) return;
 
         if (results.length === 0) {
             resultsGrid.innerHTML = `
-                <div class="empty-state" id="emptyState">
+                <div class="empty-state">
                     <i class="fas fa-users"></i>
                     <p>Nenhuma pessoa encontrada</p>
                     <small>Tente ajustar os filtros da busca</small>
@@ -408,7 +358,6 @@ const SearchManager = {
         resultsGrid.innerHTML = results.map(profile => this.createProfileCard(profile)).join('');
     },
 
-    // Criar card de perfil
     createProfileCard(profile) {
         const details = profile.user_details || {};
         const age = profile.birth_date ? this.calculateAge(profile.birth_date) : null;
@@ -479,14 +428,12 @@ const SearchManager = {
         `;
     },
 
-    // Verificar se usuário está online
     isUserOnline(lastOnlineAt) {
         if (!lastOnlineAt) return false;
         const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
         return new Date(lastOnlineAt) > fifteenMinutesAgo;
     },
 
-    // Funções de formatação
     formatRelationshipStatus(status) {
         const statusMap = {
             'solteiro': 'Solteiro', 'solteira': 'Solteira',
@@ -508,7 +455,6 @@ const SearchManager = {
         return lookingForMap[lookingFor] || lookingFor;
     },
 
-    // Atualizar contador de resultados
     updateResultsCount(count) {
         const resultsCount = document.getElementById('resultsCount');
         if (resultsCount) {
@@ -516,7 +462,6 @@ const SearchManager = {
         }
     },
 
-    // Limpar todos os filtros
     clearAllFilters() {
         const form = document.getElementById('searchForm');
         if (form) {
@@ -528,17 +473,14 @@ const SearchManager = {
         }
     },
 
-    // Visualizar perfil
     viewProfile(userId) {
         window.location.href = `perfil.html?id=${userId}`;
     },
 
-    // Enviar mensagem
     sendMessage(userId) {
         window.location.href = `mensagens.html?user=${userId}`;
     },
 
-    // Sistema de notificações
     showNotification(message, type = 'info') {
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
@@ -565,7 +507,6 @@ const SearchManager = {
 
         document.body.appendChild(notification);
 
-        // Fechar notificação
         notification.querySelector('.notification-close').onclick = () => notification.remove();
 
         setTimeout(() => {
@@ -574,17 +515,14 @@ const SearchManager = {
     }
 };
 
-// Inicialização quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', function() {
     SearchManager.initialize();
 });
 
-// Monitorar estado de autenticação
 supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
         window.location.href = 'login.html';
     }
 });
 
-// Exportar para uso global
 window.SearchManager = SearchManager;
