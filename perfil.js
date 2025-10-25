@@ -1,12 +1,6 @@
-// Configuração do Supabase
-const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 let currentUser = null;
 let visitedUserId = null;
 
-// Carregar perfil
 document.addEventListener('DOMContentLoaded', async function() {
     await loadProfile();
 });
@@ -67,7 +61,7 @@ async function loadUserData() {
 
         if (profileError) throw profileError;
 
-        const details = profile.user_details || {};
+        const details = profile.user_details?.[0] || {};
         fillProfileData(profile, details);
 
     } catch (error) {
@@ -82,11 +76,9 @@ function fillProfileData(profile, details) {
     if (profile.avatar_url) {
         const avatarImg = document.getElementById('profileAvatar');
         const avatarFallback = document.getElementById('profileAvatarFallback');
-        if (avatarImg && avatarFallback) {
-            avatarImg.src = profile.avatar_url;
-            avatarImg.style.display = 'block';
-            avatarFallback.style.display = 'none';
-        }
+        avatarImg.src = profile.avatar_url;
+        avatarImg.style.display = 'block';
+        avatarFallback.style.display = 'none';
     }
 
     if (profile.birth_date) {
@@ -94,19 +86,7 @@ function fillProfileData(profile, details) {
         document.getElementById('profileAge').textContent = age;
     }
 
-    const isPremium = profile.is_premium && 
-                     (!profile.premium_expires_at || new Date(profile.premium_expires_at) > new Date());
-    
-    const premiumBadge = document.getElementById('visitedUserPremiumBadge');
-    if (premiumBadge) {
-        if (isPremium) {
-            premiumBadge.className = 'profile-premium-badge premium';
-            premiumBadge.innerHTML = '<i class="fas fa-crown"></i> Premium';
-        } else {
-            premiumBadge.className = 'profile-premium-badge free';
-            premiumBadge.innerHTML = '<i class="fas fa-user"></i> Free';
-        }
-    }
+    updateVisitedUserPremiumBadge(profile);
 
     document.getElementById('profileLookingFor').querySelector('span').textContent = 
         formatLookingFor(details.looking_for) || 'Não informado';
@@ -166,58 +146,84 @@ function fillProfileData(profile, details) {
         document.getElementById('lifestyleSection').style.display = 'none';
     }
 
-    checkGalleryAccess(isPremium);
+    checkGalleryAccess();
 }
 
-function checkGalleryAccess(isVisitedUserPremium) {
+async function updateVisitedUserPremiumBadge(profile) {
+    try {
+        const { data: subscription, error } = await supabase
+            .from('user_subscriptions')
+            .select('status, expires_at')
+            .eq('user_id', visitedUserId)
+            .eq('status', 'active')
+            .gte('expires_at', new Date().toISOString())
+            .single();
+
+        const isVisitedUserPremium = !error && subscription !== null;
+        
+        const premiumBadge = document.getElementById('visitedUserPremiumBadge');
+        if (premiumBadge) {
+            if (isVisitedUserPremium) {
+                premiumBadge.className = 'profile-premium-badge premium';
+                premiumBadge.innerHTML = '<i class="fas fa-crown"></i> Premium';
+            } else {
+                premiumBadge.className = 'profile-premium-badge free';
+                premiumBadge.innerHTML = '<i class="fas fa-user"></i> Free';
+            }
+        }
+        
+        return isVisitedUserPremium;
+    } catch (error) {
+        const premiumBadge = document.getElementById('visitedUserPremiumBadge');
+        if (premiumBadge) {
+            premiumBadge.className = 'profile-premium-badge free';
+            premiumBadge.innerHTML = '<i class="fas fa-user"></i> Free';
+        }
+        return false;
+    }
+}
+
+async function checkGalleryAccess() {
     const galleryPremiumLock = document.getElementById('galleryPremiumLock');
     const galleryContainer = document.getElementById('galleryContainer');
     const noGalleryMessage = document.getElementById('noGalleryMessage');
 
+    const isVisitedUserPremium = await checkVisitedUserPremium();
+    
     if (!isVisitedUserPremium) {
         galleryPremiumLock.style.display = 'none';
         galleryContainer.style.display = 'none';
         noGalleryMessage.style.display = 'block';
-    } else {
-        checkCurrentUserPremiumStatus();
+        return;
     }
-}
 
-async function checkCurrentUserPremiumStatus() {
-    try {
-        const { data: currentUserProfile } = await supabase
-            .from('profiles')
-            .select('is_premium, premium_expires_at')
-            .eq('id', currentUser.id)
-            .single();
-
-        const isCurrentUserPremium = currentUserProfile?.is_premium && 
-                                   (!currentUserProfile.premium_expires_at || 
-                                    new Date(currentUserProfile.premium_expires_at) > new Date());
-
-        const galleryPremiumLock = document.getElementById('galleryPremiumLock');
-        const galleryContainer = document.getElementById('galleryContainer');
-        const noGalleryMessage = document.getElementById('noGalleryMessage');
-
-        if (isCurrentUserPremium) {
-            galleryPremiumLock.style.display = 'none';
-            galleryContainer.style.display = 'block';
-            noGalleryMessage.style.display = 'none';
-            await loadVisitedUserGallery();
-        } else {
-            galleryPremiumLock.style.display = 'block';
-            galleryContainer.style.display = 'none';
-            noGalleryMessage.style.display = 'none';
-        }
-
-    } catch (error) {
-        const galleryPremiumLock = document.getElementById('galleryPremiumLock');
-        const galleryContainer = document.getElementById('galleryContainer');
-        const noGalleryMessage = document.getElementById('noGalleryMessage');
-        
+    const canViewGallery = await PremiumManager.canViewFullGallery();
+    
+    if (canViewGallery) {
+        galleryPremiumLock.style.display = 'none';
+        galleryContainer.style.display = 'block';
+        noGalleryMessage.style.display = 'none';
+        await loadVisitedUserGallery();
+    } else {
         galleryPremiumLock.style.display = 'block';
         galleryContainer.style.display = 'none';
         noGalleryMessage.style.display = 'none';
+    }
+}
+
+async function checkVisitedUserPremium() {
+    try {
+        const { data: subscription, error } = await supabase
+            .from('user_subscriptions')
+            .select('status, expires_at')
+            .eq('user_id', visitedUserId)
+            .eq('status', 'active')
+            .gte('expires_at', new Date().toISOString())
+            .single();
+
+        return !error && subscription !== null;
+    } catch (error) {
+        return false;
     }
 }
 
@@ -327,7 +333,6 @@ document.getElementById('sendMessageBtn').addEventListener('click', function() {
     }
 });
 
-// Verificar autenticação em tempo real
 supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
         window.location.href = 'login.html';
