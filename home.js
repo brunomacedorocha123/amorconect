@@ -1,4 +1,4 @@
-// home.js - VERSÃO RÁPIDA
+// home.js - VERSÃO REAL
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -148,7 +148,7 @@ function displayUsers(profiles) {
         
         return `
         <div class="user-card">
-            <div class="user-actions-btn" onclick="openUserActions('${profile.id}', ${JSON.stringify(safeProfile).replace(/'/g, "\\'")})">
+            <div class="user-actions-btn" onclick="window.openUserActions('${profile.id}', '${safeProfile.nickname}')">
                 <i class="fas fa-ellipsis-v"></i>
             </div>
             
@@ -236,22 +236,22 @@ function viewUserProfile(userId) {
     window.location.href = `perfil.html?id=${userId}`;
 }
 
-// === SISTEMA DOS 3 PONTOS ===
-function openUserActions(userId, userData) {
-    currentBlockingUser = { id: userId, ...userData };
+// === SISTEMA DOS 3 PONTOS (GLOBAL) ===
+window.openUserActions = function(userId, userName) {
+    currentBlockingUser = { id: userId, name: userName };
     showModal('userActionsModal');
 }
 
-function closeUserActionsModal() {
+window.closeUserActionsModal = function() {
     closeAllModals();
 }
 
-function blockUser() {
+window.blockUser = function() {
     if (!currentBlockingUser) return;
     showBlockConfirmationModal();
 }
 
-function showBlockConfirmationModal() {
+window.showBlockConfirmationModal = function() {
     const isPremium = window.PremiumManager ? window.PremiumManager.userPlanInfo?.is_premium : false;
     
     const freeWarning = document.getElementById('freeBlockWarning');
@@ -266,17 +266,17 @@ function showBlockConfirmationModal() {
     }
 
     const message = document.getElementById('blockConfirmMessage');
-    const userName = currentBlockingUser.nickname || 'este usuário';
+    const userName = currentBlockingUser.name || 'este usuário';
     message.textContent = `Tem certeza que deseja bloquear ${userName}?`;
 
     showModal('blockConfirmModal');
 }
 
-function closeBlockConfirmModal() {
+window.closeBlockConfirmModal = function() {
     closeAllModals();
 }
 
-async function confirmBlockUser() {
+window.confirmBlockUser = async function() {
     if (!currentBlockingUser) return;
 
     try {
@@ -309,12 +309,12 @@ async function confirmBlockUser() {
     }
 }
 
-function reportUser() {
+window.reportUser = function() {
     showNotification('Funcionalidade de denúncia em desenvolvimento');
     closeAllModals();
 }
 
-function viewProfileFromModal() {
+window.viewProfileFromModal = function() {
     if (currentBlockingUser) {
         closeAllModals();
         viewUserProfile(currentBlockingUser.id);
@@ -326,6 +326,7 @@ function showModal(modalId) {
     closeAllModals();
     const modal = document.getElementById(modalId);
     if (modal) {
+        modal.style.display = 'flex';
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
@@ -333,6 +334,7 @@ function showModal(modalId) {
 
 function closeAllModals() {
     document.querySelectorAll('.modal').forEach(modal => {
+        modal.style.display = 'none';
         modal.classList.remove('active');
     });
     document.body.style.overflow = '';
@@ -350,7 +352,7 @@ function showNotification(message) {
         color: white;
         padding: 1rem 1.5rem;
         border-radius: var(--border-radius-sm);
-        z-index: 3000;
+        z-index: 4000;
         box-shadow: var(--shadow-hover);
         animation: slideInRight 0.3s ease-out;
         max-width: 300px;
