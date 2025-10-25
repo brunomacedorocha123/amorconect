@@ -2,6 +2,49 @@
 
 /* ===== ESTILOS DA PÁGINA DE BLOQUEADOS ===== */
 
+/* CORREÇÃO DO SCROLL - MODAIS */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 3000;
+    backdrop-filter: blur(5px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.modal.active {
+    display: flex;
+    opacity: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    transform: translateY(-30px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    margin: auto;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal.active .modal-content {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Garantir que o body tenha scroll quando não há modal */
+body {
+    overflow-y: auto;
+}
+
 /* Seção de Upsell para Free Users */
 .premium-upsell-section {
     background: linear-gradient(135deg, rgba(198, 166, 100, 0.1), rgba(166, 91, 91, 0.05));
@@ -345,6 +388,16 @@
 
 /* ===== RESPONSIVO ===== */
 @media (max-width: 768px) {
+    /* Correção modais mobile */
+    .modal {
+        padding: 10px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+    
     .premium-upsell-section {
         padding: 1.5rem;
     }
@@ -426,6 +479,10 @@
 }
 
 @media (max-width: 480px) {
+    .modal {
+        padding: 5px;
+    }
+    
     .premium-upsell-section {
         padding: 1.2rem;
     }
@@ -478,6 +535,14 @@
 
 /* Orientação Landscape em Mobile */
 @media (max-width: 768px) and (orientation: landscape) {
+    .modal {
+        padding: 5px;
+    }
+    
+    .modal-content {
+        max-height: 85vh;
+    }
+    
     .premium-upsell-section {
         padding: 1.2rem;
     }
@@ -518,4 +583,30 @@
 
 .premium-upsell-section {
     animation: fadeInUp 0.5s ease-out 0.2s both;
+}
+
+/* Animações para modais */
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-content {
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+/* Scroll suave para a página inteira */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Garantir que os modais não afetem o scroll da página principal */
+body:not(.modal-open) {
+    overflow-y: auto !important;
 }
