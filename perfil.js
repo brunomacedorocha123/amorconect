@@ -73,6 +73,8 @@ function fillProfileData(profile, details) {
 
     updatePremiumBadge(profile);
 
+    // ATUALIZADO: Inclui status de relacionamento
+    updateField('profileRelationshipStatus', details.relationship_status);
     updateField('profileLookingFor', details.looking_for);
     updateField('profileGender', details.gender);
     updateField('profileOrientation', details.sexual_orientation);
@@ -97,6 +99,23 @@ function fillProfileData(profile, details) {
 }
 
 // ==================== FUNÇÕES DE FORMATAÇÃO PARA PORTUGUÊS ====================
+
+// NOVA FUNÇÃO: Formatar Status de Relacionamento
+function formatRelationshipStatus(value) {
+    const options = {
+        'solteiro': 'Solteiro',
+        'solteira': 'Solteira',
+        'divorciado': 'Divorciado',
+        'divorciada': 'Divorciada',
+        'casado': 'Casado',
+        'casada': 'Casada',
+        'viúvo': 'Viúvo',
+        'viúva': 'Viúva',
+        'noivo': 'Noivo',
+        'noiva': 'Noiva'
+    };
+    return options[value] || value;
+}
 
 function formatLookingFor(value) {
     const options = {
@@ -212,7 +231,9 @@ function updateField(elementId, value) {
             let displayValue = value;
             
             // APLICA FORMATAÇÃO PARA PORTUGUÊS
-            if (elementId === 'profileLookingFor') {
+            if (elementId === 'profileRelationshipStatus') {
+                displayValue = formatRelationshipStatus(value);
+            } else if (elementId === 'profileLookingFor') {
                 displayValue = formatLookingFor(value);
             } else if (elementId === 'profileGender') {
                 displayValue = formatGender(value);
@@ -242,7 +263,7 @@ function updateList(containerId, items, sectionId) {
     const section = document.getElementById(sectionId);
     
     if (!items || items.length === 0) {
-        section.style.display = 'none';
+        if (section) section.style.display = 'none';
         return;
     }
 
@@ -299,14 +320,14 @@ async function checkGalleryAccess() {
     const isCurrentUserPremium = await checkCurrentUserPremium();
     
     if (isCurrentUserPremium) {
-        premiumLock.style.display = 'none';
-        galleryContainer.style.display = 'block';
-        noGallery.style.display = 'none';
+        if (premiumLock) premiumLock.style.display = 'none';
+        if (galleryContainer) galleryContainer.style.display = 'block';
+        if (noGallery) noGallery.style.display = 'none';
         await loadUserGallery();
     } else {
-        premiumLock.style.display = 'block';
-        galleryContainer.style.display = 'none';
-        noGallery.style.display = 'none';
+        if (premiumLock) premiumLock.style.display = 'block';
+        if (galleryContainer) galleryContainer.style.display = 'none';
+        if (noGallery) noGallery.style.display = 'none';
     }
 }
 
@@ -401,6 +422,7 @@ function openGalleryImage(imageUrl) {
     }
 }
 
+// Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('imageModal');
     const closeBtn = document.getElementById('closeModalBtn');
@@ -419,15 +441,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    document.getElementById('sendMessageBtn').addEventListener('click', function() {
-        if (visitedUserId) {
-            window.location.href = `mensagens.html?user=${visitedUserId}`;
-        }
-    });
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    if (sendMessageBtn) {
+        sendMessageBtn.addEventListener('click', function() {
+            if (visitedUserId) {
+                window.location.href = `mensagens.html?user=${visitedUserId}`;
+            }
+        });
+    }
 });
 
+// Monitorar estado de autenticação
 supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
         window.location.href = 'login.html';
     }
 });
+
+// Exportar funções para uso global
+window.profileViewer = {
+    initializeProfile,
+    loadUserData,
+    openGalleryImage
+};
