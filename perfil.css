@@ -631,61 +631,61 @@ body {
 .online-status-display {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
-    padding: 0.2rem 0.6rem;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    margin-top: 0.2rem;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 15px;
+    font-size: 0.9rem; /* ✅ TEXTO NORMAL */
+    font-weight: 600;
+    margin-top: 0.3rem;
     animation: fadeIn 0.3s ease;
 }
 
 .online-status-display.online {
-    background: rgba(72, 187, 120, 0.08);
-    border: 1px solid rgba(72, 187, 120, 0.3);
+    background: rgba(72, 187, 120, 0.1);
+    border: 1px solid #48bb78;
     color: #48bb78;
 }
 
 .online-status-display.offline {
-    background: rgba(160, 174, 192, 0.08);
-    border: 1px solid rgba(160, 174, 192, 0.3);
+    background: rgba(160, 174, 192, 0.1);
+    border: 1px solid #a0aec0;
     color: #a0aec0;
 }
 
 .online-dot {
     color: #48bb78;
-    font-size: 0.5rem;
+    font-size: 0.6rem; /* ✅ PONTO UM POUCO MENOR */
     animation: pulse-online 2s infinite;
 }
 
 .offline-dot {
     color: #a0aec0;
-    font-size: 0.5rem;
+    font-size: 0.6rem; /* ✅ PONTO UM POUCO MENOR */
 }
 
 /* Posicionamento compacto no perfil */
 .profile-basic-info .online-status-display {
     display: block;
     margin-left: 0;
-    margin-top: 0.1rem;
-    margin-bottom: 0.5rem;
+    margin-top: 0.2rem;
+    margin-bottom: 0.6rem;
 }
 
 /* ========== MOBILE ========== */
 @media (max-width: 768px) {
     .online-status-display {
-        font-size: 0.75rem;
-        padding: 0.15rem 0.5rem;
-        gap: 0.25rem;
+        font-size: 0.85rem; /* ✅ TEXTO QUASE NORMAL */
+        padding: 0.25rem 0.6rem; /* ✅ ÁREA MENOR */
+        gap: 0.3rem;
     }
     
     .online-dot,
     .offline-dot {
-        font-size: 0.45rem;
+        font-size: 0.55rem;
     }
     
     .profile-basic-info .online-status-display {
-        margin-top: 0.05rem;
-        margin-bottom: 0.3rem;
+        margin-top: 0.1rem;
+        margin-bottom: 0.4rem;
     }
 }
