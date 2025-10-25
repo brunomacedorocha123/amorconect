@@ -1001,3 +1001,184 @@ footer {
         padding: 2rem 1rem;
     }
 }
+
+/* ========== MODO INVISÍVEL ========== */
+.premium-feature-container {
+    background: var(--section-bg);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 2px solid var(--gold);
+}
+
+.premium-feature-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(198, 166, 100, 0.3);
+}
+
+.premium-feature-info h4 {
+    color: var(--gold);
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.premium-feature-info p {
+    color: var(--beige);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.premium-feature-status {
+    font-weight: 600;
+}
+
+.premium-feature-active {
+    color: #48bb78;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.premium-feature-locked {
+    color: var(--beige);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Controle do modo invisível */
+.invisible-mode-control {
+    animation: fadeIn 0.3s ease;
+}
+
+.premium-checkbox {
+    padding: 1rem;
+    background: rgba(198, 166, 100, 0.1);
+    border-radius: 8px;
+    border: 2px solid var(--gold);
+    margin-bottom: 1rem;
+}
+
+.premium-checkbox:hover {
+    background: rgba(198, 166, 100, 0.2);
+}
+
+.premium-checkbox .checkmark {
+    border-color: var(--gold);
+}
+
+.premium-checkbox input[type="checkbox"]:checked + .checkmark {
+    background: var(--gold);
+    border-color: var(--gold);
+}
+
+/* CTA de Upgrade */
+.premium-upgrade-cta {
+    background: linear-gradient(135deg, var(--section-bg), #2a2a2a);
+    border: 2px dashed var(--gold);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.upgrade-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.upgrade-content i {
+    font-size: 2rem;
+    color: var(--gold);
+}
+
+.upgrade-text h4 {
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.upgrade-text p {
+    color: var(--beige);
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.btn-premium.btn-sm {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+/* Estados do modo invisível */
+.invisible-mode-active {
+    position: relative;
+}
+
+.invisible-mode-active::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 8px;
+    height: 8px;
+    background: #48bb78;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== MOBILE ========== */
+@media (max-width: 768px) {
+    .premium-feature-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .premium-feature-status {
+        order: -1;
+    }
+    
+    .upgrade-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.8rem;
+    }
+    
+    .premium-feature-container {
+        padding: 1.2rem;
+    }
+    
+    .premium-upgrade-cta {
+        padding: 1.2rem;
+    }
+}
+
+/* ========== DARK MODE ENHANCEMENT ========== */
+@media (prefers-color-scheme: dark) {
+    .premium-feature-container {
+        background: linear-gradient(135deg, #2a2a2a, #242424);
+    }
+    
+    .premium-upgrade-cta {
+        background: linear-gradient(135deg, #242424, #1a1a1a);
+    }
+}

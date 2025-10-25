@@ -204,89 +204,130 @@
                     </div>
 
                     <!-- Informações Públicas -->
-                    <!-- Informações Públicas -->
-<div class="form-section">
-    <h3><i class="fas fa-heart"></i> Sobre Você</h3>
-    <p class="section-description">Informações visíveis para outros usuários</p>
+                    <div class="form-section">
+                        <h3><i class="fas fa-heart"></i> Sobre Você</h3>
+                        <p class="section-description">Informações visíveis para outros usuários</p>
 
-    <div class="form-grid">
-        <!-- CAMPO NOVO: STATUS DE RELACIONAMENTO -->
-        <div class="form-group">
-            <label for="relationshipStatus">Status de Relacionamento *</label>
-            <select id="relationshipStatus" class="form-control" required>
-                <option value="">Selecione...</option>
-                <option value="solteiro">Solteiro</option>
-                <option value="solteira">Solteira</option>
-                <option value="divorciado">Divorciado</option>
-                <option value="divorciada">Divorciada</option>
-                <option value="casado">Casado</option>
-                <option value="casada">Casada</option>
-                <option value="viúvo">Viúvo</option>
-                <option value="viúva">Viúva</option>
-                <option value="noivo">Noivo</option>
-                <option value="noiva">Noiva</option>
-            </select>
-        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="relationshipStatus">Status de Relacionamento *</label>
+                                <select id="relationshipStatus" class="form-control" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="solteiro">Solteiro</option>
+                                    <option value="solteira">Solteira</option>
+                                    <option value="divorciado">Divorciado</option>
+                                    <option value="divorciada">Divorciada</option>
+                                    <option value="casado">Casado</option>
+                                    <option value="casada">Casada</option>
+                                    <option value="viúvo">Viúvo</option>
+                                    <option value="viúva">Viúva</option>
+                                    <option value="noivo">Noivo</option>
+                                    <option value="noiva">Noiva</option>
+                                </select>
+                            </div>
 
-        <div class="form-group">
-            <label for="gender">Gênero *</label>
-            <select id="gender" class="form-control" required>
-                <option value="">Selecione...</option>
-                <option value="feminino">Feminino</option>
-                <option value="masculino">Masculino</option>
-                <option value="nao_informar">Prefiro não informar</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="sexualOrientation">Orientação Sexual</label>
-            <select id="sexualOrientation" class="form-control">
-                <option value="">Selecione...</option>
-                <option value="heterossexual">Heterossexual</option>
-                <option value="homossexual">Homossexual</option>
-                <option value="bissexual">Bissexual</option>
-                <option value="outro">Outro</option>
-                <option value="prefiro_nao_informar">Prefiro não informar</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="profession">Profissão</label>
-            <input type="text" id="profession" class="form-control" placeholder="Sua profissão">
-        </div>
-        <div class="form-group">
-            <label for="education">Escolaridade</label>
-            <select id="education" class="form-control">
-                <option value="">Selecione...</option>
-                <option value="fundamental_incompleto">Fundamental Incompleto</option>
-                <option value="fundamental_completo">Fundamental Completo</option>
-                <option value="medio_incompleto">Médio Incompleto</option>
-                <option value="medio_completo">Médio Completo</option>
-                <option value="superior_incompleto">Superior Incompleto</option>
-                <option value="superior_completo">Superior Completo</option>
-                <option value="pos_graduacao">Pós-graduação</option>
-                <option value="mestrado">Mestrado</option>
-                <option value="doutorado">Doutorado</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="zodiac">Signo</label>
-            <select id="zodiac" class="form-control">
-                <option value="">Selecione...</option>
-                <option value="aries">♈ Áries</option>
-                <option value="touro">♉ Touro</option>
-                <option value="gemeos">♊ Gêmeos</option>
-                <option value="cancer">♋ Câncer</option>
-                <option value="leao">♌ Leão</option>
-                <option value="virgem">♍ Virgem</option>
-                <option value="libra">♎ Libra</option>
-                <option value="escorpiao">♏ Escorpião</option>
-                <option value="sagitario">♐ Sagitário</option>
-                <option value="capricornio">♑ Capricórnio</option>
-                <option value="aquario">♒ Aquário</option>
-                <option value="peixes">♓ Peixes</option>
-            </select>
-        </div>
-    </div>
-</div>
+                            <div class="form-group">
+                                <label for="gender">Gênero *</label>
+                                <select id="gender" class="form-control" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="feminino">Feminino</option>
+                                    <option value="masculino">Masculino</option>
+                                    <option value="nao_informar">Prefiro não informar</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="sexualOrientation">Orientação Sexual</label>
+                                <select id="sexualOrientation" class="form-control">
+                                    <option value="">Selecione...</option>
+                                    <option value="heterossexual">Heterossexual</option>
+                                    <option value="homossexual">Homossexual</option>
+                                    <option value="bissexual">Bissexual</option>
+                                    <option value="outro">Outro</option>
+                                    <option value="prefiro_nao_informar">Prefiro não informar</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="profession">Profissão</label>
+                                <input type="text" id="profession" class="form-control" placeholder="Sua profissão">
+                            </div>
+                            <div class="form-group">
+                                <label for="education">Escolaridade</label>
+                                <select id="education" class="form-control">
+                                    <option value="">Selecione...</option>
+                                    <option value="fundamental_incompleto">Fundamental Incompleto</option>
+                                    <option value="fundamental_completo">Fundamental Completo</option>
+                                    <option value="medio_incompleto">Médio Incompleto</option>
+                                    <option value="medio_completo">Médio Completo</option>
+                                    <option value="superior_incompleto">Superior Incompleto</option>
+                                    <option value="superior_completo">Superior Completo</option>
+                                    <option value="pos_graduacao">Pós-graduação</option>
+                                    <option value="mestrado">Mestrado</option>
+                                    <option value="doutorado">Doutorado</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="zodiac">Signo</label>
+                                <select id="zodiac" class="form-control">
+                                    <option value="">Selecione...</option>
+                                    <option value="aries">♈ Áries</option>
+                                    <option value="touro">♉ Touro</option>
+                                    <option value="gemeos">♊ Gêmeos</option>
+                                    <option value="cancer">♋ Câncer</option>
+                                    <option value="leao">♌ Leão</option>
+                                    <option value="virgem">♍ Virgem</option>
+                                    <option value="libra">♎ Libra</option>
+                                    <option value="escorpiao">♏ Escorpião</option>
+                                    <option value="sagitario">♐ Sagitário</option>
+                                    <option value="capricornio">♑ Capricórnio</option>
+                                    <option value="aquario">♒ Aquário</option>
+                                    <option value="peixes">♓ Peixes</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modo Invisível -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-eye-slash"></i> Modo Invisível</h3>
+                        <p class="section-description">Controle sua visibilidade na plataforma</p>
+                        
+                        <div class="premium-feature-container">
+                            <div class="premium-feature-header">
+                                <div class="premium-feature-info">
+                                    <h4><i class="fas fa-crown"></i> Recurso Premium</h4>
+                                    <p>Ocultar seu perfil e atividade online</p>
+                                </div>
+                                <div class="premium-feature-status" id="invisibleFeatureStatus">
+                                    <!-- Será preenchido pelo JavaScript -->
+                                </div>
+                            </div>
+
+                            <div class="invisible-mode-control" id="invisibleModeControl" style="display: none;">
+                                <div class="form-group">
+                                    <label class="checkbox-label premium-checkbox">
+                                        <input type="checkbox" id="isInvisible">
+                                        <span class="checkmark"></span>
+                                        <i class="fas fa-eye-slash"></i>
+                                        Ativar Modo Invisível
+                                    </label>
+                                    <small>Quando ativado, seu perfil não aparecerá nas buscas e sua atividade ficará oculta</small>
+                                </div>
+                            </div>
+
+                            <div class="premium-upgrade-cta" id="invisibleUpgradeCTA">
+                                <div class="upgrade-content">
+                                    <i class="fas fa-lock"></i>
+                                    <div class="upgrade-text">
+                                        <h4>Recurso Bloqueado</h4>
+                                        <p>Faça upgrade para Premium para ativar o modo invisível</p>
+                                    </div>
+                                    <a href="pricing.html" class="btn btn-premium btn-sm">
+                                        <i class="fas fa-crown"></i> Tornar-se Premium
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- Características Pessoais -->
                     <div class="form-section">
@@ -512,6 +553,7 @@
                             <div class="char-count">
                                 <span id="charCount">0</span>/100 caracteres
                             </div>
+                        </div>
                     </div>
 
                     <!-- Form Actions -->
@@ -525,100 +567,101 @@
                     </div>
                 </form>
             </section>
-</div>
-   <!-- SEÇÃO: Galeria Premium -->
-<section class="form-section">
-    <h3><i class="fas fa-images"></i> Minha Galeria Premium</h3>
-    
-    <div id="galleryManager" style="display: none;">
-        <div class="section-description">
-            <p>Armazene e visualize suas fotos especiais</p>
-            <div class="storage-status">
-                <div class="storage-info">
-                    <span id="storageUsed">0MB de 10MB usados</span>
-                    <div class="storage-bar">
-                        <div class="storage-fill" id="storageFill" style="width: 0%"></div>
+
+            <!-- SEÇÃO: Galeria Premium -->
+            <section class="form-section">
+                <h3><i class="fas fa-images"></i> Minha Galeria Premium</h3>
+                
+                <div id="galleryManager" style="display: none;">
+                    <div class="section-description">
+                        <p>Armazene e visualize suas fotos especiais</p>
+                        <div class="storage-status">
+                            <div class="storage-info">
+                                <span id="storageUsed">0MB de 10MB usados</span>
+                                <div class="storage-bar">
+                                    <div class="storage-fill" id="storageFill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    <div class="gallery-upload">
+                        <button type="button" class="btn btn-primary" id="uploadGalleryBtn">
+                            <i class="fas fa-plus"></i> Adicionar Fotos
+                        </button>
+                        <input type="file" id="galleryUpload" multiple accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" style="display: none;">
+                    </div>
+
+                    <div id="galleryGrid" class="gallery-grid">
+                        <div class="empty-gallery">
+                            <i class="fas fa-images"></i>
+                            <p>Sua galeria está vazia</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="galleryUpgradeCTA" class="empty-gallery" style="display: block;">
+                    <i class="fas fa-crown"></i>
+                    <p>Galeria Premium Bloqueada</p>
+                    <a href="pricing.html" class="btn btn-premium" style="margin-top: 1rem;">
+                        <i class="fas fa-crown"></i> Tornar-se Premium
+                    </a>
+                </div>
+            </section>
+        </div>
+
+        <!-- MODAL PARA IMAGEM AMPLIADA -->
+        <div id="imageModal" class="image-modal">
+            <div class="modal-overlay"></div>
+            <div class="modal-container">
+                <button class="modal-close-btn" id="closeModalBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="modal-image-wrapper">
+                    <img id="modalImageView" src="" alt="Imagem ampliada">
                 </div>
             </div>
         </div>
+    </main>
 
-        <div class="gallery-upload">
-            <button type="button" class="btn btn-primary" id="uploadGalleryBtn">
-                <i class="fas fa-plus"></i> Adicionar Fotos
-            </button>
-            <input type="file" id="galleryUpload" multiple accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" style="display: none;">
-        </div>
-
-        <div id="galleryGrid" class="gallery-grid">
-            <div class="empty-gallery">
-                <i class="fas fa-images"></i>
-                <p>Sua galeria está vazia</p>
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Amor Conect</h3>
+                    <p>Conectando corações de forma segura e genuína.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Links Rápidos</h3>
+                    <ul>
+                        <li><a href="home.html">Home</a></li>
+                        <li><a href="mensagens.html">Mensagens</a></li>
+                        <li><a href="busca.html">Buscar</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Suporte</h3>
+                    <ul>
+                        <li><a href="#">Ajuda</a></li>
+                        <li><a href="#">Privacidade</a></li>
+                        <li><a href="#">Termos</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 Amor Conect. Todos os direitos reservados.</p>
             </div>
         </div>
-    </div>
+    </footer>
 
-    <div id="galleryUpgradeCTA" class="empty-gallery" style="display: block;">
-        <i class="fas fa-crown"></i>
-        <p>Galeria Premium Bloqueada</p>
-        <a href="pricing.html" class="btn btn-premium" style="margin-top: 1rem;">
-            <i class="fas fa-crown"></i> Tornar-se Premium
-        </a>
-    </div>
-</section>
+    <!-- Inputs hidden para upload -->
+    <input type="file" id="avatarUpload" accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;">
 
-<!-- MODAL PARA IMAGEM AMPLIADA -->
-<div id="imageModal" class="image-modal">
-    <div class="modal-overlay"></div>
-    <div class="modal-container">
-        <button class="modal-close-btn" id="closeModalBtn">
-            <i class="fas fa-times"></i>
-        </button>
-        <div class="modal-image-wrapper">
-            <img id="modalImageView" src="" alt="Imagem ampliada">
-        </div>
-    </div>
-</div>
-</main>
-
-<!-- Footer -->
-<footer>
-    <div class="container">
-        <div class="footer-content">
-            <div class="footer-column">
-                <h3>Amor Conect</h3>
-                <p>Conectando corações de forma segura e genuína.</p>
-            </div>
-            <div class="footer-column">
-                <h3>Links Rápidos</h3>
-                <ul>
-                    <li><a href="home.html">Home</a></li>
-                    <li><a href="mensagens.html">Mensagens</a></li>
-                    <li><a href="busca.html">Buscar</a></li>
-                </ul>
-            </div>
-            <div class="footer-column">
-                <h3>Suporte</h3>
-                <ul>
-                    <li><a href="#">Ajuda</a></li>
-                    <li><a href="#">Privacidade</a></li>
-                    <li><a href="#">Termos</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="copyright">
-            <p>&copy; 2024 Amor Conect. Todos os direitos reservados.</p>
-        </div>
-    </div>
-</footer>
-
-<!-- Inputs hidden para upload -->
-<input type="file" id="avatarUpload" accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;">
-
-<!-- Scripts na ordem correta -->
-<script src="painel-perfil.js"></script>
-<script src="premium-check.js"></script>
-<script src="avatar.js"></script>
-<script src="galeria.js"></script>
+    <!-- Scripts na ordem correta -->
+    <script src="painel-perfil.js"></script>
+    <script src="premium-check.js"></script>
+    <script src="avatar.js"></script>
+    <script src="galeria.js"></script>
 </body>
 </html>

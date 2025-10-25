@@ -19,6 +19,7 @@ async function initializeApp() {
         // AGUARDAR O PREMIUM MANAGER ATUALIZAR A UI
         setTimeout(async () => {
             await PremiumManager.updateUIWithPremiumStatus();
+            await updateInvisibleModeUI(); // Atualizar UI do modo invisível
         }, 500);
     }
 }
@@ -67,6 +68,12 @@ function setupEventListeners() {
         upgradeBtn.addEventListener('click', () => {
             window.location.href = 'pricing.html';
         });
+    }
+
+    // Modo invisível
+    const invisibleCheckbox = document.getElementById('isInvisible');
+    if (invisibleCheckbox) {
+        invisibleCheckbox.addEventListener('change', handleInvisibleToggle);
     }
 }
 
@@ -130,6 +137,12 @@ function fillProfileForm(profile, userDetails) {
     setValue('zipCode', profile.zip_code);
     setValue('displayCity', profile.display_city);
 
+    // Modo Invisível
+    const invisibleCheckbox = document.getElementById('isInvisible');
+    if (invisibleCheckbox) {
+        invisibleCheckbox.checked = profile.is_invisible || false;
+    }
+
     // Dados públicos
     if (userDetails) {
         setValue('relationshipStatus', userDetails.relationship_status);
@@ -166,6 +179,66 @@ function fillProfileForm(profile, userDetails) {
     }
 
     updateCharCount();
+}
+
+// Atualizar UI do modo invisível
+async function updateInvisibleModeUI() {
+    const isPremium = await PremiumManager.checkPremiumStatus();
+    const invisibleControl = document.getElementById('invisibleModeControl');
+    const upgradeCTA = document.getElementById('invisibleUpgradeCTA');
+    const featureStatus = document.getElementById('invisibleFeatureStatus');
+
+    if (isPremium) {
+        // Usuário Premium - mostrar controle
+        if (invisibleControl) invisibleControl.style.display = 'block';
+        if (upgradeCTA) upgradeCTA.style.display = 'none';
+        if (featureStatus) {
+            featureStatus.innerHTML = `
+                <span class="premium-feature-active">
+                    <i class="fas fa-check-circle"></i> Ativo
+                </span>
+            `;
+        }
+    } else {
+        // Usuário Free - mostrar CTA de upgrade
+        if (invisibleControl) invisibleControl.style.display = 'none';
+        if (upgradeCTA) upgradeCTA.style.display = 'block';
+        if (featureStatus) {
+            featureStatus.innerHTML = `
+                <span class="premium-feature-locked">
+                    <i class="fas fa-lock"></i> Bloqueado
+                </span>
+            `;
+        }
+    }
+}
+
+// Manipular toggle do modo invisível
+async function handleInvisibleToggle(event) {
+    const isInvisible = event.target.checked;
+    
+    try {
+        const { error } = await supabase
+            .from('profiles')
+            .update({
+                is_invisible: isInvisible,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', currentUser.id);
+
+        if (error) throw error;
+
+        showNotification(
+            `Modo invisível ${isInvisible ? 'ativado' : 'desativado'} com sucesso!`,
+            'success'
+        );
+
+    } catch (error) {
+        console.error('Erro ao atualizar modo invisível:', error);
+        showNotification('Erro ao atualizar modo invisível', 'error');
+        // Reverter o checkbox em caso de erro
+        event.target.checked = !isInvisible;
+    }
 }
 
 // Salvar perfil
@@ -213,6 +286,9 @@ async function handleProfileSave(event) {
 
 // Coletar dados do perfil
 function collectProfileData() {
+    const invisibleCheckbox = document.getElementById('isInvisible');
+    const isInvisible = invisibleCheckbox ? invisibleCheckbox.checked : false;
+
     return {
         full_name: getValue('fullName'),
         nickname: getValue('nickname'),
@@ -225,7 +301,8 @@ function collectProfileData() {
         city: getValue('city'),
         state: getValue('state'),
         zip_code: getValue('zipCode').replace(/\D/g, ''),
-        display_city: getValue('displayCity')
+        display_city: getValue('displayCity'),
+        is_invisible: isInvisible
     };
 }
 
@@ -418,7 +495,7 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 
-// Função para buscar CEP (opcional - pode adicionar depois)
+// Função para buscar CEP
 async function buscarCEP(cep) {
     try {
         const cepLimpo = cep.replace(/\D/g, '');
@@ -439,7 +516,7 @@ async function buscarCEP(cep) {
     }
 }
 
-// Adicionar evento para busca automática de CEP (opcional)
+// Adicionar evento para busca automática de CEP
 document.addEventListener('DOMContentLoaded', function() {
     const zipCodeInput = document.getElementById('zipCode');
     if (zipCodeInput) {
@@ -457,5 +534,6 @@ window.supabase = supabase;
 window.profileManager = {
     loadUserProfile,
     saveProfile: handleProfileSave,
-    showNotification
+    showNotification,
+    updateInvisibleModeUI
 };
