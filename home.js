@@ -1,4 +1,4 @@
-// home.js - VERSÃO DEFINITIVA
+// home.js - VERSÃO CORRIGIDA E FUNCIONAL
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -133,37 +133,59 @@ async function loadUsers() {
     displayUsers(filteredProfiles);
 }
 
+async function filterBlockedUsers(users) {
+    try {
+        const { data: blockedByMe } = await supabase
+            .from('user_blocks')
+            .select('blocked_id')
+            .eq('blocker_id', currentUser.id);
+
+        const { data: blockedMe } = await supabase
+            .from('user_blocks')
+            .select('blocker_id')
+            .eq('blocked_id', currentUser.id);
+
+        const blockedByMeIds = (blockedByMe || []).map(item => item.blocked_id);
+        const blockedMeIds = (blockedMe || []).map(item => item.blocker_id);
+
+        const allBlockedIds = [...new Set([...blockedByMeIds, ...blockedMeIds])];
+
+        return users.filter(user => !allBlockedIds.includes(user.id));
+
+    } catch (error) {
+        console.error('Erro ao filtrar usuários bloqueados:', error);
+        return users;
+    }
+}
+
 function displayUsers(profiles) {
     const usersGrid = document.getElementById('usersGrid');
     
     usersGrid.innerHTML = profiles.map(profile => {
-        const safeProfile = {
-            id: profile.id,
-            nickname: profile.nickname || 'Usuário',
-            avatar_url: profile.avatar_url,
-            display_city: profile.display_city,
-            is_premium: profile.is_premium,
-            last_online_at: profile.last_online_at
-        };
+        const safeNickname = (profile.nickname || 'Usuário').replace(/'/g, "\\'");
+        const safeCity = (profile.display_city || 'Localização não informada').replace(/'/g, "\\'");
         
         return `
         <div class="user-card">
-            <div class="user-actions-btn" onclick="window.openUserActions('${profile.id}', '${safeProfile.nickname}')">
+            <div class="user-actions-btn" onclick="openUserActions('${profile.id}', '${safeNickname}')">
                 <i class="fas fa-ellipsis-v"></i>
             </div>
             
             <div class="user-header">
                 <div class="user-avatar-small">
                     ${profile.avatar_url ? 
-                        `<img src="${profile.avatar_url}" alt="${profile.nickname}">` : 
-                        `<div class="avatar-fallback">${getUserInitials(profile.nickname)}</div>`
+                        `<img src="${profile.avatar_url}" alt="${safeNickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
+                        ''
                     }
+                    <div class="avatar-fallback" style="${profile.avatar_url ? 'display:none' : 'display:flex'}">
+                        ${getUserInitials(profile.nickname)}
+                    </div>
                 </div>
                 <div class="user-info">
-                    <div class="user-name">${profile.nickname || 'Usuário'}</div>
+                    <div class="user-name">${safeNickname}</div>
                     <div class="user-location">
                         <i class="fas fa-map-marker-alt"></i>
-                        ${profile.display_city || 'Localização não informada'}
+                        ${safeCity}
                     </div>
                     <div class="user-premium-badge ${profile.is_premium ? 'premium' : 'free'}">
                         ${profile.is_premium ? '👑 Premium' : '👤 Free'}
@@ -185,33 +207,6 @@ function displayUsers(profiles) {
         </div>
         `;
     }).join('');
-}
-
-async function filterBlockedUsers(users) {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return users;
-
-        const { data: blockedByMe } = await supabase
-            .from('user_blocks')
-            .select('blocked_id')
-            .eq('blocker_id', user.id);
-
-        const { data: blockedMe } = await supabase
-            .from('user_blocks')
-            .select('blocker_id')
-            .eq('blocked_id', user.id);
-
-        const blockedByMeIds = (blockedByMe || []).map(item => item.blocked_id);
-        const blockedMeIds = (blockedMe || []).map(item => item.blocker_id);
-
-        const allBlockedIds = [...new Set([...blockedByMeIds, ...blockedMeIds])];
-
-        return users.filter(user => !allBlockedIds.includes(user.id));
-
-    } catch (error) {
-        return users;
-    }
 }
 
 function setActiveFilter(filter) {
@@ -236,20 +231,23 @@ function viewUserProfile(userId) {
     window.location.href = `perfil.html?id=${userId}`;
 }
 
-// === SISTEMA DOS 3 PONTOS ===
-window.openUserActions = function(userId, userName) {
+// === SISTEMA DE BLOQUEIO CORRIGIDO ===
+function openUserActions(userId, userName) {
     currentBlockingUser = { id: userId, name: userName };
     showModal('userActionsModal');
 }
 
-window.closeUserActionsModal = function() {
-    closeAllModals();
+function closeUserActionsModal() {
+    hideModal('userActionsModal');
 }
 
-window.blockUser = function() {
-    if (!currentBlockingUser) return;
+function blockUser() {
+    if (!currentBlockingUser) {
+        showNotification('Erro: usuário não selecionado');
+        return;
+    }
     
-    closeAllModals();
+    hideModal('userActionsModal');
     
     const isPremium = window.PremiumManager ? window.PremiumManager.userPlanInfo?.is_premium : false;
     
@@ -271,89 +269,111 @@ window.blockUser = function() {
     showModal('blockConfirmModal');
 }
 
-window.closeBlockConfirmModal = function() {
-    closeAllModals();
+function closeBlockConfirmModal() {
+    hideModal('blockConfirmModal');
+    currentBlockingUser = null;
 }
 
-window.confirmBlockUser = async function() {
-    if (!currentBlockingUser) return;
+async function confirmBlockUser() {
+    if (!currentBlockingUser) {
+        showNotification('Erro: usuário não selecionado');
+        return;
+    }
 
     try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
         const { error } = await supabase
             .from('user_blocks')
             .insert({
-                blocker_id: user.id,
-                blocked_id: currentBlockingUser.id
+                blocker_id: currentUser.id,
+                blocked_id: currentBlockingUser.id,
+                created_at: new Date().toISOString()
             });
 
-        if (error) throw error;
-
-        const isPremium = window.PremiumManager ? window.PremiumManager.userPlanInfo?.is_premium : false;
-        
-        if (isPremium) {
-            showNotification('Usuário bloqueado com sucesso! Acesse a página "Bloqueados" para gerenciar.');
+        if (error) {
+            if (error.code === '23505') {
+                showNotification('Este usuário já está bloqueado!');
+            } else {
+                throw error;
+            }
         } else {
-            showNotification('Usuário bloqueado com sucesso!');
-        }
-        
-        closeAllModals();
-        
-        await loadUsers();
+            const isPremium = window.PremiumManager ? window.PremiumManager.userPlanInfo?.is_premium : false;
+            
+            if (isPremium) {
+                showNotification('Usuário bloqueado com sucesso! Acesse a página "Bloqueados" para gerenciar.');
+            } else {
+                showNotification('Usuário bloqueado com sucesso!');
+            }
+            
+            hideModal('blockConfirmModal');
+            
+            await loadUsers();
 
-        if (!isPremium) {
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
+            if (!isPremium) {
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            }
         }
 
     } catch (error) {
+        console.error('Erro ao bloquear usuário:', error);
         showNotification('Erro ao bloquear usuário. Tente novamente.');
     }
 }
 
-window.reportUser = function() {
+function reportUser() {
     showNotification('Funcionalidade de denúncia em desenvolvimento');
     closeAllModals();
 }
 
-window.viewProfileFromModal = function() {
+function viewProfileFromModal() {
     if (currentBlockingUser) {
         closeAllModals();
         viewUserProfile(currentBlockingUser.id);
     }
 }
 
-// === SISTEMA DE MODAIS ===
+// === SISTEMA DE MODAIS CORRIGIDO ===
 function showModal(modalId) {
-    closeAllModals();
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.style.display = 'flex';
-        modal.classList.add('active');
+        setTimeout(() => modal.classList.add('active'), 10);
         document.body.style.overflow = 'hidden';
+    }
+}
+
+function hideModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
     }
 }
 
 function closeAllModals() {
     document.querySelectorAll('.modal').forEach(modal => {
-        modal.style.display = 'none';
         modal.classList.remove('active');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
     });
     document.body.style.overflow = '';
     currentBlockingUser = null;
 }
 
 // === SISTEMA DE NOTIFICAÇÕES ===
-function showNotification(message) {
+function showNotification(message, type = 'success') {
     const notification = document.createElement('div');
+    const backgroundColor = type === 'error' ? 'var(--error)' : 'var(--success)';
+    
     notification.style.cssText = `
         position: fixed;
         top: 20px;
         right: 20px;
-        background: var(--success);
+        background: ${backgroundColor};
         color: white;
         padding: 1rem 1.5rem;
         border-radius: var(--border-radius-sm);
@@ -361,6 +381,7 @@ function showNotification(message) {
         box-shadow: var(--shadow-hover);
         animation: slideInRight 0.3s ease-out;
         max-width: 300px;
+        font-weight: 500;
     `;
     notification.textContent = message;
     
@@ -415,6 +436,23 @@ async function logout() {
     if (!error) window.location.href = 'login.html';
 }
 
+// === EXPORTA FUNÇÕES PARA O HTML ===
+window.openUserActions = openUserActions;
+window.closeUserActionsModal = closeUserActionsModal;
+window.blockUser = blockUser;
+window.closeBlockConfirmModal = closeBlockConfirmModal;
+window.confirmBlockUser = confirmBlockUser;
+window.reportUser = reportUser;
+window.viewProfileFromModal = viewProfileFromModal;
+window.viewUserProfile = viewUserProfile;
+window.goToPerfil = goToPerfil;
+window.goToMensagens = goToMensagens;
+window.goToBusca = goToBusca;
+window.goToBloqueados = goToBloqueados;
+window.goToPricing = goToPricing;
+window.logout = logout;
+
+// Listener de autenticação
 supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') window.location.href = 'login.html';
 });

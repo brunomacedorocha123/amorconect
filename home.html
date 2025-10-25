@@ -213,7 +213,7 @@
                     </button>
                     <button class="action-btn block-btn" onclick="blockUser()">
                         <i class="fas fa-ban"></i>
-                        <span id="blockBtnText">Bloquear Usuário</span>
+                        <span>Bloquear Usuário</span>
                     </button>
                     <button class="action-btn report-btn" onclick="reportUser()">
                         <i class="fas fa-flag"></i>
@@ -229,6 +229,9 @@
         <div class="modal-content confirm-modal">
             <div class="modal-header">
                 <h3>Confirmar Bloqueio</h3>
+                <button class="modal-close" onclick="closeBlockConfirmModal()">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
                 <div class="confirmation-message">
