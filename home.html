@@ -3,413 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home - Amor Conect</title>
+    <title>Home - PulseLove</title>
+    <link rel="stylesheet" href="home.css">
+    <link rel="stylesheet" href="home-mobile.css" media="(max-width: 768px)">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        :root {
-            --gold: #C6A664;
-            --light-gold: #D4B978;
-            --burgundy: #A65B5B;
-            --dark-bg: #1A1A1A;
-            --card-bg: #242424;
-            --section-bg: #2A2A2A;
-            --white: #F5F5F5;
-            --beige: #E8DCC3;
-            --light-beige: #F0E9D8;
-            --shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-            --transition: all 0.3s ease;
-        }
-
-        body {
-            background-color: var(--dark-bg);
-            color: var(--white);
-            line-height: 1.6;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        /* Header */
-        header {
-            background: var(--card-bg);
-            padding: 1rem 0;
-            box-shadow: var(--shadow);
-            border-bottom: 2px solid var(--gold);
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .logo-text {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--gold);
-        }
-
-        .user-menu {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-
-        .user-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--burgundy), var(--gold));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--white);
-            font-weight: bold;
-            font-size: 1.2rem;
-            border: 2px solid var(--gold);
-        }
-
-        .btn {
-            padding: 0.7rem 1.5rem;
-            border-radius: 30px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--gold);
-            color: var(--gold);
-        }
-
-        .btn-primary {
-            background: var(--burgundy);
-            color: var(--white);
-            border: 2px solid var(--burgundy);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(198, 166, 100, 0.3);
-        }
-
-        /* Main Content */
-        .main-content {
-            padding: 2rem 0;
-            flex: 1;
-        }
-
-        .welcome-section {
-            text-align: center;
-            margin-bottom: 3rem;
-            padding: 2rem;
-            background: var(--card-bg);
-            border-radius: 15px;
-            border: 2px solid var(--gold);
-        }
-
-        .welcome-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            color: var(--gold);
-        }
-
-        .welcome-section h1 {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            color: var(--light-gold);
-        }
-
-        .welcome-section p {
-            font-size: 1.1rem;
-            color: var(--beige);
-        }
-
-        /* Seção de Usuários */
-        .users-section {
-            margin-top: 2rem;
-        }
-
-        .section-title {
-            font-size: 1.5rem;
-            color: var(--gold);
-            margin-bottom: 1.5rem;
-            text-align: center;
-        }
-
-        .users-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .user-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 1.5rem;
-            border: 2px solid var(--gold);
-            transition: var(--transition);
-            cursor: pointer;
-        }
-
-        .user-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--light-gold);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        }
-
-        .user-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .user-avatar-small {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--burgundy), var(--gold));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--white);
-            font-weight: bold;
-            font-size: 1.1rem;
-            border: 2px solid var(--gold);
-            flex-shrink: 0;
-        }
-
-        .user-info {
-            flex: 1;
-        }
-
-        .user-name {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--light-gold);
-            margin-bottom: 0.3rem;
-        }
-
-        .user-location {
-            color: var(--beige);
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .user-premium-badge {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            background: var(--gold);
-            color: var(--dark-bg);
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .user-premium-badge.free {
-            background: var(--section-bg);
-            color: var(--beige);
-        }
-
-        .user-details {
-            border-top: 1px solid var(--section-bg);
-            padding-top: 1rem;
-        }
-
-        .user-detail {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        .user-detail strong {
-            color: var(--gold);
-        }
-
-        .view-profile-btn {
-            width: 100%;
-            padding: 0.8rem;
-            background: var(--burgundy);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            margin-top: 1rem;
-        }
-
-        .view-profile-btn:hover {
-            background: var(--dark-burgundy);
-            transform: translateY(-2px);
-        }
-
-        /* Quick Actions */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        .action-card {
-            background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 12px;
-            text-align: center;
-            border: 2px solid var(--gold);
-            transition: var(--transition);
-            cursor: pointer;
-        }
-
-        .action-card:hover {
-            transform: translateY(-3px);
-            border-color: var(--light-gold);
-        }
-
-        .action-icon {
-            font-size: 2rem;
-            margin-bottom: 0.8rem;
-            color: var(--gold);
-        }
-
-        .action-card h3 {
-            color: var(--light-gold);
-            margin-bottom: 0.5rem;
-            font-size: 1.1rem;
-        }
-
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 2rem;
-            color: var(--beige);
-        }
-
-        .loading-spinner {
-            border: 3px solid var(--section-bg);
-            border-top: 3px solid var(--gold);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Footer */
-        footer {
-            background-color: var(--card-bg);
-            color: var(--beige);
-            padding: 2rem 0 1rem;
-            border-top: 2px solid var(--gold);
-            margin-top: auto;
-        }
-
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 2rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .footer-column h3 {
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
-            color: var(--gold);
-        }
-
-        .footer-column ul {
-            list-style: none;
-        }
-
-        .footer-column ul li {
-            margin-bottom: 0.5rem;
-        }
-
-        .footer-column a {
-            color: var(--beige);
-            text-decoration: none;
-            transition: var(--transition);
-        }
-
-        .footer-column a:hover {
-            color: var(--gold);
-        }
-
-        .copyright {
-            text-align: center;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--gold);
-            color: var(--beige);
-            opacity: 0.8;
-        }
-
-        /* Responsividade */
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-
-            .users-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .quick-actions {
-                grid-template-columns: 1fr;
-            }
-
-            .welcome-section h1 {
-                font-size: 1.8rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <!-- Header -->
     <header>
         <div class="container">
             <div class="header-content">
+                <!-- Logo -->
                 <div class="logo">
-                    <div class="logo-text">Amor Conect</div>
+                    <img src="logopulse.png" alt="PulseLove" class="logo-img">
                 </div>
+
+                <!-- Menu Hamburger (Mobile) -->
+                <div class="menu-toggle" id="menuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+
+                <!-- Navegação -->
+                <nav id="mainNav">
+                    <ul>
+                        <li><a href="#" class="nav-link active"><i class="fas fa-home"></i> Home</a></li>
+                        <li><a href="busca.html" class="nav-link"><i class="fas fa-search"></i> Buscar</a></li>
+                        <li><a href="mensagens.html" class="nav-link"><i class="fas fa-envelope"></i> Mensagens</a></li>
+                        <li><a href="visitas.html" class="nav-link"><i class="fas fa-eye"></i> Quem me viu</a></li>
+                        <li><a href="pricing.html" class="nav-link premium-link"><i class="fas fa-crown"></i> Premium</a></li>
+                    </ul>
+                </nav>
+
+                <!-- User Menu -->
                 <div class="user-menu">
-                    <div class="user-avatar" id="userAvatar">U</div>
-                    <button class="btn btn-outline" onclick="logout()">Sair</button>
+                    <div class="user-avatar" id="userAvatar">
+                        <img id="userAvatarImg" src="" alt="Avatar">
+                        <div class="avatar-fallback" id="avatarFallback">U</div>
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name" id="userName">Usuário</span>
+                        <span class="user-status" id="userStatus">Online</span>
+                    </div>
+                    <button class="btn btn-outline logout-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Sair
+                    </button>
                 </div>
             </div>
         </div>
@@ -419,46 +59,112 @@
     <main class="main-content">
         <div class="container">
             <!-- Welcome Section -->
-            <div class="welcome-section">
-                <div class="welcome-icon">👋</div>
-                <h1 id="welcomeMessage">Bem-vindo ao Amor Conect!</h1>
-                <p>Conheça outras pessoas da comunidade</p>
-            </div>
-
-            <!-- Seção de Usuários -->
-            <div class="users-section">
-                <h2 class="section-title">Pessoas na Comunidade</h2>
-                
-                <div id="usersContainer">
-                    <div class="loading">
-                        <div class="loading-spinner"></div>
-                        <p>Carregando usuários...</p>
+            <section class="welcome-section">
+                <div class="welcome-content">
+                    <div class="welcome-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h1 id="welcomeMessage">Bem-vindo ao PulseLove!</h1>
+                    <p>Conheça pessoas incríveis e faça conexões genuínas</p>
+                    
+                    <!-- Quick Stats -->
+                    <div class="quick-stats">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="onlineUsers">0</span>
+                                <span class="stat-label">Online agora</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="profileViews">0</span>
+                                <span class="stat-label">Visualizações</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="pulseCount">0</span>
+                                <span class="stat-label">Pulses</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
+
+            <!-- Users Section -->
+            <section class="users-section">
+                <div class="section-header">
+                    <h2 class="section-title">Pessoas perto de você</h2>
+                    <div class="section-actions">
+                        <button class="btn-filter active" data-filter="all">Todos</button>
+                        <button class="btn-filter" data-filter="online">Online</button>
+                        <button class="btn-filter" data-filter="premium">Premium</button>
+                    </div>
+                </div>
+
+                <!-- Users Grid -->
+                <div class="users-grid" id="usersGrid">
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <p>Carregando pessoas...</p>
+                    </div>
+                </div>
+
+                <!-- Load More -->
+                <div class="load-more-container">
+                    <button class="btn btn-primary load-more-btn" id="loadMoreBtn">
+                        <i class="fas fa-plus"></i> Carregar mais
+                    </button>
+                </div>
+            </section>
 
             <!-- Quick Actions -->
-            <div class="quick-actions">
-                <div class="action-card" onclick="goToPerfil()">
-                    <div class="action-icon">👤</div>
-                    <h3>Meu Perfil</h3>
+            <section class="quick-actions-section">
+                <h2 class="section-title">Acesso Rápido</h2>
+                <div class="quick-actions-grid">
+                    <div class="action-card" onclick="goToPerfil()">
+                        <div class="action-icon">
+                            <i class="fas fa-user-edit"></i>
+                        </div>
+                        <h3>Meu Perfil</h3>
+                        <p>Atualize suas informações</p>
+                    </div>
+                    
+                    <div class="action-card" onclick="goToMensagens()">
+                        <div class="action-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h3>Mensagens</h3>
+                        <p>Veja suas conversas</p>
+                    </div>
+                    
+                    <div class="action-card" onclick="goToBusca()">
+                        <div class="action-icon">
+                            <i class="fas fa-search-plus"></i>
+                        </div>
+                        <h3>Busca Avançada</h3>
+                        <p>Encontre pessoas específicas</p>
+                    </div>
+                    
+                    <div class="action-card premium-action" onclick="goToPricing()">
+                        <div class="action-icon">
+                            <i class="fas fa-crown"></i>
+                        </div>
+                        <h3>Virar Premium</h3>
+                        <p>Desbloqueie recursos exclusivos</p>
+                        <span class="premium-badge">Premium</span>
+                    </div>
                 </div>
-                
-                <div class="action-card" onclick="goToMensagens()">
-                    <div class="action-icon">💌</div>
-                    <h3>Mensagens</h3>
-                </div>
-                
-                <div class="action-card" onclick="goToBusca()">
-                    <div class="action-icon">🔍</div>
-                    <h3>Buscar Pessoas</h3>
-                </div>
-                
-                <div class="action-card" onclick="goToPricing()">
-                    <div class="action-icon">👑</div>
-                    <h3>Premium</h3>
-                </div>
-            </div>
+            </section>
         </div>
     </main>
 
@@ -466,242 +172,60 @@
     <footer>
         <div class="container">
             <div class="footer-content">
-                <div class="footer-column">
-                    <h3>Amor Conect</h3>
-                    <p>Conectando corações, construindo histórias.</p>
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <img src="logopulse.png" alt="PulseLove" class="logo-img">
+                    </div>
+                    <p class="footer-description">
+                        Conectando corações, construindo histórias de amor genuínas.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-tiktok"></i></a>
+                    </div>
                 </div>
-                <div class="footer-column">
+                
+                <div class="footer-section">
                     <h3>Navegação</h3>
-                    <ul>
-                        <li><a href="#" onclick="goToPerfil()">Meu Perfil</a></li>
-                        <li><a href="#" onclick="goToMensagens()">Mensagens</a></li>
-                        <li><a href="#" onclick="goToBusca()">Buscar Pessoas</a></li>
+                    <ul class="footer-links">
+                        <li><a href="home.html">Home</a></li>
+                        <li><a href="busca.html">Buscar Pessoas</a></li>
+                        <li><a href="mensagens.html">Mensagens</a></li>
+                        <li><a href="visitas.html">Quem me viu</a></li>
                     </ul>
                 </div>
-                <div class="footer-column">
-                    <h3>Suporte</h3>
-                    <ul>
-                        <li><a href="#">Ajuda</a></li>
-                        <li><a href="#">Privacidade</a></li>
-                        <li><a href="#">Termos</a></li>
+                
+                <div class="footer-section">
+                    <h3>Minha Conta</h3>
+                    <ul class="footer-links">
+                        <li><a href="painel.html">Meu Perfil</a></li>
+                        <li><a href="configuracoes.html">Configurações</a></li>
+                        <li><a href="pricing.html">Premium</a></li>
+                        <li><a href="ajuda.html">Ajuda</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Legal</h3>
+                    <ul class="footer-links">
+                        <li><a href="privacidade.html">Privacidade</a></li>
+                        <li><a href="termos.html">Termos de Uso</a></li>
+                        <li><a href="seguranca.html">Segurança</a></li>
+                        <li><a href="comunidade.html">Diretrizes</a></li>
                     </ul>
                 </div>
             </div>
-            <div class="copyright">
-                <p>&copy; 2024 Amor Conect. Todos os direitos reservados.</p>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 PulseLove. Todos os direitos reservados.</p>
+                <p>Feito com <i class="fas fa-heart"></i> para conectar pessoas</p>
             </div>
         </div>
     </footer>
 
-    <script>
-        // Configuração do Supabase
-        const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        let currentUser = null;
-
-        // ========== FUNÇÕES DE NAVEGAÇÃO ==========
-        function goToPerfil() {
-            window.location.href = 'painel.html';
-        }
-
-        function goToMensagens() {
-            window.location.href = 'mensagens.html';
-        }
-
-        function goToBusca() {
-            window.location.href = 'busca.html';
-        }
-
-        function goToPricing() {
-            window.location.href = 'pricing.html';
-        }
-
-        function viewUserProfile(userId) {
-            window.location.href = `perfil.html?id=${userId}`;
-        }
-
-        async function logout() {
-            try {
-                const { error } = await supabase.auth.signOut();
-                if (error) throw error;
-                window.location.href = 'login.html';
-            } catch (error) {
-                alert('Erro ao sair: ' + error.message);
-            }
-        }
-
-        // ========== INICIALIZAÇÃO ==========
-        document.addEventListener('DOMContentLoaded', async function() {
-            try {
-                const { data: { user }, error } = await supabase.auth.getUser();
-                
-                if (error) throw error;
-                
-                if (!user) {
-                    window.location.href = 'login.html';
-                    return;
-                }
-
-                currentUser = user;
-
-                // Personalizar welcome message
-                const userName = user.user_metadata?.full_name || user.user_metadata?.nickname || user.email?.split('@')[0] || 'Amor Conect';
-                document.getElementById('welcomeMessage').textContent = `Olá, ${userName.split(' ')[0]}!`;
-                
-                // Atualizar avatar com iniciais
-                const initials = getUserInitials(userName);
-                document.getElementById('userAvatar').textContent = initials;
-
-                // Carregar lista de usuários
-                await loadUsers();
-
-            } catch (error) {
-                console.error('Erro ao carregar usuário:', error);
-                window.location.href = 'login.html';
-            }
-        });
-
-        // ========== CARREGAR USUÁRIOS ==========
-        async function loadUsers() {
-            try {
-                // Buscar perfis de outros usuários (excluindo o usuário atual)
-                const { data: profiles, error } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .neq('id', currentUser.id)
-                    .limit(20);
-
-                if (error) throw error;
-
-                // Buscar detalhes dos usuários
-                const userIds = profiles.map(p => p.id);
-                const { data: userDetails, error: detailsError } = await supabase
-                    .from('user_details')
-                    .select('*')
-                    .in('user_id', userIds);
-
-                if (detailsError) {
-                    console.error('Erro ao carregar detalhes:', detailsError);
-                }
-
-                displayUsers(profiles, userDetails || []);
-
-            } catch (error) {
-                console.error('Erro ao carregar usuários:', error);
-                document.getElementById('usersContainer').innerHTML = `
-                    <div class="loading">
-                        <p>Erro ao carregar usuários. Tente novamente.</p>
-                    </div>
-                `;
-            }
-        }
-
-        // ========== EXIBIR USUÁRIOS ==========
-        function displayUsers(profiles, userDetails) {
-            const container = document.getElementById('usersContainer');
-            
-            if (!profiles || profiles.length === 0) {
-                container.innerHTML = `
-                    <div class="loading">
-                        <p>Nenhum usuário encontrado.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            // Criar mapa de detalhes para acesso rápido
-            const detailsMap = {};
-            userDetails.forEach(detail => {
-                detailsMap[detail.user_id] = detail;
-            });
-
-            container.innerHTML = `
-                <div class="users-grid">
-                    ${profiles.map(profile => {
-                        const details = detailsMap[profile.id] || {};
-                        const age = profile.birth_date ? calculateAge(profile.birth_date) : '--';
-                        const isPremium = profile.is_premium && 
-                                        (!profile.premium_expires_at || new Date(profile.premium_expires_at) > new Date());
-                        
-                        return `
-                            <div class="user-card" onclick="viewUserProfile('${profile.id}')">
-                                <div class="user-header">
-                                    <div class="user-avatar-small">
-                                        ${getUserInitials(profile.nickname || 'U')}
-                                    </div>
-                                    <div class="user-info">
-                                        <div class="user-name">${profile.nickname || 'Usuário'}</div>
-                                        <div class="user-location">
-                                            ${profile.display_city || 'Localização não informada'}
-                                        </div>
-                                        <div class="user-premium-badge ${isPremium ? 'premium' : 'free'}">
-                                            ${isPremium ? '👑 Premium' : '👤 Free'}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="user-details">
-                                    <div class="user-detail">
-                                        <strong>Idade:</strong> <span>${age} anos</span>
-                                    </div>
-                                    <div class="user-detail">
-                                        <strong>Procura:</strong> <span>${formatLookingFor(details.looking_for) || 'Não informado'}</span>
-                                    </div>
-                                    <div class="user-detail">
-                                        <strong>Interesses:</strong> <span>${details.interests ? details.interests.slice(0, 2).join(', ') : 'Não informado'}</span>
-                                    </div>
-                                </div>
-                                <button class="view-profile-btn" onclick="event.stopPropagation(); viewUserProfile('${profile.id}')">
-                                    Ver Perfil
-                                </button>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            `;
-        }
-
-        // ========== FUNÇÕES AUXILIARES ==========
-        function getUserInitials(name) {
-            return name
-                .split(' ')
-                .map(word => word.charAt(0))
-                .join('')
-                .toUpperCase()
-                .substring(0, 2);
-        }
-
-        function calculateAge(birthDate) {
-            const today = new Date();
-            const birth = new Date(birthDate);
-            let age = today.getFullYear() - birth.getFullYear();
-            const monthDiff = today.getMonth() - birth.getMonth();
-            
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-                age--;
-            }
-            
-            return age;
-        }
-
-        function formatLookingFor(value) {
-            const options = {
-                'amizade': 'Amizade',
-                'namoro': 'Namoro',
-                'relacionamento_serio': 'Relacionamento Sério',
-                'conversa': 'Apenas Conversa'
-            };
-            return options[value] || value;
-        }
-
-        // ========== MONITORAR AUTENTICAÇÃO ==========
-        supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_OUT') {
-                window.location.href = 'login.html';
-            }
-        });
-    </script>
-    <script src="premium-check.js"></script>
+    <!-- Scripts -->
+    <script src="home.js"></script>
 </body>
 </html>
