@@ -1,4 +1,4 @@
-// home.js - VERSÃO DEFINITIVA
+// home.js - VERSÃO COM FALLBACK
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -118,92 +118,28 @@ async function loadUsers() {
 }
 
 async function fetchUsers() {
+    // TENTATIVA 1: Query básica sem RLS
     let query = supabase
         .from('profiles')
-        .select(`
-            *,
-            user_details (
-                zodiac,
-                relationship_status,
-                gender,
-                sexual_orientation
-            )
-        `)
+        .select('*')
         .neq('id', currentUser.id)
         .eq('is_invisible', false)
-        .order('last_online_at', { ascending: false })
-        .limit(50);
-
-    if (currentFilter === 'online') {
-        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-        query = query.gte('last_online_at', fifteenMinutesAgo);
-    } else if (currentFilter === 'premium') {
-        query = query.eq('is_premium', true);
-    }
+        .limit(8);
 
     const { data: profiles, error } = await query;
 
-    if (error) return [];
-
-    const filteredProfiles = await filterBySexualCompatibility(profiles);
-    const prioritizedUsers = prioritizeUsers(filteredProfiles);
-    
-    return prioritizedUsers.slice(0, maxHomeCards);
-}
-
-async function filterBySexualCompatibility(profiles) {
-    const { data: currentUserDetails, error } = await supabase
-        .from('user_details')
-        .select('gender, sexual_orientation')
-        .eq('user_id', currentUser.id)
-        .single();
-
-    if (error || !currentUserDetails) {
-        return profiles;
+    if (error || !profiles || profiles.length === 0) {
+        // TENTATIVA 2: Query alternativa se a primeira falhar
+        const { data: fallbackProfiles } = await supabase
+            .from('profiles')
+            .select('*')
+            .neq('id', currentUser.id)
+            .limit(8);
+        
+        return fallbackProfiles || [];
     }
 
-    const currentGender = currentUserDetails.gender;
-    const currentOrientation = currentUserDetails.sexual_orientation;
-
-    return profiles.filter(profile => {
-        const profileGender = profile.user_details?.[0]?.gender;
-        const profileOrientation = profile.user_details?.[0]?.sexual_orientation;
-
-        if (!profileGender || !profileOrientation) {
-            return true;
-        }
-
-        return isSexuallyCompatible(currentGender, currentOrientation, profileGender, profileOrientation);
-    });
-}
-
-function isSexuallyCompatible(currentGender, currentOrientation, profileGender, profileOrientation) {
-    if (currentOrientation === 'heterossexual') {
-        return profileGender !== currentGender;
-    } else if (currentOrientation === 'homossexual') {
-        return profileGender === currentGender;
-    } else if (currentOrientation === 'bissexual') {
-        return true;
-    }
-
-    return true;
-}
-
-function prioritizeUsers(users) {
-    return users.sort((a, b) => {
-        const aPremium = a.is_premium && (!a.premium_expires_at || new Date(a.premium_expires_at) > new Date());
-        const bPremium = b.is_premium && (!b.premium_expires_at || new Date(b.premium_expires_at) > new Date());
-        
-        if (aPremium && !bPremium) return -1;
-        if (!aPremium && bPremium) return 1;
-        
-        const aOnline = isUserOnline(a.last_online_at);
-        const bOnline = isUserOnline(b.last_online_at);
-        if (aOnline && !bOnline) return -1;
-        if (!aOnline && bOnline) return 1;
-        
-        return 0;
-    });
+    return profiles;
 }
 
 function displayUsers(profiles) {
@@ -213,6 +149,9 @@ function displayUsers(profiles) {
         usersGrid.innerHTML = `
             <div class="loading-state">
                 <p>Nenhuma pessoa encontrada no momento.</p>
+                <p style="margin-top: 10px; font-size: 0.9rem; color: var(--text-light);">
+                    Quando novos usuários se cadastrarem, eles aparecerão aqui.
+                </p>
             </div>
         `;
         return;
@@ -222,11 +161,9 @@ function displayUsers(profiles) {
 }
 
 function createUserCard(profile) {
-    const details = profile.user_details?.[0] || {};
     const age = profile.birth_date ? calculateAge(profile.birth_date) : '--';
     const isOnline = isUserOnline(profile.last_online_at);
-    const isPremium = profile.is_premium && 
-                     (!profile.premium_expires_at || new Date(profile.premium_expires_at) > new Date());
+    const isPremium = profile.is_premium;
 
     return `
         <div class="user-card" onclick="viewUserProfile('${profile.id}')">
@@ -253,10 +190,7 @@ function createUserCard(profile) {
                     <strong>Idade:</strong> <span>${age} anos</span>
                 </div>
                 <div class="user-detail">
-                    <strong>Signo:</strong> <span>${formatZodiac(details.zodiac) || 'Não informado'}</span>
-                </div>
-                <div class="user-detail">
-                    <strong>Status:</strong> <span>${formatRelationshipStatus(details.relationship_status) || 'Não informado'}</span>
+                    <strong>Status:</strong> <span>${profile.relationship_status || 'Não informado'}</span>
                 </div>
                 <div class="online-status ${isOnline ? 'status-online' : 'status-offline'}">
                     <span class="status-dot"></span>
@@ -336,36 +270,6 @@ function isUserOnline(lastOnlineAt) {
     if (!lastOnlineAt) return false;
     const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
     return new Date(lastOnlineAt) > fifteenMinutesAgo;
-}
-
-function formatZodiac(value) {
-    const options = {
-        'aries': 'Áries',
-        'touro': 'Touro',
-        'gemeos': 'Gêmeos',
-        'cancer': 'Câncer',
-        'leao': 'Leão',
-        'virgem': 'Virgem',
-        'libra': 'Libra',
-        'escorpiao': 'Escorpião',
-        'sagitario': 'Sagitário',
-        'capricornio': 'Capricórnio',
-        'aquario': 'Aquário',
-        'peixes': 'Peixes'
-    };
-    return options[value] || value;
-}
-
-function formatRelationshipStatus(value) {
-    const options = {
-        'solteiro': 'Solteiro(a)',
-        'namorando': 'Namorando',
-        'casado': 'Casado(a)',
-        'divorciado': 'Divorciado(a)',
-        'viuvo': 'Viúvo(a)',
-        'separado': 'Separado(a)'
-    };
-    return options[value] || value;
 }
 
 supabase.auth.onAuthStateChange((event, session) => {
