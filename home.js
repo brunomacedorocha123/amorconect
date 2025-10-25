@@ -236,14 +236,9 @@ function viewUserProfile(userId) {
     window.location.href = `perfil.html?id=${userId}`;
 }
 
+// === SISTEMA DOS 3 PONTOS ===
 function openUserActions(userId, userData) {
     currentBlockingUser = { id: userId, ...userData };
-    
-    const blockBtn = document.getElementById('blockBtnText');
-    if (blockBtn) {
-        blockBtn.textContent = 'Bloquear Usuário';
-    }
-
     showModal('userActionsModal');
 }
 
@@ -326,6 +321,7 @@ function viewProfileFromModal() {
     }
 }
 
+// === SISTEMA DE MODAIS ===
 function showModal(modalId) {
     closeAllModals();
     const modal = document.getElementById(modalId);
@@ -343,6 +339,7 @@ function closeAllModals() {
     currentBlockingUser = null;
 }
 
+// === SISTEMA DE NOTIFICAÇÕES ===
 function showNotification(message) {
     const notification = document.createElement('div');
     notification.style.cssText = `
@@ -372,6 +369,7 @@ function showNotification(message) {
     }, 3000);
 }
 
+// === ESTILOS DE ANIMAÇÃO ===
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideInRight {
@@ -398,6 +396,7 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+// === NAVEGAÇÃO ===
 function goToPerfil() { window.location.href = 'painel.html'; }
 function goToMensagens() { window.location.href = 'mensagens.html'; }
 function goToBusca() { window.location.href = 'busca.html'; }
