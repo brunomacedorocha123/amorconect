@@ -1,4 +1,4 @@
-// busca.js - Sistema completo de busca
+// busca.js - Sistema completo de busca - CORRIGIDO
 const SearchManager = {
     currentUser: null,
     currentFilters: {},
@@ -32,7 +32,6 @@ const SearchManager = {
     setupEventListeners() {
         const searchForm = document.getElementById('searchForm');
         const clearFilters = document.getElementById('clearFilters');
-        const resultsGrid = document.getElementById('resultsGrid');
 
         if (searchForm) {
             searchForm.addEventListener('submit', (e) => this.handleSearch(e));
@@ -42,7 +41,7 @@ const SearchManager = {
             clearFilters.addEventListener('click', () => this.clearAllFilters());
         }
 
-        // Busca automática ao alterar filtros (opcional)
+        // Busca automática ao alterar filtros
         const autoSearchInputs = document.querySelectorAll('#searchForm select, #searchForm input[type="text"]');
         autoSearchInputs.forEach(input => {
             input.addEventListener('change', () => {
@@ -65,12 +64,11 @@ const SearchManager = {
 
     // Carregar dados iniciais
     async loadInitialData() {
-        // Carregar dados do usuário atual para header
         await this.loadCurrentUserData();
-        
-        // Busca inicial com filtros padrão
         this.setDefaultFilters();
-        await this.performSearch();
+        
+        // Busca inicial com alguns usuários
+        await this.performInitialSearch();
     },
 
     // Carregar dados do usuário atual
@@ -97,6 +95,37 @@ const SearchManager = {
             }
         } catch (error) {
             console.error('Erro ao carregar dados do usuário:', error);
+        }
+    },
+
+    // Busca inicial
+    async performInitialSearch() {
+        try {
+            // Buscar alguns usuários aleatórios para mostrar
+            const { data: profiles, error } = await supabase
+                .from('profiles')
+                .select(`
+                    *,
+                    user_details (
+                        gender,
+                        sexual_orientation,
+                        relationship_status,
+                        looking_for,
+                        interests
+                    )
+                `)
+                .neq('id', this.currentUser.id)
+                .limit(12);
+
+            if (error) throw error;
+
+            this.searchResults = profiles || [];
+            this.displayResults(this.searchResults);
+            this.updateResultsCount(this.searchResults.length);
+
+        } catch (error) {
+            console.error('Erro na busca inicial:', error);
+            this.displayResults([]);
         }
     },
 
@@ -158,7 +187,7 @@ const SearchManager = {
             
         } catch (error) {
             console.error('Erro na busca:', error);
-            this.showNotification('Erro ao realizar busca', 'error');
+            this.showNotification('Erro ao realizar busca: ' + error.message, 'error');
             this.displayResults([]);
         } finally {
             this.isLoading = false;
@@ -183,8 +212,11 @@ const SearchManager = {
         };
     },
 
-    // Executar query no Supabase
+    // Executar query no Supabase - CORRIGIDO (sem invisibilidade)
     async executeSearchQuery(filters) {
+        console.log('🔍 Executando busca com filtros:', filters);
+        
+        // QUERY BASE - SEM FILTRO DE INVISIBILIDADE
         let query = supabase
             .from('profiles')
             .select(`
@@ -206,21 +238,25 @@ const SearchManager = {
                     characteristics
                 )
             `)
-            .neq('id', this.currentUser.id) // Excluir usuário atual
-            .eq('is_invisible', false); // Apenas usuários visíveis
+            .neq('id', this.currentUser.id); // REMOVIDO: .eq('is_invisible', false)
 
         // Aplicar filtros
         query = this.applyFilters(query, filters);
 
         const { data, error } = await query;
 
-        if (error) throw error;
+        if (error) {
+            console.error('Erro na query:', error);
+            throw error;
+        }
 
-        // Filtros adicionais que precisam ser feitos no client-side
+        console.log('📊 Dados brutos encontrados:', data?.length || 0);
+        
+        // FILTRAGEM DE FAIXA ETÁRIA NO CLIENTE (usando birth_date)
         return this.applyClientSideFilters(data || [], filters);
     },
 
-    // Aplicar filtros na query
+    // Aplicar filtros na query - CORRIGIDO
     applyFilters(query, filters) {
         // Filtro de plano
         if (filters.plan === 'premium') {
@@ -253,12 +289,12 @@ const SearchManager = {
         return query;
     },
 
-    // Aplicar filtros no client-side (para relacionamentos complexos)
+    // Aplicar filtros no client-side - CORRIGIDO (com faixa etária)
     applyClientSideFilters(profiles, filters) {
         return profiles.filter(profile => {
             const details = profile.user_details || {};
 
-            // Filtro de faixa etária
+            // ✅ FILTRO DE FAIXA ETÁRIA (usando birth_date do perfil)
             if (filters.age_range && profile.birth_date) {
                 const age = this.calculateAge(profile.birth_date);
                 if (!this.isInAgeRange(age, filters.age_range)) {
@@ -315,7 +351,7 @@ const SearchManager = {
         });
     },
 
-    // Calcular idade
+    // Calcular idade a partir da data de nascimento
     calculateAge(birthDate) {
         const today = new Date();
         const birth = new Date(birthDate);
