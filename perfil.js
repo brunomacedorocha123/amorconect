@@ -38,26 +38,43 @@ async function initializeProfile() {
 
 async function loadUserData() {
     try {
-        // Buscar perfil básico
+        // Buscar perfil COM detalhes (usando join)
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('*')
+            .select(`
+                *,
+                user_details (
+                    gender,
+                    sexual_orientation,
+                    profession,
+                    education,
+                    zodiac,
+                    religion,
+                    drinking,
+                    smoking,
+                    exercise,
+                    exercise_details,
+                    has_pets,
+                    pets_details,
+                    looking_for,
+                    description,
+                    interests,
+                    characteristics
+                )
+            `)
             .eq('id', visitedUserId)
             .single();
 
-        if (profileError) {
-            throw new Error('Perfil não encontrado');
-        }
+        if (profileError) throw profileError;
 
-        // Buscar detalhes
-        const { data: details, error: detailsError } = await supabase
-            .from('user_details')
-            .select('*')
-            .eq('user_id', visitedUserId)
-            .single();
+        // ✅ CORREÇÃO CRÍTICA - user_details é um ARRAY, pegar primeiro item
+        const details = profile.user_details?.[0] || {};
+        
+        console.log('🔍 DEBUG - Dados carregados:');
+        console.log('Perfil:', profile);
+        console.log('Detalhes:', details);
 
-        // Preencher dados na página
-        fillProfileData(profile, details || {});
+        fillProfileData(profile, details);
 
     } catch (error) {
         console.error('Erro ao carregar dados:', error);
@@ -89,7 +106,7 @@ function fillProfileData(profile, details) {
     // Status Premium
     updatePremiumBadge(profile);
 
-    // Informações detalhadas
+    // Informações detalhadas - CORRIGIDO para usar os IDs corretos
     updateDetail('profileLookingFor', details.looking_for);
     updateDetail('profileGender', details.gender);
     updateDetail('profileOrientation', details.sexual_orientation);
@@ -133,7 +150,7 @@ function updateListSection(containerId, items, sectionId) {
     const section = document.getElementById(sectionId);
     
     if (!items || items.length === 0) {
-        section.style.display = 'none';
+        if (section) section.style.display = 'none';
         return;
     }
 
@@ -154,17 +171,31 @@ function updateListSection(containerId, items, sectionId) {
     }
 }
 
-function updatePremiumBadge(profile) {
+async function updatePremiumBadge(profile) {
     const badge = document.getElementById('visitedUserPremiumBadge');
     if (!badge) return;
 
-    // Verificação simples de premium - ajuste conforme sua lógica
-    const isPremium = profile.is_premium || false;
-    
-    if (isPremium) {
-        badge.className = 'profile-premium-badge premium';
-        badge.innerHTML = '<i class="fas fa-crown"></i> Premium';
-    } else {
+    try {
+        // VERIFICAÇÃO CORRETA usando user_subscriptions (igual ao seu premium-check.js)
+        const { data: subscription, error } = await supabase
+            .from('user_subscriptions')
+            .select('status, expires_at')
+            .eq('user_id', visitedUserId)
+            .eq('status', 'active')
+            .gte('expires_at', new Date().toISOString())
+            .single();
+
+        const isPremium = !error && subscription !== null;
+        
+        if (isPremium) {
+            badge.className = 'profile-premium-badge premium';
+            badge.innerHTML = '<i class="fas fa-crown"></i> Premium';
+        } else {
+            badge.className = 'profile-premium-badge free';
+            badge.innerHTML = '<i class="fas fa-user"></i> Free';
+        }
+    } catch (error) {
+        // Em caso de erro, mostra como Free
         badge.className = 'profile-premium-badge free';
         badge.innerHTML = '<i class="fas fa-user"></i> Free';
     }
