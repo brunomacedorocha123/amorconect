@@ -1,4 +1,4 @@
-// bloqueados.js - Sistema da página de usuários bloqueados
+// bloqueados.js - VERSÃO COMPLETA E CORRIGIDA
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -40,14 +40,12 @@ function setupEventListeners() {
         });
     }
 
-    // Fechar modais ao clicar fora
     document.addEventListener('click', (e) => {
         if (e.target.classList.contains('modal')) {
             closeAllModals();
         }
     });
 
-    // Fechar modais com ESC
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             closeAllModals();
@@ -85,24 +83,16 @@ function updateUserHeader(profile) {
     if (userName) {
         userName.textContent = profile.nickname || currentUser.email.split('@')[0];
     }
-
-    const welcomeMessage = document.getElementById('welcomeMessage');
-    if (welcomeMessage) {
-        const firstName = (profile.nickname || currentUser.email.split('@')[0]).split(' ')[0];
-        welcomeMessage.textContent = `Usuários Bloqueados`;
-    }
 }
 
 async function checkPremiumAndLoad() {
     const isPremium = await PremiumManager.checkPremiumStatus();
     
     if (isPremium) {
-        // Usuário Premium - Mostrar conteúdo completo
         document.getElementById('freeUserMessage').style.display = 'none';
         document.getElementById('premiumContent').style.display = 'block';
         await loadBlockedUsers();
     } else {
-        // Usuário Free - Mostrar mensagem de upsell
         document.getElementById('freeUserMessage').style.display = 'block';
         document.getElementById('premiumContent').style.display = 'none';
     }
@@ -121,6 +111,7 @@ async function loadBlockedUsers() {
             .select(`
                 id,
                 created_at,
+                blocked_id,
                 profiles:blocked_id (
                     id,
                     nickname,
@@ -137,15 +128,12 @@ async function loadBlockedUsers() {
 
         blockedUsers = blockedUsersData || [];
 
-        // Atualizar estatísticas
         updateStats(blockedUsers);
 
         if (blockedUsers.length === 0) {
-            // Lista vazia
             usersGrid.style.display = 'none';
             emptyState.style.display = 'block';
         } else {
-            // Mostrar usuários bloqueados
             usersGrid.style.display = 'grid';
             emptyState.style.display = 'none';
             displayBlockedUsers(blockedUsers);
@@ -161,10 +149,8 @@ function updateStats(users) {
     const oldestBlock = document.getElementById('oldestBlock');
     const clearAllBtn = document.getElementById('clearAllBtn');
 
-    // Total bloqueados
     totalBlocked.textContent = users.length;
 
-    // Bloqueio mais antigo
     if (users.length > 0) {
         const oldest = new Date(Math.min(...users.map(user => new Date(user.created_at))));
         const now = new Date();
@@ -183,27 +169,33 @@ function updateStats(users) {
         oldestBlock.textContent = '-';
     }
 
-    // Habilitar/desabilitar botão limpar todos
     clearAllBtn.disabled = users.length === 0;
 }
 
 function displayBlockedUsers(users) {
     const usersGrid = document.getElementById('blockedUsersGrid');
     
-    usersGrid.innerHTML = users.map(block => `
+    usersGrid.innerHTML = users.map(block => {
+        const safeNickname = (block.profiles.nickname || 'Usuário').replace(/'/g, "\\'");
+        const safeCity = (block.profiles.display_city || 'Localização não informada').replace(/'/g, "\\'");
+        
+        return `
         <div class="blocked-user-card">
             <div class="blocked-user-header">
                 <div class="blocked-user-avatar">
                     ${block.profiles.avatar_url ? 
-                        `<img src="${block.profiles.avatar_url}" alt="${block.profiles.nickname}">` : 
-                        `<div class="avatar-fallback">${getUserInitials(block.profiles.nickname)}</div>`
+                        `<img src="${block.profiles.avatar_url}" alt="${safeNickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
+                        ''
                     }
+                    <div class="avatar-fallback" style="${block.profiles.avatar_url ? 'display:none' : 'display:flex'}">
+                        ${getUserInitials(block.profiles.nickname)}
+                    </div>
                 </div>
                 <div class="blocked-user-info">
-                    <div class="blocked-user-name">${block.profiles.nickname || 'Usuário'}</div>
+                    <div class="blocked-user-name">${safeNickname}</div>
                     <div class="blocked-user-location">
                         <i class="fas fa-map-marker-alt"></i>
-                        ${block.profiles.display_city || 'Localização não informada'}
+                        ${safeCity}
                     </div>
                     <div class="blocked-user-premium-badge ${block.profiles.is_premium ? 'premium' : 'free'}">
                         ${block.profiles.is_premium ? '👑 Premium' : '👤 Free'}
@@ -224,31 +216,33 @@ function displayBlockedUsers(users) {
                     <span>${isUserOnline(block.profiles.last_online_at) ? 'Online agora' : 'Offline'}</span>
                 </div>
             </div>
-            <button class="unblock-btn" onclick="openUnblockConfirm('${block.profiles.id}', '${block.profiles.nickname}')">
+            <button class="unblock-btn" onclick="openUnblockConfirm('${block.profiles.id}', '${safeNickname}')">
                 <i class="fas fa-user-check"></i> Desbloquear Usuário
             </button>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
-// Abrir modal de confirmação de desbloqueio
 function openUnblockConfirm(userId, userName) {
     currentUnblockingUser = { id: userId, name: userName };
     
     const message = document.getElementById('unblockConfirmMessage');
-    message.textContent = `Tem certeza que deseja desbloquear ${userName}?`;
+    const safeUserName = userName.replace(/\\'/g, "'");
+    message.textContent = `Tem certeza que deseja desbloquear ${safeUserName}?`;
     
     showModal('unblockConfirmModal');
 }
 
-// Fechar modal de desbloqueio
 function closeUnblockConfirmModal() {
-    closeAllModals();
+    hideModal('unblockConfirmModal');
 }
 
-// Confirmar desbloqueio
 async function confirmUnblockUser() {
-    if (!currentUnblockingUser) return;
+    if (!currentUnblockingUser) {
+        showNotification('Erro: usuário não selecionado', 'error');
+        return;
+    }
 
     try {
         const { error } = await supabase
@@ -260,19 +254,20 @@ async function confirmUnblockUser() {
         if (error) throw error;
 
         showNotification(`${currentUnblockingUser.name} foi desbloqueado com sucesso!`);
-        closeAllModals();
+        hideModal('unblockConfirmModal');
         
-        // Recarregar lista
         await loadBlockedUsers();
 
     } catch (error) {
-        showNotification('Erro ao desbloquear usuário. Tente novamente.');
+        showNotification('Erro ao desbloquear usuário. Tente novamente.', 'error');
     }
 }
 
-// Abrir modal de limpar todos
 function clearAllBlocks() {
-    if (blockedUsers.length === 0) return;
+    if (blockedUsers.length === 0) {
+        showNotification('Não há usuários para desbloquear.', 'error');
+        return;
+    }
     
     const countElement = document.getElementById('clearAllCount');
     countElement.textContent = blockedUsers.length;
@@ -280,12 +275,10 @@ function clearAllBlocks() {
     showModal('clearAllConfirmModal');
 }
 
-// Fechar modal limpar todos
 function closeClearAllConfirmModal() {
-    closeAllModals();
+    hideModal('clearAllConfirmModal');
 }
 
-// Confirmar limpar todos os bloqueios
 async function confirmClearAllBlocks() {
     try {
         const { error } = await supabase
@@ -296,17 +289,15 @@ async function confirmClearAllBlocks() {
         if (error) throw error;
 
         showNotification('Todos os usuários foram desbloqueados!');
-        closeAllModals();
+        hideModal('clearAllConfirmModal');
         
-        // Recarregar lista
         await loadBlockedUsers();
 
     } catch (error) {
-        showNotification('Erro ao desbloquear todos os usuários. Tente novamente.');
+        showNotification('Erro ao desbloquear todos os usuários. Tente novamente.', 'error');
     }
 }
 
-// Funções utilitárias
 function getUserInitials(name) {
     if (!name) return 'U';
     return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().substring(0, 2);
@@ -329,39 +320,53 @@ function formatDate(dateString) {
     });
 }
 
-// Sistema de Modais
 function showModal(modalId) {
-    closeAllModals();
     const modal = document.getElementById(modalId);
     if (modal) {
-        modal.classList.add('active');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('active'), 10);
         document.body.style.overflow = 'hidden';
+    }
+}
+
+function hideModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
     }
 }
 
 function closeAllModals() {
     document.querySelectorAll('.modal').forEach(modal => {
         modal.classList.remove('active');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 300);
     });
     document.body.style.overflow = '';
     currentUnblockingUser = null;
 }
 
-// Sistema de Notificações
-function showNotification(message) {
+function showNotification(message, type = 'success') {
     const notification = document.createElement('div');
+    const backgroundColor = type === 'error' ? 'var(--error)' : 'var(--success)';
+    
     notification.style.cssText = `
         position: fixed;
         top: 20px;
         right: 20px;
-        background: var(--success);
+        background: ${backgroundColor};
         color: white;
         padding: 1rem 1.5rem;
         border-radius: var(--border-radius-sm);
-        z-index: 3000;
+        z-index: 4000;
         box-shadow: var(--shadow-hover);
         animation: slideInRight 0.3s ease-out;
         max-width: 300px;
+        font-weight: 500;
     `;
     notification.textContent = message;
     
@@ -377,7 +382,6 @@ function showNotification(message) {
     }, 3000);
 }
 
-// Adicionar estilos de animação para notificações
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideInRight {
@@ -404,7 +408,6 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Funções de Navegação
 function goToHome() {
     window.location.href = 'home.html';
 }
@@ -430,7 +433,23 @@ async function logout() {
     if (!error) window.location.href = 'login.html';
 }
 
-// Monitorar estado de autenticação
+window.openUnblockConfirm = openUnblockConfirm;
+window.closeUnblockConfirmModal = closeUnblockConfirmModal;
+window.confirmUnblockUser = confirmUnblockUser;
+window.clearAllBlocks = clearAllBlocks;
+window.closeClearAllConfirmModal = closeClearAllConfirmModal;
+window.confirmClearAllBlocks = confirmClearAllBlocks;
+window.goToHome = goToHome;
+window.goToPricing = goToPricing;
+window.goToPerfil = goToPerfil;
+window.goToMensagens = goToMensagens;
+window.goToBusca = goToBusca;
+window.logout = logout;
+
+setTimeout(async () => {
+    await PremiumManager.updateUIWithPremiumStatus();
+}, 500);
+
 supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
         window.location.href = 'login.html';
