@@ -34,7 +34,6 @@ async function initializeProfile() {
 
 async function loadUserData() {
     try {
-        // CONSULTA SIMPLES E DIRETA - SEM JOIN COMPLEXO
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -43,16 +42,13 @@ async function loadUserData() {
 
         if (profileError) throw profileError;
 
-        // CONSULTA SEPARADA PARA user_details
         const { data: userDetails, error: detailsError } = await supabase
             .from('user_details')
             .select('*')
             .eq('user_id', visitedUserId)
             .single();
 
-        // Se não encontrar detalhes, usa objeto vazio
         const details = userDetails || {};
-
         fillProfileData(profile, details);
 
     } catch (error) {
@@ -61,27 +57,22 @@ async function loadUserData() {
 }
 
 function fillProfileData(profile, details) {
-    // DADOS BÁSICOS
     document.getElementById('profileNickname').textContent = profile.nickname || 'Usuário';
     document.getElementById('profileLocation').textContent = profile.display_city || 'Cidade não informada';
     
-    // AVATAR
     if (profile.avatar_url) {
         document.getElementById('profileAvatar').src = profile.avatar_url;
         document.getElementById('profileAvatar').style.display = 'block';
         document.getElementById('profileAvatarFallback').style.display = 'none';
     }
 
-    // IDADE
     if (profile.birth_date) {
         const age = calculateAge(profile.birth_date);
         document.getElementById('profileAge').textContent = age;
     }
 
-    // PREMIUM BADGE
     updatePremiumBadge(profile);
 
-    // DADOS DETALHADOS - CORRIGIDOS
     updateField('profileLookingFor', details.looking_for);
     updateField('profileGender', details.gender);
     updateField('profileOrientation', details.sexual_orientation);
@@ -93,35 +84,159 @@ function fillProfileData(profile, details) {
     updateField('profileExercise', details.exercise);
     updateField('profilePets', details.has_pets);
 
-    // DESCRIÇÃO
     if (details.description) {
         document.getElementById('profileDescription').textContent = details.description;
     } else {
         document.getElementById('descriptionSection').style.display = 'none';
     }
 
-    // CARACTERÍSTICAS
     updateList('profileCharacteristics', details.characteristics, 'characteristicsSection');
-
-    // INTERESSES
     updateList('profileInterests', details.interests, 'interestsSection');
 
-    // GALERIA
     checkGalleryAccess();
 }
 
-// FUNÇÃO AUXILIAR PARA ATUALIZAR CAMPOS
+// ==================== FUNÇÕES DE FORMATAÇÃO PARA PORTUGUÊS ====================
+
+function formatLookingFor(value) {
+    const options = {
+        'amizade': 'Amizade',
+        'namoro': 'Namoro',
+        'relacionamento_serio': 'Relacionamento Sério',
+        'conversa': 'Apenas Conversa'
+    };
+    return options[value] || value;
+}
+
+function formatGender(value) {
+    const options = {
+        'feminino': 'Feminino',
+        'masculino': 'Masculino',
+        'nao_informar': 'Prefiro não informar',
+        'outro': 'Outro'
+    };
+    return options[value] || value;
+}
+
+function formatSexualOrientation(value) {
+    const options = {
+        'heterossexual': 'Heterossexual',
+        'homossexual': 'Homossexual',
+        'bissexual': 'Bissexual',
+        'assexual': 'Assexual',
+        'pansexual': 'Pansexual',
+        'outro': 'Outro',
+        'prefiro_nao_informar': 'Prefiro não informar'
+    };
+    return options[value] || value;
+}
+
+function formatZodiac(value) {
+    const options = {
+        'aries': 'Áries',
+        'touro': 'Touro',
+        'gemeos': 'Gêmeos',
+        'cancer': 'Câncer',
+        'leao': 'Leão',
+        'virgem': 'Virgem',
+        'libra': 'Libra',
+        'escorpiao': 'Escorpião',
+        'sagitario': 'Sagitário',
+        'capricornio': 'Capricórnio',
+        'aquario': 'Aquário',
+        'peixes': 'Peixes'
+    };
+    return options[value] || value;
+}
+
+function formatReligion(value) {
+    const options = {
+        'catolica': 'Católica',
+        'evangelica': 'Evangélica',
+        'espirita': 'Espírita',
+        'umbanda_candomble': 'Umbanda/Candomblé',
+        'budista': 'Budista',
+        'judaica': 'Judaica',
+        'islamica': 'Islâmica',
+        'outra': 'Outra',
+        'nenhuma': 'Nenhuma',
+        'prefiro_nao_informar': 'Prefiro não informar'
+    };
+    return options[value] || value;
+}
+
+function formatDrinking(value) {
+    const options = {
+        'nao_bebo': 'Não bebo',
+        'socialmente': 'Socialmente',
+        'frequentemente': 'Frequentemente',
+        'prefiro_nao_informar': 'Prefiro não informar'
+    };
+    return options[value] || value;
+}
+
+function formatSmoking(value) {
+    const options = {
+        'nao_fumo': 'Não fumo',
+        'socialmente': 'Socialmente',
+        'frequentemente': 'Frequentemente',
+        'prefiro_nao_informar': 'Prefiro não informar'
+    };
+    return options[value] || value;
+}
+
+function formatExercise(value) {
+    const options = {
+        'nao_pratico': 'Não pratico',
+        'ocasionalmente': 'Ocasionalmente',
+        'regularmente': 'Regularmente',
+        'prefiro_nao_informar': 'Prefiro não informar'
+    };
+    return options[value] || value;
+}
+
+function formatPets(value) {
+    const options = {
+        'nao': 'Não tenho',
+        'sim': 'Tenho pets',
+        'prefiro_nao_informar': 'Prefiro não informar'
+    };
+    return options[value] || value;
+}
+
 function updateField(elementId, value) {
     const element = document.getElementById(elementId);
     if (element) {
         const span = element.querySelector('span');
         if (span) {
-            span.textContent = value || 'Não informado';
+            let displayValue = value;
+            
+            // APLICA FORMATAÇÃO PARA PORTUGUÊS
+            if (elementId === 'profileLookingFor') {
+                displayValue = formatLookingFor(value);
+            } else if (elementId === 'profileGender') {
+                displayValue = formatGender(value);
+            } else if (elementId === 'profileOrientation') {
+                displayValue = formatSexualOrientation(value);
+            } else if (elementId === 'profileZodiac') {
+                displayValue = formatZodiac(value);
+            } else if (elementId === 'profileReligion') {
+                displayValue = formatReligion(value);
+            } else if (elementId === 'profileDrinking') {
+                displayValue = formatDrinking(value);
+            } else if (elementId === 'profileSmoking') {
+                displayValue = formatSmoking(value);
+            } else if (elementId === 'profileExercise') {
+                displayValue = formatExercise(value);
+            } else if (elementId === 'profilePets') {
+                displayValue = formatPets(value);
+            }
+            
+            span.textContent = displayValue || 'Não informado';
         }
     }
 }
 
-// FUNÇÃO AUXILIAR PARA LISTAS
 function updateList(containerId, items, sectionId) {
     const container = document.getElementById(containerId);
     const section = document.getElementById(sectionId);
@@ -286,7 +401,6 @@ function openGalleryImage(imageUrl) {
     }
 }
 
-// EVENT LISTENERS
 document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('imageModal');
     const closeBtn = document.getElementById('closeModalBtn');
