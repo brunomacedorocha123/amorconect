@@ -1,4 +1,4 @@
-// home.js - VERSÃO COMPLETA COM FILTRO DE ORIENTAÇÃO SEXUAL
+// home.js - VERSÃO COMPLETA CORRIGIDA
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -103,15 +103,15 @@ async function loadUsers() {
     const usersGrid = document.getElementById('usersGrid');
     usersGrid.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>Carregando pessoas...</p></div>';
 
-    // Carrega o perfil do usuário atual para saber a orientação sexual
+    // Carrega o perfil completo do usuário atual
     const { data: currentUserProfile, error: profileError } = await supabase
         .from('profiles')
-        .select('sexual_orientation, gender')
+        .select('*')
         .eq('id', currentUser.id)
         .single();
 
-    if (profileError) {
-        usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar perfil.</p></div>';
+    if (profileError || !currentUserProfile) {
+        usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar perfil do usuário.</p></div>';
         return;
     }
 
@@ -122,7 +122,7 @@ async function loadUsers() {
         .eq('is_invisible', false)
         .limit(8);
 
-    // FILTRO POR ORIENTAÇÃO SEXUAL
+    // FILTRO POR ORIENTAÇÃO SEXUAL - CORRIGIDO
     const userOrientation = currentUserProfile.sexual_orientation;
     const userGender = currentUserProfile.gender;
 
@@ -139,7 +139,7 @@ async function loadUsers() {
             query = query.eq('gender', 'mulher');
         }
     }
-    // Para bissexual, não aplica filtro de gênero
+    // Para bissexual ou outros, não aplica filtro de gênero
 
     // Aplica filtros adicionais (online, premium)
     if (currentFilter === 'online') {
@@ -152,7 +152,7 @@ async function loadUsers() {
     const { data: profiles, error } = await query;
 
     if (error) {
-        usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar.</p></div>';
+        usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar usuários.</p></div>';
         return;
     }
 
