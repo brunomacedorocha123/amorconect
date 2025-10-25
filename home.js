@@ -103,40 +103,56 @@ async function loadUsers() {
     const usersGrid = document.getElementById('usersGrid');
     usersGrid.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>Carregando pessoas...</p></div>';
 
-    // Carrega o perfil completo do usuário atual
-    const { data: currentUserProfile, error: profileError } = await supabase
+    // Carrega o perfil completo do usuário atual COM user_details
+    const { data: currentUserData, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+            *,
+            user_details (
+                gender,
+                sexual_orientation
+            )
+        `)
         .eq('id', currentUser.id)
         .single();
 
-    if (profileError || !currentUserProfile) {
+    if (profileError || !currentUserData) {
         usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar perfil do usuário.</p></div>';
         return;
     }
 
     let query = supabase
         .from('profiles')
-        .select('*')
+        .select(`
+            *,
+            user_details (
+                gender,
+                sexual_orientation
+            )
+        `)
         .neq('id', currentUser.id)
         .eq('is_invisible', false)
         .limit(8);
 
-    // FILTRO POR ORIENTAÇÃO SEXUAL - CORRIGIDO
-    const userOrientation = currentUserProfile.sexual_orientation;
-    const userGender = currentUserProfile.gender;
+    // FILTRO POR ORIENTAÇÃO SEXUAL - CORRIGIDO (usa user_details)
+    const userOrientation = currentUserData.user_details?.[0]?.sexual_orientation;
+    const userGender = currentUserData.user_details?.[0]?.gender;
 
     if (userOrientation === 'heterossexual') {
         if (userGender === 'homem') {
-            query = query.eq('gender', 'mulher');
+            // Homem hetero: vê apenas mulheres
+            query = query.eq('user_details.gender', 'mulher');
         } else if (userGender === 'mulher') {
-            query = query.eq('gender', 'homem');
+            // Mulher hetero: vê apenas homens
+            query = query.eq('user_details.gender', 'homem');
         }
     } else if (userOrientation === 'homossexual') {
         if (userGender === 'homem') {
-            query = query.eq('gender', 'homem');
+            // Homem homo: vê apenas homens
+            query = query.eq('user_details.gender', 'homem');
         } else if (userGender === 'mulher') {
-            query = query.eq('gender', 'mulher');
+            // Mulher homo: vê apenas mulheres
+            query = query.eq('user_details.gender', 'mulher');
         }
     }
     // Para bissexual ou outros, não aplica filtro de gênero
@@ -195,6 +211,7 @@ function displayUsers(profiles) {
     usersGrid.innerHTML = profiles.map(profile => {
         const safeNickname = (profile.nickname || 'Usuário').replace(/'/g, "\\'");
         const safeCity = (profile.display_city || 'Localização não informada').replace(/'/g, "\\'");
+        const userGender = profile.user_details?.[0]?.gender || 'Não informado';
         
         return `
         <div class="user-card">
@@ -224,6 +241,9 @@ function displayUsers(profiles) {
                 </div>
             </div>
             <div class="user-details">
+                <div class="user-detail">
+                    <strong>Gênero:</strong> <span>${userGender}</span>
+                </div>
                 <div class="user-detail">
                     <strong>Status:</strong> <span>Ativo</span>
                 </div>
