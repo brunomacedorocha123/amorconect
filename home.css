@@ -379,7 +379,7 @@ nav a.active {
     background: linear-gradient(90deg, var(--gold), var(--burgundy));
 }
 
-/* Botão de 3 pontos - POSIÇÃO CORRIGIDA */
+/* Botão de 3 pontos - CORRIGIDO */
 .user-actions-btn {
     position: absolute;
     top: 0.8rem;
@@ -395,7 +395,7 @@ nav a.active {
     cursor: pointer;
     transition: var(--transition);
     backdrop-filter: blur(10px);
-    z-index: 100;
+    z-index: 1000;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
@@ -759,7 +759,7 @@ footer {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.7);
-    z-index: 2000;
+    z-index: 3000;
     backdrop-filter: blur(5px);
 }
 
@@ -904,6 +904,12 @@ footer {
     margin-bottom: 1rem;
 }
 
+.success-icon {
+    font-size: 3rem;
+    color: var(--success);
+    margin-bottom: 1rem;
+}
+
 .confirmation-message p {
     margin-bottom: 1.5rem;
     font-size: 1.1rem;
@@ -919,17 +925,29 @@ footer {
     margin-top: 1rem;
 }
 
-.block-consequences p {
+.unblock-consequences {
+    text-align: left;
+    background: rgba(72, 187, 120, 0.05);
+    padding: 1.5rem;
+    border-radius: var(--border-radius-sm);
+    border-left: 4px solid var(--success);
+    margin-top: 1rem;
+}
+
+.block-consequences p,
+.unblock-consequences p {
     margin-bottom: 0.8rem;
     font-size: 1rem;
 }
 
-.block-consequences ul {
+.block-consequences ul,
+.unblock-consequences ul {
     list-style: none;
     padding: 0;
 }
 
-.block-consequences li {
+.block-consequences li,
+.unblock-consequences li {
     padding: 0.3rem 0;
     font-size: 0.9rem;
     color: var(--text-secondary);
@@ -941,6 +959,12 @@ footer {
 .block-consequences li:before {
     content: "•";
     color: var(--error);
+    font-weight: bold;
+}
+
+.unblock-consequences li:before {
+    content: "•";
+    color: var(--success);
     font-weight: bold;
 }
 
