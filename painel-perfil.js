@@ -132,6 +132,7 @@ function fillProfileForm(profile, userDetails) {
 
     // Dados públicos
     if (userDetails) {
+        setValue('relationshipStatus', userDetails.relationship_status);
         setValue('gender', userDetails.gender);
         setValue('sexualOrientation', userDetails.sexual_orientation);
         setValue('profession', userDetails.profession);
@@ -237,6 +238,7 @@ function collectUserDetailsData() {
         .map(checkbox => checkbox.value);
 
     return {
+        relationship_status: getValue('relationshipStatus'),
         gender: getValue('gender'),
         sexual_orientation: getValue('sexualOrientation'),
         profession: getValue('profession'),
@@ -280,6 +282,11 @@ function validateProfileData(profileData, userDetailsData) {
     
     if (age < 18) {
         showNotification('Você deve ter pelo menos 18 anos!', 'error');
+        return false;
+    }
+    
+    if (!userDetailsData.relationship_status) {
+        showNotification('Informe seu status de relacionamento!', 'error');
         return false;
     }
     
@@ -411,5 +418,44 @@ function showNotification(message, type = 'info') {
     }, 5000);
 }
 
+// Função para buscar CEP (opcional - pode adicionar depois)
+async function buscarCEP(cep) {
+    try {
+        const cepLimpo = cep.replace(/\D/g, '');
+        if (cepLimpo.length !== 8) return;
+        
+        const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+        const data = await response.json();
+        
+        if (!data.erro) {
+            setValue('street', data.logradouro);
+            setValue('neighborhood', data.bairro);
+            setValue('city', data.localidade);
+            setValue('state', data.uf);
+            setValue('displayCity', `${data.localidade}, ${data.uf}`);
+        }
+    } catch (error) {
+        console.log('Erro ao buscar CEP:', error);
+    }
+}
+
+// Adicionar evento para busca automática de CEP (opcional)
+document.addEventListener('DOMContentLoaded', function() {
+    const zipCodeInput = document.getElementById('zipCode');
+    if (zipCodeInput) {
+        zipCodeInput.addEventListener('blur', function(e) {
+            const cep = e.target.value.replace(/\D/g, '');
+            if (cep.length === 8) {
+                buscarCEP(cep);
+            }
+        });
+    }
+});
+
 // Exportar para uso global
 window.supabase = supabase;
+window.profileManager = {
+    loadUserProfile,
+    saveProfile: handleProfileSave,
+    showNotification
+};
