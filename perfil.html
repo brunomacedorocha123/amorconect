@@ -6,6 +6,7 @@
     <title>Perfil - Amor Conect</title>
     <link rel="stylesheet" href="perfil.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <!-- Header Simplificado -->
@@ -29,17 +30,19 @@
             <section class="profile-hero">
                 <div class="profile-avatar-section">
                     <div class="profile-avatar-large">
-                        <div class="user-avatar-fallback-large" id="profileAvatarFallback">U</div>
+                        <div class="user-avatar-fallback-large" id="profileAvatarFallback">
+                            <span id="avatarInitials">U</span>
+                        </div>
                         <img class="avatar-image-large" id="profileAvatar" style="display: none;" alt="Avatar do usuário">
                     </div>
                     <div class="profile-basic-info">
-                        <h1 id="profileNickname">Usuário</h1>
-                        <div class="profile-premium-badge" id="visitedUserPremiumBadge">
+                        <h1 id="profileNickname">Carregando...</h1>
+                        <div class="profile-premium-badge free" id="visitedUserPremiumBadge">
                             <i class="fas fa-user"></i> Free
                         </div>
                         <div class="profile-location">
                             <i class="fas fa-map-marker-alt"></i>
-                            <span id="profileLocation">Cidade, Estado</span>
+                            <span id="profileLocation">Carregando...</span>
                         </div>
                         <div class="profile-stats">
                             <div class="stat">
@@ -63,19 +66,19 @@
                 <h3><i class="fas fa-user"></i> Sobre</h3>
                 <div class="about-content">
                     <div class="about-item" id="profileLookingFor">
-                        <strong>Procura:</strong> <span>--</span>
+                        <strong>Procura:</strong> <span>Carregando...</span>
                     </div>
                     <div class="about-item" id="profileGender">
-                        <strong>Gênero:</strong> <span>--</span>
+                        <strong>Gênero:</strong> <span>Carregando...</span>
                     </div>
                     <div class="about-item" id="profileOrientation">
-                        <strong>Orientação:</strong> <span>--</span>
+                        <strong>Orientação:</strong> <span>Carregando...</span>
                     </div>
                     <div class="about-item" id="profileProfession">
-                        <strong>Profissão:</strong> <span>--</span>
+                        <strong>Profissão:</strong> <span>Carregando...</span>
                     </div>
                     <div class="about-item" id="profileZodiac">
-                        <strong>Signo:</strong> <span>--</span>
+                        <strong>Signo:</strong> <span>Carregando...</span>
                     </div>
                 </div>
             </section>
@@ -84,7 +87,7 @@
             <section class="profile-section" id="descriptionSection">
                 <h3><i class="fas fa-edit"></i> Sobre Mim</h3>
                 <div class="description-content">
-                    <p id="profileDescription">Este usuário ainda não adicionou uma descrição.</p>
+                    <p id="profileDescription">Carregando descrição...</p>
                 </div>
             </section>
 
@@ -92,7 +95,10 @@
             <section class="profile-section" id="characteristicsSection">
                 <h3><i class="fas fa-user-tag"></i> Características</h3>
                 <div class="characteristics-grid" id="profileCharacteristics">
-                    <!-- Carregado via JavaScript -->
+                    <div class="characteristic-item">
+                        <i class="fas fa-check"></i>
+                        <span>Carregando...</span>
+                    </div>
                 </div>
             </section>
 
@@ -100,7 +106,10 @@
             <section class="profile-section" id="interestsSection">
                 <h3><i class="fas fa-star"></i> Interesses</h3>
                 <div class="interests-grid" id="profileInterests">
-                    <!-- Carregado via JavaScript -->
+                    <div class="interest-item">
+                        <i class="fas fa-star"></i>
+                        <span>Carregando...</span>
+                    </div>
                 </div>
             </section>
 
@@ -109,19 +118,19 @@
                 <h3><i class="fas fa-running"></i> Estilo de Vida</h3>
                 <div class="lifestyle-grid">
                     <div class="lifestyle-item" id="profileReligion">
-                        <strong>Religião:</strong> <span>--</span>
+                        <strong>Religião:</strong> <span>Carregando...</span>
                     </div>
                     <div class="lifestyle-item" id="profileDrinking">
-                        <strong>Bebida:</strong> <span>--</span>
+                        <strong>Bebida:</strong> <span>Carregando...</span>
                     </div>
                     <div class="lifestyle-item" id="profileSmoking">
-                        <strong>Fumo:</strong> <span>--</span>
+                        <strong>Fumo:</strong> <span>Carregando...</span>
                     </div>
                     <div class="lifestyle-item" id="profileExercise">
-                        <strong>Exercício:</strong> <span>--</span>
+                        <strong>Exercício:</strong> <span>Carregando...</span>
                     </div>
                     <div class="lifestyle-item" id="profilePets">
-                        <strong>Pets:</strong> <span>--</span>
+                        <strong>Pets:</strong> <span>Carregando...</span>
                     </div>
                 </div>
             </section>
@@ -169,6 +178,7 @@
     </div>
 
     <script>
+        // Configuração Supabase
         const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
