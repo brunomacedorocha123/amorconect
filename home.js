@@ -1,4 +1,4 @@
-// home.js - VERSÃO COMPLETA E SIMPLES
+// home.js - VERSÃO COMPLETA COM SISTEMA DE COMPATIBILIDADE
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -101,37 +101,145 @@ function updateUserHeader(profile) {
 
 async function loadUsers() {
     const usersGrid = document.getElementById('usersGrid');
-    usersGrid.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>Carregando pessoas...</p></div>';
+    usersGrid.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>Carregando pessoas compatíveis...</p></div>';
 
-    // Busca perfis visíveis
-    let query = supabase
-        .from('profiles')
-        .select('*')
-        .neq('id', currentUser.id)
-        .eq('is_invisible', false)
-        .limit(8);
+    try {
+        // PRIMEIRO: Buscar perfil completo do usuário atual com orientação sexual
+        const { data: currentUserProfile, error: profileError } = await supabase
+            .from('profiles')
+            .select(`
+                *,
+                user_details (
+                    gender,
+                    sexual_orientation
+                )
+            `)
+            .eq('id', currentUser.id)
+            .single();
 
-    if (currentFilter === 'online') {
-        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-        query = query.gte('last_online_at', fifteenMinutesAgo);
-    } else if (currentFilter === 'premium') {
-        query = query.eq('is_premium', true);
-    }
+        if (profileError || !currentUserProfile) {
+            usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar perfil.</p></div>';
+            return;
+        }
 
-    const { data: profiles, error } = await query;
+        const userDetails = currentUserProfile.user_details || {};
+        const userGender = userDetails.gender;
+        const userOrientation = userDetails.sexual_orientation;
 
-    if (error) {
+        console.log('Usuário atual:', {
+            gender: userGender,
+            orientation: userOrientation
+        });
+
+        // Buscar todos os perfis visíveis
+        let query = supabase
+            .from('profiles')
+            .select(`
+                *,
+                user_details (
+                    gender,
+                    sexual_orientation
+                )
+            `)
+            .neq('id', currentUser.id)
+            .eq('is_invisible', false)
+            .limit(20); // Buscar mais para depois filtrar
+
+        // Aplicar filtro de status se necessário
+        if (currentFilter === 'online') {
+            const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+            query = query.gte('last_online_at', fifteenMinutesAgo);
+        } else if (currentFilter === 'premium') {
+            query = query.eq('is_premium', true);
+        }
+
+        const { data: profiles, error } = await query;
+
+        if (error) {
+            usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar usuários.</p></div>';
+            return;
+        }
+
+        if (!profiles || profiles.length === 0) {
+            usersGrid.innerHTML = '<div class="loading-state"><p>Nenhuma pessoa encontrada.</p></div>';
+            return;
+        }
+
+        // FILTRAR POR COMPATIBILIDADE
+        const compatibleProfiles = filterCompatibleUsers(profiles, userGender, userOrientation);
+        
+        if (compatibleProfiles.length === 0) {
+            usersGrid.innerHTML = `
+                <div class="loading-state">
+                    <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; color: #ccc;"></i>
+                    <p>Nenhuma pessoa compatível encontrada no momento.</p>
+                    <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">
+                        Tente ajustar seus filtros ou complete seu perfil.
+                    </p>
+                </div>
+            `;
+            return;
+        }
+
+        // Aplicar filtro de bloqueios
+        const filteredProfiles = await filterBlockedUsers(compatibleProfiles);
+        
+        if (filteredProfiles.length === 0) {
+            usersGrid.innerHTML = '<div class="loading-state"><p>Nenhuma pessoa disponível no momento.</p></div>';
+            return;
+        }
+
+        // Mostrar apenas os primeiros 8 perfis
+        const profilesToShow = filteredProfiles.slice(0, 8);
+        displayUsers(profilesToShow);
+
+    } catch (error) {
+        console.error('Erro ao carregar usuários:', error);
         usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar.</p></div>';
-        return;
     }
+}
 
-    if (!profiles || profiles.length === 0) {
-        usersGrid.innerHTML = '<div class="loading-state"><p>Nenhuma pessoa encontrada.</p></div>';
-        return;
-    }
+// FUNÇÃO PRINCIPAL: FILTRAR USUÁRIOS COMPATÍVEIS
+function filterCompatibleUsers(profiles, userGender, userOrientation) {
+    return profiles.filter(profile => {
+        const profileGender = profile.user_details?.gender;
+        const profileOrientation = profile.user_details?.sexual_orientation;
 
-    const filteredProfiles = await filterBlockedUsers(profiles);
-    displayUsers(filteredProfiles);
+        // Se não temos informações de gênero do perfil, mostrar por segurança
+        if (!profileGender) {
+            return true;
+        }
+
+        // REGRAS DE COMPATIBILIDADE
+        switch (userOrientation) {
+            
+            case 'heterossexual':
+                // Heterossexual: gênero oposto
+                if (userGender === 'masculino' || userGender === 'homem') {
+                    return profileGender === 'feminino' || profileGender === 'mulher';
+                } else if (userGender === 'feminino' || userGender === 'mulher') {
+                    return profileGender === 'masculino' || profileGender === 'homem';
+                }
+                return false;
+
+            case 'homossexual':
+                // Homossexual: mesmo gênero
+                if (userGender === 'masculino' || userGender === 'homem') {
+                    return profileGender === 'masculino' || profileGender === 'homem';
+                } else if (userGender === 'feminino' || userGender === 'mulher') {
+                    return profileGender === 'feminino' || profileGender === 'mulher';
+                }
+                return false;
+
+            case 'bissexual':
+                // Bissexual: todos os gêneros
+                return true;
+
+            default:
+                // Outras orientações ou não informado: mostrar todos (comportamento mais amplo)
+                return true;
+        }
+    });
 }
 
 async function filterBlockedUsers(users) {
@@ -162,8 +270,10 @@ function displayUsers(profiles) {
     const usersGrid = document.getElementById('usersGrid');
     
     usersGrid.innerHTML = profiles.map(profile => {
+        const userDetails = profile.user_details || {};
         const safeNickname = (profile.nickname || 'Usuário').replace(/'/g, "\\'");
         const safeCity = (profile.display_city || 'Localização não informada').replace(/'/g, "\\'");
+        const profileGender = userDetails.gender || 'Não informado';
         
         return `
         <div class="user-card">
@@ -187,6 +297,10 @@ function displayUsers(profiles) {
                         <i class="fas fa-map-marker-alt"></i>
                         ${safeCity}
                     </div>
+                    <div class="user-gender">
+                        <i class="fas fa-venus-mars"></i>
+                        ${formatGenderForDisplay(profileGender)}
+                    </div>
                     <div class="user-premium-badge ${profile.is_premium ? 'premium' : 'free'}">
                         ${profile.is_premium ? '👑 Premium' : '👤 Free'}
                     </div>
@@ -207,6 +321,19 @@ function displayUsers(profiles) {
         </div>
         `;
     }).join('');
+}
+
+// Função para formatar gênero para exibição
+function formatGenderForDisplay(gender) {
+    const genderMap = {
+        'masculino': 'Masculino',
+        'feminino': 'Feminino',
+        'homem': 'Masculino',
+        'mulher': 'Feminino',
+        'nao_informar': 'Não informado',
+        'outro': 'Outro'
+    };
+    return genderMap[gender] || gender;
 }
 
 function setActiveFilter(filter) {
@@ -419,6 +546,19 @@ style.textContent = `
             transform: translateX(100%);
             opacity: 0;
         }
+    }
+
+    .user-gender {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+        color: #666;
+        margin-top: 0.25rem;
+    }
+
+    .user-gender i {
+        color: #8a4baf;
     }
 `;
 document.head.appendChild(style);
