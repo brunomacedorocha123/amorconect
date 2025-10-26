@@ -12,7 +12,6 @@ const VisitorsSystem = {
             await this.loadVisitors();
             this.setupEventListeners();
         } catch (error) {
-            console.error('Erro ao inicializar sistema de visitantes:', error);
             this.showErrorState();
         }
     },
@@ -32,7 +31,6 @@ const VisitorsSystem = {
             if (window.PremiumManager) {
                 this.isPremium = await PremiumManager.checkPremiumStatus();
             } else {
-                // Fallback: verificar diretamente no banco
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('is_premium')
@@ -50,7 +48,6 @@ const VisitorsSystem = {
         const container = document.getElementById('visitorsContainer');
         if (!container) return;
 
-        // Mostrar loading
         container.innerHTML = `
             <div class="loading-state">
                 <div class="loading-spinner"></div>
@@ -74,7 +71,6 @@ const VisitorsSystem = {
         const container = document.getElementById('visitorsContainer');
         
         try {
-            // Buscar contagem total de visitas
             const { data: visits, error } = await supabase
                 .from('profile_visits')
                 .select('id')
@@ -83,12 +79,9 @@ const VisitorsSystem = {
             if (error) throw error;
 
             const visitCount = visits?.length || 0;
-
-            // Mostrar estado free
             container.innerHTML = this.getFreeStateHTML(visitCount);
 
         } catch (error) {
-            console.error('Erro ao carregar visitantes free:', error);
             this.showEmptyState();
         }
     },
@@ -98,7 +91,6 @@ const VisitorsSystem = {
         const container = document.getElementById('visitorsContainer');
         
         try {
-            // Buscar visitas recentes com dados dos visitantes
             const { data: visits, error } = await supabase
                 .from('profile_visits')
                 .select(`
@@ -118,15 +110,10 @@ const VisitorsSystem = {
             if (error) throw error;
 
             this.recentVisits = visits || [];
-
-            // Mostrar estado premium
             container.innerHTML = this.getPremiumStateHTML();
-
-            // Mostrar/ocultar botão "Ver todos"
             this.toggleViewAllButton();
 
         } catch (error) {
-            console.error('Erro ao carregar visitantes premium:', error);
             this.showEmptyState();
         }
     },
@@ -169,9 +156,6 @@ const VisitorsSystem = {
                     <i class="fas fa-eye-slash"></i>
                     <h4>Nenhuma visita ainda</h4>
                     <p>Seu perfil ainda não foi visitado por outros usuários.</p>
-                    <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-light);">
-                        Quando alguém visitar, aparecerá aqui.
-                    </p>
                 </div>
             `;
         }
@@ -222,6 +206,9 @@ const VisitorsSystem = {
                     <div class="visitors-total">
                         Total: <strong>${this.recentVisits.length} visita(s)</strong>
                     </div>
+                    <button class="btn-view-all" id="viewAllVisitorsBtn">
+                        Ver todos <i class="fas fa-arrow-right"></i>
+                    </button>
                 </div>
                 <div class="visitors-grid">
                     ${visitorsHTML}
@@ -273,21 +260,17 @@ const VisitorsSystem = {
         }
     },
 
-    // IR PARA PÁGINA DE HISTÓRICO COMPLETO
-    goToVisitorsHistory() {
-        if (this.isPremium) {
-            window.location.href = 'visitantes.html';
-        } else {
-            window.location.href = 'pricing.html';
-        }
-    },
-
     // CONFIGURAR EVENT LISTENERS
     setupEventListeners() {
         const viewAllBtn = document.getElementById('viewAllVisitorsBtn');
         if (viewAllBtn) {
             viewAllBtn.addEventListener('click', () => this.goToVisitorsHistory());
         }
+    },
+
+    // IR PARA PÁGINA DE HISTÓRICO COMPLETO
+    goToVisitorsHistory() {
+        window.location.href = 'visitantes.html';
     },
 
     // ESTADO DE ERRO
@@ -319,40 +302,11 @@ const VisitorsSystem = {
                 </div>
             `;
         }
-    },
-
-    // ATUALIZAR VISITANTES (PARA CHAMAR EXTERNAMENTE)
-    async refreshVisitors() {
-        await this.checkPremiumStatus();
-        await this.loadVisitors();
     }
 };
 
-// ========== INTEGRAÇÃO COM O PERFIL.JS ==========
-// Função para registrar visita quando alguém visualiza um perfil
-async function registerProfileVisit(visitedUserId) {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user || user.id === visitedUserId) return;
-
-        // Registrar visita usando a função do Supabase
-        const { data, error } = await supabase.rpc('register_profile_visit', {
-            p_visitor_id: user.id,
-            p_visited_id: visitedUserId
-        });
-
-        if (error) {
-            console.error('Erro ao registrar visita:', error);
-        }
-
-    } catch (error) {
-        console.error('Erro no registro de visita:', error);
-    }
-}
-
 // ========== INICIALIZAÇÃO AUTOMÁTICA ==========
 document.addEventListener('DOMContentLoaded', function() {
-    // Aguardar um pouco para não conflitar com outros scripts
     setTimeout(() => {
         VisitorsSystem.initialize();
     }, 1000);
@@ -360,4 +314,3 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ========== EXPORTAR PARA USO GLOBAL ==========
 window.VisitorsSystem = VisitorsSystem;
-window.registerProfileVisit = registerProfileVisit;
