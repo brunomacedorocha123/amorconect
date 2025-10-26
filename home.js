@@ -1,4 +1,4 @@
-// home.js - VERSÃO CORRIGIDA - SISTEMA DE MODAIS
+// home.js - VERSÃO CORRIGIDA - MODAIS FUNCIONANDO
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -48,26 +48,18 @@ function setupEventListeners() {
         });
     });
 
-    // Event listeners para fechar modais
+    // Event listeners para fechar modais ao clicar fora
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('modal')) {
             closeAllModals();
         }
     });
 
+    // Event listener para tecla Escape
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeAllModals();
         }
-    });
-
-    // Event listeners específicos para botões de fechar
-    const closeButtons = document.querySelectorAll('.modal-close, [onclick*="close"]');
-    closeButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.stopPropagation();
-            closeAllModals();
-        });
     });
 }
 
@@ -353,7 +345,7 @@ function viewUserProfile(userId) {
     window.location.href = `perfil.html?id=${userId}`;
 }
 
-// === SISTEMA DE MODAIS CORRIGIDO ===
+// === SISTEMA DE MODAIS SIMPLES E FUNCIONAL ===
 function openUserActions(userId, userName) {
     currentBlockingUser = { id: userId, name: userName };
     showModal('userActionsModal');
@@ -454,18 +446,17 @@ function viewProfileFromModal() {
     }
 }
 
-// === SISTEMA DE MODAIS SIMPLIFICADO E CORRIGIDO ===
+// === SISTEMA DE MODAIS SIMPLIFICADO ===
 function showModal(modalId) {
-    closeAllModals(); // Fecha qualquer modal aberto antes
-    
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.style.display = 'flex';
-        // Pequeno delay para a animação CSS funcionar
-        requestAnimationFrame(() => {
-            modal.classList.add('active');
-        });
         document.body.style.overflow = 'hidden';
+        
+        // Pequeno delay para garantir que o display:flex foi aplicado
+        setTimeout(() => {
+            modal.classList.add('active');
+        }, 10);
     }
 }
 
@@ -473,11 +464,10 @@ function hideModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.remove('active');
+        
         // Espera a animação terminar antes de esconder
         setTimeout(() => {
-            if (!modal.classList.contains('active')) {
-                modal.style.display = 'none';
-            }
+            modal.style.display = 'none';
         }, 300);
     }
 }
@@ -488,7 +478,7 @@ function closeAllModals() {
         modal.classList.remove('active');
         setTimeout(() => {
             modal.style.display = 'none';
-        }, 50); // Delay menor para fechamento rápido
+        }, 300);
     });
     document.body.style.overflow = '';
     currentBlockingUser = null;
@@ -526,60 +516,6 @@ function showNotification(message, type = 'success') {
         }, 300);
     }, 3000);
 }
-
-// === ESTILOS DE ANIMAÇÃO ===
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideInRight {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    
-    @keyframes slideOutRight {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-    }
-
-    .user-gender {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.8rem;
-        color: #666;
-        margin-top: 0.25rem;
-    }
-
-    .user-gender i {
-        color: #8a4baf;
-    }
-
-    /* Garantir que os botões de fechar funcionem */
-    .modal-close {
-        cursor: pointer;
-        background: none;
-        border: none;
-        font-size: 1.2rem;
-        color: #666;
-        padding: 0.5rem;
-    }
-
-    .modal-close:hover {
-        color: #333;
-    }
-`;
-document.head.appendChild(style);
 
 // === NAVEGAÇÃO ===
 function goToPerfil() { window.location.href = 'painel.html'; }
