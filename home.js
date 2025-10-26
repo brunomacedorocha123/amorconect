@@ -1,4 +1,4 @@
-// home.js - VERSÃO FINAL CORRIGIDA
+// home.js - VERSÃO SIMPLES E FUNCIONAL
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -46,20 +46,6 @@ function setupEventListeners() {
             const filter = this.getAttribute('data-filter');
             setActiveFilter(filter);
         });
-    });
-
-    // Event listener para fechar modais ao clicar fora
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('modal')) {
-            closeAllModals();
-        }
-    });
-
-    // Event listener para tecla Escape
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeAllModals();
-        }
     });
 }
 
@@ -345,14 +331,32 @@ function viewUserProfile(userId) {
     window.location.href = `perfil.html?id=${userId}`;
 }
 
-// === SISTEMA DE MODAIS SIMPLES E FUNCIONAL ===
+// === SISTEMA DE MODAIS SIMPLES ===
 function openUserActions(userId, userName) {
     currentBlockingUser = { id: userId, name: userName };
-    showModal('userActionsModal');
+    
+    // Fecha todos os modais primeiro
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.style.display = 'none';
+    });
+    
+    // Abre o modal de ações
+    const modal = document.getElementById('userActionsModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
 }
 
 function closeUserActionsModal() {
-    hideModal('userActionsModal');
+    const modal = document.getElementById('userActionsModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+function closeBlockConfirmModal() {
+    const modal = document.getElementById('blockConfirmModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+    currentBlockingUser = null;
 }
 
 function blockUser() {
@@ -361,8 +365,10 @@ function blockUser() {
         return;
     }
     
-    hideModal('userActionsModal');
+    // Fecha o modal de ações
+    closeUserActionsModal();
     
+    // Configura o modal de confirmação
     const isPremium = window.PremiumManager ? window.PremiumManager.userPlanInfo?.is_premium : false;
     
     const freeWarning = document.getElementById('freeBlockWarning');
@@ -380,12 +386,9 @@ function blockUser() {
     const userName = currentBlockingUser.name || 'este usuário';
     message.textContent = `Tem certeza que deseja bloquear ${userName}?`;
 
-    showModal('blockConfirmModal');
-}
-
-function closeBlockConfirmModal() {
-    hideModal('blockConfirmModal');
-    currentBlockingUser = null;
+    // Abre o modal de confirmação
+    const modal = document.getElementById('blockConfirmModal');
+    modal.style.display = 'flex';
 }
 
 async function confirmBlockUser() {
@@ -418,8 +421,7 @@ async function confirmBlockUser() {
                 showNotification('Usuário bloqueado com sucesso!');
             }
             
-            hideModal('blockConfirmModal');
-            
+            closeBlockConfirmModal();
             await loadUsers();
 
             if (!isPremium) {
@@ -446,25 +448,8 @@ function viewProfileFromModal() {
     }
 }
 
-// === FUNÇÕES DE MODAL SIMPLES ===
-function showModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-    }
-}
-
-function hideModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
 function closeAllModals() {
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
+    document.querySelectorAll('.modal').forEach(modal => {
         modal.style.display = 'none';
     });
     document.body.style.overflow = '';
