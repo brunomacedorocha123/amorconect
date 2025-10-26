@@ -1,4 +1,4 @@
-/* home.css */
+/* home.css - VERSÃO COMPLETA E CORRIGIDA */
 :root {
     /* Cores principais */
     --gold: #C6A664;
@@ -379,7 +379,7 @@ nav a.active {
     background: linear-gradient(90deg, var(--gold), var(--burgundy));
 }
 
-/* Botão de 3 pontos - CORRIGIDO */
+/* Botão de 3 pontos */
 .user-actions-btn {
     position: absolute;
     top: 0.8rem;
@@ -750,7 +750,7 @@ footer {
     margin: 0 0.2rem;
 }
 
-/* Modal Styles */
+/* ===== MODAIS CORRIGIDOS - SEM CONGELAMENTO ===== */
 .modal {
     display: none;
     position: fixed;
@@ -759,14 +759,16 @@ footer {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.7);
-    z-index: 3000;
-    backdrop-filter: blur(5px);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .modal.active {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    opacity: 1;
 }
 
 .modal-content {
@@ -778,18 +780,14 @@ footer {
     overflow-y: auto;
     box-shadow: var(--shadow-hover);
     border: 2px solid var(--gold);
-    animation: modalSlideIn 0.3s ease-out;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+    position: relative;
+    z-index: 10001;
 }
 
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-30px) scale(0.9);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+.modal.active .modal-content {
+    transform: scale(1);
 }
 
 .modal-header {
@@ -799,6 +797,8 @@ footer {
     justify-content: space-between;
     align-items: center;
     background: linear-gradient(135deg, rgba(198, 166, 100, 0.1), transparent);
+    position: relative;
+    z-index: 10002;
 }
 
 .modal-header h3 {
@@ -816,6 +816,13 @@ footer {
     padding: 0.5rem;
     border-radius: 50%;
     transition: var(--transition);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 10003;
 }
 
 .modal-close:hover {
@@ -825,6 +832,8 @@ footer {
 
 .modal-body {
     padding: 1.5rem;
+    position: relative;
+    z-index: 10002;
 }
 
 .modal-footer {
@@ -833,6 +842,8 @@ footer {
     display: flex;
     gap: 1rem;
     justify-content: flex-end;
+    position: relative;
+    z-index: 10002;
 }
 
 /* User Actions List */
@@ -1039,56 +1050,4 @@ footer {
     .user-actions-btn i {
         font-size: 0.7rem;
     }
-}
-
-
-/* ===== CORREÇÃO CRÍTICA PARA MODAIS - ADICIONAR NO FINAL ===== */
-.modal {
-    display: none !important;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    z-index: 3000;
-    backdrop-filter: blur(5px);
-    align-items: center;
-    justify-content: center;
-}
-
-.modal.active {
-    display: flex !important;
-}
-
-.modal-content {
-    position: relative;
-    z-index: 3001;
-}
-
-.modal-content * {
-    pointer-events: auto;
-}
-
-.modal-close {
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    color: var(--text-light);
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 50%;
-    transition: var(--transition);
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    z-index: 3002;
-}
-
-.modal-close:hover {
-    background: rgba(166, 91, 91, 0.1);
-    color: var(--burgundy);
 }
