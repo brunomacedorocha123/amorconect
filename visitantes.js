@@ -10,6 +10,11 @@ const VisitorsHistory = {
     // INICIALIZAR PÁGINA
     async initialize() {
         try {
+            // Configuração Supabase
+            const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
+            window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
             await this.checkAuthentication();
             await this.checkPremiumStatus();
             
@@ -19,7 +24,6 @@ const VisitorsHistory = {
             }
 
             await this.loadAllVisits();
-            this.setupEventListeners();
             
         } catch (error) {
             console.error('Erro ao inicializar página de visitantes:', error);
@@ -40,15 +44,23 @@ const VisitorsHistory = {
     // VERIFICAR STATUS PREMIUM
     async checkPremiumStatus() {
         try {
+            // Primeiro tenta pelo PremiumManager
             if (window.PremiumManager) {
                 this.isPremium = await PremiumManager.checkPremiumStatus();
-            } else {
-                const { data: profile } = await supabase
+            } 
+            // Fallback: verificar direto no banco
+            else {
+                const { data: profile, error } = await supabase
                     .from('profiles')
                     .select('is_premium')
                     .eq('id', this.currentUser.id)
                     .single();
-                this.isPremium = profile?.is_premium || false;
+
+                if (!error && profile) {
+                    this.isPremium = profile.is_premium;
+                } else {
+                    this.isPremium = false;
+                }
             }
         } catch (error) {
             this.isPremium = false;
@@ -78,7 +90,10 @@ const VisitorsHistory = {
                 .eq('visited_id', this.currentUser.id)
                 .order('visited_at', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                console.error('Erro ao buscar visitas:', error);
+                throw error;
+            }
 
             this.allVisits = visits || [];
             this.displayVisitsPage();
@@ -93,7 +108,7 @@ const VisitorsHistory = {
     displayVisitsPage() {
         const container = document.getElementById('visitorsPageContainer');
         
-        if (this.allVisits.length === 0) {
+        if (!this.allVisits || this.allVisits.length === 0) {
             container.innerHTML = this.getEmptyStateHTML();
             return;
         }
@@ -112,15 +127,18 @@ const VisitorsHistory = {
 
     // FILTRAR VISITAS
     filterVisits(visits) {
+        if (!visits) return [];
+        
         switch (this.currentFilter) {
             case 'premium':
-                return visits.filter(visit => visit.profiles.is_premium);
+                return visits.filter(visit => visit.profiles && visit.profiles.is_premium);
             case 'recent':
                 const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-                return visits.filter(visit => new Date(visit.visited_at) > oneWeekAgo);
+                return visits.filter(visit => visit.visited_at && new Date(visit.visited_at) > oneWeekAgo);
             case 'online':
                 const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
                 return visits.filter(visit => 
+                    visit.profiles && 
                     visit.profiles.last_online_at && 
                     new Date(visit.profiles.last_online_at) > fifteenMinutesAgo
                 );
@@ -131,6 +149,7 @@ const VisitorsHistory = {
 
     // PAGINAR VISITAS
     paginateVisits(visits) {
+        if (!visits) return [];
         const startIndex = (this.currentPage - 1) * this.itemsPerPage;
         const endIndex = startIndex + this.itemsPerPage;
         return visits.slice(startIndex, endIndex);
@@ -139,8 +158,9 @@ const VisitorsHistory = {
     // HTML PARA ESTATÍSTICAS
     getStatsHTML() {
         const totalVisits = this.allVisits.length;
-        const premiumVisitors = this.allVisits.filter(v => v.profiles.is_premium).length;
+        const premiumVisitors = this.allVisits.filter(v => v.profiles && v.profiles.is_premium).length;
         const recentVisits = this.allVisits.filter(v => {
+            if (!v.visited_at) return false;
             const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
             return new Date(v.visited_at) > oneWeekAgo;
         }).length;
@@ -165,10 +185,15 @@ const VisitorsHistory = {
 
     // HTML PARA FILTROS
     getFiltersHTML() {
+        const filteredCount = this.filterVisits(this.allVisits).length;
+        
         return `
             <section class="filters-section">
                 <div class="filters-header">
                     <h3>Filtrar Visitantes</h3>
+                    <span style="color: var(--text-light); font-size: 0.9rem;">
+                        ${filteredCount} de ${this.allVisits.length} visitantes
+                    </span>
                 </div>
                 <div class="filter-buttons">
                     <button class="btn-filter ${this.currentFilter === 'all' ? 'active' : ''}" 
@@ -194,18 +219,21 @@ const VisitorsHistory = {
 
     // HTML PARA LISTA DE VISITANTES
     getVisitorsListHTML(visits) {
-        if (visits.length === 0) {
+        if (!visits || visits.length === 0) {
             return `
                 <div class="empty-state">
                     <i class="fas fa-search"></i>
                     <h3>Nenhum visitante encontrado</h3>
                     <p>Nenhum visitante corresponde aos filtros aplicados.</p>
+                    <button class="btn-premium" onclick="VisitorsHistory.setFilter('all')" style="margin-top: 1rem;">
+                        <i class="fas fa-redo"></i> Mostrar Todos
+                    </button>
                 </div>
             `;
         }
 
         const visitorsHTML = visits.map(visit => {
-            const profile = visit.profiles;
+            const profile = visit.profiles || {};
             const visitTime = this.formatVisitTime(visit.visited_at);
             const initials = this.getUserInitials(profile.nickname);
             const isOnline = this.isUserOnline(profile.last_online_at);
@@ -239,12 +267,11 @@ const VisitorsHistory = {
                                 <i class="fas fa-user"></i>
                                 <span>${profile.is_premium ? 'Premium' : 'Free'}</span>
                             </div>
+                            <div class="visitor-detail">
+                                <i class="fas fa-clock"></i>
+                                <span>${visitTime}</span>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="visitor-time">
-                        <i class="fas fa-clock"></i>
-                        ${visitTime}
                     </div>
                     
                     <div class="visitor-actions">
@@ -320,6 +347,11 @@ const VisitorsHistory = {
                 <a href="pricing.html" class="btn-premium">
                     <i class="fas fa-crown"></i> Tornar-se Premium
                 </a>
+                <div style="margin-top: 1.5rem;">
+                    <a href="home.html" class="btn-outline" style="text-decoration: none; padding: 0.7rem 1.5rem;">
+                        <i class="fas fa-arrow-left"></i> Voltar para Home
+                    </a>
+                </div>
             </div>
         `;
     },
@@ -335,12 +367,19 @@ const VisitorsHistory = {
                 <button class="btn-premium" onclick="VisitorsHistory.initialize()" style="margin-top: 1rem;">
                     <i class="fas fa-redo"></i> Tentar Novamente
                 </button>
+                <div style="margin-top: 1rem;">
+                    <a href="home.html" class="btn-outline" style="text-decoration: none; padding: 0.7rem 1.5rem;">
+                        <i class="fas fa-arrow-left"></i> Voltar para Home
+                    </a>
+                </div>
             </div>
         `;
     },
 
     // ========== FUNÇÕES UTILITÁRIAS ==========
     formatVisitTime(visitedAt) {
+        if (!visitedAt) return 'Data desconhecida';
+        
         const now = new Date();
         const visitDate = new Date(visitedAt);
         const diffMs = now - visitDate;
@@ -353,13 +392,12 @@ const VisitorsHistory = {
         if (diffHours < 24) return `Há ${diffHours} h`;
         if (diffDays === 1) return 'Ontem';
         if (diffDays < 7) return `Há ${diffDays} dias`;
+        if (diffDays < 30) return `Há ${Math.floor(diffDays/7)} sem`;
         
         return visitDate.toLocaleDateString('pt-BR', {
             day: '2-digit',
             month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+            year: 'numeric'
         });
     },
 
@@ -399,22 +437,14 @@ const VisitorsHistory = {
     },
 
     viewProfile(visitorId) {
-        window.location.href = `perfil.html?id=${visitorId}`;
-    },
-
-    // CONFIGURAR EVENT LISTENERS
-    setupEventListeners() {
-        // Event listeners são configurados via onclick nos elementos
+        if (visitorId) {
+            window.location.href = `perfil.html?id=${visitorId}`;
+        }
     }
 };
 
 // ========== INICIALIZAÇÃO AUTOMÁTICA ==========
 document.addEventListener('DOMContentLoaded', function() {
-    // Configuração Supabase
-    const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
-    window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
     // Inicializar página
     VisitorsHistory.initialize();
 });
