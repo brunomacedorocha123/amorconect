@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - Amor Conect</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --background: #f8fafc;
+            --text: #2d3748;
+            --success: #48bb78;
+            --warning: #ed8936;
+            --danger: #f56565;
+            --info: #4299e1;
+            --white: #ffffff;
+            --gray: #718096;
+            --light-gray: #edf2f7;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--text);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: var(--white);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+
+        .admin-nav {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 0.8rem 1.5rem;
+            background: var(--light-gray);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-btn.active {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .content-section {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-title {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: var(--white);
+        }
+
+        .btn-info {
+            background: var(--info);
+            color: var(--white);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--light-gray);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray);
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .report-card {
+            border: 1px solid var(--light-gray);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            background: var(--white);
+            transition: all 0.3s ease;
+        }
+
+        .report-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: var(--primary);
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .report-users {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .report-reason {
+            background: var(--primary);
+            color: var(--white);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .report-meta {
+            margin-bottom: 1rem;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .report-evidence {
+            background: var(--light-gray);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-style: italic;
+            border-left: 4px solid var(--primary);
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            z-index: 1000;
+        }
+
+        .user-card {
+            border: 1px solid var(--light-gray);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            background: var(--white);
+        }
+
+        .user-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .report-header {
+                flex-direction: column;
+                align-items: start;
+            }
+            
+            .report-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .admin-nav {
+                flex-direction: column;
+            }
+            
+            .nav-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .user-header {
+                flex-direction: column;
+                align-items: start;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Botão Logout -->
+    <button class="logout-btn" onclick="logoutAdmin()">🚪 Sair</button>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>👑 Painel de Administração</h1>
+            <p>Amor Conect - Gerenciamento de Denúncias</p>
+            <div style="margin-top: 1rem;">
+                <small id="lastUpdate">Última atualização: --</small>
+            </div>
+
+            <!-- Navegação -->
+            <div class="admin-nav">
+                <button class="nav-btn active" onclick="showSection('denuncias')">
+                    🚨 Denúncias
+                </button>
+                <button class="nav-btn" onclick="showSection('estatisticas')">
+                    📊 Estatísticas
+                </button>
+                <button class="nav-btn" onclick="showSection('usuarios')">
+                    👥 Usuários
+                </button>
+            </div>
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalDenuncias">0</div>
+                <div class="stat-label">Total de Denúncias</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pendentesDenuncias">0</div>
+                <div class="stat-label">Pendentes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="resolvidasDenuncias">0</div>
+                <div class="stat-label">Resolvidas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalUsuarios">0</div>
+                <div class="stat-label">Usuários Totais</div>
+            </div>
+        </div>
+
+        <!-- SEÇÃO: DENÚNCIAS -->
+        <div id="denuncias" class="content-section active">
+            <div class="section-title">
+                <h2>🚨 Denúncias Pendentes</h2>
+                <div>
+                    <button class="btn btn-primary" onclick="carregarDenuncias()">
+                        🔄 Atualizar
+                    </button>
+                </div>
+            </div>
+            <div id="denunciasContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Carregando denúncias...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEÇÃO: ESTATÍSTICAS -->
+        <div id="estatisticas" class="content-section">
+            <div class="section-title">
+                <h2>📊 Estatísticas do Sistema</h2>
+                <button class="btn btn-primary" onclick="carregarEstatisticasDetalhadas()">
+                    🔄 Atualizar
+                </button>
+            </div>
+            <div id="estatisticasContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Carregando estatísticas...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEÇÃO: USUÁRIOS -->
+        <div id="usuarios" class="content-section">
+            <div class="section-title">
+                <h2>👥 Gerenciar Usuários</h2>
+                <button class="btn btn-primary" onclick="carregarUsuarios()">
+                    🔄 Atualizar
+                </button>
+            </div>
+            <div id="usuariosContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Carregando usuários...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIGURAÇÃO SUPABASE ====================
+        const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ==================== VERIFICAÇÃO DE AUTENTICAÇÃO ====================
+        function verificarAutenticacao() {
+            if (localStorage.getItem('adminAuthenticated') !== 'true') {
+                window.location.href = 'login-admin.html';
+                return false;
+            }
+            return true;
+        }
+
+        function logoutAdmin() {
+            localStorage.removeItem('adminAuthenticated');
+            window.location.href = 'login-admin.html';
+        }
+
+        // ==================== FUNÇÕES PRINCIPAIS ====================
+        async function carregarEstatisticas() {
+            if (!verificarAutenticacao()) return;
+            
+            try {
+                // Total de denúncias
+                const { count: totalDenuncias } = await supabase
+                    .from('user_reports')
+                    .select('*', { count: 'exact', head: true });
+
+                // Denúncias pendentes
+                const { count: denunciasPendentes } = await supabase
+                    .from('user_reports')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('status', 'pending');
+
+                // Denúncias resolvidas
+                const { count: denunciasResolvidas } = await supabase
+                    .from('user_reports')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('status', 'resolved');
+
+                // Total de usuários
+                const { count: totalUsuarios } = await supabase
+                    .from('profiles')
+                    .select('*', { count: 'exact', head: true });
+
+                // Atualizar interface
+                document.getElementById('totalDenuncias').textContent = totalDenuncias || 0;
+                document.getElementById('pendentesDenuncias').textContent = denunciasPendentes || 0;
+                document.getElementById('resolvidasDenuncias').textContent = denunciasResolvidas || 0;
+                document.getElementById('totalUsuarios').textContent = totalUsuarios || 0;
+
+                document.getElementById('lastUpdate').textContent = 
+                    `Última atualização: ${new Date().toLocaleString('pt-BR')}`;
+
+            } catch (erro) {
+                console.error('Erro nas estatísticas:', erro);
+            }
+        }
+
+        async function carregarDenuncias() {
+            if (!verificarAutenticacao()) return;
+            
+            const container = document.getElementById('denunciasContainer');
+            
+            try {
+                const { data: denuncias, error } = await supabase
+                    .from('user_reports')
+                    .select(`
+                        *,
+                        reporter:reporter_id(nickname, avatar_url, id),
+                        reported:reported_user_id(nickname, avatar_url, id, email)
+                    `)
+                    .eq('status', 'pending')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (!denuncias || denuncias.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">🎉</div>
+                            <h3>Nenhuma denúncia pendente!</h3>
+                            <p>Todas as denúncias foram resolvidas.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = denuncias.map(denuncia => `
+                    <div class="report-card">
+                        <div class="report-header">
+                            <div class="report-users">
+                                <strong>${denuncia.reporter?.nickname || 'Usuário'}</strong> 
+                                denunciou 
+                                <strong>${denuncia.reported?.nickname || 'Usuário'}</strong>
+                            </div>
+                            <div class="report-reason">${traduzirMotivo(denuncia.reason)}</div>
+                        </div>
+                        
+                        <div class="report-meta">
+                            <small>Data: ${new Date(denuncia.created_at).toLocaleString('pt-BR')}</small>
+                            ${denuncia.reported?.email ? `<br><small>Email: ${denuncia.reported.email}</small>` : ''}
+                        </div>
+
+                        ${denuncia.evidence ? `
+                            <div class="report-evidence">
+                                <strong>Motivo detalhado:</strong> "${denuncia.evidence}"
+                            </div>
+                        ` : ''}
+
+                        <div class="report-actions">
+                            <button class="btn btn-danger" onclick="tomarAcao('${denuncia.id}', '${denuncia.reported_user_id}', 'banir', '${denuncia.reported?.email || ''}')">
+                                🚫 Banir Permanentemente
+                            </button>
+                            <button class="btn btn-warning" onclick="tomarAcao('${denuncia.id}', '${denuncia.reported_user_id}', 'advertir')">
+                                ⚠️ Advertir
+                            </button>
+                            <button class="btn btn-success" onclick="tomarAcao('${denuncia.id}', null, 'resolver')">
+                                ✅ Resolver
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (erro) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">❌</div>
+                        <h3>Erro ao carregar denúncias</h3>
+                        <p>${erro.message}</p>
+                        <button class="btn btn-primary" onclick="carregarTudo()" style="margin-top: 1rem;">
+                            🔄 Tentar Novamente
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        async function tomarAcao(idDenuncia, idUsuario, acao, emailUsuario = '') {
+            if (!verificarAutenticacao()) return;
+            
+            const textoAcao = {
+                'banir': 'BANIR PERMANENTEMENTE este usuário',
+                'advertir': 'advertir este usuário', 
+                'resolver': 'resolver esta denúncia'
+            }[acao];
+            
+            if (acao === 'banir') {
+                if (!confirm(`🚨🚨🚨 BANIMENTO PERMANENTE 🚨🚨🚨\n\nEsta ação é IRREVERSÍVEL!\n\n• Email será BLOQUEADO PARA SEMPRE\n• Usuário NUNCA poderá criar nova conta\n• Todos os dados serão removidos\n\nTem certeza absoluta?`)) {
+                    return;
+                }
+            } else {
+                if (!confirm(`Tem certeza que deseja ${textoAcao}?`)) return;
+            }
+
+            try {
+                if (acao === 'banir' && idUsuario) {
+                    await banirUsuario(idUsuario, emailUsuario, idDenuncia);
+                }
+                
+                else if (acao === 'advertir' && idUsuario) {
+                    await advertirUsuario(idUsuario, idDenuncia);
+                }
+                
+                // Marcar denúncia como resolvida
+                const { error: reportError } = await supabase
+                    .from('user_reports')
+                    .update({ 
+                        status: 'resolved',
+                        resolved_at: new Date().toISOString(),
+                        action_taken: acao,
+                        resolved_by: 'admin'
+                    })
+                    .eq('id', idDenuncia);
+
+                if (reportError) throw reportError;
+
+                let mensagem = '';
+                if (acao === 'banir') {
+                    mensagem = '🚫 USUÁRIO BANIDO PERMANENTEMENTE!\n\n• Email BLOQUEADO para sempre\n• Não pode criar nova conta\n• Dados removidos do sistema';
+                } else if (acao === 'advertir') {
+                    mensagem = '⚠️ Advertência administrativa registrada!\n\nUsuário foi notificado sobre a violação.';
+                } else {
+                    mensagem = '✅ Denúncia resolvida sem ações adicionais.';
+                }
+                
+                alert(mensagem);
+                carregarTudo();
+
+            } catch (erro) {
+                console.error('Erro na ação administrativa:', erro);
+                alert(`❌ Erro: ${erro.message}`);
+            }
+        }
+
+        async function banirUsuario(userId, email, denunciaId) {
+            try {
+                let emailParaBanir = email;
+                
+                if (!emailParaBanir) {
+                    const { data: usuario, error: userError } = await supabase
+                        .from('profiles')
+                        .select('email')
+                        .eq('id', userId)
+                        .single();
+                        
+                    if (userError) throw new Error('Usuário não encontrado');
+                    emailParaBanir = usuario.email;
+                }
+                
+                const { data: denuncia } = await supabase
+                    .from('user_reports')
+                    .select('reason, evidence')
+                    .eq('id', denunciaId)
+                    .single();
+                    
+                const motivo = denuncia?.evidence || denuncia?.reason || 'Violação grave das regras';
+                
+                // Inserir na lista de emails banidos
+                const { error: banError } = await supabase
+                    .from('banned_emails')
+                    .insert({
+                        email: emailParaBanir,
+                        reason: `BANIMENTO ADMIN: ${motivo}`,
+                        banned_by: 'admin',
+                        permanent_ban: true,
+                        related_user_id: userId
+                    });
+                    
+                if (banError && banError.code !== '23505') { // 23505 = já existe
+                    throw new Error(`Erro ao banir email: ${banError.message}`);
+                }
+                
+                // Limpar dados do usuário
+                await limparDadosUsuario(userId);
+                
+                console.log(`✅ Usuário ${userId} banido permanentemente. Email: ${emailParaBanir}`);
+                
+            } catch (erro) {
+                throw erro;
+            }
+        }
+
+        async function advertirUsuario(userId, denunciaId) {
+            try {
+                const { data: denuncia } = await supabase
+                    .from('user_reports')
+                    .select('reason, evidence')
+                    .eq('id', denunciaId)
+                    .single();
+                    
+                const motivo = denuncia?.evidence || denuncia?.reason || 'Violação de regras';
+                
+                // Inserir advertência
+                const { error: warnError } = await supabase
+                    .from('user_warnings')
+                    .insert({
+                        user_id: userId,
+                        reason: `⚠️ ADVERTÊNCIA ADMIN: ${motivo}`,
+                        severity: 'high',
+                        created_at: new Date().toISOString(),
+                        admin_notice: 'Próxima violação resultará em banimento permanente'
+                    });
+
+                if (warnError) {
+                    // Fallback: atualizar perfil diretamente
+                    await supabase
+                        .from('profiles')
+                        .update({
+                            warning_count: 1,
+                            last_warning_at: new Date().toISOString()
+                        })
+                        .eq('id', userId);
+                }
+
+            } catch (erro) {
+                throw erro;
+            }
+        }
+
+        async function limparDadosUsuario(userId) {
+            try {
+                console.log(`🧹 Limpando dados do usuário banido: ${userId}`);
+                
+                // Atualizar perfil para indicar banimento
+                const { error: profileError } = await supabase
+                    .from('profiles')
+                    .update({
+                        nickname: '[Usuário Banido]',
+                        full_name: 'Usuário Removido',
+                        bio: 'Esta conta foi removida permanentemente por violação grave das regras da comunidade.',
+                        avatar_url: null,
+                        banned: true,
+                        banned_at: new Date().toISOString(),
+                        banned_reason: 'Banimento administrativo permanente - Violação de regras',
+                        is_active: false,
+                        last_online_at: new Date().toISOString()
+                    })
+                    .eq('id', userId);
+
+                if (profileError) throw profileError;
+
+                console.log(`✅ Dados do usuário ${userId} limpos com sucesso`);
+                
+            } catch (erro) {
+                console.error('❌ Erro ao limpar dados do usuário:', erro);
+                throw erro;
+            }
+        }
+
+        function traduzirMotivo(motivo) {
+            const motivos = {
+                'spam': '📢 Spam',
+                'inappropriate': '🔞 Conteúdo Inadequado',
+                'harassment': '🚨 Assédio',
+                'fake_profile': '👤 Perfil Falso', 
+                'scam': '💸 Golpe/Fraude',
+                'other': '❓ Outro'
+            };
+            return motivos[motivo] || motivo;
+        }
+
+        // ==================== SEÇÃO ESTATÍSTICAS ====================
+        async function carregarEstatisticasDetalhadas() {
+            if (!verificarAutenticacao()) return;
+            
+            const container = document.getElementById('estatisticasContainer');
+            
+            try {
+                // Buscar dados detalhados
+                const { data: denunciasPorMotivo } = await supabase
+                    .from('user_reports')
+                    .select('reason, status')
+                    .limit(1000);
+
+                const { data: usuariosAtivos } = await supabase
+                    .from('profiles')
+                    .select('created_at, is_premium')
+                    .eq('is_active', true);
+
+                // Processar estatísticas
+                const stats = {
+                    totalDenuncias: denunciasPorMotivo?.length || 0,
+                    denunciasPorMotivo: {},
+                    usuariosAtivos: usuariosAtivos?.length || 0,
+                    usuariosPremium: usuariosAtivos?.filter(u => u.is_premium)?.length || 0,
+                    usuariosUltimaSemana: usuariosAtivos?.filter(u => 
+                        new Date(u.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+                    )?.length || 0
+                };
+
+                // Contar denúncias por motivo
+                if (denunciasPorMotivo) {
+                    denunciasPorMotivo.forEach(denuncia => {
+                        stats.denunciasPorMotivo[denuncia.reason] = (stats.denunciasPorMotivo[denuncia.reason] || 0) + 1;
+                    });
+                }
+
+                // Renderizar estatísticas
+                let html = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                        <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 10px;">
+                            <h3 style="color: var(--primary); margin-bottom: 1rem;">📈 Estatísticas de Usuários</h3>
+                            <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Usuários Ativos:</span>
+                                    <strong>${stats.usuariosAtivos}</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Usuários Premium:</span>
+                                    <strong style="color: var(--success);">${stats.usuariosPremium}</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Novos (7 dias):</span>
+                                    <strong style="color: var(--info);">${stats.usuariosUltimaSemana}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 10px;">
+                            <h3 style="color: var(--primary); margin-bottom: 1rem;">📊 Denúncias por Motivo</h3>
+                            <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                `;
+
+                Object.entries(stats.denunciasPorMotivo).forEach(([motivo, quantidade]) => {
+                    html += `
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>${traduzirMotivo(motivo)}:</span>
+                            <strong>${quantidade}</strong>
+                        </div>
+                    `;
+                });
+
+                html += `
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                container.innerHTML = html;
+
+            } catch (erro) {
+                console.error('Erro ao carregar estatísticas:', erro);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">❌</div>
+                        <h3>Erro ao carregar estatísticas</h3>
+                        <p>${erro.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // ==================== SEÇÃO USUÁRIOS ====================
+        async function carregarUsuarios() {
+            if (!verificarAutenticacao()) return;
+            
+            const container = document.getElementById('usuariosContainer');
+            
+            try {
+                const { data: usuarios, error } = await supabase
+                    .from('profiles')
+                    .select('id, nickname, email, created_at, is_premium, is_active, avatar_url')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+
+                if (error) throw error;
+
+                if (!usuarios || usuarios.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">👥</div>
+                            <h3>Nenhum usuário encontrado</h3>
+                            <p>Não há usuários no sistema.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = `
+                    <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="filtrarUsuarios('all')">
+                            👥 Todos (${usuarios.length})
+                        </button>
+                        <button class="btn" onclick="filtrarUsuarios('premium')" style="background: var(--success); color: white;">
+                            ⭐ Premium (${usuarios.filter(u => u.is_premium).length})
+                        </button>
+                        <button class="btn" onclick="filtrarUsuarios('free')" style="background: var(--info); color: white;">
+                            🆓 Free (${usuarios.filter(u => !u.is_premium).length})
+                        </button>
+                    </div>
+                    <div id="listaUsuarios">
+                `;
+
+                usuarios.forEach(usuario => {
+                    const iniciais = usuario.nickname ? 
+                        usuario.nickname.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : 'U';
+                    
+                    html += `
+                        <div class="user-card" data-user-id="${usuario.id}" data-premium="${usuario.is_premium}">
+                            <div class="user-header">
+                                <div class="user-info">
+                                    <div class="user-avatar">
+                                        ${usuario.avatar_url ? 
+                                            `<img src="${usuario.avatar_url}" alt="${usuario.nickname}" style="width: 100%; height: 100%; border-radius: 50%;">` : 
+                                            iniciais
+                                        }
+                                    </div>
+                                    <div>
+                                        <h4>${usuario.nickname || 'Sem nome'}</h4>
+                                        <p style="color: var(--gray); font-size: 0.9rem;">${usuario.email}</p>
+                                        <p style="color: var(--gray); font-size: 0.8rem;">
+                                            Cadastrado em: ${new Date(usuario.created_at).toLocaleDateString('pt-BR')}
+                                            ${usuario.is_premium ? ' | ⭐ Premium' : ' | 🆓 Free'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="report-actions">
+                                    <button class="btn btn-warning" onclick="advertirUsuarioDireto('${usuario.id}')">
+                                        ⚠️ Advertir
+                                    </button>
+                                    <button class="btn btn-danger" onclick="banirUsuarioDireto('${usuario.id}', '${usuario.email}')">
+                                        🚫 Banir
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                container.innerHTML = html;
+
+            } catch (erro) {
+                console.error('Erro ao carregar usuários:', erro);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">❌</div>
+                        <h3>Erro ao carregar usuários</h3>
+                        <p>${erro.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function filtrarUsuarios(filtro) {
+            const usuarios = document.querySelectorAll('.user-card');
+            
+            usuarios.forEach(usuario => {
+                switch(filtro) {
+                    case 'premium':
+                        usuario.style.display = usuario.dataset.premium === 'true' ? 'block' : 'none';
+                        break;
+                    case 'free':
+                        usuario.style.display = usuario.dataset.premium === 'false' ? 'block' : 'none';
+                        break;
+                    default:
+                        usuario.style.display = 'block';
+                }
+            });
+        }
+
+        async function advertirUsuarioDireto(userId) {
+            const motivo = prompt('Digite o motivo da advertência:');
+            if (!motivo) return;
+
+            try {
+                await supabase
+                    .from('user_warnings')
+                    .insert({
+                        user_id: userId,
+                        reason: `⚠️ ADVERTÊNCIA ADMIN: ${motivo}`,
+                        severity: 'medium',
+                        created_at: new Date().toISOString()
+                    });
+
+                alert('✅ Advertência enviada!');
+            } catch (erro) {
+                alert('❌ Erro: ' + erro.message);
+            }
+        }
+
+        async function banirUsuarioDireto(userId, email) {
+            if (!confirm(`Banir permanentemente este usuário?\n\nEmail: ${email}\n\nEsta ação é IRREVERSÍVEL!`)) {
+                return;
+            }
+
+            try {
+                await banirUsuario(userId, email, 'banimento_direto');
+                alert('✅ Usuário banido permanentemente!');
+                carregarUsuarios();
+            } catch (erro) {
+                alert('❌ Erro: ' + erro.message);
+            }
+        }
+
+        // ==================== FUNÇÕES GERAIS ====================
+        function showSection(sectionName) {
+            // Esconder todas as seções
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Mostrar seção selecionada
+            document.getElementById(sectionName).classList.add('active');
+            event.target.classList.add('active');
+
+            // Carregar conteúdo específico da seção
+            switch(sectionName) {
+                case 'estatisticas':
+                    carregarEstatisticasDetalhadas();
+                    break;
+                case 'usuarios':
+                    carregarUsuarios();
+                    break;
+                case 'denuncias':
+                    carregarDenuncias();
+                    break;
+            }
+        }
+
+        function carregarTudo() {
+            carregarEstatisticas();
+            carregarDenuncias();
+        }
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!verificarAutenticacao()) return;
+            
+            console.log('👑 Painel Admin Amor Conect iniciado');
+            carregarTudo();
+            
+            // Atualizar estatísticas a cada 30 segundos
+            setInterval(() => {
+                carregarEstatisticas();
+            }, 30000);
+        });
+    </script>
+</body>
+</html>
