@@ -7,19 +7,27 @@ class MessagesSystem {
         this.conversations = [];
         this.messages = [];
         this.messageLimit = 4;
+        this.isLoading = false;
         
         this.initialize();
     }
 
     async initialize() {
-        await this.checkAuth();
-        await this.loadUserData();
-        await this.loadConversations();
-        this.setupEventListeners();
-        this.updateMessageCounter();
-        
-        this.startPeriodicChecks();
-        this.checkUrlParams();
+        try {
+            await this.checkAuth();
+            await this.loadUserData();
+            await this.loadConversations();
+            this.setupEventListeners();
+            this.updateMessageCounter();
+            
+            this.startPeriodicChecks();
+            this.checkUrlParams();
+            
+            console.log('Sistema de mensagens inicializado');
+        } catch (error) {
+            console.error('Erro na inicialização:', error);
+            this.showNotification('Erro ao carregar mensagens', 'error');
+        }
     }
 
     async checkAuth() {
@@ -31,20 +39,27 @@ class MessagesSystem {
             }
             this.currentUser = user;
         } catch (error) {
+            console.error('Erro de autenticação:', error);
             window.location.href = 'login.html';
         }
     }
 
     async loadUserData() {
-        const { data: profile } = await this.supabase
-            .from('profiles')
-            .select('nickname, avatar_url, is_premium')
-            .eq('id', this.currentUser.id)
-            .single();
+        try {
+            const { data: profile, error } = await this.supabase
+                .from('profiles')
+                .select('nickname, avatar_url, is_premium')
+                .eq('id', this.currentUser.id)
+                .single();
 
-        if (profile) {
-            this.currentUser.profile = profile;
-            this.updateUserHeader(profile);
+            if (error) throw error;
+
+            if (profile) {
+                this.currentUser.profile = profile;
+                this.updateUserHeader(profile);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar dados do usuário:', error);
         }
     }
 
@@ -80,7 +95,7 @@ class MessagesSystem {
         if (userId && this.currentUser && userId !== this.currentUser.id) {
             setTimeout(() => {
                 this.selectConversationFromUrl(userId);
-            }, 1500);
+            }, 1000);
         }
     }
 
@@ -89,25 +104,29 @@ class MessagesSystem {
             const existingConversation = this.conversations.find(c => c.other_user_id === userId);
             
             if (existingConversation) {
-                this.selectConversation(userId);
+                await this.selectConversation(userId);
             } else {
                 await this.createNewConversation(userId);
             }
             
+            // Limpar URL
             window.history.replaceState({}, '', 'mensagens.html');
         } catch (error) {
+            console.error('Erro ao selecionar conversa da URL:', error);
             this.showNotification('Erro ao carregar conversa', 'error');
         }
     }
 
     async createNewConversation(userId) {
         try {
-            const { data: userProfile } = await this.supabase
+            const { data: userProfile, error } = await this.supabase
                 .from('profiles')
                 .select('nickname, avatar_url, last_online_at')
                 .eq('id', userId)
                 .single();
                 
+            if (error) throw error;
+
             if (userProfile) {
                 const newConversation = {
                     other_user_id: userId,
@@ -121,9 +140,10 @@ class MessagesSystem {
                 
                 this.conversations.unshift(newConversation);
                 this.renderConversations();
-                this.selectConversation(userId);
+                await this.selectConversation(userId);
             }
         } catch (error) {
+            console.error('Erro ao criar nova conversa:', error);
             this.showNotification('Usuário não encontrado', 'error');
         }
     }
@@ -135,24 +155,37 @@ class MessagesSystem {
     }
 
     async loadConversations() {
+        if (this.isLoading) return;
+        
         try {
+            this.isLoading = true;
             this.showLoading('conversationsList');
             
             const { data: conversations, error } = await this.supabase
-                .rpc('get_user_conversations', { p_user_id: this.currentUser.id });
+                .rpc('get_user_conversations', { 
+                    p_user_id: this.currentUser.id 
+                });
 
-            if (error) return;
+            if (error) {
+                console.error('Erro ao carregar conversas:', error);
+                this.showError('conversationsList', 'Erro ao carregar conversas');
+                return;
+            }
 
             this.conversations = conversations || [];
             this.renderConversations();
             
         } catch (error) {
+            console.error('Erro ao carregar conversas:', error);
             this.showError('conversationsList', 'Erro ao carregar conversas');
+        } finally {
+            this.isLoading = false;
         }
     }
 
     renderConversations() {
         const container = document.getElementById('conversationsList');
+        if (!container) return;
         
         if (!this.conversations || this.conversations.length === 0) {
             container.innerHTML = `
@@ -166,13 +199,17 @@ class MessagesSystem {
         }
 
         container.innerHTML = this.conversations.map(conv => `
-            <div class="conversation-item" data-user-id="${conv.other_user_id}" 
+            <div class="conversation-item ${this.currentConversation === conv.other_user_id ? 'active' : ''}" 
+                 data-user-id="${conv.other_user_id}" 
                  onclick="MessagesSystem.selectConversation('${conv.other_user_id}')">
                 <div class="conversation-avatar">
                     ${conv.other_user_avatar_url ? 
-                        `<img src="${conv.other_user_avatar_url}" alt="${conv.other_user_nickname}">` :
-                        `<div class="avatar-fallback">${this.getUserInitials(conv.other_user_nickname)}</div>`
+                        `<img src="${conv.other_user_avatar_url}" alt="${conv.other_user_nickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
+                        ''
                     }
+                    <div class="avatar-fallback" style="${conv.other_user_avatar_url ? 'display: none;' : ''}">
+                        ${this.getUserInitials(conv.other_user_nickname)}
+                    </div>
                 </div>
                 <div class="conversation-info">
                     <div class="conversation-header">
@@ -198,6 +235,7 @@ class MessagesSystem {
 
     async selectConversation(otherUserId) {
         try {
+            // Atualizar UI
             document.querySelectorAll('.conversation-item').forEach(item => {
                 item.classList.remove('active');
             });
@@ -213,34 +251,44 @@ class MessagesSystem {
             this.updateChatHeader(otherUserId);
             
         } catch (error) {
+            console.error('Erro ao selecionar conversa:', error);
             this.showNotification('Erro ao carregar conversa', 'error');
         }
     }
 
     async loadConversationMessages(otherUserId) {
+        if (this.isLoading) return;
+        
         try {
+            this.isLoading = true;
             this.showLoading('messagesHistory');
             
             const { data: messages, error } = await this.supabase
                 .rpc('get_conversation_messages', {
                     p_user1_id: this.currentUser.id,
-                    p_user2_id: otherUserId,
-                    p_limit: 100,
-                    p_offset: 0
+                    p_user2_id: otherUserId
                 });
 
-            if (error) return;
+            if (error) {
+                console.error('Erro ao carregar mensagens:', error);
+                this.showError('messagesHistory', 'Erro ao carregar mensagens');
+                return;
+            }
 
             this.messages = messages || [];
             this.renderMessages();
             
         } catch (error) {
+            console.error('Erro ao carregar mensagens:', error);
             this.showError('messagesHistory', 'Erro ao carregar mensagens');
+        } finally {
+            this.isLoading = false;
         }
     }
 
     renderMessages() {
         const container = document.getElementById('messagesHistory');
+        if (!container) return;
         
         if (!this.messages || this.messages.length === 0) {
             container.innerHTML = `
@@ -305,15 +353,18 @@ class MessagesSystem {
         const messageInput = document.getElementById('messageInput');
         const message = messageInput.value.trim();
         
-        if (!message) return;
+        if (!message) {
+            this.showNotification('Digite uma mensagem', 'warning');
+            return;
+        }
+        
         if (!this.currentConversation) {
             this.showNotification('Selecione uma conversa primeiro', 'error');
             return;
         }
 
-        const canSend = await this.checkCanSendMessage();
-        if (!canSend.can_send) {
-            this.handleSendError(canSend.reason);
+        if (message.length > 1000) {
+            this.showNotification('Mensagem muito longa (máx. 1000 caracteres)', 'error');
             return;
         }
 
@@ -328,43 +379,32 @@ class MessagesSystem {
                     p_message: message
                 });
 
-            if (error) throw error;
+            if (error) {
+                console.error('Erro RPC send_message:', error);
+                throw error;
+            }
 
-            if (data && data[0].success) {
+            if (data === 'success') {
                 messageInput.value = '';
                 this.updateCharCounter();
                 this.showMessageStatus('Mensagem enviada!', 'success');
                 
+                // Recarregar mensagens e conversas
                 await this.loadConversationMessages(this.currentConversation);
                 await this.loadConversations();
                 this.updateMessageCounter();
                 
             } else {
-                throw new Error(data[0].reason || 'Erro ao enviar mensagem');
+                this.handleSendError(data);
+                throw new Error(data);
             }
 
         } catch (error) {
+            console.error('Erro ao enviar mensagem:', error);
             this.showMessageStatus('Erro ao enviar mensagem', 'error');
         } finally {
             this.setSendButtonState(false);
             setTimeout(() => this.clearMessageStatus(), 3000);
-        }
-    }
-
-    async checkCanSendMessage() {
-        try {
-            const { data, error } = await this.supabase
-                .rpc('can_send_message', {
-                    p_sender_id: this.currentUser.id,
-                    p_receiver_id: this.currentConversation
-                });
-
-            if (error) return { can_send: false, reason: 'unknown_error' };
-
-            return data[0] || { can_send: false, reason: 'unknown_error' };
-            
-        } catch (error) {
-            return { can_send: false, reason: 'unknown_error' };
         }
     }
 
@@ -386,6 +426,8 @@ class MessagesSystem {
             const isPremium = this.currentUser.profile?.is_premium;
             const counter = document.getElementById('messageCounter');
             
+            if (!counter) return;
+
             if (isPremium) {
                 counter.innerHTML = `
                     <span class="counter-text">Mensagens: </span>
@@ -410,6 +452,7 @@ class MessagesSystem {
             counter.classList.remove('premium');
 
         } catch (error) {
+            console.error('Erro ao atualizar contador:', error);
         }
     }
 
@@ -451,8 +494,9 @@ class MessagesSystem {
     updateCharCounter() {
         const messageInput = document.getElementById('messageInput');
         const charCounter = document.getElementById('charCounter');
-        const count = messageInput.value.length;
+        if (!messageInput || !charCounter) return;
         
+        const count = messageInput.value.length;
         charCounter.textContent = `${count}/1000`;
         
         if (count > 900) {
@@ -501,12 +545,14 @@ class MessagesSystem {
         
         if (inputArea) inputArea.style.display = 'block';
         
-        const placeholder = chatHeader.querySelector('.chat-header-placeholder');
+        const placeholder = document.querySelector('.chat-header-placeholder');
         if (placeholder) placeholder.style.display = 'none';
     }
 
     async updateChatHeader(otherUserId) {
         const chatHeader = document.getElementById('chatHeader');
+        if (!chatHeader) return;
+        
         const conversation = this.conversations.find(c => c.other_user_id === otherUserId);
         
         if (!conversation) return;
@@ -515,9 +561,12 @@ class MessagesSystem {
             <div class="chat-header-user">
                 <div class="chat-user-avatar">
                     ${conversation.other_user_avatar_url ? 
-                        `<img src="${conversation.other_user_avatar_url}" alt="${conversation.other_user_nickname}">` :
-                        `<div class="avatar-fallback">${this.getUserInitials(conversation.other_user_nickname)}</div>`
+                        `<img src="${conversation.other_user_avatar_url}" alt="${conversation.other_user_nickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
+                        ''
                     }
+                    <div class="avatar-fallback" style="${conversation.other_user_avatar_url ? 'display: none;' : ''}">
+                        ${this.getUserInitials(conversation.other_user_nickname)}
+                    </div>
                 </div>
                 <div class="chat-user-info">
                     <h3>${this.escapeHtml(conversation.other_user_nickname)}</h3>
@@ -538,26 +587,45 @@ class MessagesSystem {
     }
 
     async showUserInfo(userId) {
+        // Implementar modal de informações do usuário
+        this.showNotification('Funcionalidade em desenvolvimento', 'info');
     }
 
     async refreshMessages() {
+        if (this.isLoading) return;
+        
         const refreshBtn = document.getElementById('refreshMessages');
-        refreshBtn.classList.add('loading');
-        
-        await this.loadConversations();
-        
-        if (this.currentConversation) {
-            await this.loadConversationMessages(this.currentConversation);
+        if (refreshBtn) {
+            refreshBtn.classList.add('loading');
         }
         
-        setTimeout(() => {
-            refreshBtn.classList.remove('loading');
-        }, 500);
+        try {
+            await this.loadConversations();
+            
+            if (this.currentConversation) {
+                await this.loadConversationMessages(this.currentConversation);
+            }
+            
+            this.showNotification('Conversas atualizadas', 'success');
+        } catch (error) {
+            console.error('Erro ao atualizar:', error);
+        } finally {
+            if (refreshBtn) {
+                setTimeout(() => {
+                    refreshBtn.classList.remove('loading');
+                }, 500);
+            }
+        }
     }
 
     filterConversations(searchTerm) {
         const items = document.querySelectorAll('.conversation-item');
-        const term = searchTerm.toLowerCase();
+        const term = searchTerm.toLowerCase().trim();
+        
+        if (!term) {
+            items.forEach(item => item.style.display = 'flex');
+            return;
+        }
         
         items.forEach(item => {
             const userName = item.querySelector('.conversation-name').textContent.toLowerCase();
@@ -574,11 +642,14 @@ class MessagesSystem {
     scrollToBottom() {
         const container = document.getElementById('messagesHistory');
         if (container) {
-            container.scrollTop = container.scrollHeight;
+            setTimeout(() => {
+                container.scrollTop = container.scrollHeight;
+            }, 100);
         }
     }
 
     startPeriodicChecks() {
+        // Atualizar a cada 30 segundos
         setInterval(async () => {
             if (this.currentConversation) {
                 await this.loadConversationMessages(this.currentConversation);
@@ -588,12 +659,15 @@ class MessagesSystem {
     }
 
     escapeHtml(text) {
+        if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 
     formatTime(dateString) {
+        if (!dateString) return '';
+        
         const date = new Date(dateString);
         const now = new Date();
         const diffMs = now - date;
@@ -610,6 +684,8 @@ class MessagesSystem {
     }
 
     formatDate(dateString) {
+        if (!dateString) return '';
+        
         const date = new Date(dateString);
         const today = new Date();
         const yesterday = new Date(today);
@@ -644,7 +720,7 @@ class MessagesSystem {
         const container = document.getElementById(containerId);
         if (container) {
             container.innerHTML = `
-                <div class="empty-state">
+                <div class="empty-state error-state">
                     <i class="fas fa-exclamation-triangle"></i>
                     <h3>Erro</h3>
                     <p>${message}</p>
@@ -655,17 +731,36 @@ class MessagesSystem {
     }
 
     async retryLoad() {
-        await this.loadConversations();
-        if (this.currentConversation) {
-            await this.loadConversationMessages(this.currentConversation);
+        try {
+            await this.loadConversations();
+            if (this.currentConversation) {
+                await this.loadConversationMessages(this.currentConversation);
+            }
+        } catch (error) {
+            console.error('Erro no retry:', error);
         }
     }
 
     showNotification(message, type = 'info') {
+        // Usar sistema de notificação existente ou fallback
         if (typeof window.showNotification === 'function') {
             window.showNotification(message, type);
         } else {
-            alert(message);
+            // Fallback simples
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
         }
     }
 }
@@ -695,12 +790,21 @@ window.sendMessage = function() {
 };
 
 async function logout() {
-    const { error } = await supabase.auth.signOut();
-    if (!error) window.location.href = 'login.html';
+    try {
+        const { error } = await supabase.auth.signOut();
+        if (!error) {
+            window.location.href = 'login.html';
+        }
+    } catch (error) {
+        console.error('Erro no logout:', error);
+    }
 }
 
+// Monitorar estado de autenticação
 supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_OUT') window.location.href = 'login.html';
+    if (event === 'SIGNED_OUT') {
+        window.location.href = 'login.html';
+    }
 });
 
 window.logout = logout;
