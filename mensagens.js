@@ -6,7 +6,7 @@ class MessagesSystem {
         this.currentConversation = null;
         this.conversations = [];
         this.messages = [];
-        this.messageLimit = 4; // Free: 4 mensagens/dia
+        this.messageLimit = 4;
         
         this.initialize();
     }
@@ -18,7 +18,6 @@ class MessagesSystem {
         this.setupEventListeners();
         this.updateMessageCounter();
         
-        // Iniciar verificações periódicas
         this.startPeriodicChecks();
     }
 
@@ -36,7 +35,6 @@ class MessagesSystem {
     }
 
     async loadUserData() {
-        // Carregar dados do usuário atual
         const { data: profile } = await this.supabase
             .from('profiles')
             .select('nickname, avatar_url, is_premium')
@@ -45,7 +43,33 @@ class MessagesSystem {
 
         if (profile) {
             this.currentUser.profile = profile;
+            this.updateUserHeader(profile);
         }
+    }
+
+    updateUserHeader(profile) {
+        const avatarImg = document.getElementById('userAvatarImg');
+        const avatarFallback = document.getElementById('avatarFallback');
+        
+        if (profile.avatar_url) {
+            avatarImg.src = profile.avatar_url;
+            avatarImg.style.display = 'block';
+            avatarFallback.style.display = 'none';
+        } else {
+            avatarImg.style.display = 'none';
+            avatarFallback.style.display = 'flex';
+            avatarFallback.textContent = this.getUserInitials(profile.nickname || this.currentUser.email);
+        }
+
+        const userName = document.getElementById('userName');
+        if (userName) {
+            userName.textContent = profile.nickname || this.currentUser.email.split('@')[0];
+        }
+    }
+
+    getUserInitials(name) {
+        if (!name) return 'U';
+        return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().substring(0, 2);
     }
 
     async loadConversations() {
@@ -55,13 +79,12 @@ class MessagesSystem {
             const { data: conversations, error } = await this.supabase
                 .rpc('get_user_conversations', { p_user_id: this.currentUser.id });
 
-            if (error) throw error;
+            if (error) return;
 
             this.conversations = conversations || [];
             this.renderConversations();
             
         } catch (error) {
-            console.error('Erro ao carregar conversas:', error);
             this.showError('conversationsList', 'Erro ao carregar conversas');
         }
     }
@@ -86,7 +109,7 @@ class MessagesSystem {
                 <div class="conversation-avatar">
                     ${conv.other_user_avatar_url ? 
                         `<img src="${conv.other_user_avatar_url}" alt="${conv.other_user_nickname}">` :
-                        `<div class="avatar-fallback">${conv.other_user_nickname?.charAt(0).toUpperCase() || 'U'}</div>`
+                        `<div class="avatar-fallback">${this.getUserInitials(conv.other_user_nickname)}</div>`
                     }
                 </div>
                 <div class="conversation-info">
@@ -113,7 +136,6 @@ class MessagesSystem {
 
     async selectConversation(otherUserId) {
         try {
-            // Ativar item na lista
             document.querySelectorAll('.conversation-item').forEach(item => {
                 item.classList.remove('active');
             });
@@ -125,7 +147,6 @@ class MessagesSystem {
             this.updateChatHeader(otherUserId);
             
         } catch (error) {
-            console.error('Erro ao selecionar conversa:', error);
             this.showNotification('Erro ao carregar conversa', 'error');
         }
     }
@@ -142,13 +163,12 @@ class MessagesSystem {
                     p_offset: 0
                 });
 
-            if (error) throw error;
+            if (error) return;
 
             this.messages = messages || [];
             this.renderMessages();
             
         } catch (error) {
-            console.error('Erro ao carregar mensagens:', error);
             this.showError('messagesHistory', 'Erro ao carregar mensagens');
         }
     }
@@ -167,7 +187,6 @@ class MessagesSystem {
             return;
         }
 
-        // Agrupar mensagens por data
         const groupedMessages = this.groupMessagesByDate(this.messages);
         
         container.innerHTML = Object.keys(groupedMessages).map(date => `
@@ -190,7 +209,6 @@ class MessagesSystem {
             </div>
         `).join('');
 
-        // Scroll para baixo
         this.scrollToBottom();
     }
 
@@ -227,7 +245,6 @@ class MessagesSystem {
             return;
         }
 
-        // Verificar se pode enviar mensagem
         const canSend = await this.checkCanSendMessage();
         if (!canSend.can_send) {
             this.handleSendError(canSend.reason);
@@ -248,12 +265,10 @@ class MessagesSystem {
             if (error) throw error;
 
             if (data && data[0].success) {
-                // Mensagem enviada com sucesso
                 messageInput.value = '';
                 this.updateCharCounter();
                 this.showMessageStatus('Mensagem enviada!', 'success');
                 
-                // Recarregar mensagens e conversas
                 await this.loadConversationMessages(this.currentConversation);
                 await this.loadConversations();
                 this.updateMessageCounter();
@@ -263,7 +278,6 @@ class MessagesSystem {
             }
 
         } catch (error) {
-            console.error('Erro ao enviar mensagem:', error);
             this.showMessageStatus('Erro ao enviar mensagem', 'error');
         } finally {
             this.setSendButtonState(false);
@@ -279,12 +293,11 @@ class MessagesSystem {
                     p_receiver_id: this.currentConversation
                 });
 
-            if (error) throw error;
+            if (error) return { can_send: false, reason: 'unknown_error' };
 
             return data[0] || { can_send: false, reason: 'unknown_error' };
             
         } catch (error) {
-            console.error('Erro ao verificar permissão:', error);
             return { can_send: false, reason: 'unknown_error' };
         }
     }
@@ -316,7 +329,6 @@ class MessagesSystem {
                 return;
             }
 
-            // Para usuários free, buscar contador atual
             const { data: limits, error } = await this.supabase
                 .from('user_message_limits')
                 .select('messages_sent_today')
@@ -324,7 +336,6 @@ class MessagesSystem {
                 .single();
 
             const sentToday = limits?.messages_sent_today || 0;
-            const remaining = Math.max(0, this.messageLimit - sentToday);
 
             counter.innerHTML = `
                 <span class="counter-text">Mensagens hoje: </span>
@@ -333,15 +344,14 @@ class MessagesSystem {
             counter.classList.remove('premium');
 
         } catch (error) {
-            console.error('Erro ao atualizar contador:', error);
         }
     }
 
     setupEventListeners() {
-        // Input de mensagem
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendMessage');
-        const charCounter = document.getElementById('charCounter');
+        const refreshBtn = document.getElementById('refreshMessages');
+        const searchInput = document.getElementById('searchConversations');
 
         if (messageInput) {
             messageInput.addEventListener('input', () => {
@@ -361,14 +371,10 @@ class MessagesSystem {
             sendButton.addEventListener('click', () => this.sendMessage());
         }
 
-        // Botão de atualizar
-        const refreshBtn = document.getElementById('refreshMessages');
         if (refreshBtn) {
             refreshBtn.addEventListener('click', () => this.refreshMessages());
         }
 
-        // Busca de conversas
-        const searchInput = document.getElementById('searchConversations');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 this.filterConversations(e.target.value);
@@ -429,7 +435,6 @@ class MessagesSystem {
         
         if (inputArea) inputArea.style.display = 'block';
         
-        // Esconder placeholder se existir
         const placeholder = chatHeader.querySelector('.chat-header-placeholder');
         if (placeholder) placeholder.style.display = 'none';
     }
@@ -445,7 +450,7 @@ class MessagesSystem {
                 <div class="chat-user-avatar">
                     ${conversation.other_user_avatar_url ? 
                         `<img src="${conversation.other_user_avatar_url}" alt="${conversation.other_user_nickname}">` :
-                        `<div class="avatar-fallback">${conversation.other_user_nickname?.charAt(0).toUpperCase() || 'U'}</div>`
+                        `<div class="avatar-fallback">${this.getUserInitials(conversation.other_user_nickname)}</div>`
                     }
                 </div>
                 <div class="chat-user-info">
@@ -467,9 +472,6 @@ class MessagesSystem {
     }
 
     async showUserInfo(userId) {
-        // Implementar modal de informações do usuário
-        console.log('Mostrar informações do usuário:', userId);
-        // TODO: Implementar modal com informações completas do usuário
     }
 
     async refreshMessages() {
@@ -511,7 +513,6 @@ class MessagesSystem {
     }
 
     startPeriodicChecks() {
-        // Atualizar conversas a cada 30 segundos
         setInterval(async () => {
             if (this.currentConversation) {
                 await this.loadConversationMessages(this.currentConversation);
@@ -520,7 +521,6 @@ class MessagesSystem {
         }, 30000);
     }
 
-    // Utilitários
     escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
@@ -596,11 +596,9 @@ class MessagesSystem {
     }
 
     showNotification(message, type = 'info') {
-        // Usar sistema de notificação existente ou criar um simples
         if (typeof window.showNotification === 'function') {
             window.showNotification(message, type);
         } else {
-            // Fallback simples
             alert(message);
         }
     }
@@ -629,3 +627,14 @@ window.sendMessage = function() {
         window.MessagesSystem.sendMessage();
     }
 };
+
+async function logout() {
+    const { error } = await supabase.auth.signOut();
+    if (!error) window.location.href = 'login.html';
+}
+
+supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT') window.location.href = 'login.html';
+});
+
+window.logout = logout;
