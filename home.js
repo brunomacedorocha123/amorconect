@@ -103,7 +103,88 @@ async function loadUsers() {
     const usersGrid = document.getElementById('usersGrid');
     usersGrid.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>Carregando pessoas...</p></div>';
 
-    // Busca perfis visíveis
+    try {
+        // Busca dados do usuário atual
+        const { data: currentUserDetails, error: userError } = await supabase
+            .from('user_details')
+            .select('gender, sexual_orientation')
+            .eq('user_id', currentUser.id)
+            .single();
+
+        // Se não tem user_details, mostra todos (fallback)
+        if (userError || !currentUserDetails) {
+            await loadAllUsers(usersGrid);
+            return;
+        }
+
+        // Busca perfis visíveis
+        let query = supabase
+            .from('profiles')
+            .select('*')
+            .neq('id', currentUser.id)
+            .eq('is_invisible', false)
+            .limit(20);
+
+        if (currentFilter === 'online') {
+            const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+            query = query.gte('last_online_at', fifteenMinutesAgo);
+        } else if (currentFilter === 'premium') {
+            query = query.eq('is_premium', true);
+        }
+
+        const { data: allProfiles, error } = await query;
+
+        if (error || !allProfiles || allProfiles.length === 0) {
+            usersGrid.innerHTML = '<div class="loading-state"><p>Nenhuma pessoa encontrada.</p></div>';
+            return;
+        }
+
+        // Busca gêneros dos perfis
+        const profileIds = allProfiles.map(profile => profile.id);
+        const { data: profilesGender } = await supabase
+            .from('user_details')
+            .select('user_id, gender')
+            .in('user_id', profileIds);
+
+        // Aplica filtro de orientação sexual
+        const genderMap = {};
+        profilesGender?.forEach(detail => {
+            genderMap[detail.user_id] = detail.gender;
+        });
+
+        const userOrientation = currentUserDetails.sexual_orientation;
+        const userGender = currentUserDetails.gender;
+
+        let compatibleProfiles = allProfiles.filter(profile => {
+            const profileGender = genderMap[profile.id];
+            if (!profileGender) return false;
+
+            if (userOrientation === 'heterossexual') {
+                if (userGender === 'homem') return profileGender === 'mulher';
+                if (userGender === 'mulher') return profileGender === 'homem';
+            } else if (userOrientation === 'homossexual') {
+                return profileGender === userGender;
+            }
+            return true; // bissexual ou outros
+        });
+
+        if (compatibleProfiles.length === 0) {
+            usersGrid.innerHTML = '<div class="loading-state"><p>Nenhuma pessoa compatível encontrada.</p></div>';
+            return;
+        }
+
+        // Filtra bloqueados e exibe
+        const finalProfiles = await filterBlockedUsers(compatibleProfiles.slice(0, 8));
+        displayUsers(finalProfiles, genderMap);
+
+    } catch (error) {
+        // Fallback: carrega todos se houver erro
+        await loadAllUsers(usersGrid);
+    }
+}
+
+// Função fallback se houver erro no filtro
+async function loadAllUsers(usersGrid) {
     let query = supabase
         .from('profiles')
         .select('*')
@@ -158,12 +239,13 @@ async function filterBlockedUsers(users) {
     }
 }
 
-function displayUsers(profiles) {
+function displayUsers(profiles, genderMap = {}) {
     const usersGrid = document.getElementById('usersGrid');
     
     usersGrid.innerHTML = profiles.map(profile => {
         const safeNickname = (profile.nickname || 'Usuário').replace(/'/g, "\\'");
         const safeCity = (profile.display_city || 'Localização não informada').replace(/'/g, "\\'");
+        const userGender = genderMap[profile.id] || 'Não informado';
         
         return `
         <div class="user-card">
@@ -193,6 +275,9 @@ function displayUsers(profiles) {
                 </div>
             </div>
             <div class="user-details">
+                <div class="user-detail">
+                    <strong>Gênero:</strong> <span>${userGender}</span>
+                </div>
                 <div class="user-detail">
                     <strong>Status:</strong> <span>Ativo</span>
                 </div>
