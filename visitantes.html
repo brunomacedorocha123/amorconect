@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico de Visitantes - PulseLove</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ========== VARIÁVEIS CSS ========== */
+        :root {
+            --gold: #C6A664;
+            --light-gold: #D4B978;
+            --burgundy: #A65B5B;
+            --dark-burgundy: #8A4A4A;
+            --light-bg: #f8f9fa;
+            --white: #ffffff;
+            --card-bg: #ffffff;
+            --section-bg: #f1f3f5;
+            --dark-bg: #1A1A1A;
+            --dark-card: #242424;
+            --dark-text: #2d3748;
+            --text-primary: #2d3748;
+            --text-secondary: #4a5568;
+            --text-light: #718096;
+            --text-white: #ffffff;
+            --online: #48bb78;
+            --offline: #a0aec0;
+            --error: #f56565;
+            --success: #48bb78;
+            --warning: #ed8936;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
+            --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s ease;
+            --border-radius: 16px;
+            --border-radius-sm: 8px;
+        }
+
+        /* ========== ESTILOS GERAIS ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--light-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ========== HEADER ========== */
+        .page-header {
+            background: var(--dark-bg);
+            padding: 1rem 0;
+            border-bottom: 3px solid var(--gold);
+            margin-bottom: 2rem;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo img {
+            height: 50px;
+        }
+
+        .page-title {
+            color: var(--text-white);
+            font-size: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--gold);
+            color: var(--gold);
+        }
+
+        .btn-outline:hover {
+            background: var(--gold);
+            color: var(--dark-bg);
+        }
+
+        /* ========== MAIN CONTENT ========== */
+        .main-content {
+            padding: 2rem 0;
+            min-height: calc(100vh - 200px);
+        }
+
+        /* ========== SEÇÃO DE VISITANTES ========== */
+        .visitors-hero {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .visitors-hero h1 {
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .visitors-hero p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .visitors-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            text-align: center;
+            box-shadow: var(--shadow-card);
+            border: 1px solid rgba(198, 166, 100, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--gold);
+            display: block;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* ========== FILTROS ========== */
+        .filters-section {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-card);
+        }
+
+        .filters-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-filter {
+            padding: 0.6rem 1.2rem;
+            background: var(--section-bg);
+            border: 1px solid #e2e8f0;
+            border-radius: 30px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .btn-filter:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .btn-filter.active {
+            background: var(--gold);
+            border-color: var(--gold);
+            color: var(--dark-bg);
+        }
+
+        /* ========== LISTA DE VISITANTES ========== */
+        .visitors-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .visitor-item {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-card);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .visitor-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--gold);
+        }
+
+        .visitor-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--gold), var(--burgundy));
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+        }
+
+        .visitor-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--burgundy), var(--gold));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-white);
+            font-weight: bold;
+            font-size: 1.2rem;
+            border: 2px solid var(--gold);
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .visitor-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .visitor-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .visitor-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.3rem;
+        }
+
+        .visitor-details {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .visitor-detail {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .visitor-detail i {
+            color: var(--burgundy);
+            width: 16px;
+        }
+
+        .visitor-time {
+            background: var(--section-bg);
+            padding: 0.4rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .visitor-time i {
+            color: var(--gold);
+        }
+
+        .visitor-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-action {
+            padding: 0.5rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            background: var(--white);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .btn-action:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .btn-action.view-profile {
+            background: var(--burgundy);
+            color: var(--text-white);
+            border-color: var(--burgundy);
+        }
+
+        .btn-action.view-profile:hover {
+            background: var(--dark-burgundy);
+        }
+
+        /* ========== ESTADOS VAZIOS/ERRO ========== */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-light);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            color: #ccc;
+        }
+
+        .empty-state h3 {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f1f3f5;
+            border-top: 3px solid var(--gold);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ========== PAGINAÇÃO ========== */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding: 1.5rem;
+        }
+
+        .btn-pagination {
+            padding: 0.6rem 1.2rem;
+            border: 1px solid #e2e8f0;
+            background: var(--white);
+            color: var(--text-secondary);
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-pagination:hover:not(:disabled) {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .btn-pagination:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-info {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* ========== PREMIUM LOCK ========== */
+        .premium-lock {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-card);
+        }
+
+        .premium-lock i {
+            font-size: 4rem;
+            color: var(--gold);
+            margin-bottom: 1.5rem;
+        }
+
+        .premium-lock h2 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .premium-lock p {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn-premium {
+            background: linear-gradient(135deg, var(--gold), var(--burgundy));
+            color: var(--text-white);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-premium:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(198, 166, 100, 0.3);
+        }
+
+        /* ========== RESPONSIVO ========== */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .visitors-hero h1 {
+                font-size: 2rem;
+            }
+
+            .visitor-item {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .visitor-details {
+                justify-content: center;
+            }
+
+            .visitor-actions {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .filter-buttons {
+                justify-content: center;
+            }
+
+            .visitors-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 15px;
+            }
+
+            .visitor-details {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .btn-action {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.7rem;
+            }
+
+            .pagination {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="page-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="logopulse.png" alt="PulseLove">
+                </div>
+                <h1 class="page-title">
+                    <i class="fas fa-eye"></i> Quem te Visitou
+                </h1>
+                <a href="home.html" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i> Voltar para Home
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Hero Section -->
+            <section class="visitors-hero">
+                <h1>Seu Histórico de Visitantes</h1>
+                <p>Veja todas as pessoas que visitaram seu perfil e descubra quem se interessou por você</p>
+            </section>
+
+            <!-- Container Principal -->
+            <div id="visitorsPageContainer">
+                <!-- Conteúdo será carregado dinamicamente via JavaScript -->
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Carregando histórico de visitantes...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="visitantes.js"></script>
+</body>
+</html>
