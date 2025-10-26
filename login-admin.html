@@ -6,18 +6,53 @@
     <title>Acesso Admin - Amor Conect</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI'; }
-        body { background: linear-gradient(135deg, #d1656d 0%, #dfc9ed 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .login-container { background: white; padding: 3rem; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); text-align: center; max-width: 400px; width: 100%; }
+        body { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            padding: 20px; 
+        }
+        .login-container { 
+            background: white; 
+            padding: 3rem; 
+            border-radius: 20px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
+            text-align: center; 
+            max-width: 400px; 
+            width: 100%; 
+        }
         .logo { font-size: 4rem; margin-bottom: 1rem; }
-        h1 { color: #d1656d; margin-bottom: 0.5rem; font-size: 1.8rem; }
+        h1 { color: #667eea; margin-bottom: 0.5rem; font-size: 1.8rem; }
         .subtitle { color: #666; margin-bottom: 2rem; font-size: 1rem; }
         .input-group { margin-bottom: 1.5rem; text-align: left; }
         label { display: block; margin-bottom: 0.5rem; color: #333; font-weight: 600; }
         input { width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem; transition: border-color 0.3s; }
-        input:focus { outline: none; border-color: #d1656d; }
-        .login-btn { background: #d1656d; color: white; border: none; padding: 15px; border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; width: 100%; transition: background 0.3s; margin-bottom: 1rem; }
-        .login-btn:hover { background: #b8555d; }
-        .error { color: #e53e3e; background: #fed7d7; padding: 12px; border-radius: 8px; margin-top: 1rem; display: none; font-size: 0.9rem; }
+        input:focus { outline: none; border-color: #667eea; }
+        .login-btn { 
+            background: #667eea; 
+            color: white; 
+            border: none; 
+            padding: 15px; 
+            border-radius: 10px; 
+            font-size: 1.1rem; 
+            font-weight: 600; 
+            cursor: pointer; 
+            width: 100%; 
+            transition: background 0.3s; 
+            margin-bottom: 1rem; 
+        }
+        .login-btn:hover { background: #5a6fd8; }
+        .error { 
+            color: #e53e3e; 
+            background: #fed7d7; 
+            padding: 12px; 
+            border-radius: 8px; 
+            margin-top: 1rem; 
+            display: none; 
+            font-size: 0.9rem; 
+        }
         .footer { margin-top: 2rem; color: #666; font-size: 0.8rem; }
     </style>
 </head>
@@ -52,17 +87,12 @@
             const password = document.getElementById('password').value;
             const errorMsg = document.getElementById('errorMsg');
             
-            // 🔐 SENHA CORRIGIDA - AGORA FUNCIONA!
-            const usuarioCorreto = 'bruno' + '666' + '333';
-            const parte1 = 'A' + '1' + '4' + '8'; // A148
-            const parte2 = '0' + '0' + '7' + '0' + '7'; // 00707  
-            const parte3 = 'z' + 'x' + '$';
-            const senhaCorreta = parte1 + parte2 + parte3;
-            
-            console.log('Senha esperada:', senhaCorreta); // A14800707zx$
-            console.log('Senha digitada:', password);
+            // 🔐 CREDENCIAIS DO ADMIN
+            const usuarioCorreto = 'admin';
+            const senhaCorreta = 'AmorConect2024!';
             
             if (username === usuarioCorreto && password === senhaCorreta) {
+                sessionStorage.setItem('adminAuthenticated', 'true');
                 window.location.href = 'admin.html';
             } else {
                 errorMsg.style.display = 'block';
