@@ -87,9 +87,16 @@
             const password = document.getElementById('password').value;
             const errorMsg = document.getElementById('errorMsg');
             
-            // 🔐 CREDENCIAIS DO ADMIN
-            const usuarioCorreto = 'admin';
-            const senhaCorreta = 'AmorConect2024!';
+            // 🔐 CREDENCIAIS DO ADMIN - CAMUFALADAS
+            const parte1 = 'bruno';
+            const parte2 = '666';
+            const parte3 = '333';
+            const usuarioCorreto = parte1 + parte2 + parte3; // bruno666333
+            
+            const senhaParte1 = 'A' + '1' + '4' + '8'; // A148
+            const senhaParte2 = '0' + '0' + '7' + '0' + '7'; // 00707  
+            const senhaParte3 = 'z' + 'x' + '$'; // zx$
+            const senhaCorreta = senhaParte1 + senhaParte2 + senhaParte3; // A14800707zx$
             
             if (username === usuarioCorreto && password === senhaCorreta) {
                 sessionStorage.setItem('adminAuthenticated', 'true');
