@@ -146,9 +146,9 @@ const FeelManager = {
             ${this.feelsReceived.length > 8 ? this.getViewAllButton() : ''}
         `;
 
-        // Mostrar botão "Ver todos" se tiver mais de 8 feels
+        // === CORREÇÃO: SEMPRE MOSTRAR BOTÃO "VER TODOS" PARA PREMIUM ===
         const viewAllBtn = document.getElementById('viewAllFeelsBtn');
-        if (viewAllBtn && this.feelsReceived.length > 8) {
+        if (viewAllBtn) {
             viewAllBtn.style.display = 'block';
         }
     },
@@ -170,12 +170,18 @@ const FeelManager = {
                 </p>
                 <div class="premium-upsell">
                     <p><strong>Quer ver quem são?</strong></p>
-                    <button class="btn btn-primary" onclick="goToPricing()">
-                        <i class="fas fa-crown"></i> Virar Premium
+                    <button class="btn btn-primary" onclick="goToFeelsPage()">
+                        <i class="fas fa-crown"></i> Ver Todos os Feels
                     </button>
                 </div>
             </div>
         `;
+
+        // Para free users, esconder o botão "Ver todos" do header da seção
+        const viewAllBtn = document.getElementById('viewAllFeelsBtn');
+        if (viewAllBtn) {
+            viewAllBtn.style.display = 'none';
+        }
     },
 
     // CARD DE USUÁRIO QUE DEU FEEL
@@ -222,7 +228,10 @@ const FeelManager = {
     getViewAllButton() {
         return `
             <div class="view-all-container">
-                <button class="btn-view-all" onclick="window.location.href='feels.html'">
+                <p style="color: var(--text-light); margin-bottom: 1rem; font-size: 0.9rem;">
+                    Mostrando 8 de ${this.feelsReceived.length} Feels
+                </p>
+                <button class="btn-view-all" onclick="goToFeelsPage()">
                     Ver todos os Feels <i class="fas fa-arrow-right"></i>
                 </button>
             </div>
@@ -347,7 +356,7 @@ const FeelManager = {
     showFeelLimitReached() {
         this.showNotification(
             `Limite diário de Feels atingido! (${this.dailyFeelLimit}/dia)\n\n` +
-            '💎 Torne-se Premium para Feils ilimitados!', 
+            '💎 Torne-se Premium para Feels ilimitados!', 
             'error'
         );
     },
@@ -410,27 +419,6 @@ const FeelManager = {
     getUserInitials(name) {
         if (!name) return 'U';
         return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().substring(0, 2);
-    },
-
-    // ATUALIZAR CONTADOR DE FEELS DISPONÍVEIS
-    updateFeelCounter() {
-        const feelCounter = document.getElementById('feelCounter');
-        if (feelCounter) {
-            let isPremium = false;
-            
-            // Verificar se é premium
-            if (window.PremiumManager?.userPlanInfo?.is_premium) {
-                isPremium = true;
-            }
-            
-            if (!isPremium) {
-                const remaining = this.dailyFeelLimit - (this.todayFeelCount || 0);
-                feelCounter.textContent = `${remaining} Feels restantes hoje`;
-                feelCounter.style.display = remaining > 0 ? 'block' : 'none';
-            } else {
-                feelCounter.style.display = 'none';
-            }
-        }
     }
 };
 
