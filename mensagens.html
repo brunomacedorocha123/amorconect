@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mensagens - PulseLove</title>
+    <link rel="stylesheet" href="mensagens.css">
+    <link rel="stylesheet" href="mensagens-mobile.css" media="(max-width: 768px)">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <!-- Logo -->
+                <div class="logo">
+                    <img src="logopulse.png" alt="PulseLove" class="logo-img">
+                </div>
+
+                <!-- Menu Hamburger (Mobile) -->
+                <div class="menu-toggle" id="menuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+
+                <!-- Navegação -->
+                <nav id="mainNav">
+                    <ul>
+                        <li><a href="home.html" class="nav-link"><i class="fas fa-home"></i> Home</a></li>
+                        <li><a href="busca.html" class="nav-link"><i class="fas fa-search"></i> Buscar</a></li>
+                        <li><a href="mensagens.html" class="nav-link active"><i class="fas fa-envelope"></i> Mensagens</a></li>
+                        <li><a href="painel.html" class="nav-link"><i class="fas fa-user"></i> Meu Perfil</a></li>
+                        <li><a href="bloqueados.html" class="nav-link"><i class="fas fa-shield-alt"></i></a></li>
+                        <li><a href="pricing.html" class="nav-link premium-link"><i class="fas fa-crown"></i> Premium</a></li>
+                    </ul>
+                </nav>
+
+                <!-- User Menu -->
+                <div class="user-menu">
+                    <div class="user-avatar" id="userAvatar">
+                        <img id="userAvatarImg" src="" alt="Avatar">
+                        <div class="avatar-fallback" id="avatarFallback">U</div>
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name" id="userName">Usuário</span>
+                        <span class="user-status" id="userStatus">Online</span>
+                    </div>
+                    <button class="btn btn-outline logout-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Sistema de Mensagens -->
+            <section class="messages-system">
+                <div class="messages-header">
+                    <h1><i class="fas fa-envelope"></i> Mensagens</h1>
+                    <div class="messages-actions">
+                        <!-- Contador de Mensagens Diárias -->
+                        <div class="message-counter" id="messageCounter">
+                            <span class="counter-text">Mensagens hoje: </span>
+                            <span class="counter-number">0/4</span>
+                        </div>
+                        
+                        <!-- Botão de Atualizar -->
+                        <button class="btn-refresh" id="refreshMessages" title="Atualizar conversas">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="messages-container">
+                    <!-- Sidebar de Conversas -->
+                    <div class="conversations-sidebar">
+                        <div class="sidebar-header">
+                            <h3>Conversas</h3>
+                            <div class="search-conversations">
+                                <input type="text" id="searchConversations" placeholder="Buscar conversas...">
+                                <i class="fas fa-search"></i>
+                            </div>
+                        </div>
+
+                        <div class="conversations-list" id="conversationsList">
+                            <!-- Lista de conversas será carregada aqui -->
+                            <div class="loading-state">
+                                <div class="loading-spinner"></div>
+                                <p>Carregando conversas...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Área do Chat -->
+                    <div class="chat-area">
+                        <!-- Header do Chat (vazio inicialmente) -->
+                        <div class="chat-header" id="chatHeader">
+                            <div class="chat-header-placeholder">
+                                <i class="fas fa-comments"></i>
+                                <p>Selecione uma conversa para começar a enviar mensagens</p>
+                            </div>
+                        </div>
+
+                        <!-- Histórico de Mensagens -->
+                        <div class="messages-history" id="messagesHistory">
+                            <div class="empty-chat">
+                                <i class="fas fa-comment-slash"></i>
+                                <h3>Nenhuma conversa selecionada</h3>
+                                <p>Escolha uma conversa na lista ao lado para ver as mensagens</p>
+                            </div>
+                        </div>
+
+                        <!-- Área de Digitação (inicialmente escondida) -->
+                        <div class="message-input-area" id="messageInputArea" style="display: none;">
+                            <div class="message-input-container">
+                                <textarea 
+                                    id="messageInput" 
+                                    placeholder="Digite sua mensagem..." 
+                                    rows="1"
+                                    maxlength="1000"
+                                ></textarea>
+                                <div class="input-actions">
+                                    <div class="char-counter" id="charCounter">0/1000</div>
+                                    <button class="btn-send" id="sendMessage">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Status de Envio -->
+                            <div class="message-status" id="messageStatus"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <img src="logopulse.png" alt="PulseLove" class="logo-img">
+                    </div>
+                    <p class="footer-description">
+                        Conectando corações, construindo histórias de amor genuínas.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Navegação</h3>
+                    <ul class="footer-links">
+                        <li><a href="home.html">Home</a></li>
+                        <li><a href="busca.html">Buscar Pessoas</a></li>
+                        <li><a href="mensagens.html">Mensagens</a></li>
+                        <li><a href="painel.html">Meu Perfil</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Minha Conta</h3>
+                    <ul class="footer-links">
+                        <li><a href="painel.html">Meu Perfil</a></li>
+                        <li><a href="configuracoes.html">Configurações</a></li>
+                        <li><a href="bloqueados.html">Usuários Bloqueados</a></li>
+                        <li><a href="pricing.html">Premium</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Legal</h3>
+                    <ul class="footer-links">
+                        <li><a href="privacidade.html">Privacidade</a></li>
+                        <li><a href="termos.html">Termos de Uso</a></li>
+                        <li><a href="seguranca.html">Segurança</a></li>
+                        <li><a href="comunidade.html">Diretrizes</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 PulseLove. Todos os direitos reservados.</p>
+                <p>Feito com <i class="fas fa-heart"></i> para conectar pessoas</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal de Informações do Usuário -->
+    <div id="userInfoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Informações do Usuário</h3>
+                <button class="modal-close" onclick="closeUserInfoModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="user-info-modal-content" id="userInfoModalContent">
+                    <!-- Conteúdo será preenchido dinamicamente -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeUserInfoModal()">Fechar</button>
+                <button class="btn btn-primary" id="blockUserBtn" onclick="blockCurrentUser()">Bloquear Usuário</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="premium-check.js"></script>
+    <script src="mensagens.js"></script>
+    <script src="mensagens-temporeal.js"></script>
+
+    <script>
+        // Configuração do Supabase (já existe no seu sistema)
+        const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Função de logout (já existe no seu sistema)
+        async function logout() {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+            }
+        }
+
+        // Funções dos modais
+        function closeUserInfoModal() {
+            document.getElementById('userInfoModal').style.display = 'none';
+        }
+
+        function blockCurrentUser() {
+            // Implementação da função de bloqueio
+            console.log('Bloquear usuário - implementar');
+        }
+
+        // Inicialização quando o DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar sistema de mensagens
+            if (typeof MessagesSystem !== 'undefined') {
+                MessagesSystem.initialize();
+            }
+            
+            // Atualizar UI premium
+            setTimeout(async () => {
+                if (typeof PremiumManager !== 'undefined') {
+                    await PremiumManager.updateUIWithPremiumStatus();
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>

@@ -1,3 +1,4 @@
+// perfil.js - Sistema completo de visualização de perfil
 let currentUser = null;
 let visitedUserId = null;
 let feelStatus = {
@@ -33,6 +34,7 @@ async function initializeProfile() {
 
         await loadUserData();
         await checkFeelStatus();
+        setupMessageButton();
 
     } catch (error) {
         alert('Erro ao carregar perfil');
@@ -138,6 +140,126 @@ function fillProfileData(profile, details) {
     updateList('profileInterests', details.interests, 'interestsSection');
 
     checkGalleryAccess();
+}
+
+// ==================== BOTÃO ENVIAR MENSAGEM ====================
+
+function setupMessageButton() {
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    if (sendMessageBtn) {
+        sendMessageBtn.addEventListener('click', sendMessageToUser);
+    }
+}
+
+// Função para enviar mensagem (redirecionar para mensagens.html)
+async function sendMessageToUser() {
+    try {
+        if (!currentUser || !visitedUserId) {
+            showNotification('Erro: usuário não identificado', 'error');
+            return;
+        }
+
+        // Verificar se não é o próprio usuário
+        if (currentUser.id === visitedUserId) {
+            showNotification('Você não pode enviar mensagem para si mesmo', 'error');
+            return;
+        }
+
+        // Verificar se há bloqueio entre os usuários
+        const isBlocked = await checkIfBlocked();
+        if (isBlocked) {
+            showNotification('Não é possível enviar mensagem para este usuário', 'error');
+            return;
+        }
+
+        // Verificar se usuário é premium ou tem mensagens disponíveis
+        const canSend = await checkCanSendMessage();
+        if (!canSend.can_send) {
+            handleSendMessageError(canSend.reason);
+            return;
+        }
+
+        // Redirecionar para a página de mensagens com o usuário já selecionado
+        window.location.href = `mensagens.html?user=${visitedUserId}`;
+
+    } catch (error) {
+        console.error('Erro ao enviar mensagem:', error);
+        showNotification('Erro ao tentar enviar mensagem', 'error');
+    }
+}
+
+// Verificar se há bloqueio entre os usuários
+async function checkIfBlocked() {
+    try {
+        const { data, error } = await supabase
+            .from('user_blocks')
+            .select('id')
+            .or(`and(blocker_id.eq.${currentUser.id},blocked_id.eq.${visitedUserId}),and(blocker_id.eq.${visitedUserId},blocked_id.eq.${currentUser.id})`);
+
+        if (error) throw error;
+
+        return data && data.length > 0;
+    } catch (error) {
+        console.error('Erro ao verificar bloqueio:', error);
+        return false;
+    }
+}
+
+// Verificar se pode enviar mensagem
+async function checkCanSendMessage() {
+    try {
+        // Se for premium, pode enviar ilimitado
+        const isPremium = await checkCurrentUserPremium();
+        if (isPremium) {
+            return { can_send: true, reason: 'premium' };
+        }
+
+        // Para usuários free, verificar limite diário
+        const { data: limits, error } = await supabase
+            .from('user_message_limits')
+            .select('messages_sent_today, last_reset_date')
+            .eq('user_id', currentUser.id)
+            .single();
+
+        if (error) {
+            // Se não existe registro, pode enviar
+            return { can_send: true, reason: 'can_send' };
+        }
+
+        // Verificar se precisa resetar (passou da meia-noite)
+        const today = new Date().toISOString().split('T')[0];
+        if (limits.last_reset_date !== today) {
+            return { can_send: true, reason: 'can_send' };
+        }
+
+        // Verificar se atingiu o limite de 4 mensagens
+        if (limits.messages_sent_today >= 4) {
+            return { can_send: false, reason: 'limit_reached' };
+        }
+
+        return { can_send: true, reason: 'can_send' };
+
+    } catch (error) {
+        console.error('Erro ao verificar permissão de mensagem:', error);
+        return { can_send: false, reason: 'unknown_error' };
+    }
+}
+
+// Tratar erros de envio de mensagem
+function handleSendMessageError(reason) {
+    switch (reason) {
+        case 'limit_reached':
+            showNotification('Você atingiu o limite de 4 mensagens por dia. Volte amanhã!', 'error');
+            break;
+        case 'blocked':
+            showNotification('Não é possível enviar mensagem para este usuário.', 'error');
+            break;
+        case 'unknown_error':
+            showNotification('Erro ao verificar permissão de mensagem.', 'error');
+            break;
+        default:
+            showNotification('Não é possível enviar mensagem no momento.', 'error');
+    }
 }
 
 // ==================== SISTEMA FEEL NO PERFIL ====================
@@ -682,14 +804,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    const sendMessageBtn = document.getElementById('sendMessageBtn');
-    if (sendMessageBtn) {
-        sendMessageBtn.addEventListener('click', function() {
-            if (visitedUserId) {
-                window.location.href = `mensagens.html?user=${visitedUserId}`;
-            }
-        });
-    }
+    // Botão de mensagem já configurado no setupMessageButton()
 });
 
 // Monitorar estado de autenticação
@@ -706,5 +821,6 @@ window.profileViewer = {
     openGalleryImage,
     isUserOnline,
     sendFeel,
-    removeFeel
+    removeFeel,
+    sendMessageToUser
 };
