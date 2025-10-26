@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home - PulseLove</title>
     <link rel="stylesheet" href="home.css">
+    <link rel="stylesheet" href="home-visitante.css">
     <link rel="stylesheet" href="home-mobile.css" media="(max-width: 768px)">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -67,6 +68,28 @@
                     </div>
                     <h1 id="welcomeMessage">Bem-vindo ao PulseLove!</h1>
                     <p>Conheça pessoas incríveis e faça conexões genuínas</p>
+                </div>
+            </section>
+
+            <!-- ========== SEÇÃO QUEM TE VISITOU ========== -->
+            <section class="visitors-section" id="visitorsSection">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-eye"></i> Quem te visitou
+                    </h2>
+                    <div class="section-actions">
+                        <button class="btn-view-all" id="viewAllVisitorsBtn" style="display: none;">
+                            Ver todos <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="visitors-container" id="visitorsContainer">
+                    <!-- Conteúdo dinâmico free/premium -->
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <p>Carregando visitas...</p>
+                    </div>
                 </div>
             </section>
 
@@ -255,7 +278,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeBlockConfirmModal()">Cancelar</button>
-                <button class="btn btn-primary" onclick="confirmBlockUser()">Confirmar Bloqueio</button>
+                    <button class="btn btn-primary" onclick="confirmBlockUser()">Confirmar Bloqueio</button>
             </div>
         </div>
     </div>
@@ -263,5 +286,6 @@
     <!-- Scripts -->
     <script src="premium-check.js"></script>
     <script src="home.js"></script>
+    <script src="home-visitante.js"></script>
 </body>
 </html>

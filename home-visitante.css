@@ -1,0 +1,322 @@
+/* home-visitante.css - Sistema de Visitantes na Home */
+
+/* ========== SEÇÃO DE VISITANTES ========== */
+.visitors-section {
+    margin-bottom: 2.5rem;
+}
+
+.visitors-container {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-card);
+    border: 1px solid rgba(198, 166, 100, 0.2);
+    position: relative;
+    min-height: 120px;
+}
+
+.visitors-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--gold), var(--burgundy));
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+/* ========== ESTADO FREE (APENAS CONTADOR) ========== */
+.visitors-free-state {
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.visitors-count {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+}
+
+.visitors-count-label {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+.visitors-premium-cta {
+    background: linear-gradient(135deg, rgba(198, 166, 100, 0.1), rgba(166, 91, 91, 0.05));
+    border: 2px solid var(--gold);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.visitors-premium-cta h4 {
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.visitors-premium-cta p {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+/* ========== ESTADO PREMIUM (CARDS) ========== */
+.visitors-premium-state {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.visitors-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(198, 166, 100, 0.2);
+}
+
+.visitors-total {
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.visitors-total strong {
+    color: var(--gold);
+    font-size: 1.1rem;
+}
+
+.btn-view-all {
+    background: var(--burgundy);
+    color: var(--text-white);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.btn-view-all:hover {
+    background: var(--dark-burgundy);
+    transform: translateY(-2px);
+}
+
+.visitors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+/* ========== CARD DE VISITANTE ========== */
+.visitor-card {
+    background: var(--section-bg);
+    border-radius: var(--border-radius-sm);
+    padding: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: var(--transition);
+    cursor: pointer;
+    position: relative;
+}
+
+.visitor-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--gold);
+}
+
+.visitor-header {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.8rem;
+}
+
+.visitor-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--burgundy), var(--gold));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-white);
+    font-weight: bold;
+    font-size: 1rem;
+    border: 2px solid var(--gold);
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.visitor-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.visitor-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.visitor-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.visitor-location {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.visitor-location i {
+    color: var(--burgundy);
+    font-size: 0.7rem;
+}
+
+.visitor-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+.visitor-time {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+}
+
+.visitor-time i {
+    color: var(--gold);
+}
+
+.visitor-premium-badge {
+    background: var(--gold);
+    color: var(--dark-bg);
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* ========== ESTADOS VAZIOS ========== */
+.visitors-empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--text-light);
+}
+
+.visitors-empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #ccc;
+}
+
+.visitors-empty-state h4 {
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.visitors-empty-state p {
+    font-size: 0.9rem;
+}
+
+/* ========== BOTÃO PREMIUM ========== */
+.btn-premium-small {
+    background: linear-gradient(135deg, var(--gold), var(--burgundy));
+    color: var(--text-white);
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-premium-small:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(198, 166, 100, 0.3);
+}
+
+/* ========== RESPONSIVO ========== */
+@media (max-width: 768px) {
+    .visitors-container {
+        padding: 1rem;
+    }
+    
+    .visitors-grid {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+    
+    .visitor-card {
+        padding: 0.8rem;
+    }
+    
+    .visitor-header {
+        gap: 0.6rem;
+    }
+    
+    .visitor-avatar {
+        width: 45px;
+        height: 45px;
+        font-size: 0.9rem;
+    }
+    
+    .visitor-name {
+        font-size: 0.9rem;
+    }
+    
+    .visitors-count {
+        font-size: 2rem;
+    }
+    
+    .visitors-premium-cta {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .visitors-stats {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+    
+    .btn-view-all {
+        align-self: flex-end;
+    }
+    
+    .visitors-section .section-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+}

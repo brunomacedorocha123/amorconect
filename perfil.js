@@ -24,11 +24,37 @@ async function initializeProfile() {
             return;
         }
 
+        // Registrar visita automaticamente (silencioso)
+        await registerProfileVisit();
+
         await loadUserData();
 
     } catch (error) {
         alert('Erro ao carregar perfil');
         window.location.href = 'home.html';
+    }
+}
+
+// SISTEMA DE REGISTRO DE VISITAS (SILENCIOSO)
+async function registerProfileVisit() {
+    try {
+        if (!currentUser || !visitedUserId || currentUser.id === visitedUserId) {
+            return;
+        }
+
+        // Registrar visita sem mostrar nada para o usuário
+        await supabase
+            .from('profile_visits')
+            .upsert({
+                visitor_id: currentUser.id,
+                visited_id: visitedUserId,
+                visited_at: new Date().toISOString()
+            }, {
+                onConflict: 'visitor_id,visited_id'
+            });
+
+    } catch (error) {
+        // Silencioso - não mostrar erro
     }
 }
 
@@ -59,7 +85,7 @@ async function loadUserData() {
 function fillProfileData(profile, details) {
     document.getElementById('profileNickname').textContent = profile.nickname || 'Usuário';
     
-    // ✅ STATUS ONLINE/OFFLINE VISÍVEL
+    // STATUS ONLINE/OFFLINE VISÍVEL
     const isOnline = isUserOnline(profile.last_online_at);
     createOnlineStatusDisplay(isOnline);
     
@@ -109,7 +135,7 @@ function fillProfileData(profile, details) {
     checkGalleryAccess();
 }
 
-// ✅ FUNÇÃO NOVA: Criar display de status visível
+// FUNÇÃO: Criar display de status visível
 function createOnlineStatusDisplay(isOnline) {
     const profileBasicInfo = document.querySelector('.profile-basic-info');
     if (!profileBasicInfo) return;
@@ -142,14 +168,12 @@ function createOnlineStatusDisplay(isOnline) {
     if (locationElement && locationElement.parentNode) {
         locationElement.parentNode.insertBefore(statusElement, locationElement.nextSibling);
     } else {
-        // Fallback: inserir no profile-basic-info
         profileBasicInfo.appendChild(statusElement);
     }
 }
 
-// ✅ FUNÇÃO PARA OCULTAR INFORMAÇÕES SENSÍVEIS (MODO INVISÍVEL)
+// FUNÇÃO PARA OCULTAR INFORMAÇÕES SENSÍVEIS (MODO INVISÍVEL)
 function hideSensitiveInfo() {
-    // Ocultar informações detalhadas de localização
     const locationElements = document.querySelectorAll('.profile-location, [data-location]');
     locationElements.forEach(el => {
         if (el.id !== 'profileLocation') {
