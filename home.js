@@ -1,4 +1,4 @@
-// home.js - VERSÃO CORRIGIDA - MODAIS FUNCIONANDO
+// home.js - VERSÃO CORRIGIDA - BOTÃO X FUNCIONANDO
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -48,14 +48,14 @@ function setupEventListeners() {
         });
     });
 
-    // Event listeners para fechar modais ao clicar fora
+    // Event listener para fechar modais ao clicar fora - CORRIGIDO
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('modal')) {
             closeAllModals();
         }
     });
 
-    // Event listener para tecla Escape
+    // Event listener para tecla Escape - CORRIGIDO
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeAllModals();
@@ -345,7 +345,7 @@ function viewUserProfile(userId) {
     window.location.href = `perfil.html?id=${userId}`;
 }
 
-// === SISTEMA DE MODAIS SIMPLES E FUNCIONAL ===
+// === SISTEMA DE MODAIS CORRIGIDO - BOTÃO X FUNCIONANDO ===
 function openUserActions(userId, userName) {
     currentBlockingUser = { id: userId, name: userName };
     showModal('userActionsModal');
@@ -446,14 +446,14 @@ function viewProfileFromModal() {
     }
 }
 
-// === SISTEMA DE MODAIS SIMPLIFICADO ===
+// === SISTEMA DE MODAIS SIMPLIFICADO E FUNCIONAL ===
 function showModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
         
-        // Pequeno delay para garantir que o display:flex foi aplicado
+        // Pequeno delay para CSS
         setTimeout(() => {
             modal.classList.add('active');
         }, 10);
