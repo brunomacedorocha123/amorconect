@@ -1,4 +1,4 @@
-// home.js - VERSÃO COMPLETA COM SISTEMA DE COMPATIBILIDADE
+// home.js - VERSÃO CORRIGIDA COM SISTEMA DE COMPATIBILIDADE
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -104,46 +104,32 @@ async function loadUsers() {
     usersGrid.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>Carregando pessoas compatíveis...</p></div>';
 
     try {
-        // PRIMEIRO: Buscar perfil completo do usuário atual com orientação sexual
-        const { data: currentUserProfile, error: profileError } = await supabase
-            .from('profiles')
-            .select(`
-                *,
-                user_details (
-                    gender,
-                    sexual_orientation
-                )
-            `)
-            .eq('id', currentUser.id)
+        // PRIMEIRO: Buscar dados do usuário atual de forma separada
+        const { data: currentUserDetails, error: detailsError } = await supabase
+            .from('user_details')
+            .select('gender, sexual_orientation')
+            .eq('user_id', currentUser.id)
             .single();
 
-        if (profileError || !currentUserProfile) {
-            usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar perfil.</p></div>';
-            return;
+        let userGender = '';
+        let userOrientation = '';
+
+        if (!detailsError && currentUserDetails) {
+            userGender = currentUserDetails.gender || '';
+            userOrientation = currentUserDetails.sexual_orientation || '';
         }
 
-        const userDetails = currentUserProfile.user_details || {};
-        const userGender = userDetails.gender;
-        const userOrientation = userDetails.sexual_orientation;
-
-        console.log('Usuário atual:', {
+        console.log('Dados do usuário atual:', {
             gender: userGender,
             orientation: userOrientation
         });
 
-        // Buscar todos os perfis visíveis
+        // Buscar perfis básicos primeiro
         let query = supabase
             .from('profiles')
-            .select(`
-                *,
-                user_details (
-                    gender,
-                    sexual_orientation
-                )
-            `)
+            .select('*')
             .neq('id', currentUser.id)
-            .eq('is_invisible', false)
-            .limit(20); // Buscar mais para depois filtrar
+            .eq('is_invisible', false);
 
         // Aplicar filtro de status se necessário
         if (currentFilter === 'online') {
@@ -156,6 +142,7 @@ async function loadUsers() {
         const { data: profiles, error } = await query;
 
         if (error) {
+            console.error('Erro ao buscar perfis:', error);
             usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar usuários.</p></div>';
             return;
         }
@@ -165,16 +152,36 @@ async function loadUsers() {
             return;
         }
 
+        // Buscar detalhes de gênero para todos os perfis
+        const profileIds = profiles.map(p => p.id);
+        const { data: allUserDetails, error: detailsError2 } = await supabase
+            .from('user_details')
+            .select('user_id, gender, sexual_orientation')
+            .in('user_id', profileIds);
+
+        // Combinar perfis com seus detalhes
+        const profilesWithDetails = profiles.map(profile => {
+            const details = allUserDetails?.find(d => d.user_id === profile.id) || {};
+            return {
+                ...profile,
+                user_details: details
+            };
+        });
+
+        console.log('Perfis encontrados:', profilesWithDetails.length);
+
         // FILTRAR POR COMPATIBILIDADE
-        const compatibleProfiles = filterCompatibleUsers(profiles, userGender, userOrientation);
+        const compatibleProfiles = filterCompatibleUsers(profilesWithDetails, userGender, userOrientation);
         
+        console.log('Perfis compatíveis:', compatibleProfiles.length);
+
         if (compatibleProfiles.length === 0) {
             usersGrid.innerHTML = `
                 <div class="loading-state">
                     <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; color: #ccc;"></i>
                     <p>Nenhuma pessoa compatível encontrada no momento.</p>
                     <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">
-                        Tente ajustar seus filtros ou complete seu perfil.
+                        Complete seu perfil com gênero e orientação sexual para ver mais matches.
                     </p>
                 </div>
             `;
@@ -194,13 +201,19 @@ async function loadUsers() {
         displayUsers(profilesToShow);
 
     } catch (error) {
-        console.error('Erro ao carregar usuários:', error);
-        usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar.</p></div>';
+        console.error('Erro geral ao carregar usuários:', error);
+        usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar. Tente novamente.</p></div>';
     }
 }
 
 // FUNÇÃO PRINCIPAL: FILTRAR USUÁRIOS COMPATÍVEIS
 function filterCompatibleUsers(profiles, userGender, userOrientation) {
+    // Se o usuário não tem orientação definida, mostrar todos (comportamento padrão)
+    if (!userOrientation) {
+        console.log('Usuário sem orientação definida - mostrando todos os perfis');
+        return profiles;
+    }
+
     return profiles.filter(profile => {
         const profileGender = profile.user_details?.gender;
         const profileOrientation = profile.user_details?.sexual_orientation;
@@ -210,26 +223,35 @@ function filterCompatibleUsers(profiles, userGender, userOrientation) {
             return true;
         }
 
+        // Converter para formato padrão para comparação
+        const userGenderNormalized = userGender.toLowerCase();
+        const profileGenderNormalized = profileGender.toLowerCase();
+
+        console.log('Comparando:', {
+            user: { gender: userGenderNormalized, orientation: userOrientation },
+            profile: { gender: profileGenderNormalized, orientation: profileOrientation }
+        });
+
         // REGRAS DE COMPATIBILIDADE
-        switch (userOrientation) {
+        switch (userOrientation.toLowerCase()) {
             
             case 'heterossexual':
                 // Heterossexual: gênero oposto
-                if (userGender === 'masculino' || userGender === 'homem') {
-                    return profileGender === 'feminino' || profileGender === 'mulher';
-                } else if (userGender === 'feminino' || userGender === 'mulher') {
-                    return profileGender === 'masculino' || profileGender === 'homem';
+                if (userGenderNormalized === 'masculino' || userGenderNormalized === 'homem') {
+                    return profileGenderNormalized === 'feminino' || profileGenderNormalized === 'mulher';
+                } else if (userGenderNormalized === 'feminino' || userGenderNormalized === 'mulher') {
+                    return profileGenderNormalized === 'masculino' || profileGenderNormalized === 'homem';
                 }
-                return false;
+                return true; // Se não reconhece o gênero, mostrar por segurança
 
             case 'homossexual':
                 // Homossexual: mesmo gênero
-                if (userGender === 'masculino' || userGender === 'homem') {
-                    return profileGender === 'masculino' || profileGender === 'homem';
-                } else if (userGender === 'feminino' || userGender === 'mulher') {
-                    return profileGender === 'feminino' || profileGender === 'mulher';
+                if (userGenderNormalized === 'masculino' || userGenderNormalized === 'homem') {
+                    return profileGenderNormalized === 'masculino' || profileGenderNormalized === 'homem';
+                } else if (userGenderNormalized === 'feminino' || userGenderNormalized === 'mulher') {
+                    return profileGenderNormalized === 'feminino' || profileGenderNormalized === 'mulher';
                 }
-                return false;
+                return true; // Se não reconhece o gênero, mostrar por segurança
 
             case 'bissexual':
                 // Bissexual: todos os gêneros
@@ -262,6 +284,7 @@ async function filterBlockedUsers(users) {
         return users.filter(user => !allBlockedIds.includes(user.id));
 
     } catch (error) {
+        console.error('Erro ao filtrar bloqueios:', error);
         return users;
     }
 }
@@ -307,9 +330,6 @@ function displayUsers(profiles) {
                 </div>
             </div>
             <div class="user-details">
-                <div class="user-detail">
-                    <strong>Status:</strong> <span>Ativo</span>
-                </div>
                 <div class="online-status ${isUserOnline(profile.last_online_at) ? 'status-online' : 'status-offline'}">
                     <span class="status-dot"></span>
                     <span>${isUserOnline(profile.last_online_at) ? 'Online agora' : 'Offline'}</span>
@@ -325,15 +345,18 @@ function displayUsers(profiles) {
 
 // Função para formatar gênero para exibição
 function formatGenderForDisplay(gender) {
+    if (!gender) return 'Não informado';
+    
     const genderMap = {
         'masculino': 'Masculino',
         'feminino': 'Feminino',
         'homem': 'Masculino',
         'mulher': 'Feminino',
         'nao_informar': 'Não informado',
+        'prefiro_nao_informar': 'Não informado',
         'outro': 'Outro'
     };
-    return genderMap[gender] || gender;
+    return genderMap[gender.toLowerCase()] || gender;
 }
 
 function setActiveFilter(filter) {
