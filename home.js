@@ -1,4 +1,4 @@
-// home.js - VERSÃO CORRIGIDA COM SISTEMA DE COMPATIBILIDADE
+// home.js - VERSÃO FINAL CORRIGIDA
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -6,6 +6,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUser = null;
 let currentFilter = 'all';
 let currentBlockingUser = null;
+let eventListenersAdded = false;
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
@@ -31,6 +32,8 @@ async function checkAuthentication() {
 }
 
 function setupEventListeners() {
+    if (eventListenersAdded) return;
+    
     const menuToggle = document.getElementById('menuToggle');
     const mainNav = document.getElementById('mainNav');
     if (menuToggle && mainNav) {
@@ -48,17 +51,22 @@ function setupEventListeners() {
         });
     });
 
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('modal')) {
-            closeAllModals();
-        }
-    });
+    document.addEventListener('click', handleModalClick);
+    document.addEventListener('keydown', handleEscapeKey);
+    
+    eventListenersAdded = true;
+}
 
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeAllModals();
-        }
-    });
+function handleModalClick(e) {
+    if (e.target.classList.contains('modal')) {
+        closeAllModals();
+    }
+}
+
+function handleEscapeKey(e) {
+    if (e.key === 'Escape') {
+        closeAllModals();
+    }
 }
 
 async function loadUserProfile() {
@@ -104,7 +112,6 @@ async function loadUsers() {
     usersGrid.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>Carregando pessoas compatíveis...</p></div>';
 
     try {
-        // PRIMEIRO: Buscar dados do usuário atual de forma separada
         const { data: currentUserDetails, error: detailsError } = await supabase
             .from('user_details')
             .select('gender, sexual_orientation')
@@ -119,19 +126,12 @@ async function loadUsers() {
             userOrientation = currentUserDetails.sexual_orientation || '';
         }
 
-        console.log('Dados do usuário atual:', {
-            gender: userGender,
-            orientation: userOrientation
-        });
-
-        // Buscar perfis básicos primeiro
         let query = supabase
             .from('profiles')
             .select('*')
             .neq('id', currentUser.id)
             .eq('is_invisible', false);
 
-        // Aplicar filtro de status se necessário
         if (currentFilter === 'online') {
             const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
             query = query.gte('last_online_at', fifteenMinutesAgo);
@@ -142,7 +142,6 @@ async function loadUsers() {
         const { data: profiles, error } = await query;
 
         if (error) {
-            console.error('Erro ao buscar perfis:', error);
             usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar usuários.</p></div>';
             return;
         }
@@ -152,14 +151,12 @@ async function loadUsers() {
             return;
         }
 
-        // Buscar detalhes de gênero para todos os perfis
         const profileIds = profiles.map(p => p.id);
         const { data: allUserDetails, error: detailsError2 } = await supabase
             .from('user_details')
             .select('user_id, gender, sexual_orientation')
             .in('user_id', profileIds);
 
-        // Combinar perfis com seus detalhes
         const profilesWithDetails = profiles.map(profile => {
             const details = allUserDetails?.find(d => d.user_id === profile.id) || {};
             return {
@@ -168,13 +165,8 @@ async function loadUsers() {
             };
         });
 
-        console.log('Perfis encontrados:', profilesWithDetails.length);
-
-        // FILTRAR POR COMPATIBILIDADE
         const compatibleProfiles = filterCompatibleUsers(profilesWithDetails, userGender, userOrientation);
         
-        console.log('Perfis compatíveis:', compatibleProfiles.length);
-
         if (compatibleProfiles.length === 0) {
             usersGrid.innerHTML = `
                 <div class="loading-state">
@@ -188,7 +180,6 @@ async function loadUsers() {
             return;
         }
 
-        // Aplicar filtro de bloqueios
         const filteredProfiles = await filterBlockedUsers(compatibleProfiles);
         
         if (filteredProfiles.length === 0) {
@@ -196,69 +187,50 @@ async function loadUsers() {
             return;
         }
 
-        // Mostrar apenas os primeiros 8 perfis
         const profilesToShow = filteredProfiles.slice(0, 8);
         displayUsers(profilesToShow);
 
     } catch (error) {
-        console.error('Erro geral ao carregar usuários:', error);
         usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar. Tente novamente.</p></div>';
     }
 }
 
-// FUNÇÃO PRINCIPAL: FILTRAR USUÁRIOS COMPATÍVEIS
 function filterCompatibleUsers(profiles, userGender, userOrientation) {
-    // Se o usuário não tem orientação definida, mostrar todos (comportamento padrão)
     if (!userOrientation) {
-        console.log('Usuário sem orientação definida - mostrando todos os perfis');
         return profiles;
     }
 
     return profiles.filter(profile => {
         const profileGender = profile.user_details?.gender;
-        const profileOrientation = profile.user_details?.sexual_orientation;
 
-        // Se não temos informações de gênero do perfil, mostrar por segurança
         if (!profileGender) {
             return true;
         }
 
-        // Converter para formato padrão para comparação
         const userGenderNormalized = userGender.toLowerCase();
         const profileGenderNormalized = profileGender.toLowerCase();
 
-        console.log('Comparando:', {
-            user: { gender: userGenderNormalized, orientation: userOrientation },
-            profile: { gender: profileGenderNormalized, orientation: profileOrientation }
-        });
-
-        // REGRAS DE COMPATIBILIDADE
         switch (userOrientation.toLowerCase()) {
-            
             case 'heterossexual':
-                // Heterossexual: gênero oposto
                 if (userGenderNormalized === 'masculino' || userGenderNormalized === 'homem') {
                     return profileGenderNormalized === 'feminino' || profileGenderNormalized === 'mulher';
                 } else if (userGenderNormalized === 'feminino' || userGenderNormalized === 'mulher') {
                     return profileGenderNormalized === 'masculino' || profileGenderNormalized === 'homem';
                 }
-                return true; // Se não reconhece o gênero, mostrar por segurança
+                return true;
 
             case 'homossexual':
-                // Homossexual: mesmo gênero
                 if (userGenderNormalized === 'masculino' || userGenderNormalized === 'homem') {
                     return profileGenderNormalized === 'masculino' || profileGenderNormalized === 'homem';
                 } else if (userGenderNormalized === 'feminino' || userGenderNormalized === 'mulher') {
                     return profileGenderNormalized === 'feminino' || profileGenderNormalized === 'mulher';
                 }
-                return true; // Se não reconhece o gênero, mostrar por segurança
+                return true;
 
             case 'bissexual':
-                // Bissexual: todos os gêneros
                 return true;
 
             default:
-                // Outras orientações ou não informado: mostrar todos (comportamento mais amplo)
                 return true;
         }
     });
@@ -284,7 +256,6 @@ async function filterBlockedUsers(users) {
         return users.filter(user => !allBlockedIds.includes(user.id));
 
     } catch (error) {
-        console.error('Erro ao filtrar bloqueios:', error);
         return users;
     }
 }
@@ -343,7 +314,6 @@ function displayUsers(profiles) {
     }).join('');
 }
 
-// Função para formatar gênero para exibição
 function formatGenderForDisplay(gender) {
     if (!gender) return 'Não informado';
     
