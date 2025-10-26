@@ -111,7 +111,7 @@ const VisitorsSystem = {
 
             this.recentVisits = visits || [];
             container.innerHTML = this.getPremiumStateHTML();
-            this.toggleViewAllButton();
+            this.showViewAllButton();
 
         } catch (error) {
             this.showEmptyState();
@@ -206,15 +206,20 @@ const VisitorsSystem = {
                     <div class="visitors-total">
                         Total: <strong>${this.recentVisits.length} visita(s)</strong>
                     </div>
-                    <button class="btn-view-all" id="viewAllVisitorsBtn">
-                        Ver todos <i class="fas fa-arrow-right"></i>
-                    </button>
                 </div>
                 <div class="visitors-grid">
                     ${visitorsHTML}
                 </div>
             </div>
         `;
+    },
+
+    // MOSTRAR BOTÃO "VER TODOS"
+    showViewAllButton() {
+        const viewAllBtn = document.getElementById('viewAllVisitorsBtn');
+        if (viewAllBtn && this.isPremium && this.recentVisits.length > 0) {
+            viewAllBtn.style.display = 'flex';
+        }
     },
 
     // FORMATAR TEMPO DA VISITA
@@ -239,18 +244,6 @@ const VisitorsSystem = {
     getUserInitials(name) {
         if (!name) return 'U';
         return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().substring(0, 2);
-    },
-
-    // MOSTRAR/OCULTAR BOTÃO "VER TODOS"
-    toggleViewAllButton() {
-        const viewAllBtn = document.getElementById('viewAllVisitorsBtn');
-        if (viewAllBtn) {
-            if (this.isPremium && this.recentVisits.length > 0) {
-                viewAllBtn.style.display = 'flex';
-            } else {
-                viewAllBtn.style.display = 'none';
-            }
-        }
     },
 
     // VER PERFIL DO VISITANTE
@@ -299,12 +292,6 @@ const VisitorsSystem = {
                 </div>
             `;
         }
-    },
-
-    // ATUALIZAR VISITANTES
-    async refreshVisitors() {
-        await this.checkPremiumStatus();
-        await this.loadVisitors();
     }
 };
 
