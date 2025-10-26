@@ -3,7 +3,7 @@ const FeelManager = {
     currentUser: null,
     feelsReceived: [],
     feelsGiven: [],
-    dailyFeelLimit: 10, // Limite diário para free users
+    dailyFeelLimit: 10,
 
     // INICIALIZAR SISTEMA FEEL
     async initialize() {
@@ -14,7 +14,6 @@ const FeelManager = {
             this.currentUser = user;
             await this.loadFeelsData();
             await this.renderFeelsSection();
-            this.setupEventListeners();
             
         } catch (error) {
             console.error('Erro ao inicializar sistema Feel:', error);
@@ -23,11 +22,14 @@ const FeelManager = {
 
     // CARREGAR DADOS DE FEELS
     async loadFeelsData() {
-        await Promise.all([
-            this.loadFeelsReceived(),
-            this.loadFeelsGiven(),
-            this.checkDailyFeelCount()
-        ]);
+        try {
+            await Promise.all([
+                this.loadFeelsReceived(),
+                this.loadFeelsGiven()
+            ]);
+        } catch (error) {
+            console.error('Erro ao carregar dados feels:', error);
+        }
     },
 
     // CARREGAR FEELS RECEBIDOS
@@ -54,6 +56,7 @@ const FeelManager = {
             }
         } catch (error) {
             console.error('Erro ao carregar feels recebidos:', error);
+            this.feelsReceived = [];
         }
     },
 
@@ -68,24 +71,30 @@ const FeelManager = {
             if (!error) {
                 this.feelsGiven = data || [];
             }
+            
+            // Calcular feels de hoje
+            this.calculateDailyFeels();
+            
         } catch (error) {
             console.error('Erro ao carregar feels dados:', error);
+            this.feelsGiven = [];
         }
     },
 
-    // VERIFICAR CONTAGEM DIÁRIA DE FEELS
-    async checkDailyFeelCount() {
+    // CALCULAR FEELS DIÁRIOS
+    calculateDailyFeels() {
         try {
             const today = new Date().toISOString().split('T')[0];
             const todayFeels = this.feelsGiven.filter(feel => 
-                feel.created_at.startsWith(today)
+                feel.created_at && feel.created_at.startsWith(today)
             );
             
             this.todayFeelCount = todayFeels.length;
             this.canGiveMoreFeels = this.todayFeelCount < this.dailyFeelLimit;
             
         } catch (error) {
-            console.error('Erro ao verificar feels diários:', error);
+            this.todayFeelCount = 0;
+            this.canGiveMoreFeels = true;
         }
     },
 
@@ -94,23 +103,41 @@ const FeelManager = {
         const feelsContainer = document.getElementById('feelsContainer');
         if (!feelsContainer) return;
 
-        const planInfo = await PremiumManager.getPlanInfo();
-        
-        if (planInfo.is_premium) {
-            this.renderPremiumFeelsSection(feelsContainer);
-        } else {
+        try {
+            // Verificar se PremiumManager existe
+            let isPremium = false;
+            if (typeof PremiumManager !== 'undefined') {
+                const planInfo = await PremiumManager.getPlanInfo();
+                isPremium = planInfo.is_premium;
+            } else {
+                // Fallback: verificar diretamente no perfil
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('is_premium')
+                    .eq('id', this.currentUser.id)
+                    .single();
+                isPremium = profile?.is_premium || false;
+            }
+            
+            if (isPremium) {
+                this.renderPremiumFeelsSection(feelsContainer);
+            } else {
+                this.renderFreeFeelsSection(feelsContainer);
+            }
+        } catch (error) {
+            // Se houver erro, mostra versão free
             this.renderFreeFeelsSection(feelsContainer);
         }
     },
 
     // RENDERIZAR SEÇÃO PREMIUM (LISTA COMPLETA)
     renderPremiumFeelsSection(container) {
-        if (this.feelsReceived.length === 0) {
+        if (!this.feelsReceived || this.feelsReceived.length === 0) {
             container.innerHTML = this.getEmptyFeelsState();
             return;
         }
 
-        const recentFeels = this.feelsReceived.slice(0, 8); // Mostrar últimos 8
+        const recentFeels = this.feelsReceived.slice(0, 8);
         
         container.innerHTML = `
             <div class="feels-grid">
@@ -128,7 +155,7 @@ const FeelManager = {
 
     // RENDERIZAR SEÇÃO FREE (APENAS CONTADOR)
     renderFreeFeelsSection(container) {
-        const feelCount = this.feelsReceived.length;
+        const feelCount = this.feelsReceived ? this.feelsReceived.length : 0;
         
         container.innerHTML = `
             <div class="feels-free-state">
@@ -153,8 +180,10 @@ const FeelManager = {
 
     // CARD DE USUÁRIO QUE DEU FEEL
     getFeelUserCard(feel) {
+        if (!feel || !feel.giver) return '';
+        
         const user = feel.giver;
-        const safeNickname = (user.nickname || 'Usuário').replace(/'/g, "\\'");
+        const safeNickname = (user.nickname || 'Usuário').replace(/"/g, '&quot;');
         const timeAgo = this.getTimeAgo(feel.created_at);
         
         return `
@@ -165,7 +194,7 @@ const FeelManager = {
                         ''
                     }
                     <div class="avatar-fallback" style="${user.avatar_url ? 'display:none' : 'display:flex'}">
-                        ${getUserInitials(user.nickname)}
+                        ${this.getUserInitials(user.nickname)}
                     </div>
                 </div>
                 <div class="feel-user-name">${safeNickname}</div>
@@ -203,15 +232,19 @@ const FeelManager = {
     // DAR FEEL EM UM USUÁRIO
     async sendFeel(receiverId) {
         try {
+            if (!receiverId || !this.currentUser) {
+                this.showNotification('Erro: dados inválidos', 'error');
+                return false;
+            }
+
             // Verificar se é premium ou tem feels disponíveis
-            const planInfo = await PremiumManager.getPlanInfo();
-            
-            if (!planInfo.is_premium) {
-                if (!this.canGiveMoreFeels) {
-                    this.showFeelLimitReached();
-                    return false;
-                }
-                
+            let isPremium = false;
+            if (typeof PremiumManager !== 'undefined') {
+                const planInfo = await PremiumManager.getPlanInfo();
+                isPremium = planInfo.is_premium;
+            }
+
+            if (!isPremium) {
                 if (this.todayFeelCount >= this.dailyFeelLimit) {
                     this.showFeelLimitReached();
                     return false;
@@ -221,7 +254,7 @@ const FeelManager = {
             // Verificar se já deu feel antes
             const existingFeel = this.feelsGiven.find(feel => feel.receiver_id === receiverId);
             if (existingFeel) {
-                showNotification('Você já deu Feel neste perfil!');
+                this.showNotification('Você já deu Feel neste perfil!');
                 return false;
             }
 
@@ -237,8 +270,8 @@ const FeelManager = {
                 .single();
 
             if (error) {
-                if (error.code === '23505') { // Unique violation
-                    showNotification('Você já deu Feel neste perfil!');
+                if (error.code === '23505') {
+                    this.showNotification('Você já deu Feel neste perfil!');
                 } else {
                     throw error;
                 }
@@ -247,20 +280,19 @@ const FeelManager = {
 
             // Atualizar dados locais
             this.feelsGiven.push({ receiver_id: receiverId, created_at: data.created_at });
-            this.todayFeelCount++;
-            this.canGiveMoreFeels = this.todayFeelCount < this.dailyFeelLimit;
+            this.calculateDailyFeels();
 
             // Mostrar feedback
-            showNotification('Feel enviado com sucesso! ❤️');
+            this.showNotification('Feel enviado com sucesso! ❤️');
             
             // Verificar se criou vibe (match)
-            await this.checkForVibe(receiverId);
+            setTimeout(() => this.checkForVibe(receiverId), 1000);
             
             return true;
 
         } catch (error) {
             console.error('Erro ao enviar feel:', error);
-            showNotification('Erro ao enviar Feel. Tente novamente.', 'error');
+            this.showNotification('Erro ao enviar Feel. Tente novamente.', 'error');
             return false;
         }
     },
@@ -268,6 +300,8 @@ const FeelManager = {
     // REMOVER FEEL
     async removeFeel(receiverId) {
         try {
+            if (!receiverId || !this.currentUser) return false;
+
             const { error } = await supabase
                 .from('user_feels')
                 .delete()
@@ -278,15 +312,14 @@ const FeelManager = {
 
             // Atualizar dados locais
             this.feelsGiven = this.feelsGiven.filter(feel => feel.receiver_id !== receiverId);
-            this.todayFeelCount = Math.max(0, this.todayFeelCount - 1);
-            this.canGiveMoreFeels = this.todayFeelCount < this.dailyFeelLimit;
+            this.calculateDailyFeels();
 
-            showNotification('Feel removido');
+            this.showNotification('Feel removido');
             return true;
 
         } catch (error) {
             console.error('Erro ao remover feel:', error);
-            showNotification('Erro ao remover Feel.', 'error');
+            this.showNotification('Erro ao remover Feel.', 'error');
             return false;
         }
     },
@@ -312,82 +345,113 @@ const FeelManager = {
 
     // NOTIFICAÇÃO DE LIMITE DE FEELS
     showFeelLimitReached() {
-        showNotification(
+        this.showNotification(
             `Limite diário de Feels atingido! (${this.dailyFeelLimit}/dia)\n\n` +
-            '💎 Torne-se Premium para Feels ilimitados!', 
+            '💎 Torne-se Premium para Feils ilimitados!', 
             'error'
         );
-        
-        // Opcional: redirecionar para pricing após 3 segundos
-        setTimeout(() => {
-            if (confirm('Deseja ver os planos Premium para Feels ilimitados?')) {
-                goToPricing();
-            }
-        }, 2000);
     },
 
     // NOTIFICAÇÃO DE VIBE (MATCH)
     async showVibeNotification(receiverId) {
-        // Buscar info do usuário
-        const { data: user } = await supabase
-            .from('profiles')
-            .select('nickname, avatar_url')
-            .eq('id', receiverId)
-            .single();
+        try {
+            const { data: user } = await supabase
+                .from('profiles')
+                .select('nickname')
+                .eq('id', receiverId)
+                .single();
 
-        if (user) {
-            showNotification(
-                `🎉 VIBE CONECTADA!\n\nVocê e ${user.nickname} sentiram a mesma energia!`, 
-                'success'
-            );
+            if (user) {
+                this.showNotification(
+                    `🎉 VIBE CONECTADA! Você e ${user.nickname} sentiram a mesma energia!`, 
+                    'success'
+                );
+            }
+        } catch (error) {
+            // Se não conseguir pegar o nome, mostra mensagem genérica
+            this.showNotification('🎉 VIBE CONECTADA! Vocês sentiram a mesma energia!', 'success');
+        }
+    },
+
+    // SISTEMA DE NOTIFICAÇÃO (fallback)
+    showNotification(message, type = 'success') {
+        // Tenta usar o sistema do home.js primeiro
+        if (typeof window.showNotification === 'function') {
+            window.showNotification(message, type);
+        } else {
+            // Fallback simples
+            alert(message);
         }
     },
 
     // CALCULAR TEMPO DECORRIDO
     getTimeAgo(timestamp) {
-        const now = new Date();
-        const time = new Date(timestamp);
-        const diffMs = now - time;
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
+        if (!timestamp) return 'Recentemente';
+        
+        try {
+            const now = new Date();
+            const time = new Date(timestamp);
+            const diffMs = now - time;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
 
-        if (diffMins < 1) return 'Agora';
-        if (diffMins < 60) return `${diffMins}min`;
-        if (diffHours < 24) return `${diffHours}h`;
-        if (diffDays < 7) return `${diffDays}d`;
-        return time.toLocaleDateString('pt-BR');
+            if (diffMins < 1) return 'Agora';
+            if (diffMins < 60) return `${diffMins}min`;
+            if (diffHours < 24) return `${diffHours}h`;
+            if (diffDays < 7) return `${diffDays}d`;
+            return time.toLocaleDateString('pt-BR');
+        } catch (error) {
+            return 'Recentemente';
+        }
     },
 
-    // CONFIGURAR EVENT LISTENERS
-    setupEventListeners() {
-        // Listeners serão adicionados quando integrarmos com os cards
+    // INICIAIS DO USUÁRIO
+    getUserInitials(name) {
+        if (!name) return 'U';
+        return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().substring(0, 2);
     },
 
-    // ATUALIZAR CONTADOR DE FEELS DISPONÍVEIS (para free)
+    // ATUALIZAR CONTADOR DE FEELS DISPONÍVEIS
     updateFeelCounter() {
         const feelCounter = document.getElementById('feelCounter');
-        if (feelCounter && !window.PremiumManager?.userPlanInfo?.is_premium) {
-            const remaining = this.dailyFeelLimit - this.todayFeelCount;
-            feelCounter.textContent = `${remaining} Feels restantes hoje`;
-            feelCounter.style.display = remaining > 0 ? 'block' : 'none';
+        if (feelCounter) {
+            let isPremium = false;
+            
+            // Verificar se é premium
+            if (window.PremiumManager?.userPlanInfo?.is_premium) {
+                isPremium = true;
+            }
+            
+            if (!isPremium) {
+                const remaining = this.dailyFeelLimit - (this.todayFeelCount || 0);
+                feelCounter.textContent = `${remaining} Feels restantes hoje`;
+                feelCounter.style.display = remaining > 0 ? 'block' : 'none';
+            } else {
+                feelCounter.style.display = 'none';
+            }
         }
     }
 };
 
 // INICIALIZAR QUANDO O DOM ESTIVER PRONTO
 document.addEventListener('DOMContentLoaded', function() {
+    // Aguardar um pouco para garantir que tudo carregou
     setTimeout(() => {
         FeelManager.initialize();
-    }, 1500);
+    }, 1000);
 });
 
 // === FUNÇÕES GLOBAIS ===
 window.sendFeel = (receiverId) => FeelManager.sendFeel(receiverId);
 window.removeFeel = (receiverId) => FeelManager.removeFeel(receiverId);
+window.FeelManager = FeelManager;
 
-// INTEGRAÇÃO COM PREMIUM CHECK - ATUALIZAR QUANDO STATUS MUDAR
-window.PremiumManager?.updateUIWithPremiumStatus = async function() {
-    await PremiumManager.updateUIWithPremiumStatus();
-    await FeelManager.renderFeelsSection(); // Re-renderizar seções
-};
+// RECARREGAR SEÇÃO QUANDO HOUVER MUDANÇA DE PREMIUM
+if (window.PremiumManager) {
+    const originalUpdateUI = window.PremiumManager.updateUIWithPremiumStatus;
+    window.PremiumManager.updateUIWithPremiumStatus = async function() {
+        await originalUpdateUI?.();
+        await FeelManager.renderFeelsSection();
+    };
+}
