@@ -1,4 +1,4 @@
-// home.js - VERSÃO FINAL CORRIGIDA - MODAIS FUNCIONANDO
+// home.js - VERSÃO FINAL CORRIGIDA
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -48,7 +48,7 @@ function setupEventListeners() {
         });
     });
 
-    // Event listener para fechar modais ao clicar fora - CORRIGIDO
+    // Event listener para fechar modais ao clicar fora
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('modal')) {
             closeAllModals();
@@ -345,7 +345,7 @@ function viewUserProfile(userId) {
     window.location.href = `perfil.html?id=${userId}`;
 }
 
-// === SISTEMA DE MODAIS CORRIGIDO - SEM FECHAMENTO AUTOMÁTICO ===
+// === SISTEMA DE MODAIS SIMPLES E FUNCIONAL ===
 function openUserActions(userId, userName) {
     currentBlockingUser = { id: userId, name: userName };
     showModal('userActionsModal');
@@ -446,42 +446,26 @@ function viewProfileFromModal() {
     }
 }
 
-// === SISTEMA DE MODAIS SIMPLES E FUNCIONAL ===
+// === FUNÇÕES DE MODAL SIMPLES ===
 function showModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
-        // Fecha qualquer modal aberto primeiro
-        closeAllModals();
-        
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
-        
-        // Pequeno delay para a animação CSS
-        setTimeout(() => {
-            modal.classList.add('active');
-        }, 10);
     }
 }
 
 function hideModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
-        modal.classList.remove('active');
-        
-        // Espera a animação terminar antes de esconder
-        setTimeout(() => {
-            modal.style.display = 'none';
-        }, 300);
+        modal.style.display = 'none';
     }
 }
 
 function closeAllModals() {
     const modals = document.querySelectorAll('.modal');
     modals.forEach(modal => {
-        modal.classList.remove('active');
-        setTimeout(() => {
-            modal.style.display = 'none';
-        }, 300);
+        modal.style.display = 'none';
     });
     document.body.style.overflow = '';
     currentBlockingUser = null;
