@@ -111,19 +111,54 @@ async function loadUsers() {
             .eq('user_id', currentUser.id)
             .single();
 
-        // Se não tem user_details, mostra todos (fallback)
         if (userError || !currentUserDetails) {
-            await loadAllUsers(usersGrid);
+            usersGrid.innerHTML = '<div class="loading-state"><p>Complete seu perfil para ver pessoas.</p></div>';
             return;
         }
 
-        // Busca perfis visíveis
+        // Busca TODOS os user_details visíveis
+        const { data: allUserDetails, error: detailsError } = await supabase
+            .from('user_details')
+            .select('user_id, gender')
+            .neq('user_id', currentUser.id);
+
+        if (detailsError || !allUserDetails) {
+            usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar usuários.</p></div>';
+            return;
+        }
+
+        // Aplica filtro de orientação sexual
+        const userOrientation = currentUserDetails.sexual_orientation;
+        const userGender = currentUserDetails.gender;
+
+        let compatibleUserIds = allUserDetails
+            .filter(detail => {
+                const profileGender = detail.gender;
+                if (!profileGender) return false;
+
+                if (userOrientation === 'heterossexual') {
+                    if (userGender === 'homem') return profileGender === 'mulher';
+                    if (userGender === 'mulher') return profileGender === 'homem';
+                    return false;
+                } else if (userOrientation === 'homossexual') {
+                    return profileGender === userGender;
+                }
+                return true; // bissexual ou outros
+            })
+            .map(detail => detail.user_id);
+
+        if (compatibleUserIds.length === 0) {
+            usersGrid.innerHTML = '<div class="loading-state"><p>Nenhuma pessoa compatível encontrada.</p></div>';
+            return;
+        }
+
+        // Busca perfis dos usuários compatíveis
         let query = supabase
             .from('profiles')
             .select('*')
-            .neq('id', currentUser.id)
+            .in('id', compatibleUserIds)
             .eq('is_invisible', false)
-            .limit(20);
+            .limit(8);
 
         if (currentFilter === 'online') {
             const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
@@ -132,87 +167,20 @@ async function loadUsers() {
             query = query.eq('is_premium', true);
         }
 
-        const { data: allProfiles, error } = await query;
+        const { data: profiles, error } = await query;
 
-        if (error || !allProfiles || allProfiles.length === 0) {
+        if (error || !profiles || profiles.length === 0) {
             usersGrid.innerHTML = '<div class="loading-state"><p>Nenhuma pessoa encontrada.</p></div>';
             return;
         }
 
-        // Busca gêneros dos perfis
-        const profileIds = allProfiles.map(profile => profile.id);
-        const { data: profilesGender } = await supabase
-            .from('user_details')
-            .select('user_id, gender')
-            .in('user_id', profileIds);
-
-        // Aplica filtro de orientação sexual
-        const genderMap = {};
-        profilesGender?.forEach(detail => {
-            genderMap[detail.user_id] = detail.gender;
-        });
-
-        const userOrientation = currentUserDetails.sexual_orientation;
-        const userGender = currentUserDetails.gender;
-
-        let compatibleProfiles = allProfiles.filter(profile => {
-            const profileGender = genderMap[profile.id];
-            if (!profileGender) return false;
-
-            if (userOrientation === 'heterossexual') {
-                if (userGender === 'homem') return profileGender === 'mulher';
-                if (userGender === 'mulher') return profileGender === 'homem';
-            } else if (userOrientation === 'homossexual') {
-                return profileGender === userGender;
-            }
-            return true; // bissexual ou outros
-        });
-
-        if (compatibleProfiles.length === 0) {
-            usersGrid.innerHTML = '<div class="loading-state"><p>Nenhuma pessoa compatível encontrada.</p></div>';
-            return;
-        }
-
         // Filtra bloqueados e exibe
-        const finalProfiles = await filterBlockedUsers(compatibleProfiles.slice(0, 8));
-        displayUsers(finalProfiles, genderMap);
+        const filteredProfiles = await filterBlockedUsers(profiles);
+        displayUsers(filteredProfiles, allUserDetails);
 
     } catch (error) {
-        // Fallback: carrega todos se houver erro
-        await loadAllUsers(usersGrid);
-    }
-}
-
-// Função fallback se houver erro no filtro
-async function loadAllUsers(usersGrid) {
-    let query = supabase
-        .from('profiles')
-        .select('*')
-        .neq('id', currentUser.id)
-        .eq('is_invisible', false)
-        .limit(8);
-
-    if (currentFilter === 'online') {
-        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-        query = query.gte('last_online_at', fifteenMinutesAgo);
-    } else if (currentFilter === 'premium') {
-        query = query.eq('is_premium', true);
-    }
-
-    const { data: profiles, error } = await query;
-
-    if (error) {
         usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar.</p></div>';
-        return;
     }
-
-    if (!profiles || profiles.length === 0) {
-        usersGrid.innerHTML = '<div class="loading-state"><p>Nenhuma pessoa encontrada.</p></div>';
-        return;
-    }
-
-    const filteredProfiles = await filterBlockedUsers(profiles);
-    displayUsers(filteredProfiles);
 }
 
 async function filterBlockedUsers(users) {
@@ -239,8 +207,14 @@ async function filterBlockedUsers(users) {
     }
 }
 
-function displayUsers(profiles, genderMap = {}) {
+function displayUsers(profiles, userDetails) {
     const usersGrid = document.getElementById('usersGrid');
+    
+    // Cria mapa de gêneros
+    const genderMap = {};
+    userDetails.forEach(detail => {
+        genderMap[detail.user_id] = detail.gender;
+    });
     
     usersGrid.innerHTML = profiles.map(profile => {
         const safeNickname = (profile.nickname || 'Usuário').replace(/'/g, "\\'");
