@@ -4,8 +4,9 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ==================== VARIÁVEIS GLOBAIS ====================
-let currentUser = null;
-let usuariosCache = [];
+let destinoSelecionado = 'all';
+let usuarioEspecificoSelecionado = null;
+let expiracaoSelecionada = 'never';
 
 // ==================== VERIFICAÇÃO DE AUTENTICAÇÃO ====================
 function verificarAutenticacao() {
@@ -21,14 +22,16 @@ function logoutAdmin() {
     window.location.href = 'login-admin.html';
 }
 
+function irParaAdmin() {
+    window.location.href = 'admin.html';
+}
+
 // ==================== INICIALIZAÇÃO ====================
 document.addEventListener('DOMContentLoaded', function() {
     if (!verificarAutenticacao()) return;
     
-    console.log('🚀 Gestor de Notificações iniciado');
     inicializarSistema();
     
-    // Atualizar estatísticas a cada 30 segundos
     setInterval(() => {
         carregarEstatisticas();
     }, 30000);
@@ -38,9 +41,7 @@ async function inicializarSistema() {
     try {
         await carregarEstatisticas();
         await carregarVisaoGeral();
-        await carregarUsuariosCache();
     } catch (error) {
-        console.error('Erro na inicialização:', error);
         mostrarErro('Erro ao inicializar sistema');
     }
 }
@@ -50,29 +51,24 @@ async function carregarEstatisticas() {
     if (!verificarAutenticacao()) return;
     
     try {
-        // Total de notificações
         const { count: totalNotificacoes } = await supabase
             .from('user_notifications')
             .select('*', { count: 'exact', head: true });
 
-        // Notificações não lidas
         const { count: naoLidas } = await supabase
             .from('user_notifications')
             .select('*', { count: 'exact', head: true })
             .eq('is_read', false);
 
-        // Total de usuários
         const { count: totalUsuarios } = await supabase
             .from('profiles')
             .select('*', { count: 'exact', head: true });
 
-        // Templates ativos
         const { count: templatesAtivos } = await supabase
             .from('notification_templates')
             .select('*', { count: 'exact', head: true })
             .eq('is_active', true);
 
-        // Atualizar interface
         document.getElementById('totalNotifications').textContent = totalNotificacoes || 0;
         document.getElementById('unreadNotifications').textContent = naoLidas || 0;
         document.getElementById('totalUsers').textContent = totalUsuarios || 0;
@@ -91,6 +87,13 @@ async function carregarVisaoGeral() {
     const container = document.getElementById('overviewContent');
     
     try {
+        container.innerHTML = `
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Carregando dados do sistema...</p>
+            </div>
+        `;
+
         const { data: notificacoes, error } = await supabase
             .from('user_notifications')
             .select(`
@@ -126,13 +129,13 @@ async function carregarVisaoGeral() {
                     <h3 style="color: var(--primary); margin-bottom: 1rem;">🚨 Ações Rápidas</h3>
                     <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                         <button class="btn btn-primary" onclick="showSection('send')">
-                            ✉️ Enviar Notificação Rápida
+                            ✉️ Enviar Notificação
                         </button>
                         <button class="btn btn-success" onclick="mostrarModalNovoTemplate()">
                             🎯 Criar Template
                         </button>
-                        <button class="btn btn-info" onclick="carregarHistorico()">
-                            📋 Ver Relatórios
+                        <button class="btn btn-info" onclick="showSection('history')">
+                            📋 Ver Histórico
                         </button>
                     </div>
                 </div>
@@ -179,8 +182,6 @@ async function carregarVisaoGeral() {
         }
 
         container.innerHTML = html;
-
-        // Carregar estatísticas adicionais
         await carregarEstatisticasDetalhadas();
 
     } catch (error) {
@@ -226,12 +227,15 @@ async function carregarEstatisticasDetalhadas() {
         const { count: usuariosAtivos } = await supabase
             .from('profiles')
             .select('*', { count: 'exact', head: true })
-            .gte('last_online_at', umDiaAtras.toISOString());
+            .gte('last_online_at', umDiaAtras.toISOString())
+            .eq('is_active', true);
 
         // Atualizar UI
-        document.getElementById('notificacoesHoje').textContent = notificacoesHoje || 0;
-        document.getElementById('taxaLeitura').textContent = taxaLeitura + '%';
-        document.getElementById('usuariosAtivos').textContent = usuariosAtivos || 0;
+        if (document.getElementById('notificacoesHoje')) {
+            document.getElementById('notificacoesHoje').textContent = notificacoesHoje || 0;
+            document.getElementById('taxaLeitura').textContent = taxaLeitura + '%';
+            document.getElementById('usuariosAtivos').textContent = usuariosAtivos || 0;
+        }
 
     } catch (error) {
         console.error('Erro ao carregar estatísticas detalhadas:', error);
@@ -250,7 +254,7 @@ async function carregarFormularioEnvio() {
                     <h4 style="color: var(--primary); margin-bottom: 1rem;">🎯 Escolher Destinatários</h4>
                     
                     <div class="target-options">
-                        <div class="target-option" data-target="all" onclick="selecionarDestino('all')">
+                        <div class="target-option selected" data-target="all" onclick="selecionarDestino('all')">
                             <div>📧</div>
                             <div><strong>Todos os Usuários</strong></div>
                             <small>Todos os usuários do sistema</small>
@@ -286,10 +290,10 @@ async function carregarFormularioEnvio() {
                     </div>
 
                     <!-- RESUMO DOS DESTINATÁRIOS -->
-                    <div id="resumoDestinatarios" style="margin-top: 1rem; padding: 1rem; background: #e8f5e8; border-radius: 6px; display: none;">
+                    <div id="resumoDestinatarios" style="margin-top: 1rem; padding: 1rem; background: #e8f5e8; border-radius: 6px;">
                         <strong>📋 Destinatários selecionados:</strong> 
-                        <span id="textoResumoDestinatarios">--</span>
-                        <span id="contadorDestinatarios" style="float: right; font-weight: bold;"></span>
+                        <span id="textoResumoDestinatarios">Todos os usuários do sistema</span>
+                        <span id="contadorDestinatarios" style="float: right; font-weight: bold;">Todos</span>
                     </div>
                 </div>
 
@@ -377,12 +381,7 @@ async function carregarFormularioEnvio() {
             </form>
         `;
 
-        // Inicializar seleções padrão
-        selecionarDestino('all');
-        selecionarExpiracao('never');
-
     } catch (error) {
-        console.error('Erro ao carregar formulário:', error);
         container.innerHTML = `
             <div class="empty-state">
                 <div class="icon">❌</div>
@@ -394,21 +393,15 @@ async function carregarFormularioEnvio() {
 }
 
 // ==================== SELEÇÃO DE DESTINATÁRIOS ====================
-let destinoSelecionado = 'all';
-let usuarioEspecificoSelecionado = null;
-
 function selecionarDestino(destino) {
     destinoSelecionado = destino;
     
-    // Remover seleção anterior
     document.querySelectorAll('.target-option').forEach(opt => {
         opt.classList.remove('selected');
     });
     
-    // Adicionar seleção atual
     document.querySelector(`[data-target="${destino}"]`).classList.add('selected');
     
-    // Mostrar/ocultar busca de usuário específico
     const usuarioContainer = document.getElementById('usuarioEspecificoContainer');
     const resultadosBusca = document.getElementById('resultadosBuscaUsuarios');
     
@@ -461,7 +454,6 @@ async function buscarUsuarios(termo) {
         container.style.display = 'block';
 
     } catch (error) {
-        console.error('Erro na busca:', error);
         container.innerHTML = '<div class="user-result">Erro na busca</div>';
         container.style.display = 'block';
     }
@@ -482,12 +474,11 @@ function atualizarResumoDestinatarios() {
     const contador = document.getElementById('contadorDestinatarios');
     
     let textoResumo = '';
-    let count = 0;
+    let count = '';
     
     switch(destinoSelecionado) {
         case 'all':
             textoResumo = '📧 Todos os usuários do sistema';
-            // Aqui você pode buscar a contagem real se quiser
             count = 'Todos';
             break;
         case 'free':
@@ -511,24 +502,18 @@ function atualizarResumoDestinatarios() {
     
     texto.textContent = textoResumo;
     contador.textContent = count;
-    resumo.style.display = 'block';
 }
 
 // ==================== SISTEMA DE EXPIRAÇÃO ====================
-let expiracaoSelecionada = 'never';
-
 function selecionarExpiracao(expiracao) {
     expiracaoSelecionada = expiracao;
     
-    // Remover seleção anterior
     document.querySelectorAll('.expiration-option').forEach(opt => {
         opt.classList.remove('selected');
     });
     
-    // Adicionar seleção atual
     document.querySelector(`[data-expiration="${expiracao}"]`).classList.add('selected');
     
-    // Mostrar/ocultar dias personalizados
     const diasContainer = document.getElementById('diasPersonalizadosContainer');
     if (expiracao === 'custom') {
         diasContainer.style.display = 'block';
@@ -543,7 +528,6 @@ async function enviarNotificacao(event) {
     
     if (!verificarAutenticacao()) return;
     
-    // Coletar dados do formulário
     const dadosNotificacao = {
         category: document.getElementById('categoriaNotificacao').value,
         title: document.getElementById('tituloNotificacao').value.trim(),
@@ -558,33 +542,29 @@ async function enviarNotificacao(event) {
                         parseInt(document.getElementById('diasPersonalizados').value) : null
     };
     
-    // Validações
     if (!dadosNotificacao.title || !dadosNotificacao.message) {
         mostrarErro('Preencha título e mensagem');
         return;
     }
     
-    // Obter IDs dos destinatários
     let userIDs = [];
     try {
         userIDs = await obterDestinatarios();
         if (userIDs.length === 0) {
-            mostrarErro('Nenhum usuário selecionado para receber a notificação');
+            mostrarErro('Nenhum usuário selecionado');
             return;
         }
     } catch (error) {
-        mostrarErro('Erro ao buscar destinatários: ' + error.message);
+        mostrarErro('Erro ao buscar destinatários');
         return;
     }
     
-    // Confirmação para envio em massa
     if (userIDs.length > 1) {
-        const confirmacao = confirm(`Enviar esta notificação para ${userIDs.length} usuários?\n\nTítulo: ${dadosNotificacao.title}\nCategoria: ${getCategoryLabel(dadosNotificacao.category)}`);
+        const confirmacao = confirm(`Enviar para ${userIDs.length} usuários?\n\nTítulo: ${dadosNotificacao.title}`);
         if (!confirmacao) return;
     }
     
     try {
-        // Preparar notificações para inserção
         const notificacoes = userIDs.map(userId => ({
             user_id: userId,
             category: dadosNotificacao.category,
@@ -597,31 +577,24 @@ async function enviarNotificacao(event) {
             created_at: new Date().toISOString()
         }));
         
-        // Inserir em lote
         const { error } = await supabase
             .from('user_notifications')
             .insert(notificacoes);
         
         if (error) throw error;
         
-        // Registrar lote se for envio em massa
-        if (userIDs.length > 1) {
-            await registrarLoteEnvio(dadosNotificacao, destinoSelecionado, userIDs.length);
-        }
-        
-        // Feedback de sucesso
         mostrarSucesso(`✅ Notificação enviada para ${userIDs.length} usuário(s)!`);
         
-        // Limpar formulário
-        limparFormulario();
+        document.getElementById('formEnvioNotificacao').reset();
+        selecionarDestino('all');
+        selecionarExpiracao('never');
+        usuarioEspecificoSelecionado = null;
         
-        // Atualizar estatísticas
         carregarEstatisticas();
         carregarVisaoGeral();
         
     } catch (error) {
-        console.error('Erro ao enviar notificação:', error);
-        mostrarErro('❌ Erro ao enviar: ' + error.message);
+        mostrarErro('❌ Erro ao enviar notificação');
     }
 }
 
@@ -645,12 +618,11 @@ async function buscarTodosUsuarios() {
         const { data: usuarios, error } = await supabase
             .from('profiles')
             .select('id')
-            .limit(10000); // Limite razoável
+            .limit(10000);
         
         if (error) throw error;
         return usuarios.map(u => u.id);
     } catch (error) {
-        console.error('Erro ao buscar usuários:', error);
         throw error;
     }
 }
@@ -667,32 +639,7 @@ async function buscarUsuariosPorTipo(tipo) {
         if (error) throw error;
         return usuarios.map(u => u.id);
     } catch (error) {
-        console.error(`Erro ao buscar usuários ${tipo}:`, error);
         throw error;
-    }
-}
-
-async function registrarLoteEnvio(dadosNotificacao, targetType, totalRecipients) {
-    try {
-        const { error } = await supabase
-            .from('notification_batches')
-            .insert({
-                title: dadosNotificacao.title,
-                message: dadosNotificacao.message,
-                category: dadosNotificacao.category,
-                target_type: targetType,
-                total_recipients: totalRecipients,
-                total_sent: totalRecipients,
-                expiration_type: dadosNotificacao.expiration_type,
-                expiration_days: dadosNotificacao.expiration_days,
-                status: 'completed',
-                created_at: new Date().toISOString()
-            });
-        
-        if (error) throw error;
-    } catch (error) {
-        console.error('Erro ao registrar lote:', error);
-        // Não falhar o envio principal por causa do registro do lote
     }
 }
 
@@ -770,7 +717,6 @@ async function carregarTemplates() {
         container.innerHTML = html;
 
     } catch (error) {
-        console.error('Erro ao carregar templates:', error);
         container.innerHTML = `
             <div class="empty-state">
                 <div class="icon">❌</div>
@@ -789,11 +735,6 @@ function mostrarModalNovoTemplate() {
 
 function fecharModalTemplate() {
     document.getElementById('modalTemplate').classList.remove('active');
-}
-
-async function salvarComoTemplate() {
-    // Implementação similar ao envio, mas salvando como template
-    mostrarSucesso('Função em desenvolvimento - salvar como template');
 }
 
 // ==================== SEÇÃO: HISTÓRICO ====================
@@ -850,7 +791,6 @@ async function carregarHistorico() {
         container.innerHTML = html;
 
     } catch (error) {
-        console.error('Erro ao carregar histórico:', error);
         container.innerHTML = `
             <div class="empty-state">
                 <div class="icon">❌</div>
@@ -863,7 +803,6 @@ async function carregarHistorico() {
 
 // ==================== FUNÇÕES AUXILIARES ====================
 function showSection(sectionName) {
-    // Esconder todas as seções
     document.querySelectorAll('.content-section').forEach(section => {
         section.classList.remove('active');
     });
@@ -871,11 +810,9 @@ function showSection(sectionName) {
         btn.classList.remove('active');
     });
 
-    // Mostrar seção selecionada
     document.getElementById(sectionName).classList.add('active');
     event.target.classList.add('active');
 
-    // Carregar conteúdo específico
     switch(sectionName) {
         case 'overview':
             carregarVisaoGeral();
@@ -903,7 +840,6 @@ function limparFormulario() {
         selecionarDestino('all');
         selecionarExpiracao('never');
         usuarioEspecificoSelecionado = null;
-        document.getElementById('resumoDestinatarios').style.display = 'none';
     }
 }
 
@@ -969,22 +905,7 @@ function mostrarErro(mensagem) {
     alert(mensagem);
 }
 
-async function carregarUsuariosCache() {
-    try {
-        const { data: usuarios, error } = await supabase
-            .from('profiles')
-            .select('id, nickname, email, is_premium')
-            .limit(1000);
-        
-        if (!error) {
-            usuariosCache = usuarios || [];
-        }
-    } catch (error) {
-        console.error('Erro ao carregar cache de usuários:', error);
-    }
-}
-
-// ==================== FUNÇÕES DE TEMPLATE (Placeholders) ====================
+// ==================== FUNÇÕES DE TEMPLATE ====================
 function usarTemplate(templateId) {
     showSection('send');
     mostrarSucesso('Template selecionado - preencha os detalhes restantes');
@@ -1017,8 +938,9 @@ async function excluirTemplate(templateId) {
 window.showSection = showSection;
 window.carregarTudo = carregarTudo;
 window.logoutAdmin = logoutAdmin;
+window.irParaAdmin = irParaAdmin;
 window.limparFormulario = limparFormulario;
-window.salvarComoTemplate = salvarComoTemplate;
+window.salvarComoTemplate = function() { mostrarSucesso('Funcionalidade em desenvolvimento - salvar como template'); };
 window.mostrarModalNovoTemplate = mostrarModalNovoTemplate;
 window.fecharModalTemplate = fecharModalTemplate;
 window.selecionarDestino = selecionarDestino;
@@ -1031,3 +953,5 @@ window.usarTemplate = usarTemplate;
 window.editarTemplate = editarTemplate;
 window.excluirTemplate = excluirTemplate;
 window.carregarHistorico = carregarHistorico;
+window.carregarFormularioEnvio = carregarFormularioEnvio;
+window.carregarTemplates = carregarTemplates;
