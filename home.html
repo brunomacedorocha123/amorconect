@@ -94,6 +94,29 @@
                 </div>
             </section>
 
+            <!-- ========== NOVA SEÇÃO: QUEM TE CURTIU ========== -->
+            <section class="feels-section" id="feelsSection">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-heart"></i> Quem te curtiu
+                    </h2>
+                    <div class="section-actions">
+                        <button class="btn-view-all" id="viewAllFeelsBtn" style="display: none;" 
+                                onclick="window.location.href='feels.html'">
+                            Ver todos <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="feels-container" id="feelsContainer">
+                    <!-- Conteúdo dinâmico free/premium -->
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <p>Carregando curtidas...</p>
+                    </div>
+                </div>
+            </section>
+
             <!-- Users Section -->
             <section class="users-section">
                 <div class="section-header">
@@ -288,5 +311,6 @@
     <script src="premium-check.js"></script>
     <script src="home.js"></script>
     <script src="home-visitante.js"></script>
+    <script src="home-feel.js"></script> <!-- NOVO SCRIPT -->
 </body>
 </html>

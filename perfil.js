@@ -1,5 +1,9 @@
 let currentUser = null;
 let visitedUserId = null;
+let feelStatus = {
+    hasGivenFeel: false,
+    feelId: null
+};
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeProfile();
@@ -28,6 +32,7 @@ async function initializeProfile() {
         await registerProfileVisit();
 
         await loadUserData();
+        await checkFeelStatus();
 
     } catch (error) {
         alert('Erro ao carregar perfil');
@@ -134,6 +139,150 @@ function fillProfileData(profile, details) {
 
     checkGalleryAccess();
 }
+
+// ==================== SISTEMA FEEL NO PERFIL ====================
+
+// Verificar status do Feel ao carregar perfil
+async function checkFeelStatus() {
+    try {
+        if (!currentUser || !visitedUserId || currentUser.id === visitedUserId) {
+            hideFeelButton();
+            return;
+        }
+        
+        const { data, error } = await supabase
+            .from('user_feels')
+            .select('id')
+            .eq('giver_id', currentUser.id)
+            .eq('receiver_id', visitedUserId)
+            .single();
+
+        if (data && !error) {
+            feelStatus.hasGivenFeel = true;
+            feelStatus.feelId = data.id;
+            updateFeelButton(true);
+        } else {
+            feelStatus.hasGivenFeel = false;
+            feelStatus.feelId = null;
+            updateFeelButton(false);
+        }
+    } catch (error) {
+        console.error('Erro ao verificar feel:', error);
+        updateFeelButton(false);
+    }
+}
+
+// Atualizar aparência do botão
+function updateFeelButton(hasFeel) {
+    const feelBtn = document.getElementById('feelBtn');
+    const feelText = document.getElementById('feelText');
+    const feelIcon = feelBtn.querySelector('i');
+    
+    if (!feelBtn) return;
+    
+    if (hasFeel) {
+        feelBtn.classList.add('active');
+        feelIcon.className = 'fas fa-heart';
+        feelText.textContent = 'Feel Enviado';
+        feelBtn.onclick = () => removeFeel();
+    } else {
+        feelBtn.classList.remove('active');
+        feelIcon.className = 'far fa-heart';
+        feelText.textContent = 'Dar Feel';
+        feelBtn.onclick = () => sendFeel();
+    }
+    
+    feelBtn.style.display = 'flex';
+}
+
+// Ocultar botão feel (próprio perfil)
+function hideFeelButton() {
+    const feelBtn = document.getElementById('feelBtn');
+    if (feelBtn) {
+        feelBtn.style.display = 'none';
+    }
+}
+
+// Enviar Feel
+async function sendFeel() {
+    try {
+        if (!currentUser || !visitedUserId) return;
+        
+        // Usar a função do FeelManager se disponível
+        if (typeof window.FeelManager !== 'undefined') {
+            const success = await window.FeelManager.sendFeel(visitedUserId);
+            if (success) {
+                feelStatus.hasGivenFeel = true;
+                updateFeelButton(true);
+            }
+        } else {
+            // Fallback direto
+            const { data, error } = await supabase
+                .from('user_feels')
+                .insert({
+                    giver_id: currentUser.id,
+                    receiver_id: visitedUserId,
+                    created_at: new Date().toISOString()
+                })
+                .select()
+                .single();
+
+            if (error) {
+                if (error.code === '23505') {
+                    showNotification('Você já deu Feel neste perfil!');
+                } else {
+                    throw error;
+                }
+                return;
+            }
+
+            feelStatus.hasGivenFeel = true;
+            feelStatus.feelId = data.id;
+            updateFeelButton(true);
+            showNotification('Feel enviado com sucesso! ❤️');
+        }
+        
+    } catch (error) {
+        console.error('Erro ao enviar feel:', error);
+        showNotification('Erro ao enviar Feel. Tente novamente.', 'error');
+    }
+}
+
+// Remover Feel
+async function removeFeel() {
+    try {
+        if (!currentUser || !visitedUserId) return;
+        
+        // Usar a função do FeelManager se disponível
+        if (typeof window.FeelManager !== 'undefined') {
+            const success = await window.FeelManager.removeFeel(visitedUserId);
+            if (success) {
+                feelStatus.hasGivenFeel = false;
+                updateFeelButton(false);
+            }
+        } else {
+            // Fallback direto
+            const { error } = await supabase
+                .from('user_feels')
+                .delete()
+                .eq('giver_id', currentUser.id)
+                .eq('receiver_id', visitedUserId);
+
+            if (error) throw error;
+
+            feelStatus.hasGivenFeel = false;
+            feelStatus.feelId = null;
+            updateFeelButton(false);
+            showNotification('Feel removido');
+        }
+        
+    } catch (error) {
+        console.error('Erro ao remover feel:', error);
+        showNotification('Erro ao remover Feel.', 'error');
+    }
+}
+
+// ==================== FUNÇÕES EXISTENTES ====================
 
 // FUNÇÃO: Criar display de status visível
 function createOnlineStatusDisplay(isOnline) {
@@ -503,6 +652,17 @@ function openGalleryImage(imageUrl) {
     }
 }
 
+// Sistema de notificações
+function showNotification(message, type = 'success') {
+    // Usar sistema do home.js se disponível, ou fallback simples
+    if (typeof window.showNotification === 'function') {
+        window.showNotification(message, type);
+    } else {
+        // Fallback simples
+        alert(message);
+    }
+}
+
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('imageModal');
@@ -544,5 +704,7 @@ window.profileViewer = {
     initializeProfile,
     loadUserData,
     openGalleryImage,
-    isUserOnline
+    isUserOnline,
+    sendFeel,
+    removeFeel
 };

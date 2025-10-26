@@ -53,40 +53,44 @@
                     </div>
                 </div>
 
-                <!-- Botão Enviar Mensagem -->
+                <!-- Botão Enviar Mensagem + Botão Feel -->
                 <div class="action-buttons">
                     <button class="btn btn-primary btn-message" id="sendMessageBtn">
                         <i class="fas fa-paper-plane"></i> Enviar Mensagem
+                    </button>
+                    
+                    <!-- NOVO BOTÃO FEEL -->
+                    <button class="btn btn-feel" id="feelBtn">
+                        <i class="far fa-heart"></i> 
+                        <span id="feelText">Dar Feel</span>
                     </button>
                 </div>
             </section>
 
             <!-- Seção Sobre -->
-            <!-- Seção Sobre -->
-<section class="profile-section">
-    <h3><i class="fas fa-user"></i> Sobre</h3>
-    <div class="about-content">
-        <!-- NOVO CAMPO: Status de Relacionamento -->
-        <div class="about-item" id="profileRelationshipStatus">
-            <strong>Status:</strong> <span>Carregando...</span>
-        </div>
-        <div class="about-item" id="profileLookingFor">
-            <strong>Procura:</strong> <span>Carregando...</span>
-        </div>
-        <div class="about-item" id="profileGender">
-            <strong>Gênero:</strong> <span>Carregando...</span>
-        </div>
-        <div class="about-item" id="profileOrientation">
-            <strong>Orientação:</strong> <span>Carregando...</span>
-        </div>
-        <div class="about-item" id="profileProfession">
-            <strong>Profissão:</strong> <span>Carregando...</span>
-        </div>
-        <div class="about-item" id="profileZodiac">
-            <strong>Signo:</strong> <span>Carregando...</span>
-        </div>
-    </div>
-</section>
+            <section class="profile-section">
+                <h3><i class="fas fa-user"></i> Sobre</h3>
+                <div class="about-content">
+                    <div class="about-item" id="profileRelationshipStatus">
+                        <strong>Status:</strong> <span>Carregando...</span>
+                    </div>
+                    <div class="about-item" id="profileLookingFor">
+                        <strong>Procura:</strong> <span>Carregando...</span>
+                    </div>
+                    <div class="about-item" id="profileGender">
+                        <strong>Gênero:</strong> <span>Carregando...</span>
+                    </div>
+                    <div class="about-item" id="profileOrientation">
+                        <strong>Orientação:</strong> <span>Carregando...</span>
+                    </div>
+                    <div class="about-item" id="profileProfession">
+                        <strong>Profissão:</strong> <span>Carregando...</span>
+                    </div>
+                    <div class="about-item" id="profileZodiac">
+                        <strong>Signo:</strong> <span>Carregando...</span>
+                    </div>
+                </div>
+            </section>
 
             <!-- Descrição Pessoal -->
             <section class="profile-section" id="descriptionSection">
@@ -189,6 +193,7 @@
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     </script>
     <script src="premium-check.js"></script>
+    <script src="home-feel.js"></script>
     <script src="perfil.js"></script>
 </body>
 </html>

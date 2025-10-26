@@ -689,3 +689,56 @@ body {
         margin-bottom: 0.4rem;
     }
 }
+
+/* ===== BOTÃO FEEL NO PERFIL ===== */
+.btn-feel {
+    background: rgba(166, 91, 91, 0.1);
+    border: 2px solid var(--burgundy);
+    color: var(--burgundy);
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    transition: var(--transition);
+}
+
+.btn-feel:hover {
+    background: var(--burgundy);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(166, 91, 91, 0.4);
+}
+
+.btn-feel.active {
+    background: var(--burgundy);
+    color: var(--white);
+    border-color: var(--burgundy);
+}
+
+.btn-feel.active i {
+    color: var(--white);
+}
+
+.btn-feel i {
+    transition: var(--transition);
+}
+
+/* Container dos botões de ação */
+.action-buttons {
+    flex-shrink: 0;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .action-buttons {
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .btn-feel,
+    .btn-message {
+        flex: 1;
+        min-width: 140px;
+    }
+}
