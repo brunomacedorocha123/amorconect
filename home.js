@@ -1,4 +1,4 @@
-// home.js - VERSÃO SIMPLES E FUNCIONAL
+// home.js - VERSÃO COMPLETA COM SISTEMA DE DENÚNCIA
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -436,9 +436,174 @@ async function confirmBlockUser() {
     }
 }
 
+// === SISTEMA DE DENÚNCIA COMPLETO ===
 function reportUser() {
-    showNotification('Funcionalidade de denúncia em desenvolvimento');
-    closeAllModals();
+    if (!currentBlockingUser) {
+        showNotification('Erro: usuário não selecionado');
+        return;
+    }
+    
+    // Fecha o modal de ações
+    closeUserActionsModal();
+    
+    // Abre o modal de denúncia
+    openReportModal();
+}
+
+function openReportModal() {
+    // Criar modal de denúncia dinamicamente
+    const modalHTML = `
+        <div class="modal" id="reportModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🚨 Denunciar Usuário</h3>
+                    <button class="modal-close" onclick="closeReportModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="report-user-info">
+                        <p>Você está denunciando: <strong>${currentBlockingUser.name || 'Usuário'}</strong></p>
+                    </div>
+                    
+                    <div class="report-form">
+                        <div class="form-group">
+                            <label for="reportReason">Motivo da Denúncia *</label>
+                            <select id="reportReason" class="form-select">
+                                <option value="">Selecione um motivo...</option>
+                                <option value="spam">📢 Spam ou propaganda</option>
+                                <option value="inappropriate">🔞 Conteúdo inadequado</option>
+                                <option value="harassment">🚨 Assédio ou bullying</option>
+                                <option value="fake_profile">👤 Perfil falso ou impostor</option>
+                                <option value="scam">💸 Golpe ou fraude</option>
+                                <option value="other">❓ Outro motivo</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="reportDetails">Detalhes (opcional)</label>
+                            <textarea 
+                                id="reportDetails" 
+                                class="form-textarea" 
+                                placeholder="Descreva com mais detalhes o que aconteceu..."
+                                rows="4"
+                                maxlength="500"
+                            ></textarea>
+                            <div class="char-counter">
+                                <span id="charCount">0</span>/500 caracteres
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="closeReportModal()">Cancelar</button>
+                    <button class="btn btn-primary" onclick="submitReport()">📨 Enviar Denúncia</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove modal existente se houver
+    const existingModal = document.getElementById('reportModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Adiciona o novo modal
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Configura contador de caracteres
+    const textarea = document.getElementById('reportDetails');
+    const charCount = document.getElementById('charCount');
+    
+    if (textarea && charCount) {
+        textarea.addEventListener('input', function() {
+            charCount.textContent = this.value.length;
+        });
+    }
+    
+    // Mostra o modal
+    const modal = document.getElementById('reportModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeReportModal() {
+    const modal = document.getElementById('reportModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        modal.remove();
+    }
+    currentBlockingUser = null;
+}
+
+async function submitReport() {
+    if (!currentBlockingUser) {
+        showNotification('Erro: usuário não selecionado');
+        return;
+    }
+
+    const reason = document.getElementById('reportReason').value;
+    const details = document.getElementById('reportDetails').value.trim();
+
+    if (!reason) {
+        showNotification('Por favor, selecione um motivo para a denúncia.', 'error');
+        return;
+    }
+
+    try {
+        // Verificar se já existe uma denúncia pendente para este usuário
+        const { data: existingReports, error: checkError } = await supabase
+            .from('user_reports')
+            .select('id')
+            .eq('reporter_id', currentUser.id)
+            .eq('reported_user_id', currentBlockingUser.id)
+            .eq('status', 'pending')
+            .limit(1);
+
+        if (checkError) throw checkError;
+
+        if (existingReports && existingReports.length > 0) {
+            showNotification('Você já tem uma denúncia pendente para este usuário.', 'error');
+            closeReportModal();
+            return;
+        }
+
+        // Enviar a denúncia
+        const { error } = await supabase
+            .from('user_reports')
+            .insert({
+                reporter_id: currentUser.id,
+                reported_user_id: currentBlockingUser.id,
+                reason: reason,
+                evidence: details || null,
+                status: 'pending',
+                severity: getSeverityByReason(reason),
+                created_at: new Date().toISOString()
+            });
+
+        if (error) throw error;
+
+        showNotification('✅ Denúncia enviada com sucesso! Nossa equipe irá analisar.', 'success');
+        closeReportModal();
+
+    } catch (error) {
+        console.error('Erro ao enviar denúncia:', error);
+        showNotification('❌ Erro ao enviar denúncia. Tente novamente.', 'error');
+    }
+}
+
+function getSeverityByReason(reason) {
+    const severityMap = {
+        'harassment': 'high',
+        'scam': 'high', 
+        'inappropriate': 'medium',
+        'fake_profile': 'medium',
+        'spam': 'low',
+        'other': 'low'
+    };
+    return severityMap[reason] || 'medium';
 }
 
 function viewProfileFromModal() {
@@ -453,6 +618,13 @@ function closeAllModals() {
         modal.style.display = 'none';
     });
     document.body.style.overflow = '';
+    
+    // Remove modal de denúncia se existir
+    const reportModal = document.getElementById('reportModal');
+    if (reportModal) {
+        reportModal.remove();
+    }
+    
     currentBlockingUser = null;
 }
 
@@ -508,6 +680,8 @@ window.blockUser = blockUser;
 window.closeBlockConfirmModal = closeBlockConfirmModal;
 window.confirmBlockUser = confirmBlockUser;
 window.reportUser = reportUser;
+window.closeReportModal = closeReportModal;
+window.submitReport = submitReport;
 window.viewProfileFromModal = viewProfileFromModal;
 window.viewUserProfile = viewUserProfile;
 window.goToPerfil = goToPerfil;
