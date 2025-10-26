@@ -1,4 +1,4 @@
-// mensagens.js - Sistema principal de mensagens
+// mensagens.js - Sistema completo de mensagens
 class MessagesSystem {
     constructor() {
         this.supabase = supabase;
@@ -19,6 +19,7 @@ class MessagesSystem {
         this.updateMessageCounter();
         
         this.startPeriodicChecks();
+        this.checkUrlParams();
     }
 
     async checkAuth() {
@@ -70,6 +71,67 @@ class MessagesSystem {
     getUserInitials(name) {
         if (!name) return 'U';
         return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().substring(0, 2);
+    }
+
+    checkUrlParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user');
+        
+        if (userId && this.currentUser && userId !== this.currentUser.id) {
+            setTimeout(() => {
+                this.selectConversationFromUrl(userId);
+            }, 1500);
+        }
+    }
+
+    async selectConversationFromUrl(userId) {
+        try {
+            const existingConversation = this.conversations.find(c => c.other_user_id === userId);
+            
+            if (existingConversation) {
+                this.selectConversation(userId);
+            } else {
+                await this.createNewConversation(userId);
+            }
+            
+            window.history.replaceState({}, '', 'mensagens.html');
+        } catch (error) {
+            this.showNotification('Erro ao carregar conversa', 'error');
+        }
+    }
+
+    async createNewConversation(userId) {
+        try {
+            const { data: userProfile } = await this.supabase
+                .from('profiles')
+                .select('nickname, avatar_url, last_online_at')
+                .eq('id', userId)
+                .single();
+                
+            if (userProfile) {
+                const newConversation = {
+                    other_user_id: userId,
+                    other_user_nickname: userProfile.nickname,
+                    other_user_avatar_url: userProfile.avatar_url,
+                    other_user_online: this.isUserOnline(userProfile.last_online_at),
+                    last_message: 'Nenhuma mensagem',
+                    last_message_at: new Date().toISOString(),
+                    unread_count: 0
+                };
+                
+                this.conversations.unshift(newConversation);
+                this.renderConversations();
+                this.selectConversation(userId);
+            }
+        } catch (error) {
+            this.showNotification('Usuário não encontrado', 'error');
+        }
+    }
+
+    isUserOnline(lastOnlineAt) {
+        if (!lastOnlineAt) return false;
+        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+        return new Date(lastOnlineAt) > fifteenMinutesAgo;
     }
 
     async loadConversations() {
@@ -139,7 +201,11 @@ class MessagesSystem {
             document.querySelectorAll('.conversation-item').forEach(item => {
                 item.classList.remove('active');
             });
-            document.querySelector(`[data-user-id="${otherUserId}"]`).classList.add('active');
+            
+            const conversationItem = document.querySelector(`[data-user-id="${otherUserId}"]`);
+            if (conversationItem) {
+                conversationItem.classList.add('active');
+            }
 
             this.currentConversation = otherUserId;
             await this.loadConversationMessages(otherUserId);
