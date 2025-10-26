@@ -1,4 +1,4 @@
-// mensagens.js - Sistema completo de mensagens
+// mensagens.js - Sistema completo de mensagens CORRIGIDO
 class MessagesSystem {
     constructor() {
         this.supabase = supabase;
@@ -109,7 +109,6 @@ class MessagesSystem {
                 await this.createNewConversation(userId);
             }
             
-            // Limpar URL
             window.history.replaceState({}, '', 'mensagens.html');
         } catch (error) {
             console.error('Erro ao selecionar conversa da URL:', error);
@@ -168,7 +167,8 @@ class MessagesSystem {
 
             if (error) {
                 console.error('Erro ao carregar conversas:', error);
-                this.showError('conversationsList', 'Erro ao carregar conversas');
+                // Fallback: tentar método alternativo
+                await this.loadConversationsFallback();
                 return;
             }
 
@@ -177,9 +177,60 @@ class MessagesSystem {
             
         } catch (error) {
             console.error('Erro ao carregar conversas:', error);
-            this.showError('conversationsList', 'Erro ao carregar conversas');
+            await this.loadConversationsFallback();
         } finally {
             this.isLoading = false;
+        }
+    }
+
+    // Método fallback se a RPC falhar
+    async loadConversationsFallback() {
+        try {
+            const { data: messages, error } = await this.supabase
+                .from('messages')
+                .select(`
+                    id,
+                    sender_id,
+                    receiver_id,
+                    message,
+                    sent_at,
+                    read_at,
+                    sender:profiles!messages_sender_id_fkey(nickname, avatar_url),
+                    receiver:profiles!messages_receiver_id_fkey(nickname, avatar_url)
+                `)
+                .or(`sender_id.eq.${this.currentUser.id},receiver_id.eq.${this.currentUser.id}`)
+                .order('sent_at', { ascending: false });
+
+            if (error) throw error;
+
+            // Processar conversas manualmente
+            const conversationsMap = new Map();
+            
+            messages.forEach(msg => {
+                const otherUserId = msg.sender_id === this.currentUser.id ? 
+                    msg.receiver_id : msg.sender_id;
+                const otherUser = msg.sender_id === this.currentUser.id ? 
+                    msg.receiver : msg.sender;
+                
+                if (!conversationsMap.has(otherUserId)) {
+                    conversationsMap.set(otherUserId, {
+                        other_user_id: otherUserId,
+                        other_user_nickname: otherUser?.nickname || 'Usuário',
+                        other_user_avatar_url: otherUser?.avatar_url,
+                        other_user_online: false,
+                        last_message: msg.message,
+                        last_message_at: msg.sent_at,
+                        unread_count: 0
+                    });
+                }
+            });
+            
+            this.conversations = Array.from(conversationsMap.values());
+            this.renderConversations();
+            
+        } catch (error) {
+            console.error('Erro no fallback de conversas:', error);
+            this.showError('conversationsList', 'Erro ao carregar conversas');
         }
     }
 
@@ -263,6 +314,7 @@ class MessagesSystem {
             this.isLoading = true;
             this.showLoading('messagesHistory');
             
+            // Primeiro tentar com a RPC function
             const { data: messages, error } = await this.supabase
                 .rpc('get_conversation_messages', {
                     p_user1_id: this.currentUser.id,
@@ -270,20 +322,100 @@ class MessagesSystem {
                 });
 
             if (error) {
-                console.error('Erro ao carregar mensagens:', error);
-                this.showError('messagesHistory', 'Erro ao carregar mensagens');
+                console.error('Erro na RPC get_conversation_messages:', error);
+                // Se a RPC falhar, usar método direto
+                await this.loadConversationMessagesFallback(otherUserId);
                 return;
             }
 
-            this.messages = messages || [];
+            console.log('Mensagens carregadas via RPC:', messages);
+            
+            // Formatar as mensagens corretamente
+            this.messages = this.formatMessages(messages);
             this.renderMessages();
             
         } catch (error) {
             console.error('Erro ao carregar mensagens:', error);
-            this.showError('messagesHistory', 'Erro ao carregar mensagens');
+            await this.loadConversationMessagesFallback(otherUserId);
         } finally {
             this.isLoading = false;
         }
+    }
+
+    // Método fallback para carregar mensagens
+    async loadConversationMessagesFallback(otherUserId) {
+        try {
+            const { data: messages, error } = await this.supabase
+                .from('messages')
+                .select(`
+                    id,
+                    sender_id,
+                    receiver_id,
+                    message,
+                    sent_at,
+                    read_at,
+                    sender:profiles!messages_sender_id_fkey(nickname)
+                `)
+                .or(`and(sender_id.eq.${this.currentUser.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${this.currentUser.id})`)
+                .order('sent_at', { ascending: true });
+
+            if (error) throw error;
+
+            // Marcar mensagens como lidas (simulação)
+            await this.markMessagesAsRead(otherUserId);
+
+            // Formatar mensagens para o formato esperado
+            this.messages = messages.map(msg => ({
+                message_id: msg.id,
+                sender_id: msg.sender_id,
+                receiver_id: msg.receiver_id,
+                message: msg.message,
+                sent_at: msg.sent_at,
+                read_at: msg.read_at,
+                is_own_message: msg.sender_id === this.currentUser.id,
+                sender_nickname: msg.sender?.nickname
+            }));
+
+            this.renderMessages();
+            
+        } catch (error) {
+            console.error('Erro no fallback de mensagens:', error);
+            this.showError('messagesHistory', 'Erro ao carregar mensagens');
+        }
+    }
+
+    // Marcar mensagens como lidas
+    async markMessagesAsRead(otherUserId) {
+        try {
+            const { error } = await this.supabase
+                .from('messages')
+                .update({ read_at: new Date().toISOString() })
+                .eq('sender_id', otherUserId)
+                .eq('receiver_id', this.currentUser.id)
+                .is('read_at', null);
+
+            if (error) {
+                console.error('Erro ao marcar mensagens como lidas:', error);
+            }
+        } catch (error) {
+            console.error('Erro ao marcar mensagens como lidas:', error);
+        }
+    }
+
+    // Formatar mensagens para o formato padrão
+    formatMessages(messages) {
+        if (!messages) return [];
+        
+        return messages.map(msg => ({
+            message_id: msg.message_id || msg.id,
+            sender_id: msg.sender_id,
+            receiver_id: msg.receiver_id,
+            message: msg.message,
+            sent_at: msg.sent_at,
+            read_at: msg.read_at,
+            is_own_message: msg.is_own_message !== undefined ? msg.is_own_message : (msg.sender_id === this.currentUser.id),
+            sender_nickname: msg.sender_nickname
+        }));
     }
 
     renderMessages() {
@@ -339,13 +471,11 @@ class MessagesSystem {
 
     getMessageStatusIcon(message) {
         if (message.read_at) return 'fa-check-double status-read';
-        if (message.delivered_at) return 'fa-check-double status-delivered';
         return 'fa-check status-sent';
     }
 
     getMessageStatusText(message) {
         if (message.read_at) return 'Lida';
-        if (message.delivered_at) return 'Entregue';
         return 'Enviada';
     }
 
@@ -372,6 +502,14 @@ class MessagesSystem {
             this.setSendButtonState(true);
             this.showMessageStatus('Enviando...', 'info');
 
+            // Verificar se pode enviar mensagem
+            const canSend = await this.checkCanSendMessage();
+            if (!canSend.can_send) {
+                this.handleSendError(canSend.reason);
+                return;
+            }
+
+            // Enviar mensagem via RPC
             const { data, error } = await this.supabase
                 .rpc('send_message', {
                     p_sender_id: this.currentUser.id,
@@ -383,6 +521,8 @@ class MessagesSystem {
                 console.error('Erro RPC send_message:', error);
                 throw error;
             }
+
+            console.log('Resposta do send_message:', data);
 
             if (data === 'success') {
                 messageInput.value = '';
@@ -396,15 +536,82 @@ class MessagesSystem {
                 
             } else {
                 this.handleSendError(data);
-                throw new Error(data);
             }
 
         } catch (error) {
             console.error('Erro ao enviar mensagem:', error);
             this.showMessageStatus('Erro ao enviar mensagem', 'error');
+            
+            // Tentar método alternativo se a RPC falhar
+            await this.sendMessageFallback(message);
         } finally {
             this.setSendButtonState(false);
             setTimeout(() => this.clearMessageStatus(), 3000);
+        }
+    }
+
+    // Método fallback para enviar mensagem
+    async sendMessageFallback(message) {
+        try {
+            const { data, error } = await this.supabase
+                .from('messages')
+                .insert({
+                    sender_id: this.currentUser.id,
+                    receiver_id: this.currentConversation,
+                    message: message,
+                    sent_at: new Date().toISOString()
+                })
+                .select();
+
+            if (error) throw error;
+
+            if (data) {
+                this.showNotification('Mensagem enviada!', 'success');
+                await this.loadConversationMessages(this.currentConversation);
+                await this.loadConversations();
+                this.updateMessageCounter();
+            }
+        } catch (fallbackError) {
+            console.error('Erro no fallback de envio:', fallbackError);
+            this.showNotification('Erro ao enviar mensagem', 'error');
+        }
+    }
+
+    async checkCanSendMessage() {
+        try {
+            const isPremium = this.currentUser.profile?.is_premium;
+            
+            if (isPremium) {
+                return { can_send: true, reason: null };
+            }
+
+            const { data: limits, error } = await this.supabase
+                .from('user_message_limits')
+                .select('messages_sent_today, last_reset_date')
+                .eq('user_id', this.currentUser.id)
+                .single();
+
+            if (error) {
+                console.error('Erro ao verificar limites:', error);
+                return { can_send: true, reason: null }; // Fallback
+            }
+
+            // Verificar se precisa resetar
+            if (limits && new Date(limits.last_reset_date).toDateString() !== new Date().toDateString()) {
+                return { can_send: true, reason: null }; // Reset automático no próximo envio
+            }
+
+            const sentToday = limits?.messages_sent_today || 0;
+            
+            if (sentToday >= this.messageLimit) {
+                return { can_send: false, reason: 'limit_reached' };
+            }
+
+            return { can_send: true, reason: null };
+            
+        } catch (error) {
+            console.error('Erro ao verificar se pode enviar:', error);
+            return { can_send: true, reason: null }; // Fallback em caso de erro
         }
     }
 
@@ -587,7 +794,6 @@ class MessagesSystem {
     }
 
     async showUserInfo(userId) {
-        // Implementar modal de informações do usuário
         this.showNotification('Funcionalidade em desenvolvimento', 'info');
     }
 
@@ -649,9 +855,8 @@ class MessagesSystem {
     }
 
     startPeriodicChecks() {
-        // Atualizar a cada 30 segundos
         setInterval(async () => {
-            if (this.currentConversation) {
+            if (!this.isLoading && this.currentConversation) {
                 await this.loadConversationMessages(this.currentConversation);
             }
             await this.loadConversations();
@@ -742,15 +947,24 @@ class MessagesSystem {
     }
 
     showNotification(message, type = 'info') {
-        // Usar sistema de notificação existente ou fallback
         if (typeof window.showNotification === 'function') {
             window.showNotification(message, type);
         } else {
             // Fallback simples
             const notification = document.createElement('div');
             notification.className = `notification notification-${type}`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 16px;
+                border-radius: 8px;
+                color: white;
+                z-index: 1000;
+                background: ${type === 'error' ? '#e74c3c' : type === 'success' ? '#27ae60' : '#3498db'};
+            `;
             notification.innerHTML = `
-                <div class="notification-content">
+                <div style="display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
                     <span>${message}</span>
                 </div>
