@@ -450,7 +450,7 @@
     </div>
 
     <script>
-     // ==================== CONFIGURAÇÃO SUPABASE ====================
+   // ==================== CONFIGURAÇÃO SUPABASE ====================
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -611,12 +611,12 @@ async function tomarAcao(idDenuncia, idUsuario, acao, emailUsuario = '') {
             await advertirUsuario(idUsuario, idDenuncia);
         }
         
-        // Atualizar status da denúncia
+        // Atualizar status da denúncia - SEM o campo resolved_by que causa erro
         const updateData = { 
             status: 'resolved',
             resolved_at: new Date().toISOString(),
-            action_taken: acao,
-            resolved_by: 'admin'
+            action_taken: acao
+            // Removido resolved_by para evitar erro de UUID
         };
 
         const { error: reportError } = await supabase
@@ -670,16 +670,16 @@ async function banirUsuario(userId, email, denunciaId) {
         const motivoDenuncia = await obterMotivoDenuncia(denunciaId);
         const motivo = `BANIMENTO ADMIN: ${motivoDenuncia}`;
         
-        // Inserir na tabela de emails banidos
+        // Inserir na tabela de emails banidos - SEM banned_by que causa erro
         const { error: banError } = await supabase
             .from('banned_emails')
             .insert({
                 email: emailParaBanir,
                 reason: motivo,
-                banned_by: 'admin',
                 permanent_ban: true,
                 related_user_id: userId,
                 banned_at: new Date().toISOString()
+                // Removido banned_by para evitar erro de UUID
             });
             
         if (banError) {
