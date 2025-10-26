@@ -1,4 +1,4 @@
-// home.js - VERSÃO COMPLETA E CORRIGIDA
+// home.js - VERSÃO COMPLETA E FUNCIONAL
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -104,24 +104,34 @@ async function loadUsers() {
     usersGrid.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>Carregando pessoas...</p></div>';
 
     try {
-        // 1. BUSCA DADOS DO USUÁRIO ATUAL
+        // 1. BUSCA DADOS DO USUÁRIO ATUAL (com fallback)
+        let userOrientation = 'bissexual';
+        let userGender = 'homem';
+        
         const { data: currentUserDetails, error: userError } = await supabase
             .from('user_details')
             .select('gender, sexual_orientation')
             .eq('user_id', currentUser.id)
             .single();
 
-        if (userError || !currentUserDetails) {
-            usersGrid.innerHTML = '<div class="loading-state"><p>Complete seu perfil para ver pessoas.</p></div>';
-            return;
+        if (!userError && currentUserDetails) {
+            userOrientation = currentUserDetails.sexual_orientation || 'bissexual';
+            userGender = currentUserDetails.gender || 'homem';
         }
 
-        // 2. BUSCA TODOS OS PERFIS VISÍVEIS
+        // 2. BUSCA TODOS OS PERFIS VISÍVEIS COM SEUS DETALHES
         let query = supabase
             .from('profiles')
-            .select('*')
+            .select(`
+                *,
+                user_details!inner (
+                    gender,
+                    sexual_orientation
+                )
+            `)
             .neq('id', currentUser.id)
-            .eq('is_invisible', false);
+            .eq('is_invisible', false)
+            .limit(20);
 
         // Aplica filtros básicos
         if (currentFilter === 'online') {
@@ -133,41 +143,27 @@ async function loadUsers() {
 
         const { data: allProfiles, error: profilesError } = await query;
 
-        if (profilesError || !allProfiles || allProfiles.length === 0) {
+        if (profilesError) {
+            console.log('Erro profiles:', profilesError);
+            usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar usuários.</p></div>';
+            return;
+        }
+
+        if (!allProfiles || allProfiles.length === 0) {
             usersGrid.innerHTML = '<div class="loading-state"><p>Nenhuma pessoa encontrada.</p></div>';
             return;
         }
 
-        // 3. BUSCA GÊNERO DOS PERFIS ENCONTRADOS
-        const profileIds = allProfiles.map(profile => profile.id);
-        const { data: profilesGender, error: genderError } = await supabase
-            .from('user_details')
-            .select('user_id, gender')
-            .in('user_id', profileIds);
-
-        if (genderError) {
-            usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar detalhes.</p></div>';
-            return;
-        }
-
-        // 4. CRIA MAPA DE GÊNEROS
-        const genderMap = {};
-        profilesGender.forEach(detail => {
-            genderMap[detail.user_id] = detail.gender;
-        });
-
-        // 5. APLICA FILTRO DE ORIENTAÇÃO SEXUAL
-        const userOrientation = currentUserDetails.sexual_orientation;
-        const userGender = currentUserDetails.gender;
-
+        // 3. APLICA FILTRO DE ORIENTAÇÃO SEXUAL
         let compatibleProfiles = allProfiles.filter(profile => {
-            const profileGender = genderMap[profile.id];
+            const profileGender = profile.user_details?.[0]?.gender;
             
             if (!profileGender) return false;
 
             if (userOrientation === 'heterossexual') {
                 if (userGender === 'homem') return profileGender === 'mulher';
                 if (userGender === 'mulher') return profileGender === 'homem';
+                return true;
             } else if (userOrientation === 'homossexual') {
                 return profileGender === userGender;
             }
@@ -180,12 +176,13 @@ async function loadUsers() {
             return;
         }
 
-        // 6. FILTRA BLOQUEADOS E EXIBE
+        // 4. FILTRA BLOQUEADOS E LIMITA A 8
         const finalProfiles = await filterBlockedUsers(compatibleProfiles.slice(0, 8));
-        displayUsers(finalProfiles, genderMap);
+        displayUsers(finalProfiles);
 
     } catch (error) {
-        usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar.</p></div>';
+        console.log('Erro geral:', error);
+        usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar pessoas.</p></div>';
     }
 }
 
@@ -213,13 +210,13 @@ async function filterBlockedUsers(users) {
     }
 }
 
-function displayUsers(profiles, genderMap) {
+function displayUsers(profiles) {
     const usersGrid = document.getElementById('usersGrid');
     
     usersGrid.innerHTML = profiles.map(profile => {
         const safeNickname = (profile.nickname || 'Usuário').replace(/'/g, "\\'");
         const safeCity = (profile.display_city || 'Localização não informada').replace(/'/g, "\\'");
-        const userGender = genderMap[profile.id] || 'Não informado';
+        const userGender = profile.user_details?.[0]?.gender || 'Não informado';
         
         return `
         <div class="user-card">
