@@ -103,87 +103,35 @@ async function loadUsers() {
     const usersGrid = document.getElementById('usersGrid');
     usersGrid.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>Carregando pessoas...</p></div>';
 
-    try {
-        // 1. BUSCA DADOS DO USUÁRIO ATUAL (com fallback)
-        let userOrientation = 'bissexual';
-        let userGender = 'homem';
-        
-        const { data: currentUserDetails, error: userError } = await supabase
-            .from('user_details')
-            .select('gender, sexual_orientation')
-            .eq('user_id', currentUser.id)
-            .single();
+    // Busca perfis visíveis
+    let query = supabase
+        .from('profiles')
+        .select('*')
+        .neq('id', currentUser.id)
+        .eq('is_invisible', false)
+        .limit(8);
 
-        if (!userError && currentUserDetails) {
-            userOrientation = currentUserDetails.sexual_orientation || 'bissexual';
-            userGender = currentUserDetails.gender || 'homem';
-        }
-
-        // 2. BUSCA TODOS OS PERFIS VISÍVEIS COM SEUS DETALHES
-        let query = supabase
-            .from('profiles')
-            .select(`
-                *,
-                user_details!inner (
-                    gender,
-                    sexual_orientation
-                )
-            `)
-            .neq('id', currentUser.id)
-            .eq('is_invisible', false)
-            .limit(20);
-
-        // Aplica filtros básicos
-        if (currentFilter === 'online') {
-            const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-            query = query.gte('last_online_at', fifteenMinutesAgo);
-        } else if (currentFilter === 'premium') {
-            query = query.eq('is_premium', true);
-        }
-
-        const { data: allProfiles, error: profilesError } = await query;
-
-        if (profilesError) {
-            console.log('Erro profiles:', profilesError);
-            usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar usuários.</p></div>';
-            return;
-        }
-
-        if (!allProfiles || allProfiles.length === 0) {
-            usersGrid.innerHTML = '<div class="loading-state"><p>Nenhuma pessoa encontrada.</p></div>';
-            return;
-        }
-
-        // 3. APLICA FILTRO DE ORIENTAÇÃO SEXUAL
-        let compatibleProfiles = allProfiles.filter(profile => {
-            const profileGender = profile.user_details?.[0]?.gender;
-            
-            if (!profileGender) return false;
-
-            if (userOrientation === 'heterossexual') {
-                if (userGender === 'homem') return profileGender === 'mulher';
-                if (userGender === 'mulher') return profileGender === 'homem';
-                return true;
-            } else if (userOrientation === 'homossexual') {
-                return profileGender === userGender;
-            }
-            // Bissexual ou outros - mostra todos
-            return true;
-        });
-
-        if (compatibleProfiles.length === 0) {
-            usersGrid.innerHTML = '<div class="loading-state"><p>Nenhuma pessoa compatível encontrada.</p></div>';
-            return;
-        }
-
-        // 4. FILTRA BLOQUEADOS E LIMITA A 8
-        const finalProfiles = await filterBlockedUsers(compatibleProfiles.slice(0, 8));
-        displayUsers(finalProfiles);
-
-    } catch (error) {
-        console.log('Erro geral:', error);
-        usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar pessoas.</p></div>';
+    if (currentFilter === 'online') {
+        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+        query = query.gte('last_online_at', fifteenMinutesAgo);
+    } else if (currentFilter === 'premium') {
+        query = query.eq('is_premium', true);
     }
+
+    const { data: profiles, error } = await query;
+
+    if (error) {
+        usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar.</p></div>';
+        return;
+    }
+
+    if (!profiles || profiles.length === 0) {
+        usersGrid.innerHTML = '<div class="loading-state"><p>Nenhuma pessoa encontrada.</p></div>';
+        return;
+    }
+
+    const filteredProfiles = await filterBlockedUsers(profiles);
+    displayUsers(filteredProfiles);
 }
 
 async function filterBlockedUsers(users) {
@@ -216,7 +164,6 @@ function displayUsers(profiles) {
     usersGrid.innerHTML = profiles.map(profile => {
         const safeNickname = (profile.nickname || 'Usuário').replace(/'/g, "\\'");
         const safeCity = (profile.display_city || 'Localização não informada').replace(/'/g, "\\'");
-        const userGender = profile.user_details?.[0]?.gender || 'Não informado';
         
         return `
         <div class="user-card">
@@ -246,9 +193,6 @@ function displayUsers(profiles) {
                 </div>
             </div>
             <div class="user-details">
-                <div class="user-detail">
-                    <strong>Gênero:</strong> <span>${userGender}</span>
-                </div>
                 <div class="user-detail">
                     <strong>Status:</strong> <span>Ativo</span>
                 </div>
