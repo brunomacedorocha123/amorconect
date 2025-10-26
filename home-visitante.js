@@ -264,13 +264,10 @@ const VisitorsSystem = {
     setupEventListeners() {
         const viewAllBtn = document.getElementById('viewAllVisitorsBtn');
         if (viewAllBtn) {
-            viewAllBtn.addEventListener('click', () => this.goToVisitorsHistory());
+            viewAllBtn.addEventListener('click', () => {
+                window.location.href = 'visitantes.html';
+            });
         }
-    },
-
-    // IR PARA PÁGINA DE HISTÓRICO COMPLETO
-    goToVisitorsHistory() {
-        window.location.href = 'visitantes.html';
     },
 
     // ESTADO DE ERRO
@@ -302,6 +299,12 @@ const VisitorsSystem = {
                 </div>
             `;
         }
+    },
+
+    // ATUALIZAR VISITANTES
+    async refreshVisitors() {
+        await this.checkPremiumStatus();
+        await this.loadVisitors();
     }
 };
 
