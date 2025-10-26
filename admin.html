@@ -286,6 +286,23 @@
             z-index: 1000;
         }
 
+        .notifications-btn {
+            position: fixed;
+            top: 20px;
+            right: 120px;
+            background: var(--info);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
         .user-card {
             border: 1px solid var(--light-gray);
             border-radius: 10px;
@@ -348,11 +365,20 @@
                 align-items: start;
                 gap: 1rem;
             }
+
+            .notifications-btn {
+                right: 80px;
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Botão Logout -->
+    <!-- Botões Superiores -->
+    <button class="notifications-btn" onclick="irParaNotificacoes()">
+        📨 Notificações
+    </button>
     <button class="logout-btn" onclick="logoutAdmin()">🚪 Sair</button>
 
     <div class="container">
@@ -374,6 +400,9 @@
                 </button>
                 <button class="nav-btn" onclick="showSection('usuarios')">
                     👥 Usuários
+                </button>
+                <button class="nav-btn" onclick="irParaNotificacoes()" style="background: var(--info); color: white;">
+                    📨 Gestor de Notificações
                 </button>
             </div>
         </div>
@@ -467,6 +496,11 @@ function verificarAutenticacao() {
 function logoutAdmin() {
     sessionStorage.removeItem('adminAuthenticated');
     window.location.href = 'login-admin.html';
+}
+
+// ==================== FUNÇÃO PARA NOTIFICAÇÕES ====================
+function irParaNotificacoes() {
+    window.location.href = 'admin-notifica.html';
 }
 
 // ==================== FUNÇÕES PRINCIPAIS ====================
