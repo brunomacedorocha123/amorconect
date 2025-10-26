@@ -79,7 +79,7 @@
                     </h2>
                     <div class="section-actions">
                         <button class="btn-view-all" id="viewAllVisitorsBtn" style="display: none;" 
-                                onclick="window.location.href='visitantes.html'">
+                                onclick="goToVisitorsPage()">
                             Ver todos <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>
@@ -94,7 +94,7 @@
                 </div>
             </section>
 
-            <!-- ========== NOVA SEÇÃO: QUEM TE CURTIU ========== -->
+            <!-- ========== SEÇÃO QUEM TE CURTIU ========== -->
             <section class="feels-section" id="feelsSection">
                 <div class="section-header">
                     <h2 class="section-title">
@@ -102,7 +102,7 @@
                     </h2>
                     <div class="section-actions">
                         <button class="btn-view-all" id="viewAllFeelsBtn" style="display: none;" 
-                                onclick="window.location.href='feels.html'">
+                                onclick="goToFeelsPage()">
                             Ver todos <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>
@@ -311,6 +311,86 @@
     <script src="premium-check.js"></script>
     <script src="home.js"></script>
     <script src="home-visitante.js"></script>
-    <script src="home-feel.js"></script> <!-- NOVO SCRIPT -->
+    <script src="home-feel.js"></script>
+
+    <script>
+        // ========== NOVAS FUNÇÕES DE NAVEGAÇÃO ==========
+        
+        // IR PARA PÁGINA DE VISITANTES
+        async function goToVisitorsPage() {
+            try {
+                // Verificar se é premium
+                let isPremium = false;
+                if (typeof PremiumManager !== 'undefined') {
+                    const planInfo = await PremiumManager.getPlanInfo();
+                    isPremium = planInfo.is_premium;
+                } else {
+                    // Fallback: verificar direto no perfil
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (user) {
+                        const { data: profile } = await supabase
+                            .from('profiles')
+                            .select('is_premium')
+                            .eq('id', user.id)
+                            .single();
+                        isPremium = profile?.is_premium || false;
+                    }
+                }
+
+                if (isPremium) {
+                    window.location.href = 'visitantes.html';
+                } else {
+                    // Mostrar modal de upgrade
+                    if (confirm('Ver o histórico completo de visitantes é um recurso Premium! Deseja fazer upgrade?')) {
+                        window.location.href = 'pricing.html';
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao verificar premium:', error);
+                // Em caso de erro, permite acesso
+                window.location.href = 'visitantes.html';
+            }
+        }
+
+        // IR PARA PÁGINA DE FEELS
+        async function goToFeelsPage() {
+            try {
+                // Verificar se é premium
+                let isPremium = false;
+                if (typeof PremiumManager !== 'undefined') {
+                    const planInfo = await PremiumManager.getPlanInfo();
+                    isPremium = planInfo.is_premium;
+                } else {
+                    // Fallback: verificar direto no perfil
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (user) {
+                        const { data: profile } = await supabase
+                            .from('profiles')
+                            .select('is_premium')
+                            .eq('id', user.id)
+                            .single();
+                        isPremium = profile?.is_premium || false;
+                    }
+                }
+
+                if (isPremium) {
+                    window.location.href = 'feels.html';
+                } else {
+                    // Mostrar modal de upgrade
+                    if (confirm('Ver quem te curtiu é um recurso Premium! Deseja fazer upgrade?')) {
+                        window.location.href = 'pricing.html';
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao verificar premium:', error);
+                // Em caso de erro, permite acesso
+                window.location.href = 'feels.html';
+            }
+        }
+
+        // EXPORTAR FUNÇÕES
+        window.goToVisitorsPage = goToVisitorsPage;
+        window.goToFeelsPage = goToFeelsPage;
+    </script>
 </body>
 </html>
