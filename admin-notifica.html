@@ -5,373 +5,648 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de Notificações - Amor Conect</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-   <style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    body {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        padding: 20px;
-    }
-
-    .container {
-        max-width: 1000px;
-        margin: 0 auto;
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-        overflow: hidden;
-    }
-
-    .header {
-        background: linear-gradient(135deg, #2c3e50, #34495e);
-        color: white;
-        padding: 30px;
-        text-align: center;
-    }
-
-    .header h1 {
-        font-size: 2.5em;
-        margin-bottom: 10px;
-    }
-
-    .header p {
-        opacity: 0.9;
-        font-size: 1.1em;
-    }
-
-    .back-btn {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        background: #6c757d;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .back-btn:hover {
-        background: #5a6268;
-    }
-
-    .form-container {
-        padding: 40px;
-    }
-
-    .form-group {
-        margin-bottom: 25px;
-    }
-
-    label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: #2c3e50;
-        font-size: 1.1em;
-    }
-
-    input, select, textarea {
-        width: 100%;
-        padding: 12px 15px;
-        border: 2px solid #e1e8ed;
-        border-radius: 8px;
-        font-size: 16px;
-        transition: all 0.3s ease;
-    }
-
-    input:focus, select:focus, textarea:focus {
-        outline: none;
-        border-color: #3498db;
-        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-    }
-
-    textarea {
-        min-height: 120px;
-        resize: vertical;
-    }
-
-    .radio-group {
-        display: flex;
-        gap: 20px;
-        flex-wrap: wrap;
-    }
-
-    .radio-option {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        padding: 10px 15px;
-        border: 2px solid #e1e8ed;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-    }
-
-    .radio-option:hover {
-        border-color: #3498db;
-    }
-
-    .radio-option input[type="radio"] {
-        width: auto;
-        margin: 0;
-    }
-
-    .category-badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 20px;
-        color: white;
-        font-size: 0.9em;
-        font-weight: 500;
-    }
-
-    .expiration-options {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-        gap: 10px;
-    }
-
-    .expiration-option {
-        text-align: center;
-        padding: 15px;
-        border: 2px solid #e1e8ed;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        position: relative;
-    }
-
-    .expiration-option:hover {
-        border-color: #3498db;
-        transform: translateY(-2px);
-    }
-
-    .expiration-option.selected {
-        border-color: #3498db;
-        background: #3498db;
-        color: white;
-        transform: translateY(-2px);
-    }
-
-    .expiration-option input[type="radio"] {
-        display: none;
-    }
-
-    /* CORREÇÃO PARA OS RADIO BUTTONS - TORNAR CLICÁVEIS */
-    .expiration-option label {
-        cursor: pointer;
-        margin: 0;
-        width: 100%;
-        height: 100%;
-        display: block;
-    }
-
-    .btn {
-        padding: 15px 30px;
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .btn-primary {
-        background: linear-gradient(135deg, #3498db, #2980b9);
-        color: white;
-    }
-
-    .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
-    }
-
-    .btn-block {
-        width: 100%;
-    }
-
-    .user-specific {
-        display: none;
-        margin-top: 15px;
-    }
-
-    .user-specific input {
-        width: 100%;
-    }
-
-    .notification-preview {
-        background: #f8f9fa;
-        border: 2px dashed #dee2e6;
-        border-radius: 8px;
-        padding: 20px;
-        margin-top: 30px;
-        display: none;
-    }
-
-    .notification-preview h3 {
-        color: #2c3e50;
-        margin-bottom: 10px;
-    }
-
-    .preview-content {
-        background: white;
-        padding: 15px;
-        border-radius: 5px;
-        border-left: 4px solid #3498db;
-    }
-
-    .loading {
-        text-align: center;
-        padding: 20px;
-        color: #6c757d;
-    }
-
-    .spinner {
-        width: 30px;
-        height: 30px;
-        border: 3px solid #f3f3f3;
-        border-top: 3px solid #3498db;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 10px;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    /* CORREÇÃO PARA OS BOTÕES DE PRAZO */
-    .expiration-options input[type="radio"]:checked + label {
-        background: #3498db;
-        color: white;
-        border-color: #3498db;
-    }
-
-    @media (max-width: 768px) {
-        .container {
-            margin: 10px;
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
-        .form-container {
+
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #48bb78;
+            --warning: #ed8936;
+            --danger: #f56565;
+            --info: #4299e1;
+            --background: #f8fafc;
+            --text: #2d3748;
+            --white: #ffffff;
+            --gray: #718096;
+            --light-gray: #edf2f7;
+            --border: #e2e8f0;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--text);
             padding: 20px;
-        }
-        
-        .radio-group {
-            flex-direction: column;
-            gap: 10px;
+            min-height: 100vh;
         }
 
-        .expiration-options {
-            grid-template-columns: 1fr 1fr;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
         }
-    }
-</style>
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: var(--white);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 0.8rem 1.5rem;
+            background: var(--light-gray);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-btn.active {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .content-section {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-title {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: var(--white);
+        }
+
+        .btn-info {
+            background: var(--info);
+            color: var(--white);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--light-gray);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray);
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--white);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .notification-card {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            background: var(--white);
+            transition: all 0.3s ease;
+        }
+
+        .notification-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: var(--primary);
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .notification-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .notification-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-bonus {
+            background: var(--success);
+            color: white;
+        }
+
+        .badge-advertencia {
+            background: var(--warning);
+            color: white;
+        }
+
+        .badge-aviso {
+            background: var(--info);
+            color: white;
+        }
+
+        .notification-meta {
+            margin-bottom: 1rem;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .notification-message {
+            background: var(--light-gray);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border-left: 4px solid var(--primary);
+        }
+
+        .notification-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: var(--light-gray);
+            border-radius: 8px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        .user-search-container {
+            position: relative;
+        }
+
+        .user-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .user-result {
+            padding: 0.8rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .user-result:hover {
+            background: var(--light-gray);
+        }
+
+        .selected-users {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .selected-user {
+            background: var(--primary);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .remove-user {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            z-index: 1000;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: var(--info);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .preview-card {
+            background: var(--light-gray);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .preview-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .preview-message {
+            color: var(--gray);
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .notification-header {
+                flex-direction: column;
+                align-items: start;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+            }
+            
+            .nav-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .back-btn, .logout-btn {
+                position: relative;
+                top: auto;
+                left: auto;
+                right: auto;
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <a href="admin.html" class="back-btn">← Voltar ao Painel</a>
+    <!-- Botões de Navegação -->
+    <button class="back-btn" onclick="voltarParaAdmin()">← Voltar</button>
+    <button class="logout-btn" onclick="logoutAdmin()">🚪 Sair</button>
 
     <div class="container">
+        <!-- Header -->
         <div class="header">
-            <h1>📢 Gestor de Notificações</h1>
-            <p>Crie e envie notificações para os usuários</p>
+            <h1>📨 Gestor de Notificações</h1>
+            <p>Amor Conect - Envio de Notificações para Usuários</p>
+
+            <!-- Navegação -->
+            <div class="nav-buttons">
+                <button class="nav-btn active" onclick="showSection('criar')">
+                    ✨ Nova Notificação
+                </button>
+                <button class="nav-btn" onclick="showSection('historico')">
+                    📋 Histórico
+                </button>
+                <button class="nav-btn" onclick="showSection('estatisticas')">
+                    📊 Estatísticas
+                </button>
+            </div>
         </div>
 
-        <div class="form-container">
+        <!-- SEÇÃO: CRIAR NOTIFICAÇÃO -->
+        <div id="criar" class="content-section active">
+            <div class="section-title">
+                <h2>✨ Criar Nova Notificação</h2>
+            </div>
+
             <form id="notificationForm">
-                <div class="form-group">
-                    <label for="notificationTitle">Título da Notificação *</label>
-                    <input type="text" id="notificationTitle" placeholder="Digite o título da notificação..." required>
-                </div>
-
-                <div class="form-group">
-                    <label for="notificationMessage">Mensagem *</label>
-                    <textarea id="notificationMessage" placeholder="Escreva a mensagem da notificação..." required></textarea>
-                </div>
-
-                <div class="form-group">
-    <label for="notificationCategory">Categoria *</label>
-    <select id="notificationCategory" required>
-        <option value="">Selecione uma categoria</option>
-        <option value="1">Bônus</option>
-        <option value="2">Avisos</option>
-        <option value="3">Advertências</option>
-        <option value="4">Informações</option>
-    </select>
-</div>
-
-                <div class="form-group">
-                    <label>Destinatários *</label>
-                    <div class="radio-group">
-                        <label class="radio-option">
-                            <input type="radio" name="userType" value="all" checked> 
-                            👥 Todos os usuários
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="userType" value="free"> 
-                            🆓 Usuários Free
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="userType" value="premium"> 
-                            ⭐ Usuários Premium
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="userType" value="specific"> 
-                            👤 Usuário Específico
-                        </label>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Tipo de Notificação *</label>
+                        <select class="form-select" id="tipoNotificacao" required onchange="toggleFields()">
+                            <option value="">Selecione o tipo</option>
+                            <option value="bonus">🎁 Bônus</option>
+                            <option value="advertencia">⚠️ Advertência</option>
+                            <option value="aviso">📢 Aviso</option>
+                        </select>
                     </div>
-                    <div class="user-specific" id="userSpecific">
-                        <input type="text" id="specificUserId" placeholder="ID do usuário específico (UUID)">
+
+                    <div class="form-group">
+                        <label class="form-label">Destinatários *</label>
+                        <select class="form-select" id="destinatarios" required onchange="toggleUserSearch()">
+                            <option value="">Selecione os destinatários</option>
+                            <option value="all">👥 Todos os usuários</option>
+                            <option value="free">🆓 Usuários Free</option>
+                            <option value="premium">⭐ Usuários Premium</option>
+                            <option value="specific">🎯 Usuários Específicos</option>
+                        </select>
                     </div>
                 </div>
 
+                <!-- Campo para usuários específicos -->
+                <div class="form-group" id="userSearchContainer" style="display: none;">
+                    <label class="form-label">Buscar Usuários</label>
+                    <div class="user-search-container">
+                        <input type="text" class="form-control" id="userSearch" placeholder="Digite o nome ou email do usuário..." onkeyup="searchUsers(this.value)">
+                        <div class="user-results" id="userResults"></div>
+                    </div>
+                    <div class="selected-users" id="selectedUsers"></div>
+                </div>
+
                 <div class="form-group">
-                    <label>Prazo de Validade *</label>
-                    <div class="expiration-options">
-                        <label class="expiration-option selected">
-                            <input type="radio" name="expiration" value="1"> 
-                            1 Dia
-                        </label>
-                        <label class="expiration-option">
-                            <input type="radio" name="expiration" value="7" checked> 
-                            7 Dias
-                        </label>
-                        <label class="expiration-option">
-                            <input type="radio" name="expiration" value="30"> 
-                            30 Dias
-                        </label>
-                        <label class="expiration-option">
-                            <input type="radio" name="expiration" value="365"> 
-                            365 Dias
-                        </label>
+                    <label class="form-label">Título *</label>
+                    <input type="text" class="form-control" id="titulo" placeholder="Digite o título da notificação..." required maxlength="100">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Mensagem *</label>
+                    <textarea class="form-control" id="mensagem" rows="5" placeholder="Digite a mensagem da notificação..." required maxlength="1000"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Data de Validade *</label>
+                        <input type="datetime-local" class="form-control" id="dataValidade" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Prioridade</label>
+                        <select class="form-select" id="prioridade">
+                            <option value="low">🟢 Baixa</option>
+                            <option value="medium" selected>🟡 Média</option>
+                            <option value="high">🟠 Alta</option>
+                            <option value="urgent">🔴 Urgente</option>
+                        </select>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
-                    📨 Enviar Notificação
-                </button>
+                <!-- Campos específicos para Bônus -->
+                <div id="bonusFields" style="display: none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Valor do Bônus</label>
+                            <input type="number" class="form-control" id="bonusValue" step="0.01" min="0" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Código do Bônus</label>
+                            <input type="text" class="form-control" id="bonusCode" placeholder="Código promocional...">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tipo de Bônus</label>
+                        <select class="form-select" id="bonusType">
+                            <option value="">Selecione o tipo</option>
+                            <option value="credits">Créditos</option>
+                            <option value="premium_days">Dias Premium</option>
+                            <option value="discount">Desconto</option>
+                            <option value="feature_access">Acesso a Recurso</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Campos específicos para Advertências -->
+                <div id="advertenciaFields" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Gravidade</label>
+                        <select class="form-select" id="warningSeverity">
+                            <option value="low">🟢 Baixa</option>
+                            <option value="medium" selected>🟡 Média</option>
+                            <option value="high">🟠 Alta</option>
+                            <option value="critical">🔴 Crítica</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Requer Confirmação</label>
+                        <select class="form-select" id="requiresAcknowledgment">
+                            <option value="false">Não</option>
+                            <option value="true">Sim</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Campos específicos para Avisos -->
+                <div id="avisoFields" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Categoria</label>
+                        <select class="form-select" id="alertCategory">
+                            <option value="system">Sistema</option>
+                            <option value="maintenance">Manutenção</option>
+                            <option value="feature">Recurso</option>
+                            <option value="security">Segurança</option>
+                            <option value="community">Comunidade</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Preview -->
+                <div class="preview-card" id="previewSection" style="display: none;">
+                    <div class="preview-title" id="previewTitle"></div>
+                    <div class="preview-message" id="previewMessage"></div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="button" class="btn btn-primary" onclick="previewNotification()">
+                        👁️ Visualizar
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        📨 Enviar Notificação
+                    </button>
+                    <button type="button" class="btn" onclick="limparFormulario()" style="background: var(--gray); color: white;">
+                        🗑️ Limpar
+                    </button>
+                </div>
             </form>
+        </div>
 
-            <div class="notification-preview" id="notificationPreview">
-                <h3>Pré-visualização</h3>
-                <div class="preview-content">
-                    <strong id="previewTitle">Título da notificação</strong>
-                    <p id="previewMessage">Mensagem da notificação aparecerá aqui...</p>
-                    <small id="previewCategory" style="color: #666;"></small>
+        <!-- SEÇÃO: HISTÓRICO -->
+        <div id="historico" class="content-section">
+            <div class="section-title">
+                <h2>📋 Histórico de Notificações</h2>
+                <button class="btn btn-primary" onclick="carregarHistorico()">
+                    🔄 Atualizar
+                </button>
+            </div>
+            <div id="historicoContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Carregando histórico...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEÇÃO: ESTATÍSTICAS -->
+        <div id="estatisticas" class="content-section">
+            <div class="section-title">
+                <h2>📊 Estatísticas de Notificações</h2>
+                <button class="btn btn-primary" onclick="carregarEstatisticas()">
+                    🔄 Atualizar
+                </button>
+            </div>
+            <div id="estatisticasContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Carregando estatísticas...</p>
                 </div>
             </div>
         </div>
