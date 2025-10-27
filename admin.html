@@ -535,7 +535,6 @@ async function carregarEstatisticas() {
             `Última atualização: ${new Date().toLocaleString('pt-BR')}`;
 
     } catch (erro) {
-        console.error('Erro ao carregar estatísticas:', erro);
         alert('Erro ao carregar estatísticas');
     }
 }
@@ -606,7 +605,6 @@ async function carregarDenuncias() {
         `).join('');
 
     } catch (erro) {
-        console.error('Erro ao carregar denúncias:', erro);
         container.innerHTML = `
             <div class="empty-state">
                 <div class="icon">❌</div>
@@ -638,19 +636,16 @@ async function tomarAcao(idDenuncia, idUsuario, acao, emailUsuario = '') {
     }
 
     try {
-        // Executar ações específicas primeiro
         if (acao === 'banir' && idUsuario) {
             await banirUsuario(idUsuario, emailUsuario, idDenuncia);
         } else if (acao === 'advertir' && idUsuario) {
             await advertirUsuario(idUsuario, idDenuncia);
         }
         
-        // Atualizar status da denúncia - SEM o campo resolved_by que causa erro
         const updateData = { 
             status: 'resolved',
             resolved_at: new Date().toISOString(),
             action_taken: acao
-            // Removido resolved_by para evitar erro de UUID
         };
 
         const { error: reportError } = await supabase
@@ -658,10 +653,7 @@ async function tomarAcao(idDenuncia, idUsuario, acao, emailUsuario = '') {
             .update(updateData)
             .eq('id', idDenuncia);
 
-        if (reportError) {
-            console.error('Erro ao atualizar denúncia:', reportError);
-            throw reportError;
-        }
+        if (reportError) throw reportError;
 
         let mensagem = '';
         if (acao === 'banir') {
@@ -676,7 +668,6 @@ async function tomarAcao(idDenuncia, idUsuario, acao, emailUsuario = '') {
         carregarTudo();
 
     } catch (erro) {
-        console.error('Erro ao processar ação:', erro);
         alert('Erro ao processar ação: ' + (erro.message || 'Erro desconhecido'));
     }
 }
@@ -685,7 +676,6 @@ async function banirUsuario(userId, email, denunciaId) {
     try {
         let emailParaBanir = email;
         
-        // Se não tem email, buscar do perfil
         if (!emailParaBanir) {
             const { data: usuario, error: userError } = await supabase
                 .from('profiles')
@@ -693,18 +683,13 @@ async function banirUsuario(userId, email, denunciaId) {
                 .eq('id', userId)
                 .single();
                 
-            if (userError) {
-                console.error('Erro ao buscar usuário:', userError);
-                throw new Error('Usuário não encontrado');
-            }
+            if (userError) throw new Error('Usuário não encontrado');
             emailParaBanir = usuario.email;
         }
         
-        // Buscar motivo da denúncia
         const motivoDenuncia = await obterMotivoDenuncia(denunciaId);
         const motivo = `BANIMENTO ADMIN: ${motivoDenuncia}`;
         
-        // Inserir na tabela de emails banidos - SEM banned_by que causa erro
         const { error: banError } = await supabase
             .from('banned_emails')
             .insert({
@@ -713,22 +698,15 @@ async function banirUsuario(userId, email, denunciaId) {
                 permanent_ban: true,
                 related_user_id: userId,
                 banned_at: new Date().toISOString()
-                // Removido banned_by para evitar erro de UUID
             });
             
-        if (banError) {
-            console.error('Erro ao banir email:', banError);
-            // Se for erro de duplicidade, continuar (email já está banido)
-            if (banError.code !== '23505') {
-                throw new Error('Erro ao banir email');
-            }
+        if (banError && banError.code !== '23505') {
+            throw new Error('Erro ao banir email');
         }
         
-        // Limpar dados do usuário
         await limparDadosUsuario(userId);
         
     } catch (erro) {
-        console.error('Erro no banirUsuario:', erro);
         throw erro;
     }
 }
@@ -742,7 +720,6 @@ async function obterMotivoDenuncia(denunciaId) {
             .single();
             
         if (error) throw error;
-        
         return denuncia?.evidence || denuncia?.reason || 'Violação grave das regras';
     } catch (erro) {
         return 'Violação grave das regras';
@@ -764,8 +741,6 @@ async function advertirUsuario(userId, denunciaId) {
             });
 
         if (warnError) {
-            console.error('Erro ao criar advertência:', warnError);
-            // Tentar atualizar contador de advertências no perfil
             await supabase
                 .from('profiles')
                 .update({
@@ -776,7 +751,6 @@ async function advertirUsuario(userId, denunciaId) {
         }
 
     } catch (erro) {
-        console.error('Erro no advertirUsuario:', erro);
         throw erro;
     }
 }
@@ -798,13 +772,9 @@ async function limparDadosUsuario(userId) {
             })
             .eq('id', userId);
 
-        if (profileError) {
-            console.error('Erro ao limpar dados do usuário:', profileError);
-            throw profileError;
-        }
+        if (profileError) throw profileError;
         
     } catch (erro) {
-        console.error('Erro no limparDadosUsuario:', erro);
         throw erro;
     }
 }
@@ -897,7 +867,6 @@ async function carregarEstatisticasDetalhadas() {
         container.innerHTML = html;
 
     } catch (erro) {
-        console.error('Erro ao carregar estatísticas detalhadas:', erro);
         container.innerHTML = `
             <div class="empty-state">
                 <div class="icon">❌</div>
@@ -989,7 +958,6 @@ async function carregarUsuarios() {
         container.innerHTML = html;
 
     } catch (erro) {
-        console.error('Erro ao carregar usuários:', erro);
         container.innerHTML = `
             <div class="empty-state">
                 <div class="icon">❌</div>
@@ -1035,7 +1003,6 @@ async function advertirUsuarioDireto(userId) {
 
         alert('✅ Advertência enviada!');
     } catch (erro) {
-        console.error('Erro ao advertir usuário:', erro);
         alert('Erro ao enviar advertência');
     }
 }
@@ -1050,23 +1017,32 @@ async function banirUsuarioDireto(userId, email) {
         alert('✅ Usuário banido permanentemente!');
         carregarUsuarios();
     } catch (erro) {
-        console.error('Erro ao banir usuário:', erro);
         alert('Erro ao banir usuário: ' + (erro.message || 'Erro desconhecido'));
     }
 }
 
 // ==================== FUNÇÕES GERAIS ====================
 function showSection(sectionName) {
+    // CORREÇÃO: Esconder todas as seções
     document.querySelectorAll('.content-section').forEach(section => {
         section.classList.remove('active');
     });
+    
+    // CORREÇÃO: Remover active de todos os botões
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('active');
     });
 
+    // CORREÇÃO: Mostrar seção selecionada
     document.getElementById(sectionName).classList.add('active');
-    event.target.classList.add('active');
+    
+    // CORREÇÃO: Encontrar e ativar o botão correto
+    const activeButton = document.querySelector(`.nav-btn[onclick*="${sectionName}"]`);
+    if (activeButton) {
+        activeButton.classList.add('active');
+    }
 
+    // Carregar conteúdo da seção
     switch(sectionName) {
         case 'estatisticas':
             carregarEstatisticasDetalhadas();
