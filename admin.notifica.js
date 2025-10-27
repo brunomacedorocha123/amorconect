@@ -122,7 +122,7 @@ function previewNotification() {
     const mensagem = document.getElementById('mensagem').value;
     
     if (!titulo || !mensagem) {
-        alert('Preencha título e mensagem para visualizar');
+        alert('❌ Preencha título e mensagem para visualizar');
         return;
     }
     
@@ -159,20 +159,28 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
     };
     
     if (!formData.tipo || !formData.titulo || !formData.mensagem || !formData.destinatarios || !formData.dataValidade) {
-        alert('Preencha todos os campos obrigatórios');
+        alert('❌ Preencha todos os campos obrigatórios');
         return;
     }
     
     if (formData.destinatarios === 'specific' && formData.userIds.length === 0) {
-        alert('Selecione pelo menos um usuário específico');
+        alert('❌ Selecione pelo menos um usuário específico');
         return;
     }
+    
+    // Mostrar loading no botão
+    const submitBtn = document.querySelector('#notificationForm button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '⏳ Enviando...';
+    submitBtn.disabled = true;
     
     try {
         // Obter admin logado
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-            alert('Erro de autenticação');
+            alert('❌ Erro de autenticação');
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
             return;
         }
 
@@ -190,14 +198,14 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             metadata.alert_category = document.getElementById('alertCategory').value;
         }
 
-        // INSERIR NA TABELA NOTIFICATIONS - USANDO COLUNAS CORRETAS
+        // INSERIR NA TABELA NOTIFICATIONS
         const notificationData = {
             title: formData.titulo,
             message: formData.mensagem,
             tipo: formData.tipo,
             destinatarios: formData.destinatarios,
             data_validade: formData.dataValidade,
-            created_by_uuid: user.id, // Usar a coluna UUID
+            created_by_uuid: user.id,
             is_active: true,
             created_at: new Date().toISOString(),
             priority: formData.prioridade,
@@ -219,11 +227,13 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             .single();
 
         if (notifError) {
-            alert('Erro ao criar notificação: ' + notifError.message);
+            alert('❌ Erro ao criar notificação: ' + notifError.message);
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
             return;
         }
 
-        // AGORA INSERIR DESTINATÁRIOS
+        // INSERIR DESTINATÁRIOS
         let usersToInsert = [];
         
         if (formData.destinatarios === 'specific') {
@@ -245,7 +255,9 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             
             const { data: users, error: usersError } = await query;
             if (usersError) {
-                alert('Erro ao buscar usuários: ' + usersError.message);
+                alert('❌ Erro ao buscar usuários: ' + usersError.message);
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
                 return;
             }
             
@@ -263,17 +275,24 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
                 .insert(usersToInsert);
             
             if (recipientsError) {
-                alert('Erro ao adicionar destinatários: ' + recipientsError.message);
+                alert('❌ Erro ao adicionar destinatários: ' + recipientsError.message);
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
                 return;
             }
         }
 
+        // SUCESSO
         alert('✅ Notificação enviada com sucesso para ' + usersToInsert.length + ' usuários!');
         limparFormulario();
         carregarHistorico();
         
     } catch (error) {
-        alert('Erro inesperado: ' + error.message);
+        alert('❌ Erro inesperado: ' + error.message);
+    } finally {
+        // Restaurar botão
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
     }
 });
 
