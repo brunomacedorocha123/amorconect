@@ -5,16 +5,31 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener('DOMContentLoaded', function() {
-    // CONFIGURAR PRAZOS DE VALIDADE
+    // CONFIGURAR PRAZOS DE VALIDADE - CORRIGIDO
     document.querySelectorAll('.expiration-option').forEach(option => {
-        option.addEventListener('click', function() {
+        option.addEventListener('click', function(e) {
+            // IMPEDIR COMPORTAMENTO PADRÃO
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // REMOVER SELEÇÃO ANTERIOR
             document.querySelectorAll('.expiration-option').forEach(opt => {
                 opt.classList.remove('selected');
-                opt.querySelector('input').checked = false;
+                const radio = opt.querySelector('input[type="radio"]');
+                if (radio) radio.checked = false;
             });
+            
+            // SELECIONAR ATUAL
             this.classList.add('selected');
-            this.querySelector('input').checked = true;
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) radio.checked = true;
         });
+        
+        // SELECIONAR PADRÃO (7 DIAS)
+        const radio = option.querySelector('input[type="radio"]');
+        if (radio && radio.checked) {
+            option.classList.add('selected');
+        }
     });
     
     // CONFIGURAR USUÁRIO ESPECÍFICO
@@ -25,52 +40,48 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // PREVIEW EM TEMPO REAL
-    document.getElementById('notificationTitle').addEventListener('input', updatePreview);
-    document.getElementById('notificationMessage').addEventListener('input', updatePreview);
-    document.getElementById('notificationCategory').addEventListener('change', updatePreview);
-    document.getElementById('specificUserId').addEventListener('input', updatePreview);
-    
-    // ENVIAR NOTIFICAÇÃO
+    // ENVIAR NOTIFICAÇÃO - CORRIGIDO
     document.getElementById('notificationForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
+        // DADOS DO FORMULÁRIO
+        const formData = new FormData(this);
+        const title = document.getElementById('notificationTitle').value.trim();
+        const message = document.getElementById('notificationMessage').value.trim();
+        const category = document.getElementById('notificationCategory').value;
+        const userType = document.querySelector('input[name="userType"]:checked').value;
+        const specificUserId = document.getElementById('specificUserId').value.trim();
+        const expiration = document.querySelector('input[name="expiration"]:checked').value;
+        
+        // VALIDAÇÃO
+        if (!title) {
+            alert('❌ Por favor, insira um título para a notificação.');
+            return;
+        }
+        
+        if (!message) {
+            alert('❌ Por favor, insira uma mensagem para a notificação.');
+            return;
+        }
+        
+        if (!category) {
+            alert('❌ Por favor, selecione uma categoria.');
+            return;
+        }
+        
+        if (userType === 'specific' && !specificUserId) {
+            alert('❌ Por favor, insira o ID do usuário específico.');
+            return;
+        }
+        
+        // BOTÃO DE ENVIO
         const submitBtn = document.getElementById('submitBtn');
         const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '⏳ Enviando...';
+        submitBtn.disabled = true;
         
         try {
-            submitBtn.innerHTML = '⏳ Enviando...';
-            submitBtn.disabled = true;
-            
-            // VALIDAÇÃO
-            const title = document.getElementById('notificationTitle').value.trim();
-            const message = document.getElementById('notificationMessage').value.trim();
-            const category = document.getElementById('notificationCategory').value;
-            const userType = document.querySelector('input[name="userType"]:checked').value;
-            const specificUserId = document.getElementById('specificUserId').value.trim();
-            const expiration = document.querySelector('input[name="expiration"]:checked').value;
-            
-            if (!title) {
-                alert('❌ Por favor, insira um título para a notificação.');
-                return;
-            }
-            
-            if (!message) {
-                alert('❌ Por favor, insira uma mensagem para a notificação.');
-                return;
-            }
-            
-            if (!category) {
-                alert('❌ Por favor, selecione uma categoria.');
-                return;
-            }
-            
-            if (userType === 'specific' && !specificUserId) {
-                alert('❌ Por favor, insira o ID do usuário específico.');
-                return;
-            }
-            
-            // ENVIAR PARA O SUPABASE
+            // PREPARAR DADOS
             const notificationData = {
                 title: title,
                 message: message,
@@ -79,94 +90,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 is_active: true
             };
             
-            // Buscar user_type_id
-            let userTypeName = 'Todos';
-            if (userType === 'free') userTypeName = 'Free';
-            if (userType === 'premium') userTypeName = 'Premium';
-            
-            const { data: userTypeData } = await supabase
-                .from('user_types')
-                .select('id')
-                .eq('name', userTypeName)
-                .single();
-                
-            if (userTypeData) {
-                notificationData.user_type_id = userTypeData.id;
-            }
-            
-            // Inserir notificação
+            // ENVIAR PARA SUPABASE
             const { data: notification, error } = await supabase
                 .from('notifications')
                 .insert(notificationData)
                 .select()
                 .single();
                 
-            if (error) throw error;
-            
-            // Se for usuário específico, adicionar na tabela de usuários
-            if (userType === 'specific' && specificUserId) {
-                await supabase
-                    .from('notification_users')
-                    .insert({
-                        notification_id: notification.id,
-                        user_id: specificUserId
-                    });
+            if (error) {
+                throw new Error(error.message);
             }
             
             alert('✅ Notificação enviada com sucesso!');
-            document.getElementById('notificationForm').reset();
-            document.getElementById('userSpecific').style.display = 'none';
-            document.getElementById('notificationPreview').style.display = 'none';
             
-            // Resetar prazos
-            document.querySelectorAll('.expiration-option').forEach(opt => {
-                opt.classList.remove('selected');
-            });
-            document.querySelector('.expiration-option:nth-child(2)').classList.add('selected');
+            // LIMPAR FORMULÁRIO - MANTENDO CATEGORIAS
+            document.getElementById('notificationTitle').value = '';
+            document.getElementById('notificationMessage').value = '';
+            document.getElementById('specificUserId').value = '';
+            document.getElementById('userSpecific').style.display = 'none';
+            
+            // MANTER CATEGORIA SELECIONADA
+            // MANTER PRAZO SELECIONADO (7 dias)
             
         } catch (error) {
-            alert('❌ Erro ao enviar notificação: ' + error.message);
+            alert('❌ Erro: ' + error.message);
         } finally {
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
         }
     });
-    
-    // INICIAR PREVIEW
-    updatePreview();
 });
-
-function updatePreview() {
-    const title = document.getElementById('notificationTitle').value;
-    const message = document.getElementById('notificationMessage').value;
-    const category = document.getElementById('notificationCategory');
-    const categoryText = category.options[category.selectedIndex].text;
-    const userType = document.querySelector('input[name="userType"]:checked').value;
-    const specificUserId = document.getElementById('specificUserId').value;
-    const preview = document.getElementById('notificationPreview');
-
-    preview.style.display = 'block';
-    
-    document.getElementById('previewTitle').textContent = title || '(Sem título)';
-    document.getElementById('previewMessage').textContent = message || '(Sem mensagem)';
-    document.getElementById('previewCategory').textContent = 'Categoria: ' + (category.value ? categoryText : 'Não selecionada');
-    
-    let destinatarios = '';
-    switch(userType) {
-        case 'all': destinatarios = '👥 Todos os usuários'; break;
-        case 'free': destinatarios = '🆓 Usuários Free'; break;
-        case 'premium': destinatarios = '⭐ Usuários Premium'; break;
-        case 'specific': destinatarios = specificUserId ? `👤 Usuário específico: ${specificUserId}` : '👤 Usuário específico: (ID não informado)'; break;
-    }
-    
-    let destinatarioElement = document.getElementById('previewDestinatarios');
-    if (!destinatarioElement) {
-        destinatarioElement = document.createElement('div');
-        destinatarioElement.id = 'previewDestinatarios';
-        destinatarioElement.style.marginTop = '10px';
-        destinatarioElement.style.fontSize = '0.9em';
-        destinatarioElement.style.color = '#666';
-        document.querySelector('.preview-content').appendChild(destinatarioElement);
-    }
-    destinatarioElement.textContent = `Para: ${destinatarios}`;
-}
