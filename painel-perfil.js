@@ -16,9 +16,12 @@ async function initializeApp() {
     if (authenticated) {
         setupEventListeners();
         await loadUserProfile();
+        
         // AGUARDAR O PREMIUM MANAGER ATUALIZAR A UI
         setTimeout(async () => {
-            await PremiumManager.updateUIWithPremiumStatus();
+            if (window.PremiumManager && typeof window.PremiumManager.updateUIWithPremiumStatus === 'function') {
+                await window.PremiumManager.updateUIWithPremiumStatus();
+            }
             await updateInvisibleModeUI(); // Atualizar UI do modo invisível
         }, 500);
         
@@ -123,11 +126,26 @@ function setupEventListeners() {
     if (invisibleCheckbox) {
         invisibleCheckbox.addEventListener('change', handleInvisibleToggle);
     }
+
+    // Busca automática de CEP
+    const zipCodeInputCEP = document.getElementById('zipCode');
+    if (zipCodeInputCEP) {
+        zipCodeInputCEP.addEventListener('blur', function(e) {
+            const cep = e.target.value.replace(/\D/g, '');
+            if (cep.length === 8) {
+                buscarCEP(cep);
+            }
+        });
+    }
 }
 
 // Carregar perfil do usuário
 async function loadUserProfile() {
     try {
+        if (!currentUser) {
+            throw new Error('Usuário não autenticado');
+        }
+
         // Carregar dados principais
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
@@ -146,14 +164,16 @@ async function loadUserProfile() {
             .eq('user_id', currentUser.id)
             .single();
 
-        if (detailsError) {
-            // Não é crítico se não houver detalhes ainda
+        if (detailsError && detailsError.code !== 'PGRST116') {
+            // PGRST116 é "Não encontrado", o que é normal para novos usuários
+            console.warn('Erro ao carregar detalhes:', detailsError);
         }
 
         // Preencher formulário E ATUALIZAR HEADER
-        fillProfileForm(profile, userDetails);
+        fillProfileForm(profile, userDetails || {});
         
     } catch (error) {
+        console.error('Erro ao carregar perfil:', error);
         showNotification('Erro ao carregar perfil', 'error');
     }
 }
@@ -192,38 +212,36 @@ function fillProfileForm(profile, userDetails) {
     }
 
     // Dados públicos
-    if (userDetails) {
-        setValue('relationshipStatus', userDetails.relationship_status);
-        setValue('gender', userDetails.gender);
-        setValue('sexualOrientation', userDetails.sexual_orientation);
-        setValue('profession', userDetails.profession);
-        setValue('education', userDetails.education);
-        setValue('zodiac', userDetails.zodiac);
-        setValue('lookingFor', userDetails.looking_for);
-        setValue('description', userDetails.description);
-        setValue('religion', userDetails.religion);
-        setValue('drinking', userDetails.drinking);
-        setValue('smoking', userDetails.smoking);
-        setValue('exercise', userDetails.exercise);
-        setValue('exerciseDetails', userDetails.exercise_details);
-        setValue('hasPets', userDetails.has_pets);
-        setValue('petsDetails', userDetails.pets_details);
+    setValue('relationshipStatus', userDetails.relationship_status);
+    setValue('gender', userDetails.gender);
+    setValue('sexualOrientation', userDetails.sexual_orientation);
+    setValue('profession', userDetails.profession);
+    setValue('education', userDetails.education);
+    setValue('zodiac', userDetails.zodiac);
+    setValue('lookingFor', userDetails.looking_for);
+    setValue('description', userDetails.description);
+    setValue('religion', userDetails.religion);
+    setValue('drinking', userDetails.drinking);
+    setValue('smoking', userDetails.smoking);
+    setValue('exercise', userDetails.exercise);
+    setValue('exerciseDetails', userDetails.exercise_details);
+    setValue('hasPets', userDetails.has_pets);
+    setValue('petsDetails', userDetails.pets_details);
 
-        // Interesses
-        if (userDetails.interests) {
-            userDetails.interests.forEach(interest => {
-                const checkbox = document.querySelector(`input[name="interests"][value="${interest}"]`);
-                if (checkbox) checkbox.checked = true;
-            });
-        }
+    // Interesses
+    if (userDetails.interests) {
+        userDetails.interests.forEach(interest => {
+            const checkbox = document.querySelector(`input[name="interests"][value="${interest}"]`);
+            if (checkbox) checkbox.checked = true;
+        });
+    }
 
-        // Características
-        if (userDetails.characteristics) {
-            userDetails.characteristics.forEach(characteristic => {
-                const checkbox = document.querySelector(`input[name="characteristics"][value="${characteristic}"]`);
-                if (checkbox) checkbox.checked = true;
-            });
-        }
+    // Características
+    if (userDetails.characteristics) {
+        userDetails.characteristics.forEach(characteristic => {
+            const checkbox = document.querySelector(`input[name="characteristics"][value="${characteristic}"]`);
+            if (checkbox) checkbox.checked = true;
+        });
     }
 
     updateCharCount();
@@ -231,46 +249,56 @@ function fillProfileForm(profile, userDetails) {
 
 // Atualizar UI do modo invisível
 async function updateInvisibleModeUI() {
-    const isPremium = await PremiumManager.checkPremiumStatus();
-    const invisibleControl = document.getElementById('invisibleModeControl');
-    const upgradeCTA = document.getElementById('invisibleUpgradeCTA');
-    const featureStatus = document.getElementById('invisibleFeatureStatus');
-    const invisibleCheckbox = document.getElementById('isInvisible');
+    try {
+        let isPremium = false;
+        
+        // Verificar se PremiumManager existe
+        if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
+            isPremium = await window.PremiumManager.checkPremiumStatus();
+        }
+        
+        const invisibleControl = document.getElementById('invisibleModeControl');
+        const upgradeCTA = document.getElementById('invisibleUpgradeCTA');
+        const featureStatus = document.getElementById('invisibleFeatureStatus');
+        const invisibleCheckbox = document.getElementById('isInvisible');
 
-    if (isPremium) {
-        // Usuário Premium - mostrar controle
-        if (invisibleControl) invisibleControl.style.display = 'block';
-        if (upgradeCTA) upgradeCTA.style.display = 'none';
-        
-        // ✅ CORREÇÃO: Mostrar status baseado no checkbox
-        const isCurrentlyInvisible = invisibleCheckbox ? invisibleCheckbox.checked : false;
-        
-        if (featureStatus) {
-            if (isCurrentlyInvisible) {
+        if (isPremium) {
+            // Usuário Premium - mostrar controle
+            if (invisibleControl) invisibleControl.style.display = 'block';
+            if (upgradeCTA) upgradeCTA.style.display = 'none';
+            
+            // ✅ CORREÇÃO: Mostrar status baseado no checkbox
+            const isCurrentlyInvisible = invisibleCheckbox ? invisibleCheckbox.checked : false;
+            
+            if (featureStatus) {
+                if (isCurrentlyInvisible) {
+                    featureStatus.innerHTML = `
+                        <span class="premium-feature-active">
+                            <i class="fas fa-eye-slash"></i> Modo Ativo
+                        </span>
+                    `;
+                } else {
+                    featureStatus.innerHTML = `
+                        <span class="premium-feature-inactive">
+                            <i class="fas fa-eye"></i> Modo Inativo
+                        </span>
+                    `;
+                }
+            }
+        } else {
+            // Usuário Free - mostrar CTA de upgrade
+            if (invisibleControl) invisibleControl.style.display = 'none';
+            if (upgradeCTA) upgradeCTA.style.display = 'block';
+            if (featureStatus) {
                 featureStatus.innerHTML = `
-                    <span class="premium-feature-active">
-                        <i class="fas fa-eye-slash"></i> Modo Ativo
-                    </span>
-                `;
-            } else {
-                featureStatus.innerHTML = `
-                    <span class="premium-feature-inactive">
-                        <i class="fas fa-eye"></i> Modo Inativo
+                    <span class="premium-feature-locked">
+                        <i class="fas fa-lock"></i> Bloqueado
                     </span>
                 `;
             }
         }
-    } else {
-        // Usuário Free - mostrar CTA de upgrade
-        if (invisibleControl) invisibleControl.style.display = 'none';
-        if (upgradeCTA) upgradeCTA.style.display = 'block';
-        if (featureStatus) {
-            featureStatus.innerHTML = `
-                <span class="premium-feature-locked">
-                    <i class="fas fa-lock"></i> Bloqueado
-                </span>
-            `;
-        }
+    } catch (error) {
+        console.error('Erro ao atualizar UI do modo invisível:', error);
     }
 }
 
@@ -279,6 +307,10 @@ async function handleInvisibleToggle(event) {
     const isInvisible = event.target.checked;
     
     try {
+        if (!currentUser) {
+            throw new Error('Usuário não autenticado');
+        }
+
         const { error } = await supabase
             .from('profiles')
             .update({
@@ -341,6 +373,7 @@ async function handleProfileSave(event) {
         showNotification('Perfil salvo com sucesso!', 'success');
         
     } catch (error) {
+        console.error('Erro ao salvar perfil:', error);
         showNotification('Erro ao salvar perfil: ' + error.message, 'error');
     } finally {
         saveButton.innerHTML = originalText;
@@ -446,6 +479,10 @@ function validateProfileData(profileData, userDetailsData) {
 
 // Salvar no banco
 async function saveProfileToDatabase(profileData, userDetailsData) {
+    if (!currentUser) {
+        throw new Error('Usuário não autenticado');
+    }
+
     // Atualizar perfil principal
     const { error: profileError } = await supabase
         .from('profiles')
@@ -579,19 +616,6 @@ async function buscarCEP(cep) {
         console.log('Erro ao buscar CEP:', error);
     }
 }
-
-// Adicionar evento para busca automática de CEP
-document.addEventListener('DOMContentLoaded', function() {
-    const zipCodeInput = document.getElementById('zipCode');
-    if (zipCodeInput) {
-        zipCodeInput.addEventListener('blur', function(e) {
-            const cep = e.target.value.replace(/\D/g, '');
-            if (cep.length === 8) {
-                buscarCEP(cep);
-            }
-        });
-    }
-});
 
 // Exportar para uso global
 window.supabase = supabase;
