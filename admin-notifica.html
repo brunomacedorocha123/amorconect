@@ -653,7 +653,7 @@
     </div>
 
     <script>
-       // ==================== CONFIGURAÇÃO SUPABASE ====================
+     // ==================== CONFIGURAÇÃO SUPABASE ====================
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -831,29 +831,23 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             return;
         }
 
-        // Buscar um admin real para created_by_uuid
-        const { data: adminUser, error: adminError } = await supabase
+        // Buscar qualquer usuário existente para created_by_uuid
+        const { data: usuarios, error: usersError } = await supabase
             .from('profiles')
             .select('id')
-            .limit(1)
-            .single();
+            .limit(1);
 
-        let createdByUUID = adminUser?.id;
+        let createdByUUID;
 
-        // Se não encontrou admin, buscar qualquer usuário
-        if (!createdByUUID) {
-            const { data: anyUser } = await supabase
-                .from('profiles')
-                .select('id')
-                .limit(1)
-                .single();
-            createdByUUID = anyUser?.id;
+        if (usersError) {
+            throw new Error('Erro ao buscar usuários: ' + usersError.message);
         }
 
-        // Se ainda não tem UUID, não pode continuar
-        if (!createdByUUID) {
-            alert('❌ Não foi possível identificar um usuário administrador');
-            return;
+        if (!usuarios || usuarios.length === 0) {
+            // Se não existe nenhum usuário, usar UUID do sistema
+            createdByUUID = '00000000-0000-0000-0000-000000000000';
+        } else {
+            createdByUUID = usuarios[0].id;
         }
 
         // Preparar dados da notificação
