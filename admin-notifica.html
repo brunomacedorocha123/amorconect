@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciar Notificações</title>
+    <title>Gestor de Notificações - Amor Conect</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
@@ -42,6 +43,27 @@
         .header p {
             opacity: 0.9;
             font-size: 1.1em;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn:hover {
+            background: #5a6268;
         }
 
         .form-container {
@@ -91,10 +113,19 @@
             align-items: center;
             gap: 8px;
             cursor: pointer;
+            padding: 10px 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .radio-option:hover {
+            border-color: #3498db;
         }
 
         .radio-option input[type="radio"] {
             width: auto;
+            margin: 0;
         }
 
         .category-badge {
@@ -191,6 +222,27 @@
             border-left: 4px solid #3498db;
         }
 
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         @media (max-width: 768px) {
             .container {
                 margin: 10px;
@@ -204,83 +256,89 @@
                 flex-direction: column;
                 gap: 10px;
             }
+
+            .expiration-options {
+                grid-template-columns: 1fr 1fr;
+            }
         }
     </style>
 </head>
 <body>
+    <a href="admin.html" class="back-btn">← Voltar ao Painel</a>
+
     <div class="container">
         <div class="header">
-            <h1>📢 Sistema de Notificações</h1>
-            <p>Crie e gerencie notificações para os usuários</p>
+            <h1>📢 Gestor de Notificações</h1>
+            <p>Crie e envie notificações para os usuários</p>
         </div>
 
         <div class="form-container">
             <form id="notificationForm">
                 <div class="form-group">
-                    <label for="notificationTitle">Título da Notificação</label>
+                    <label for="notificationTitle">Título da Notificação *</label>
                     <input type="text" id="notificationTitle" placeholder="Digite o título da notificação..." required>
                 </div>
 
                 <div class="form-group">
-                    <label for="notificationMessage">Mensagem</label>
+                    <label for="notificationMessage">Mensagem *</label>
                     <textarea id="notificationMessage" placeholder="Escreva a mensagem da notificação..." required></textarea>
                 </div>
 
                 <div class="form-group">
-                    <label>Categoria</label>
+                    <label for="notificationCategory">Categoria *</label>
                     <select id="notificationCategory" required>
-                        <option value="">Selecione uma categoria</option>
+                        <option value="">Carregando categorias...</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label>Destinatários</label>
+                    <label>Destinatários *</label>
                     <div class="radio-group">
                         <label class="radio-option">
                             <input type="radio" name="userType" value="all" checked> 
-                            Todos os usuários
+                            👥 Todos os usuários
                         </label>
                         <label class="radio-option">
                             <input type="radio" name="userType" value="free"> 
-                            Usuários Free
+                            🆓 Usuários Free
                         </label>
                         <label class="radio-option">
                             <input type="radio" name="userType" value="premium"> 
-                            Usuários Premium
+                            ⭐ Usuários Premium
                         </label>
                         <label class="radio-option">
                             <input type="radio" name="userType" value="specific"> 
-                            Usuário Específico
+                            👤 Usuário Específico
                         </label>
                     </div>
                     <div class="user-specific" id="userSpecific">
-                        <input type="number" id="specificUserId" placeholder="ID do usuário específico">
+                        <input type="text" id="specificUserId" placeholder="ID do usuário específico (UUID)">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Prazo de Validade</label>
+                    <label>Prazo de Validade *</label>
                     <div class="expiration-options">
-                        <label class="expiration-option" data-days="1">
+                        <label class="expiration-option selected">
                             <input type="radio" name="expiration" value="1"> 
                             1 Dia
                         </label>
-                        <label class="expiration-option" data-days="7">
+                        <label class="expiration-option">
                             <input type="radio" name="expiration" value="7" checked> 
                             7 Dias
                         </label>
-                        <label class="expiration-option" data-days="30">
+                        <label class="expiration-option">
                             <input type="radio" name="expiration" value="30"> 
                             30 Dias
                         </label>
-                        <label class="expiration-option" data-days="365">
+                        <label class="expiration-option">
                             <input type="radio" name="expiration" value="365"> 
                             365 Dias
                         </label>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-block">
+                <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
                     📨 Enviar Notificação
                 </button>
             </form>
@@ -288,9 +346,9 @@
             <div class="notification-preview" id="notificationPreview">
                 <h3>Pré-visualização</h3>
                 <div class="preview-content">
-                    <strong id="previewTitle"></strong>
-                    <p id="previewMessage"></p>
-                    <small id="previewCategory"></small>
+                    <strong id="previewTitle">Título da notificação</strong>
+                    <p id="previewMessage">Mensagem da notificação aparecerá aqui...</p>
+                    <small id="previewCategory" style="color: #666;"></small>
                 </div>
             </div>
         </div>
