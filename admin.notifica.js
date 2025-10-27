@@ -169,12 +169,14 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
     }
     
     try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (userError || !user) {
+        // Obter admin logado
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
             alert('Erro de autenticação');
             return;
         }
-        
+
+        // Preparar dados extras
         const metadata = {};
         
         if (formData.tipo === 'bonus') {
@@ -187,44 +189,17 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
         } else if (formData.tipo === 'aviso') {
             metadata.alert_category = document.getElementById('alertCategory').value;
         }
-        
-        // Tentar usar a função do Supabase primeiro
-        const { data, error } = await supabase.rpc('create_notification_with_recipients', {
-            p_tipo: formData.tipo,
-            p_titulo: formData.titulo,
-            p_mensagem: formData.mensagem,
-            p_destinatarios: formData.destinatarios,
-            p_data_validade: formData.dataValidade,
-            p_created_by_uuid: user.id,
-            p_user_ids: formData.destinatarios === 'specific' ? formData.userIds : null
-        });
-        
-        if (error) {
-            // Se a função não existir, usar inserção direta
-            await criarNotificacaoManual(formData, user.id, metadata);
-        } else {
-            alert('✅ Notificação enviada com sucesso!');
-            limparFormulario();
-            carregarHistorico();
-        }
-        
-    } catch (error) {
-        alert('Erro ao enviar notificação');
-    }
-});
 
-// Fallback para inserção direta
-async function criarNotificacaoManual(formData, adminId, metadata) {
-    try {
+        // INSERIR NOTIFICAÇÃO PRIMEIRO
         const { data: notification, error: notifError } = await supabase
             .from('notifications')
             .insert({
                 title: formData.titulo,
-                message: formData.mensagem,
+                message: formagem.mensagem,
                 tipo: formData.tipo,
                 destinatarios: formData.destinatarios,
                 data_validade: formData.dataValidade,
-                created_by_uuid: adminId,
+                created_by_uuid: user.id,
                 is_active: true,
                 created_at: new Date().toISOString(),
                 bonus_value: metadata.bonus_value,
@@ -237,17 +212,24 @@ async function criarNotificacaoManual(formData, adminId, metadata) {
             })
             .select()
             .single();
-        
-        if (notifError) throw notifError;
-        
+
+        if (notifError) {
+            alert('Erro ao criar notificação: ' + notifError.message);
+            return;
+        }
+
+        // AGORA INSERIR DESTINATÁRIOS
         let usersToInsert = [];
         
         if (formData.destinatarios === 'specific') {
+            // Usuários específicos selecionados
             usersToInsert = formData.userIds.map(userId => ({
                 notification_id: notification.id,
-                user_id: userId
+                user_id: userId,
+                created_at: new Date().toISOString()
             }));
         } else {
+            // Buscar usuários automaticamente
             let query = supabase.from('profiles').select('id');
             
             if (formData.destinatarios === 'free') {
@@ -257,30 +239,38 @@ async function criarNotificacaoManual(formData, adminId, metadata) {
             }
             
             const { data: users, error: usersError } = await query;
-            if (usersError) throw usersError;
+            if (usersError) {
+                alert('Erro ao buscar usuários: ' + usersError.message);
+                return;
+            }
             
             usersToInsert = users.map(user => ({
                 notification_id: notification.id,
-                user_id: user.id
+                user_id: user.id,
+                created_at: new Date().toISOString()
             }));
         }
-        
+
+        // Inserir destinatários se houver
         if (usersToInsert.length > 0) {
             const { error: recipientsError } = await supabase
                 .from('notification_recipients')
                 .insert(usersToInsert);
             
-            if (recipientsError) throw recipientsError;
+            if (recipientsError) {
+                alert('Erro ao adicionar destinatários: ' + recipientsError.message);
+                return;
+            }
         }
-        
-        alert('✅ Notificação enviada com sucesso!');
+
+        alert('✅ Notificação enviada com sucesso para ' + usersToInsert.length + ' usuários!');
         limparFormulario();
         carregarHistorico();
         
     } catch (error) {
-        alert('Erro ao enviar notificação');
+        alert('Erro inesperado: ' + error.message);
     }
-}
+});
 
 // ==================== CARREGAR HISTÓRICO ====================
 async function carregarHistorico() {
