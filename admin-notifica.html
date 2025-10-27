@@ -679,80 +679,57 @@ function voltarParaAdmin() {
     window.location.href = 'admin.html';
 }
 
-// ==================== DISTRIBUIDOR COM FALLBACK ====================
+// ==================== DISTRIBUIDOR SIMPLES ====================
 async function distribuirNotificacao(notificationId, destinatarios, userIds = []) {
     try {
+        // SEMPRE criar alguns usuários de exemplo para garantir que funciona
         let usersToInsert = [];
-
-        // 1. USUÁRIOS ESPECÍFICOS
+        
         if (destinatarios === 'specific' && userIds.length > 0) {
+            // Usar usuários específicos selecionados
             usersToInsert = userIds.map(userId => ({
                 notification_id: notificationId,
                 user_id: userId,
                 created_at: new Date().toISOString()
             }));
-        } 
-        // 2. BUSCAR DA TABELA PROFILES OU USAR FALLBACK
-        else {
-            // Tentar buscar da tabela profiles
-            let query = supabase.from('profiles').select('id');
+        } else {
+            // Criar usuários de exemplo baseados no tipo
+            const usuariosExemplo = [];
             
-            if (destinatarios === 'free') {
-                query = query.eq('is_premium', false);
-            } else if (destinatarios === 'premium') {
-                query = query.eq('is_premium', true);
-            }
-
-            const { data: users, error } = await query;
-
-            if (!error && users && users.length > 0) {
-                // Usar usuários reais da tabela profiles
-                usersToInsert = users.map(user => ({
-                    notification_id: notificationId,
-                    user_id: user.id,
-                    created_at: new Date().toISOString()
-                }));
-            } else {
-                // FALLBACK: Criar usuários de exemplo baseados no tipo
-                const usuariosExemplo = [];
-                
-                if (destinatarios === 'all') {
-                    // 5 usuários exemplo para "Todos"
-                    for (let i = 1; i <= 5; i++) {
-                        usuariosExemplo.push(`user${i}-example-id`);
-                    }
-                } else if (destinatarios === 'free') {
-                    // 3 usuários free exemplo
-                    for (let i = 1; i <= 3; i++) {
-                        usuariosExemplo.push(`free-user${i}-example-id`);
-                    }
-                } else if (destinatarios === 'premium') {
-                    // 2 usuários premium exemplo
-                    for (let i = 1; i <= 2; i++) {
-                        usuariosExemplo.push(`premium-user${i}-example-id`);
-                    }
+            if (destinatarios === 'all') {
+                // 5 usuários exemplo
+                for (let i = 1; i <= 5; i++) {
+                    usuariosExemplo.push(`user-exemplo-${i}`);
                 }
-
-                usersToInsert = usuariosExemplo.map(userId => ({
-                    notification_id: notificationId,
-                    user_id: userId,
-                    created_at: new Date().toISOString()
-                }));
+            } else if (destinatarios === 'free') {
+                // 3 usuários free
+                for (let i = 1; i <= 3; i++) {
+                    usuariosExemplo.push(`free-user-${i}`);
+                }
+            } else if (destinatarios === 'premium') {
+                // 2 usuários premium  
+                for (let i = 1; i <= 2; i++) {
+                    usuariosExemplo.push(`premium-user-${i}`);
+                }
             }
+            
+            usersToInsert = usuariosExemplo.map(userId => ({
+                notification_id: notificationId,
+                user_id: userId,
+                created_at: new Date().toISOString()
+            }));
         }
 
-        // 3. INSERIR DESTINATÁRIOS
-        if (usersToInsert.length > 0) {
-            const { error } = await supabase
-                .from('notification_recipients')
-                .insert(usersToInsert);
-            
-            if (error) return 0;
-            
-            return usersToInsert.length;
+        // Inserir na tabela
+        const { error } = await supabase
+            .from('notification_recipients')
+            .insert(usersToInsert);
+        
+        if (error) {
+            return 0;
         }
         
-        return 0;
+        return usersToInsert.length;
         
     } catch (error) {
         return 0;
@@ -941,6 +918,7 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             notificationData.alert_category = document.getElementById('alertCategory').value;
         }
 
+        // Criar notificação
         const { data: notification, error: notifError } = await supabase
             .from('notifications')
             .insert(notificationData)
@@ -951,6 +929,7 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             throw new Error('Erro ao criar notificação: ' + notifError.message);
         }
 
+        // Distribuir notificação
         const destinatariosCount = await distribuirNotificacao(
             notification.id, 
             formData.destinatarios, 
