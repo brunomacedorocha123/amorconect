@@ -5,7 +5,6 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ==================== VARIÁVEIS GLOBAIS ====================
 let selectedUsers = [];
-let currentAdminId = null;
 
 // ==================== VERIFICAÇÃO DE AUTENTICAÇÃO ====================
 function verificarAutenticacao() {
@@ -29,12 +28,10 @@ function voltarParaAdmin() {
 function toggleFields() {
     const tipo = document.getElementById('tipoNotificacao').value;
     
-    // Esconder todos os campos específicos
     document.getElementById('bonusFields').style.display = 'none';
     document.getElementById('advertenciaFields').style.display = 'none';
     document.getElementById('avisoFields').style.display = 'none';
     
-    // Mostrar campos específicos baseado no tipo
     if (tipo === 'bonus') {
         document.getElementById('bonusFields').style.display = 'block';
     } else if (tipo === 'advertencia') {
@@ -73,7 +70,7 @@ async function searchUsers(query) {
             .or(`nickname.ilike.%${query}%,email.ilike.%${query}%`)
             .limit(10);
         
-        if (error) throw error;
+        if (error) return;
         
         if (users && users.length > 0) {
             resultsContainer.innerHTML = users.map(user => `
@@ -95,13 +92,11 @@ async function searchUsers(query) {
 }
 
 function selectUser(userId, userName) {
-    // Verificar se usuário já foi selecionado
     if (!selectedUsers.find(u => u.id === userId)) {
         selectedUsers.push({ id: userId, name: userName });
         updateSelectedUsersDisplay();
     }
     
-    // Limpar busca
     document.getElementById('userSearch').value = '';
     document.getElementById('userResults').style.display = 'none';
 }
@@ -153,7 +148,6 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
     
     if (!verificarAutenticacao()) return;
     
-    // Coletar dados do formulário
     const formData = {
         tipo: document.getElementById('tipoNotificacao').value,
         titulo: document.getElementById('titulo').value,
@@ -164,7 +158,6 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
         userIds: selectedUsers.map(u => u.id)
     };
     
-    // Validar dados
     if (!formData.tipo || !formData.titulo || !formData.mensagem || !formData.destinatarios || !formData.dataValidade) {
         alert('Preencha todos os campos obrigatórios');
         return;
@@ -176,14 +169,12 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
     }
     
     try {
-        // Obter ID do admin logado
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         if (userError || !user) {
             alert('Erro de autenticação');
             return;
         }
         
-        // Preparar dados extras baseado no tipo
         const metadata = {};
         
         if (formData.tipo === 'bonus') {
@@ -197,7 +188,7 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             metadata.alert_category = document.getElementById('alertCategory').value;
         }
         
-        // Chamar a função do Supabase para criar notificação
+        // Tentar usar a função do Supabase primeiro
         const { data, error } = await supabase.rpc('create_notification_with_recipients', {
             p_tipo: formData.tipo,
             p_titulo: formData.titulo,
@@ -209,9 +200,7 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
         });
         
         if (error) {
-            console.error('Erro ao criar notificação:', error);
-            
-            // Fallback: inserir manualmente se a função não existir
+            // Se a função não existir, usar inserção direta
             await criarNotificacaoManual(formData, user.id, metadata);
         } else {
             alert('✅ Notificação enviada com sucesso!');
@@ -220,15 +209,13 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
         }
         
     } catch (error) {
-        console.error('Erro:', error);
-        alert('Erro ao enviar notificação: ' + error.message);
+        alert('Erro ao enviar notificação');
     }
 });
 
-// Fallback para quando a função SQL não existir
+// Fallback para inserção direta
 async function criarNotificacaoManual(formData, adminId, metadata) {
     try {
-        // Inserir na tabela notifications
         const { data: notification, error: notifError } = await supabase
             .from('notifications')
             .insert({
@@ -253,7 +240,6 @@ async function criarNotificacaoManual(formData, adminId, metadata) {
         
         if (notifError) throw notifError;
         
-        // Inserir destinatários
         let usersToInsert = [];
         
         if (formData.destinatarios === 'specific') {
@@ -262,7 +248,6 @@ async function criarNotificacaoManual(formData, adminId, metadata) {
                 user_id: userId
             }));
         } else {
-            // Buscar usuários baseado no tipo
             let query = supabase.from('profiles').select('id');
             
             if (formData.destinatarios === 'free') {
@@ -293,7 +278,7 @@ async function criarNotificacaoManual(formData, adminId, metadata) {
         carregarHistorico();
         
     } catch (error) {
-        throw error;
+        alert('Erro ao enviar notificação');
     }
 }
 
@@ -304,7 +289,6 @@ async function carregarHistorico() {
     const container = document.getElementById('historicoContainer');
     
     try {
-        // Usar a view ou fazer join manual
         const { data: notificacoes, error } = await supabase
             .from('notifications')
             .select(`
@@ -411,7 +395,6 @@ async function carregarEstatisticas() {
     const container = document.getElementById('estatisticasContainer');
     
     try {
-        // Buscar dados para estatísticas
         const { data: notificacoes, error: notifError } = await supabase
             .from('notifications')
             .select('tipo, created_at, is_active');
@@ -422,7 +405,6 @@ async function carregarEstatisticas() {
         
         if (notifError || recipError) throw notifError || recipError;
         
-        // Calcular estatísticas
         const stats = {
             totalNotificacoes: notificacoes?.length || 0,
             notificacoesAtivas: notificacoes?.filter(n => n.is_active)?.length || 0,
@@ -432,7 +414,6 @@ async function carregarEstatisticas() {
             totalResgatados: recipients?.filter(r => r.bonus_redeemed)?.length || 0
         };
         
-        // Calcular por tipo
         if (notificacoes) {
             notificacoes.forEach(notif => {
                 stats.porTipo[notif.tipo] = (stats.porTipo[notif.tipo] || 0) + 1;
@@ -516,26 +497,21 @@ function traduzirDestinatarios(destinatarios) {
 }
 
 function showSection(sectionName) {
-    // Esconder todas as seções
     document.querySelectorAll('.content-section').forEach(section => {
         section.classList.remove('active');
     });
     
-    // Remover active de todos os botões
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('active');
     });
 
-    // Mostrar seção selecionada
     document.getElementById(sectionName).classList.add('active');
     
-    // Ativar botão correto
     const activeButton = document.querySelector(`.nav-btn[onclick*="${sectionName}"]`);
     if (activeButton) {
         activeButton.classList.add('active');
     }
 
-    // Carregar conteúdo da seção
     switch(sectionName) {
         case 'historico':
             carregarHistorico();
@@ -550,11 +526,9 @@ function showSection(sectionName) {
 document.addEventListener('DOMContentLoaded', function() {
     if (!verificarAutenticacao()) return;
     
-    // Configurar data de validade padrão (7 dias a partir de hoje)
     const defaultDate = new Date();
     defaultDate.setDate(defaultDate.getDate() + 7);
     document.getElementById('dataValidade').value = defaultDate.toISOString().slice(0, 16);
     
-    // Carregar dados iniciais
     carregarHistorico();
 });
