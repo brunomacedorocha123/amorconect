@@ -653,7 +653,7 @@
     </div>
 
     <script>
- // ==================== CONFIGURAÇÃO SUPABASE ====================
+// ==================== CONFIGURAÇÃO SUPABASE ====================
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -699,7 +699,6 @@ async function distribuirNotificacao(notificationId, destinatarios, userIds = []
                 .select('id');
 
             if (error) {
-                console.log('Erro ao buscar usuários:', error.message);
                 return 0;
             }
 
@@ -719,7 +718,6 @@ async function distribuirNotificacao(notificationId, destinatarios, userIds = []
                 .insert(usersToInsert);
             
             if (error) {
-                console.log('Erro ao inserir destinatários:', error.message);
                 return 0;
             }
             
@@ -729,7 +727,6 @@ async function distribuirNotificacao(notificationId, destinatarios, userIds = []
         return 0;
         
     } catch (error) {
-        console.log('Erro na distribuição:', error.message);
         return 0;
     }
 }
@@ -935,7 +932,7 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
         if (destinatariosCount > 0) {
             alert(`✅ Notificação enviada com sucesso!\n📨 Distribuída para ${destinatariosCount} usuários`);
         } else {
-            alert(`✅ Notificação criada com sucesso!\n⚠️ Execute a SQL de sincronização primeiro`);
+            alert(`✅ Notificação criada com sucesso!\n⚠️ Configure a tabela profiles com usuários para distribuição automática`);
         }
         
         limparFormulario();
