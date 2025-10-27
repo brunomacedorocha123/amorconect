@@ -684,7 +684,7 @@ async function distribuirNotificacao(notificationId, destinatarios, userIds = []
     try {
         let usersToInsert = [];
 
-        // 1. USUÁRIOS ESPECÍFICOS - usa os IDs selecionados
+        // 1. USUÁRIOS ESPECÍFICOS
         if (destinatarios === 'specific' && userIds.length > 0) {
             usersToInsert = userIds.map(userId => ({
                 notification_id: notificationId,
@@ -692,10 +692,12 @@ async function distribuirNotificacao(notificationId, destinatarios, userIds = []
                 created_at: new Date().toISOString()
             }));
         } 
-        // 2. BUSCAR USUÁRIOS DA TABELA PROFILES
+        // 2. TODOS, FREE OU PREMIUM - BUSCAR DA TABELA PROFILES
         else {
-            let query = supabase.from('profiles').select('id');
-            
+            let query = supabase
+                .from('profiles')
+                .select('id, is_premium');
+
             if (destinatarios === 'free') {
                 query = query.eq('is_premium', false);
             } else if (destinatarios === 'premium') {
@@ -703,18 +705,19 @@ async function distribuirNotificacao(notificationId, destinatarios, userIds = []
             }
 
             const { data: users, error } = await query;
-            
+
             if (error) {
-                console.error('Erro ao buscar usuários:', error);
                 return 0;
             }
-            
+
             if (users && users.length > 0) {
                 usersToInsert = users.map(user => ({
                     notification_id: notificationId,
                     user_id: user.id,
                     created_at: new Date().toISOString()
                 }));
+            } else {
+                return 0;
             }
         }
 
@@ -725,7 +728,6 @@ async function distribuirNotificacao(notificationId, destinatarios, userIds = []
                 .insert(usersToInsert);
             
             if (error) {
-                console.error('Erro ao inserir destinatários:', error);
                 return 0;
             }
             
@@ -735,7 +737,6 @@ async function distribuirNotificacao(notificationId, destinatarios, userIds = []
         return 0;
         
     } catch (error) {
-        console.error('Erro na distribuição:', error);
         return 0;
     }
 }
@@ -941,7 +942,7 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
         if (destinatariosCount > 0) {
             alert(`✅ Notificação enviada com sucesso!\n📨 Distribuída para ${destinatariosCount} usuários`);
         } else {
-            alert(`✅ Notificação criada com sucesso!\n⚠️ Configure a tabela profiles com usuários para distribuição automática`);
+            alert(`✅ Notificação criada com sucesso!\n⚠️ Nenhum usuário encontrado para distribuição`);
         }
         
         limparFormulario();
