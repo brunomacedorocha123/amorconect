@@ -25,23 +25,29 @@
                     </ul>
                 </nav>
                 <div class="user-menu">
-                    <div class="user-info">
-                        <div class="user-avatar">
-                            <div class="user-avatar-fallback">U</div>
-                            <img class="avatar-image" style="display: none;" alt="Avatar do usuário">
-                            <div class="avatar-overlay">
-                                <i class="fas fa-camera"></i>
-                            </div>
-                        </div>
-                        <span id="userNickname">Usuário</span>
-                        <!-- BADGE PREMIUM -->
-                        <div id="premiumBadge" class="premium-badge free">
-                            <i class="fas fa-user"></i> Free
-                        </div>
-                    </div>
-                </div>
+    <!-- 🔔 SINO DE NOTIFICAÇÕES -->
+    <div class="notification-bell" id="notificationBell">
+        <a href="notifications.html" class="bell-link">
+            🔔
+            <span class="notification-count" id="notificationCount">0</span>
+        </a>
+    </div>
+    
+    <div class="user-info">
+        <div class="user-avatar">
+            <div class="user-avatar-fallback">U</div>
+            <img class="avatar-image" style="display: none;" alt="Avatar do usuário">
+            <div class="avatar-overlay">
+                <i class="fas fa-camera"></i>
             </div>
         </div>
+        <span id="userNickname">Usuário</span>
+        <!-- BADGE PREMIUM -->
+        <div id="premiumBadge" class="premium-badge free">
+            <i class="fas fa-user"></i> Free
+        </div>
+    </div>
+</div>
     </header>
 
     <!-- Main Content -->
@@ -663,5 +669,7 @@
     <script src="premium-check.js"></script>
     <script src="avatar.js"></script>
     <script src="galeria.js"></script>
+    <!-- No final do body, ANTES do fechamento </body> -->
+<script src="notifications-bell.js"></script>
 </body>
 </html>
