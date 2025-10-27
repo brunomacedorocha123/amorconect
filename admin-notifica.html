@@ -653,7 +653,7 @@
     </div>
 
     <script>
-     // ==================== CONFIGURAÇÃO SUPABASE ====================
+  // ==================== CONFIGURAÇÃO SUPABASE ====================
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -831,23 +831,9 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             return;
         }
 
-        // Buscar qualquer usuário existente para created_by_uuid
-       // Buscar qualquer usuário existente para created_by_uuid
-let createdByUUID = '00000000-0000-0000-0000-000000000000'; // UUID padrão do sistema
+        // UUID fixo para o sistema - SEM BUSCAR EM TABELA PROTEGIDA
+        const createdByUUID = '00000000-0000-0000-0000-000000000000';
 
-try {
-    const { data: usuarios, error: usersError } = await supabase
-        .from('profiles')
-        .select('id')
-        .limit(1);
-
-    if (!usersError && usuarios && usuarios.length > 0) {
-        createdByUUID = usuarios[0].id;
-    }
-    // Se der erro ou não encontrar usuários, usa o UUID padrão
-} catch (error) {
-    // Continua com UUID padrão
-}
         // Preparar dados da notificação
         const notificationData = {
             title: formData.titulo,
@@ -891,37 +877,23 @@ try {
             throw new Error('Erro ao criar notificação: ' + notifError.message);
         }
 
-        // Preparar destinatários
+        // Preparar destinatários - APENAS para usuários específicos
         let usersToInsert = [];
         
         if (formData.destinatarios === 'specific') {
+            // Apenas para usuários específicos selecionados
             usersToInsert = formData.userIds.map(userId => ({
                 notification_id: notification.id,
                 user_id: userId,
                 created_at: new Date().toISOString()
             }));
         } else {
-            let query = supabase.from('profiles').select('id');
-            
-            if (formData.destinatarios === 'free') {
-                query = query.eq('is_premium', false);
-            } else if (formData.destinatarios === 'premium') {
-                query = query.eq('is_premium', true);
-            }
-            
-            const { data: users, error: usersError } = await query;
-            if (usersError) {
-                throw new Error('Erro ao buscar usuários: ' + usersError.message);
-            }
-            
-            usersToInsert = users.map(user => ({
-                notification_id: notification.id,
-                user_id: user.id,
-                created_at: new Date().toISOString()
-            }));
+            // Para "todos", "free" ou "premium" - NÃO buscar usuários, criar vazio
+            // O sistema vai distribuir depois
+            usersToInsert = [];
         }
 
-        // Inserir destinatários
+        // Inserir destinatários apenas se houver
         if (usersToInsert.length > 0) {
             const { error: recipientsError } = await supabase
                 .from('notification_recipients')
@@ -933,7 +905,7 @@ try {
         }
 
         // SUCESSO
-        alert('✅ Notificação enviada com sucesso para ' + usersToInsert.length + ' usuários!');
+        alert('✅ Notificação enviada com sucesso!');
         limparFormulario();
         carregarHistorico();
         
@@ -956,15 +928,7 @@ async function carregarHistorico() {
     try {
         const { data: notificacoes, error } = await supabase
             .from('notifications')
-            .select(`
-                *,
-                notification_recipients (
-                    id,
-                    delivered,
-                    read_status,
-                    bonus_redeemed
-                )
-            `)
+            .select('*')
             .order('created_at', { ascending: false })
             .limit(50);
         
@@ -982,11 +946,6 @@ async function carregarHistorico() {
         }
         
         container.innerHTML = notificacoes.map(notif => {
-            const totalDestinatarios = notif.notification_recipients?.length || 0;
-            const entregues = notif.notification_recipients?.filter(r => r.delivered)?.length || 0;
-            const lidas = notif.notification_recipients?.filter(r => r.read_status)?.length || 0;
-            const resgatados = notif.notification_recipients?.filter(r => r.bonus_redeemed)?.length || 0;
-            
             const badgeClass = `badge-${notif.tipo}`;
             const badgeText = notif.tipo === 'bonus' ? '🎁 Bônus' : 
                             notif.tipo === 'advertencia' ? '⚠️ Advertência' : '📢 Aviso';
@@ -1017,23 +976,17 @@ async function carregarHistorico() {
                     
                     <div class="notification-stats">
                         <div class="stat-item">
-                            <div class="stat-number">${totalDestinatarios}</div>
+                            <div class="stat-number">-</div>
                             <div class="stat-label">Destinatários</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-number">${entregues}</div>
+                            <div class="stat-number">-</div>
                             <div class="stat-label">Entregues</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-number">${lidas}</div>
+                            <div class="stat-number">-</div>
                             <div class="stat-label">Lidas</div>
                         </div>
-                        ${notif.tipo === 'bonus' ? `
-                        <div class="stat-item">
-                            <div class="stat-number">${resgatados}</div>
-                            <div class="stat-label">Resgatados</div>
-                        </div>
-                        ` : ''}
                     </div>
                 </div>
             `;
@@ -1065,19 +1018,12 @@ async function carregarEstatisticas() {
             .from('notifications')
             .select('tipo, created_at, is_active');
         
-        const { data: recipients, error: recipError } = await supabase
-            .from('notification_recipients')
-            .select('delivered, read_status, bonus_redeemed');
-        
-        if (notifError || recipError) throw notifError || recipError;
+        if (notifError) throw notifError;
         
         const stats = {
             totalNotificacoes: notificacoes?.length || 0,
             notificacoesAtivas: notificacoes?.filter(n => n.is_active)?.length || 0,
-            porTipo: {},
-            totalEntregues: recipients?.filter(r => r.delivered)?.length || 0,
-            totalLidas: recipients?.filter(r => r.read_status)?.length || 0,
-            totalResgatados: recipients?.filter(r => r.bonus_redeemed)?.length || 0
+            porTipo: {}
         };
         
         if (notificacoes) {
@@ -1085,12 +1031,6 @@ async function carregarEstatisticas() {
                 stats.porTipo[notif.tipo] = (stats.porTipo[notif.tipo] || 0) + 1;
             });
         }
-        
-        const taxaEntrega = stats.totalNotificacoes > 0 ? 
-            ((stats.totalEntregues / (stats.totalNotificacoes * (recipients?.length || 1))) * 100).toFixed(1) : 0;
-        
-        const taxaleitura = stats.totalEntregues > 0 ? 
-            ((stats.totalLidas / stats.totalEntregues) * 100).toFixed(1) : 0;
         
         container.innerHTML = `
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
@@ -1104,14 +1044,6 @@ async function carregarEstatisticas() {
                         <div style="display: flex; justify-content: space-between;">
                             <span>Notificações Ativas:</span>
                             <strong style="color: var(--success);">${stats.notificacoesAtivas}</strong>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span>Taxa de Entrega:</span>
-                            <strong style="color: var(--info);">${taxaEntrega}%</strong>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span>Taxa de Leitura:</span>
-                            <strong style="color: var(--info);">${taxaleitura}%</strong>
                         </div>
                     </div>
                 </div>
@@ -1130,10 +1062,6 @@ async function carregarEstatisticas() {
                         <div style="display: flex; justify-content: space-between;">
                             <span>📢 Avisos:</span>
                             <strong>${stats.porTipo.aviso || 0}</strong>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span>🎁 Bônus Resgatados:</span>
-                            <strong style="color: var(--success);">${stats.totalResgatados}</strong>
                         </div>
                     </div>
                 </div>
