@@ -5,31 +5,25 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // QUANDO A PÁGINA CARREGAR
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ Página carregada!');
-    
-    // Verificar se está autenticado
     if (sessionStorage.getItem('adminAuthenticated') !== 'true') {
         alert('⚠️ Faça login como admin primeiro!');
         window.location.href = 'login-admin.html';
         return;
     }
 
-    // Configurar eventos
     document.getElementById('tipoUsuario').addEventListener('change', function() {
         const usuarioEspecificoGroup = document.getElementById('usuarioEspecificoGroup');
         usuarioEspecificoGroup.classList.toggle('hidden', this.value !== 'specific');
     });
 
-    document.getElementById('formNotificacao').addEventListener('submit', enviarNotificacao);
+    document.getElementById('formNotificacao').addEventListener('submit', function(e) {
+        e.preventDefault();
+        enviarNotificacao();
+    });
 });
 
-// FUNÇÃO PRINCIPAL - ENVIAR NOTIFICAÇÃO
-async function enviarNotificacao(event) {
-    if (event) event.preventDefault();
-    
-    console.log('🎯 Iniciando envio de notificação...');
-    
-    // Pegar dados do formulário
+// ENVIAR NOTIFICAÇÃO
+async function enviarNotificacao() {
     const categoria = document.getElementById('categoria').value;
     const tipoUsuario = document.getElementById('tipoUsuario').value;
     const usuarioEspecifico = document.getElementById('usuarioEspecifico').value;
@@ -37,7 +31,6 @@ async function enviarNotificacao(event) {
     const mensagem = document.getElementById('mensagem').value.trim();
     const validade = document.getElementById('validade').value;
 
-    // Validar
     if (!titulo || !mensagem) {
         mostrarErro('❌ Preencha título e mensagem!');
         return;
@@ -48,13 +41,9 @@ async function enviarNotificacao(event) {
         return;
     }
 
-    // Mostrar loading
     mostrarLoading();
 
     try {
-        console.log('📦 Buscando destinatários...');
-        
-        // 1. BUSCAR DESTINATÁRIOS
         const destinatarios = await buscarDestinatarios(tipoUsuario, usuarioEspecifico);
         
         if (destinatarios.length === 0) {
@@ -62,9 +51,6 @@ async function enviarNotificacao(event) {
             return;
         }
 
-        console.log(`👥 ${destinatarios.length} destinatários encontrados`);
-
-        // 2. CRIAR NOTIFICAÇÃO NO BANCO
         const batchId = await criarNotificacaoBanco({
             titulo,
             mensagem,
@@ -73,20 +59,13 @@ async function enviarNotificacao(event) {
             totalDestinatarios: destinatarios.length
         });
 
-        console.log('📝 Notificação criada no banco:', batchId);
-
-        // 3. ENVIAR PARA CADA USUÁRIO
         await enviarParaUsuarios(destinatarios, titulo, mensagem, categoria, batchId, validade);
 
-        // 4. SUCESSO!
         mostrarSucesso(`✅ Notificação enviada para ${destinatarios.length} usuários!`);
         limparFormulario();
 
-        console.log('🎉 Notificação enviada com sucesso!');
-
     } catch (erro) {
-        console.error('💥 ERRO:', erro);
-        mostrarErro('❌ Erro ao enviar: ' + (erro.message || 'Tente novamente'));
+        mostrarErro('❌ Erro ao enviar notificação');
     }
 }
 
@@ -97,7 +76,6 @@ async function buscarDestinatarios(tipoUsuario, usuarioEspecifico) {
         .select('id')
         .eq('is_active', true);
 
-    // Filtrar por tipo de usuário
     switch (tipoUsuario) {
         case 'free':
             query = query.eq('is_premium', false);
@@ -106,20 +84,12 @@ async function buscarDestinatarios(tipoUsuario, usuarioEspecifico) {
             query = query.eq('is_premium', true);
             break;
         case 'specific':
-            if (usuarioEspecifico) {
-                query = query.eq('id', usuarioEspecifico);
-            }
+            query = query.eq('id', usuarioEspecifico);
             break;
-        // 'all' não precisa de filtro
     }
 
     const { data, error } = await query;
-
-    if (error) {
-        console.error('Erro ao buscar destinatários:', error);
-        throw new Error('Erro ao buscar usuários');
-    }
-
+    if (error) throw error;
     return data || [];
 }
 
@@ -139,20 +109,14 @@ async function criarNotificacaoBanco(dados) {
         .select()
         .single();
 
-    if (error) {
-        console.error('Erro ao criar notificação:', error);
-        throw new Error('Erro ao salvar notificação');
-    }
-
+    if (error) throw error;
     return data.id;
 }
 
-// ENVIAR PARA USUÁRIOS INDIVIDUAIS
+// ENVIAR PARA USUÁRIOS
 async function enviarParaUsuarios(destinatarios, titulo, mensagem, categoria, batchId, validade) {
-    // Calcular data de expiração
     const expiresAt = calcularExpiracao(validade);
-
-    // Criar array de notificações
+    
     const notificacoes = destinatarios.map(usuario => ({
         user_id: usuario.id,
         title: titulo,
@@ -162,26 +126,14 @@ async function enviarParaUsuarios(destinatarios, titulo, mensagem, categoria, ba
         expires_at: expiresAt
     }));
 
-    console.log(`📤 Enviando ${notificacoes.length} notificações...`);
+    const { error } = await supabase
+        .from('user_notifications')
+        .insert(notificacoes);
 
-    // Inserir no banco (em lotes se for muitos)
-    const batchSize = 50;
-    for (let i = 0; i < notificacoes.length; i += batchSize) {
-        const batch = notificacoes.slice(i, i + batchSize);
-        const { error } = await supabase
-            .from('user_notifications')
-            .insert(batch);
-
-        if (error) {
-            console.error('Erro ao enviar notificações:', error);
-            throw new Error('Erro ao enviar para usuários');
-        }
-    }
-
-    console.log('✅ Todas as notificações salvas!');
+    if (error) throw error;
 }
 
-// CALCULAR DATA DE EXPIRAÇÃO
+// CALCULAR EXPIRAÇÃO
 function calcularExpiracao(validade) {
     if (validade === 'never') {
         return '9999-12-31 23:59:59';
@@ -218,23 +170,4 @@ function limparFormulario() {
     document.getElementById('usuarioEspecificoGroup').classList.add('hidden');
     document.getElementById('mensagemSucesso').classList.add('hidden');
     document.getElementById('mensagemErro').classList.add('hidden');
-    console.log('🧹 Formulário limpo!');
 }
-
-// TESTE RÁPIDO DA CONEXÃO
-async function testarConexao() {
-    try {
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('count')
-            .limit(1);
-
-        if (error) throw error;
-        console.log('✅ Conexão com Supabase OK!');
-    } catch (erro) {
-        console.error('❌ Erro na conexão:', erro);
-    }
-}
-
-// Testar conexão quando carregar
-setTimeout(testarConexao, 1000);
