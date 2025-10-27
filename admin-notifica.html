@@ -832,24 +832,22 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
         }
 
         // Buscar qualquer usuário existente para created_by_uuid
-        const { data: usuarios, error: usersError } = await supabase
-            .from('profiles')
-            .select('id')
-            .limit(1);
+       // Buscar qualquer usuário existente para created_by_uuid
+let createdByUUID = '00000000-0000-0000-0000-000000000000'; // UUID padrão do sistema
 
-        let createdByUUID;
+try {
+    const { data: usuarios, error: usersError } = await supabase
+        .from('profiles')
+        .select('id')
+        .limit(1);
 
-        if (usersError) {
-            throw new Error('Erro ao buscar usuários: ' + usersError.message);
-        }
-
-        if (!usuarios || usuarios.length === 0) {
-            // Se não existe nenhum usuário, usar UUID do sistema
-            createdByUUID = '00000000-0000-0000-0000-000000000000';
-        } else {
-            createdByUUID = usuarios[0].id;
-        }
-
+    if (!usersError && usuarios && usuarios.length > 0) {
+        createdByUUID = usuarios[0].id;
+    }
+    // Se der erro ou não encontrar usuários, usa o UUID padrão
+} catch (error) {
+    // Continua com UUID padrão
+}
         // Preparar dados da notificação
         const notificationData = {
             title: formData.titulo,
