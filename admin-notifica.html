@@ -653,7 +653,7 @@
     </div>
 
     <script>
-  // ==================== CONFIGURAÇÃO SUPABASE ====================
+ // ==================== CONFIGURAÇÃO SUPABASE ====================
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -677,6 +677,108 @@ function logoutAdmin() {
 
 function voltarParaAdmin() {
     window.location.href = 'admin.html';
+}
+
+// ==================== DISTRIBUIDOR DE NOTIFICAÇÕES ====================
+async function distribuirNotificacao(notificationId, destinatarios, userIds = []) {
+    try {
+        console.log('🚀 INICIANDO DISTRIBUIÇÃO:', { notificationId, destinatarios, userIds });
+        
+        let usersToInsert = [];
+
+        // 1. USUÁRIOS ESPECÍFICOS
+        if (destinatarios === 'specific' && userIds.length > 0) {
+            console.log('🎯 Modo: Usuários específicos', userIds.length);
+            usersToInsert = userIds.map(userId => ({
+                notification_id: notificationId,
+                user_id: userId,
+                created_at: new Date().toISOString()
+            }));
+        } 
+        // 2. TODOS OS USUÁRIOS (FREE + PREMIUM)
+        else if (destinatarios === 'all') {
+            console.log('👥 Modo: Todos os usuários');
+            const { data: users, error } = await supabase
+                .from('profiles')
+                .select('id')
+                .limit(100); // Limite para não sobrecarregar
+
+            if (error) throw error;
+            
+            if (users && users.length > 0) {
+                usersToInsert = users.map(user => ({
+                    notification_id: notificationId,
+                    user_id: user.id,
+                    created_at: new Date().toISOString()
+                }));
+                console.log(`📋 Encontrados ${users.length} usuários para "Todos"`);
+            }
+        }
+        // 3. APENAS USUÁRIOS FREE
+        else if (destinatarios === 'free') {
+            console.log('🆓 Modo: Apenas usuários Free');
+            const { data: users, error } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('is_premium', false)
+                .limit(100);
+
+            if (error) throw error;
+            
+            if (users && users.length > 0) {
+                usersToInsert = users.map(user => ({
+                    notification_id: notificationId,
+                    user_id: user.id,
+                    created_at: new Date().toISOString()
+                }));
+                console.log(`📋 Encontrados ${users.length} usuários Free`);
+            }
+        }
+        // 4. APENAS USUÁRIOS PREMIUM
+        else if (destinatarios === 'premium') {
+            console.log('⭐ Modo: Apenas usuários Premium');
+            const { data: users, error } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('is_premium', true)
+                .limit(100);
+
+            if (error) throw error;
+            
+            if (users && users.length > 0) {
+                usersToInsert = users.map(user => ({
+                    notification_id: notificationId,
+                    user_id: user.id,
+                    created_at: new Date().toISOString()
+                }));
+                console.log(`📋 Encontrados ${users.length} usuários Premium`);
+            }
+        }
+
+        // 5. INSERIR NA TABELA DE DESTINATÁRIOS
+        if (usersToInsert.length > 0) {
+            console.log(`📦 Inserindo ${usersToInsert.length} destinatários...`);
+            
+            const { error } = await supabase
+                .from('notification_recipients')
+                .insert(usersToInsert);
+            
+            if (error) {
+                console.error('❌ Erro ao inserir destinatários:', error);
+                throw error;
+            }
+            
+            console.log(`✅ DISTRIBUIÇÃO CONCLUÍDA: ${usersToInsert.length} usuários`);
+            return usersToInsert.length;
+        } else {
+            console.log('⚠️ Nenhum usuário encontrado para distribuição');
+            return 0;
+        }
+        
+    } catch (error) {
+        console.error('❌ ERRO NA DISTRIBUIÇÃO:', error);
+        throw new Error('Falha na distribuição: ' + error.message);
+    }
 }
 
 // ==================== FUNÇÕES DE FORMULÁRIO ====================
@@ -831,7 +933,7 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             return;
         }
 
-        // UUID fixo para o sistema - SEM BUSCAR EM TABELA PROTEGIDA
+        // UUID fixo para o sistema
         const createdByUUID = '00000000-0000-0000-0000-000000000000';
 
         // Preparar dados da notificação
@@ -866,7 +968,9 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             notificationData.alert_category = document.getElementById('alertCategory').value;
         }
 
-        // Inserir notificação
+        console.log('📝 Criando notificação principal...');
+        
+        // 1. CRIAR NOTIFICAÇÃO PRINCIPAL
         const { data: notification, error: notifError } = await supabase
             .from('notifications')
             .insert(notificationData)
@@ -877,39 +981,23 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             throw new Error('Erro ao criar notificação: ' + notifError.message);
         }
 
-        // Preparar destinatários - APENAS para usuários específicos
-        let usersToInsert = [];
-        
-        if (formData.destinatarios === 'specific') {
-            // Apenas para usuários específicos selecionados
-            usersToInsert = formData.userIds.map(userId => ({
-                notification_id: notification.id,
-                user_id: userId,
-                created_at: new Date().toISOString()
-            }));
-        } else {
-            // Para "todos", "free" ou "premium" - NÃO buscar usuários, criar vazio
-            // O sistema vai distribuir depois
-            usersToInsert = [];
-        }
+        console.log('✅ Notificação principal criada:', notification.id);
 
-        // Inserir destinatários apenas se houver
-        if (usersToInsert.length > 0) {
-            const { error: recipientsError } = await supabase
-                .from('notification_recipients')
-                .insert(usersToInsert);
-            
-            if (recipientsError) {
-                throw new Error('Erro ao adicionar destinatários: ' + recipientsError.message);
-            }
-        }
+        // 2. DISTRIBUIR PARA OS USUÁRIOS
+        console.log('🚀 Iniciando distribuição...');
+        const destinatariosCount = await distribuirNotificacao(
+            notification.id, 
+            formData.destinatarios, 
+            formData.userIds
+        );
 
-        // SUCESSO
-        alert('✅ Notificação enviada com sucesso!');
+        // 3. SUCESSO
+        alert(`✅ Notificação enviada com sucesso!\n📨 Distribuída para ${destinatariosCount} usuários`);
         limparFormulario();
         carregarHistorico();
         
     } catch (error) {
+        console.error('❌ ERRO NO ENVIO:', error);
         alert('❌ Erro: ' + error.message);
     } finally {
         // Restaurar botão
@@ -944,8 +1032,27 @@ async function carregarHistorico() {
             `;
             return;
         }
+
+        // Buscar estatísticas de destinatários
+        const notificacoesComStats = await Promise.all(
+            notificacoes.map(async (notif) => {
+                const { data: recipients, error: recError } = await supabase
+                    .from('notification_recipients')
+                    .select('id, read_status')
+                    .eq('notification_id', notif.id);
+
+                const totalDestinatarios = recipients?.length || 0;
+                const lidas = recipients?.filter(r => r.read_status)?.length || 0;
+
+                return {
+                    ...notif,
+                    totalDestinatarios,
+                    lidas
+                };
+            })
+        );
         
-        container.innerHTML = notificacoes.map(notif => {
+        container.innerHTML = notificacoesComStats.map(notif => {
             const badgeClass = `badge-${notif.tipo}`;
             const badgeText = notif.tipo === 'bonus' ? '🎁 Bônus' : 
                             notif.tipo === 'advertencia' ? '⚠️ Advertência' : '📢 Aviso';
@@ -976,16 +1083,16 @@ async function carregarHistorico() {
                     
                     <div class="notification-stats">
                         <div class="stat-item">
-                            <div class="stat-number">-</div>
+                            <div class="stat-number">${notif.totalDestinatarios}</div>
                             <div class="stat-label">Destinatários</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-number">-</div>
-                            <div class="stat-label">Entregues</div>
+                            <div class="stat-number">${notif.lidas}</div>
+                            <div class="stat-label">Lidas</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-number">-</div>
-                            <div class="stat-label">Lidas</div>
+                            <div class="stat-number">${notif.totalDestinatarios - notif.lidas}</div>
+                            <div class="stat-label">Pendentes</div>
                         </div>
                     </div>
                 </div>
@@ -1020,9 +1127,16 @@ async function carregarEstatisticas() {
         
         if (notifError) throw notifError;
         
+        // Buscar estatísticas de destinatários
+        const { data: recipients, error: recError } = await supabase
+            .from('notification_recipients')
+            .select('notification_id, read_status');
+        
         const stats = {
             totalNotificacoes: notificacoes?.length || 0,
             notificacoesAtivas: notificacoes?.filter(n => n.is_active)?.length || 0,
+            totalDestinatarios: recipients?.length || 0,
+            notificacoesLidas: recipients?.filter(r => r.read_status)?.length || 0,
             porTipo: {}
         };
         
@@ -1044,6 +1158,14 @@ async function carregarEstatisticas() {
                         <div style="display: flex; justify-content: space-between;">
                             <span>Notificações Ativas:</span>
                             <strong style="color: var(--success);">${stats.notificacoesAtivas}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Total de Destinatários:</span>
+                            <strong>${stats.totalDestinatarios}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Notificações Lidas:</span>
+                            <strong style="color: var(--info);">${stats.notificacoesLidas}</strong>
                         </div>
                     </div>
                 </div>
