@@ -3,70 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Notificações - Amor Conect</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Gerenciar Notificações</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background: #f8fafc;
-            color: #2d3748;
-            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            padding: 20px;
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
 
         .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
             text-align: center;
-            margin-bottom: 2rem;
-            padding: 2rem;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
         .header h1 {
-            color: #667eea;
-            margin-bottom: 0.5rem;
+            font-size: 2.5em;
+            margin-bottom: 10px;
         }
 
-        .form-section {
-            background: white;
-            border-radius: 15px;
-            padding: 2rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .form-container {
+            padding: 40px;
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 25px;
         }
 
         label {
-            font-weight: 600;
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1em;
         }
 
         input, select, textarea {
             width: 100%;
-            padding: 0.8rem;
-            border: 2px solid #e2e8f0;
+            padding: 12px 15px;
+            border: 2px solid #e1e8ed;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 16px;
+            transition: all 0.3s ease;
         }
 
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
         }
 
         textarea {
@@ -74,138 +80,220 @@
             resize: vertical;
         }
 
-        .btn {
-            padding: 1rem 2rem;
-            border: none;
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .radio-option input[type="radio"] {
+            width: auto;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            color: white;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .expiration-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+        }
+
+        .expiration-option {
+            text-align: center;
+            padding: 15px;
+            border: 2px solid #e1e8ed;
             border-radius: 8px;
             cursor: pointer;
-            font-weight: 600;
-            font-size: 1rem;
-            margin-right: 1rem;
-            margin-bottom: 1rem;
+            transition: all 0.3s ease;
         }
 
-        .btn-enviar {
-            background: #48bb78;
+        .expiration-option:hover {
+            border-color: #3498db;
+        }
+
+        .expiration-option.selected {
+            border-color: #3498db;
+            background: #3498db;
             color: white;
         }
 
-        .btn-limpar {
-            background: #f56565;
-            color: white;
-        }
-
-        .btn-voltar {
-            background: #718096;
-            color: white;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .hidden {
+        .expiration-option input {
             display: none;
         }
 
-        .loading {
-            text-align: center;
-            padding: 2rem;
-            color: #718096;
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .success {
-            background: #c6f6d5;
-            color: #2d3748;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            text-align: center;
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
         }
 
-        .error {
-            background: #fed7d7;
-            color: #2d3748;
-            padding: 1rem;
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        .user-specific {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .user-specific input {
+            width: 100%;
+        }
+
+        .notification-preview {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
             border-radius: 8px;
-            margin-bottom: 1rem;
-            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            display: none;
+        }
+
+        .notification-preview h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .preview-content {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+            
+            .radio-group {
+                flex-direction: column;
+                gap: 10px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📨 Enviar Notificação</h1>
-            <p>Amor Conect - Envie notificações para seus usuários</p>
+            <h1>📢 Sistema de Notificações</h1>
+            <p>Crie e gerencie notificações para os usuários</p>
         </div>
 
-        <div class="form-section">
-            <form id="formNotificacao">
-                <!-- CATEGORIA -->
+        <div class="form-container">
+            <form id="notificationForm">
                 <div class="form-group">
-                    <label for="categoria">Categoria</label>
-                    <select id="categoria" required>
-                        <option value="bonus">🎁 Bônus</option>
-                        <option value="aviso">⚠️ Aviso</option>
-                        <option value="advertencia">🚫 Advertência</option>
-                        <option value="sistema">🔧 Sistema</option>
-                        <option value="promocao">🏷️ Promoção</option>
-                        <option value="atualizacao">🔄 Atualização</option>
+                    <label for="notificationTitle">Título da Notificação</label>
+                    <input type="text" id="notificationTitle" placeholder="Digite o título da notificação..." required>
+                </div>
+
+                <div class="form-group">
+                    <label for="notificationMessage">Mensagem</label>
+                    <textarea id="notificationMessage" placeholder="Escreva a mensagem da notificação..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select id="notificationCategory" required>
+                        <option value="">Selecione uma categoria</option>
                     </select>
                 </div>
 
-                <!-- DESTINATÁRIOS -->
                 <div class="form-group">
-                    <label for="tipoUsuario">Enviar para</label>
-                    <select id="tipoUsuario" required>
-                        <option value="all">👥 Todos os Usuários</option>
-                        <option value="free">🆓 Apenas Free</option>
-                        <option value="premium">⭐ Apenas Premium</option>
-                        <option value="specific">🎯 Usuário Específico</option>
-                    </select>
+                    <label>Destinatários</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="userType" value="all" checked> 
+                            Todos os usuários
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="userType" value="free"> 
+                            Usuários Free
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="userType" value="premium"> 
+                            Usuários Premium
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="userType" value="specific"> 
+                            Usuário Específico
+                        </label>
+                    </div>
+                    <div class="user-specific" id="userSpecific">
+                        <input type="number" id="specificUserId" placeholder="ID do usuário específico">
+                    </div>
                 </div>
 
-                <!-- USUÁRIO ESPECÍFICO -->
-                <div class="form-group hidden" id="usuarioEspecificoGroup">
-                    <label for="usuarioEspecifico">ID do Usuário</label>
-                    <input type="text" id="usuarioEspecifico" placeholder="Cole o ID do usuário aqui">
-                </div>
-
-                <!-- TÍTULO -->
                 <div class="form-group">
-                    <label for="titulo">Título da Notificação</label>
-                    <input type="text" id="titulo" placeholder="Ex: Bônus de Boas-vindas!" required>
+                    <label>Prazo de Validade</label>
+                    <div class="expiration-options">
+                        <label class="expiration-option" data-days="1">
+                            <input type="radio" name="expiration" value="1"> 
+                            1 Dia
+                        </label>
+                        <label class="expiration-option" data-days="7">
+                            <input type="radio" name="expiration" value="7" checked> 
+                            7 Dias
+                        </label>
+                        <label class="expiration-option" data-days="30">
+                            <input type="radio" name="expiration" value="30"> 
+                            30 Dias
+                        </label>
+                        <label class="expiration-option" data-days="365">
+                            <input type="radio" name="expiration" value="365"> 
+                            365 Dias
+                        </label>
+                    </div>
                 </div>
 
-                <!-- MENSAGEM -->
-                <div class="form-group">
-                    <label for="mensagem">Mensagem</label>
-                    <textarea id="mensagem" placeholder="Digite a mensagem da notificação..." required></textarea>
-                </div>
-
-                <!-- VALIDADE -->
-                <div class="form-group">
-                    <label for="validade">Validade da Notificação</label>
-                    <select id="validade" required>
-                        <option value="1">⏰ 1 Dia</option>
-                        <option value="7" selected>📅 7 Dias</option>
-                        <option value="30">🗓️ 30 Dias</option>
-                        <option value="90">📆 90 Dias</option>
-                        <option value="never">∞ Nunca Expira</option>
-                    </select>
-                </div>
-
-                <!-- BOTÕES -->
-                <div>
-                    <button type="submit" class="btn btn-enviar">📨 Enviar Notificação</button>
-                    <button type="button" class="btn btn-limpar" onclick="limparFormulario()">🗑️ Limpar</button>
-                    <a href="admin.html" class="btn btn-voltar">← Voltar</a>
-                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    📨 Enviar Notificação
+                </button>
             </form>
-        </div>
 
-        <!-- MENSAGENS -->
-        <div id="mensagemSucesso" class="success hidden"></div>
-        <div id="mensagemErro" class="error hidden"></div>
+            <div class="notification-preview" id="notificationPreview">
+                <h3>Pré-visualização</h3>
+                <div class="preview-content">
+                    <strong id="previewTitle"></strong>
+                    <p id="previewMessage"></p>
+                    <small id="previewCategory"></small>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="admin-notifica.js"></script>
