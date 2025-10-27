@@ -654,7 +654,6 @@
 
     <script>
  // ==================== CONFIGURAÇÃO SUPABASE ====================
-// ==================== CONFIGURAÇÃO SUPABASE ====================
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -680,80 +679,29 @@ function voltarParaAdmin() {
     window.location.href = 'admin.html';
 }
 
-// ==================== TESTAR CONEXÃO COM PROFILES ====================
-async function testarConexaoProfiles() {
-    try {
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('id, nickname, email, is_premium')
-            .limit(10);
-
-        if (error) {
-            console.error('Erro ao acessar profiles:', error);
-            return { success: false, error: error.message, data: null };
-        }
-
-        console.log('Usuários encontrados na tabela profiles:', data);
-        return { success: true, error: null, data: data };
-        
-    } catch (error) {
-        console.error('Erro no teste:', error);
-        return { success: false, error: error.message, data: null };
-    }
-}
-
-// ==================== DISTRIBUIDOR MELHORADO ====================
+// ==================== DISTRIBUIDOR SIMPLIFICADO ====================
 async function distribuirNotificacao(notificationId, destinatarios, userIds = []) {
     try {
-        console.log('Iniciando distribuição para:', destinatarios);
-        
-        // Primeiro testar a conexão
-        const teste = await testarConexaoProfiles();
-        if (!teste.success) {
-            console.error('Falha na conexão com profiles:', teste.error);
-            return 0;
-        }
-
-        console.log('Usuários disponíveis:', teste.data);
-
         let usersToInsert = [];
 
         // 1. USUÁRIOS ESPECÍFICOS
         if (destinatarios === 'specific' && userIds.length > 0) {
-            console.log('Distribuindo para usuários específicos:', userIds);
             usersToInsert = userIds.map(userId => ({
                 notification_id: notificationId,
                 user_id: userId,
                 created_at: new Date().toISOString()
             }));
         } 
-        // 2. BUSCAR USUÁRIOS DA TABELA PROFILES
+        // 2. BUSCAR DA TABELA PROFILES
         else {
-            console.log('Buscando usuários da tabela profiles...');
-            
-            let query = supabase
+            const { data: users, error } = await supabase
                 .from('profiles')
-                .select('id, nickname, email, is_premium');
-
-            // Aplicar filtros
-            if (destinatarios === 'free') {
-                query = query.eq('is_premium', false);
-                console.log('Filtrando por usuários FREE');
-            } else if (destinatarios === 'premium') {
-                query = query.eq('is_premium', true);
-                console.log('Filtrando por usuários PREMIUM');
-            } else {
-                console.log('Buscando TODOS os usuários');
-            }
-
-            const { data: users, error } = await query;
+                .select('id');
 
             if (error) {
-                console.error('Erro ao buscar usuários:', error);
+                console.log('Erro ao buscar usuários:', error.message);
                 return 0;
             }
-
-            console.log('Usuários encontrados:', users);
 
             if (users && users.length > 0) {
                 usersToInsert = users.map(user => ({
@@ -761,34 +709,27 @@ async function distribuirNotificacao(notificationId, destinatarios, userIds = []
                     user_id: user.id,
                     created_at: new Date().toISOString()
                 }));
-                console.log(`✅ Encontrados ${users.length} usuários para distribuição`);
-            } else {
-                console.log('❌ Nenhum usuário encontrado na tabela profiles');
-                return 0;
             }
         }
 
-        // 3. INSERIR NA TABELA DE DESTINATÁRIOS
+        // 3. INSERIR DESTINATÁRIOS
         if (usersToInsert.length > 0) {
-            console.log(`📦 Inserindo ${usersToInsert.length} destinatários...`);
-            
             const { error } = await supabase
                 .from('notification_recipients')
                 .insert(usersToInsert);
             
             if (error) {
-                console.error('❌ Erro ao inserir destinatários:', error);
+                console.log('Erro ao inserir destinatários:', error.message);
                 return 0;
             }
             
-            console.log(`✅ DISTRIBUIÇÃO CONCLUÍDA: ${usersToInsert.length} usuários`);
             return usersToInsert.length;
         }
         
         return 0;
         
     } catch (error) {
-        console.error('❌ ERRO NA DISTRIBUIÇÃO:', error);
+        console.log('Erro na distribuição:', error.message);
         return 0;
     }
 }
@@ -839,10 +780,7 @@ async function searchUsers(query) {
             .or(`nickname.ilike.%${query}%,email.ilike.%${query}%`)
             .limit(10);
         
-        if (error) {
-            console.error('Erro na busca:', error);
-            return;
-        }
+        if (error) return;
         
         if (users && users.length > 0) {
             resultsContainer.innerHTML = users.map(user => `
@@ -946,20 +884,6 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             return;
         }
 
-        // Primeiro testar a conexão
-        const testeConexao = await testarConexaoProfiles();
-        if (!testeConexao.success) {
-            alert('❌ Erro de conexão com o banco: ' + testeConexao.error);
-            return;
-        }
-
-        if (!testeConexao.data || testeConexao.data.length === 0) {
-            alert('⚠️ A tabela profiles está vazia. Cadastre usuários primeiro.');
-            return;
-        }
-
-        console.log('Usuários disponíveis no sistema:', testeConexao.data);
-
         const createdByUUID = '00000000-0000-0000-0000-000000000000';
 
         const notificationData = {
@@ -992,7 +916,6 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             notificationData.alert_category = document.getElementById('alertCategory').value;
         }
 
-        console.log('Criando notificação principal...');
         const { data: notification, error: notifError } = await supabase
             .from('notifications')
             .insert(notificationData)
@@ -1003,7 +926,6 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             throw new Error('Erro ao criar notificação: ' + notifError.message);
         }
 
-        console.log('Notificação criada, iniciando distribuição...');
         const destinatariosCount = await distribuirNotificacao(
             notification.id, 
             formData.destinatarios, 
@@ -1013,7 +935,7 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
         if (destinatariosCount > 0) {
             alert(`✅ Notificação enviada com sucesso!\n📨 Distribuída para ${destinatariosCount} usuários`);
         } else {
-            alert(`✅ Notificação criada com sucesso!\n⚠️ Mas não foi distribuída - verifique se há usuários na tabela profiles`);
+            alert(`✅ Notificação criada com sucesso!\n⚠️ Execute a SQL de sincronização primeiro`);
         }
         
         limparFormulario();
