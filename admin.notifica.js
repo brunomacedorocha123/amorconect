@@ -154,6 +154,7 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
         mensagem: document.getElementById('mensagem').value,
         destinatarios: document.getElementById('destinatarios').value,
         dataValidade: document.getElementById('dataValidade').value,
+        prioridade: document.getElementById('prioridade').value,
         userIds: selectedUsers.map(u => u.id)
     };
     
@@ -175,19 +176,45 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             return;
         }
 
-        // INSERIR NA TABELA NOTIFICATIONS (estrutura básica)
+        // Preparar dados extras
+        const metadata = {};
+        
+        if (formData.tipo === 'bonus') {
+            metadata.bonus_value = parseFloat(document.getElementById('bonusValue').value) || null;
+            metadata.bonus_code = document.getElementById('bonusCode').value || null;
+            metadata.bonus_type = document.getElementById('bonusType').value || null;
+        } else if (formData.tipo === 'advertencia') {
+            metadata.warning_severity = document.getElementById('warningSeverity').value;
+            metadata.requires_acknowledgment = document.getElementById('requiresAcknowledgment').value === 'true';
+        } else if (formData.tipo === 'aviso') {
+            metadata.alert_category = document.getElementById('alertCategory').value;
+        }
+
+        // INSERIR NA TABELA NOTIFICATIONS - USANDO COLUNAS CORRETAS
+        const notificationData = {
+            title: formData.titulo,
+            message: formData.mensagem,
+            tipo: formData.tipo,
+            destinatarios: formData.destinatarios,
+            data_validade: formData.dataValidade,
+            created_by_uuid: user.id, // Usar a coluna UUID
+            is_active: true,
+            created_at: new Date().toISOString(),
+            priority: formData.prioridade,
+            status: 'active'
+        };
+
+        // Adicionar campos específicos se preenchidos
+        if (metadata.bonus_value) notificationData.bonus_value = metadata.bonus_value;
+        if (metadata.bonus_code) notificationData.bonus_code = metadata.bonus_code;
+        if (metadata.bonus_type) notificationData.bonus_type = metadata.bonus_type;
+        if (metadata.warning_severity) notificationData.warning_severity = metadata.warning_severity;
+        if (metadata.requires_acknowledgment) notificationData.requires_acknowledgment = metadata.requires_acknowledgment;
+        if (metadata.alert_category) notificationData.alert_category = metadata.alert_category;
+
         const { data: notification, error: notifError } = await supabase
             .from('notifications')
-            .insert({
-                title: formData.titulo,
-                message: formData.mensagem,
-                tipo: formData.tipo,
-                destinatarios: formData.destinatarios,
-                data_validade: formData.dataValidade,
-                created_by_uuid: user.id,
-                is_active: true,
-                created_at: new Date().toISOString()
-            })
+            .insert(notificationData)
             .select()
             .single();
 
@@ -288,6 +315,7 @@ async function carregarHistorico() {
             const totalDestinatarios = notif.notification_recipients?.length || 0;
             const entregues = notif.notification_recipients?.filter(r => r.delivered)?.length || 0;
             const lidas = notif.notification_recipients?.filter(r => r.read_status)?.length || 0;
+            const resgatados = notif.notification_recipients?.filter(r => r.bonus_redeemed)?.length || 0;
             
             const badgeClass = `badge-${notif.tipo}`;
             const badgeText = notif.tipo === 'bonus' ? '🎁 Bônus' : 
@@ -310,6 +338,13 @@ async function carregarHistorico() {
                         ${notif.message}
                     </div>
                     
+                    ${notif.bonus_value ? `
+                        <div style="background: var(--success); color: white; padding: 0.5rem; border-radius: 5px; margin: 0.5rem 0;">
+                            <strong>🎁 Bônus:</strong> R$ ${notif.bonus_value} 
+                            ${notif.bonus_code ? `| Código: ${notif.bonus_code}` : ''}
+                        </div>
+                    ` : ''}
+                    
                     <div class="notification-stats">
                         <div class="stat-item">
                             <div class="stat-number">${totalDestinatarios}</div>
@@ -323,6 +358,12 @@ async function carregarHistorico() {
                             <div class="stat-number">${lidas}</div>
                             <div class="stat-label">Lidas</div>
                         </div>
+                        ${notif.tipo === 'bonus' ? `
+                        <div class="stat-item">
+                            <div class="stat-number">${resgatados}</div>
+                            <div class="stat-label">Resgatados</div>
+                        </div>
+                        ` : ''}
                     </div>
                 </div>
             `;
@@ -355,7 +396,7 @@ async function carregarEstatisticas() {
         
         const { data: recipients, error: recipError } = await supabase
             .from('notification_recipients')
-            .select('delivered, read_status');
+            .select('delivered, read_status, bonus_redeemed');
         
         if (notifError || recipError) throw notifError || recipError;
         
@@ -364,7 +405,8 @@ async function carregarEstatisticas() {
             notificacoesAtivas: notificacoes?.filter(n => n.is_active)?.length || 0,
             porTipo: {},
             totalEntregues: recipients?.filter(r => r.delivered)?.length || 0,
-            totalLidas: recipients?.filter(r => r.read_status)?.length || 0
+            totalLidas: recipients?.filter(r => r.read_status)?.length || 0,
+            totalResgatados: recipients?.filter(r => r.bonus_redeemed)?.length || 0
         };
         
         if (notificacoes) {
@@ -417,6 +459,10 @@ async function carregarEstatisticas() {
                         <div style="display: flex; justify-content: space-between;">
                             <span>📢 Avisos:</span>
                             <strong>${stats.porTipo.aviso || 0}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>🎁 Bônus Resgatados:</span>
+                            <strong style="color: var(--success);">${stats.totalResgatados}</strong>
                         </div>
                     </div>
                 </div>
