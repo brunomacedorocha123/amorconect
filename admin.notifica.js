@@ -3,6 +3,9 @@ const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// ==================== VARIÁVEIS GLOBAIS ====================
+let selectedUsers = [];
+
 // ==================== VERIFICAÇÃO DE AUTENTICAÇÃO ====================
 function verificarAutenticacao() {
     if (sessionStorage.getItem('adminAuthenticated') !== 'true') {
@@ -12,130 +15,382 @@ function verificarAutenticacao() {
     return true;
 }
 
-// ==================== FUNÇÕES DE NAVEGAÇÃO ====================
-function voltarParaAdmin() {
-    window.location.href = 'admin.html';
-}
-
 function logoutAdmin() {
     sessionStorage.removeItem('adminAuthenticated');
     window.location.href = 'login-admin.html';
 }
 
-function irParaNotificacoes() {
-    window.location.href = 'admin-notifica.html';
+function voltarParaAdmin() {
+    window.location.href = 'admin.html';
 }
 
-// ==================== FUNÇÕES PRINCIPAIS ====================
-async function carregarEstatisticas() {
-    if (!verificarAutenticacao()) return;
+// ==================== FUNÇÕES DE FORMULÁRIO ====================
+function toggleFields() {
+    const tipo = document.getElementById('tipoNotificacao').value;
     
-    try {
-        const { count: totalDenuncias } = await supabase
-            .from('user_reports')
-            .select('*', { count: 'exact', head: true });
-
-        const { count: denunciasPendentes } = await supabase
-            .from('user_reports')
-            .select('*', { count: 'exact', head: true })
-            .eq('status', 'pending');
-
-        const { count: denunciasResolvidas } = await supabase
-            .from('user_reports')
-            .select('*', { count: 'exact', head: true })
-            .eq('status', 'resolved');
-
-        const { count: totalUsuarios } = await supabase
-            .from('profiles')
-            .select('*', { count: 'exact', head: true });
-
-        document.getElementById('totalDenuncias').textContent = totalDenuncias || 0;
-        document.getElementById('pendentesDenuncias').textContent = denunciasPendentes || 0;
-        document.getElementById('resolvidasDenuncias').textContent = denunciasResolvidas || 0;
-        document.getElementById('totalUsuarios').textContent = totalUsuarios || 0;
-
-        document.getElementById('lastUpdate').textContent = 
-            `Última atualização: ${new Date().toLocaleString('pt-BR')}`;
-
-    } catch (erro) {
-        console.error('Erro ao carregar estatísticas:', erro);
-        alert('Erro ao carregar estatísticas');
+    document.getElementById('bonusFields').style.display = 'none';
+    document.getElementById('advertenciaFields').style.display = 'none';
+    document.getElementById('avisoFields').style.display = 'none';
+    
+    if (tipo === 'bonus') {
+        document.getElementById('bonusFields').style.display = 'block';
+    } else if (tipo === 'advertencia') {
+        document.getElementById('advertenciaFields').style.display = 'block';
+    } else if (tipo === 'aviso') {
+        document.getElementById('avisoFields').style.display = 'block';
     }
 }
 
-async function carregarDenuncias() {
-    if (!verificarAutenticacao()) return;
+function toggleUserSearch() {
+    const destinatarios = document.getElementById('destinatarios').value;
+    const container = document.getElementById('userSearchContainer');
     
-    const container = document.getElementById('denunciasContainer');
+    if (destinatarios === 'specific') {
+        container.style.display = 'block';
+    } else {
+        container.style.display = 'none';
+        selectedUsers = [];
+        updateSelectedUsersDisplay();
+    }
+}
+
+// ==================== BUSCA DE USUÁRIOS ====================
+async function searchUsers(query) {
+    const resultsContainer = document.getElementById('userResults');
+    
+    if (query.length < 2) {
+        resultsContainer.style.display = 'none';
+        return;
+    }
     
     try {
-        const { data: denuncias, error } = await supabase
-            .from('user_reports')
+        const { data: users, error } = await supabase
+            .from('profiles')
+            .select('id, nickname, email, is_premium')
+            .or(`nickname.ilike.%${query}%,email.ilike.%${query}%`)
+            .limit(10);
+        
+        if (error) return;
+        
+        if (users && users.length > 0) {
+            resultsContainer.innerHTML = users.map(user => `
+                <div class="user-result" onclick="selectUser('${user.id}', '${user.nickname || user.email}')">
+                    <strong>${user.nickname || 'Sem nome'}</strong> 
+                    <br>
+                    <small>${user.email} ${user.is_premium ? '⭐' : '🆓'}</small>
+                </div>
+            `).join('');
+            resultsContainer.style.display = 'block';
+        } else {
+            resultsContainer.innerHTML = '<div class="user-result">Nenhum usuário encontrado</div>';
+            resultsContainer.style.display = 'block';
+        }
+    } catch (error) {
+        resultsContainer.innerHTML = '<div class="user-result">Erro na busca</div>';
+        resultsContainer.style.display = 'block';
+    }
+}
+
+function selectUser(userId, userName) {
+    if (!selectedUsers.find(u => u.id === userId)) {
+        selectedUsers.push({ id: userId, name: userName });
+        updateSelectedUsersDisplay();
+    }
+    
+    document.getElementById('userSearch').value = '';
+    document.getElementById('userResults').style.display = 'none';
+}
+
+function removeUser(userId) {
+    selectedUsers = selectedUsers.filter(u => u.id !== userId);
+    updateSelectedUsersDisplay();
+}
+
+function updateSelectedUsersDisplay() {
+    const container = document.getElementById('selectedUsers');
+    container.innerHTML = selectedUsers.map(user => `
+        <div class="selected-user">
+            ${user.name}
+            <button type="button" class="remove-user" onclick="removeUser('${user.id}')">×</button>
+        </div>
+    `).join('');
+}
+
+// ==================== PREVIEW DA NOTIFICAÇÃO ====================
+function previewNotification() {
+    const titulo = document.getElementById('titulo').value;
+    const mensagem = document.getElementById('mensagem').value;
+    
+    if (!titulo || !mensagem) {
+        alert('❌ Preencha título e mensagem para visualizar');
+        return;
+    }
+    
+    document.getElementById('previewTitle').textContent = titulo;
+    document.getElementById('previewMessage').textContent = mensagem;
+    document.getElementById('previewSection').style.display = 'block';
+}
+
+function limparFormulario() {
+    if (confirm('Tem certeza que deseja limpar o formulário?')) {
+        document.getElementById('notificationForm').reset();
+        selectedUsers = [];
+        updateSelectedUsersDisplay();
+        document.getElementById('previewSection').style.display = 'none';
+        toggleFields();
+        toggleUserSearch();
+    }
+}
+
+// ==================== ENVIO DE NOTIFICAÇÃO ====================
+document.getElementById('notificationForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    if (!verificarAutenticacao()) return;
+    
+    const formData = {
+        tipo: document.getElementById('tipoNotificacao').value,
+        titulo: document.getElementById('titulo').value,
+        mensagem: document.getElementById('mensagem').value,
+        destinatarios: document.getElementById('destinatarios').value,
+        dataValidade: document.getElementById('dataValidade').value,
+        prioridade: document.getElementById('prioridade').value,
+        userIds: selectedUsers.map(u => u.id)
+    };
+    
+    if (!formData.tipo || !formData.titulo || !formData.mensagem || !formData.destinatarios || !formData.dataValidade) {
+        alert('❌ Preencha todos os campos obrigatórios');
+        return;
+    }
+    
+    if (formData.destinatarios === 'specific' && formData.userIds.length === 0) {
+        alert('❌ Selecione pelo menos um usuário específico');
+        return;
+    }
+    
+    // Mostrar loading no botão
+    const submitBtn = document.querySelector('#notificationForm button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '⏳ Enviando...';
+    submitBtn.disabled = true;
+    
+    try {
+        // Obter admin logado
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            alert('❌ Erro de autenticação');
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            return;
+        }
+
+        // INSERIR NA TABELA NOTIFICATIONS (VERSÃO CORRIGIDA)
+        const notificationData = {
+            title: formData.titulo,
+            message: formData.mensagem,
+            tipo: formData.tipo,
+            destinatarios: formData.destinatarios,
+            data_validade: formData.dataValidade,
+            created_by_uuid: user.id,
+            is_active: true,
+            created_at: new Date().toISOString(),
+            priority: formData.prioridade,
+            status: 'active'
+        };
+
+        // Adicionar campos específicos baseados no tipo
+        if (formData.tipo === 'bonus') {
+            const bonusValue = document.getElementById('bonusValue').value;
+            const bonusCode = document.getElementById('bonusCode').value;
+            const bonusType = document.getElementById('bonusType').value;
+            
+            if (bonusValue) notificationData.bonus_value = parseFloat(bonusValue);
+            if (bonusCode) notificationData.bonus_code = bonusCode;
+            if (bonusType) notificationData.bonus_type = bonusType;
+            
+        } else if (formData.tipo === 'advertencia') {
+            notificationData.warning_severity = document.getElementById('warningSeverity').value;
+            notificationData.requires_acknowledgment = document.getElementById('requiresAcknowledgment').value === 'true';
+            
+        } else if (formData.tipo === 'aviso') {
+            notificationData.alert_category = document.getElementById('alertCategory').value;
+        }
+
+        const { data: notification, error: notifError } = await supabase
+            .from('notifications')
+            .insert(notificationData)
+            .select()
+            .single();
+
+        if (notifError) {
+            alert('❌ Erro ao criar notificação: ' + notifError.message);
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+            return;
+        }
+
+        // INSERIR DESTINATÁRIOS
+        let usersToInsert = [];
+        
+        if (formData.destinatarios === 'specific') {
+            // Usuários específicos selecionados
+            usersToInsert = formData.userIds.map(userId => ({
+                notification_id: notification.id,
+                user_id: userId,
+                created_at: new Date().toISOString()
+            }));
+        } else {
+            // Buscar usuários automaticamente
+            let query = supabase.from('profiles').select('id');
+            
+            if (formData.destinatarios === 'free') {
+                query = query.eq('is_premium', false);
+            } else if (formData.destinatarios === 'premium') {
+                query = query.eq('is_premium', true);
+            }
+            
+            const { data: users, error: usersError } = await query;
+            if (usersError) {
+                alert('❌ Erro ao buscar usuários: ' + usersError.message);
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                return;
+            }
+            
+            usersToInsert = users.map(user => ({
+                notification_id: notification.id,
+                user_id: user.id,
+                created_at: new Date().toISOString()
+            }));
+        }
+
+        // Inserir destinatários se houver
+        if (usersToInsert.length > 0) {
+            const { error: recipientsError } = await supabase
+                .from('notification_recipients')
+                .insert(usersToInsert);
+            
+            if (recipientsError) {
+                alert('❌ Erro ao adicionar destinatários: ' + recipientsError.message);
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                return;
+            }
+        }
+
+        // SUCESSO
+        alert('✅ Notificação enviada com sucesso para ' + usersToInsert.length + ' usuários!');
+        limparFormulario();
+        carregarHistorico();
+        
+    } catch (error) {
+        alert('❌ Erro inesperado: ' + error.message);
+    } finally {
+        // Restaurar botão
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
+});
+
+// ==================== CARREGAR HISTÓRICO ====================
+async function carregarHistorico() {
+    if (!verificarAutenticacao()) return;
+    
+    const container = document.getElementById('historicoContainer');
+    
+    try {
+        const { data: notificacoes, error } = await supabase
+            .from('notifications')
             .select(`
                 *,
-                reporter:reporter_id(nickname, avatar_url, id),
-                reported:reported_user_id(nickname, avatar_url, id, email)
+                notification_recipients (
+                    id,
+                    delivered,
+                    read_status,
+                    bonus_redeemed
+                )
             `)
-            .eq('status', 'pending')
-            .order('created_at', { ascending: false });
-
+            .order('created_at', { ascending: false })
+            .limit(50);
+        
         if (error) throw error;
-
-        if (!denuncias || denuncias.length === 0) {
+        
+        if (!notificacoes || notificacoes.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
-                    <div class="icon">🎉</div>
-                    <h3>Nenhuma denúncia pendente!</h3>
-                    <p>Todas as denúncias foram resolvidas.</p>
+                    <div class="icon">📭</div>
+                    <h3>Nenhuma notificação enviada</h3>
+                    <p>Comece criando sua primeira notificação.</p>
                 </div>
             `;
             return;
         }
-
-        container.innerHTML = denuncias.map(denuncia => `
-            <div class="report-card">
-                <div class="report-header">
-                    <div class="report-users">
-                        <strong>${denuncia.reporter?.nickname || 'Usuário'}</strong> 
-                        denunciou 
-                        <strong>${denuncia.reported?.nickname || 'Usuário'}</strong>
+        
+        container.innerHTML = notificacoes.map(notif => {
+            const totalDestinatarios = notif.notification_recipients?.length || 0;
+            const entregues = notif.notification_recipients?.filter(r => r.delivered)?.length || 0;
+            const lidas = notif.notification_recipients?.filter(r => r.read_status)?.length || 0;
+            const resgatados = notif.notification_recipients?.filter(r => r.bonus_redeemed)?.length || 0;
+            
+            const badgeClass = `badge-${notif.tipo}`;
+            const badgeText = notif.tipo === 'bonus' ? '🎁 Bônus' : 
+                            notif.tipo === 'advertencia' ? '⚠️ Advertência' : '📢 Aviso';
+            
+            return `
+                <div class="notification-card">
+                    <div class="notification-header">
+                        <div class="notification-title">${notif.title}</div>
+                        <div class="notification-badge ${badgeClass}">${badgeText}</div>
                     </div>
-                    <div class="report-reason">${traduzirMotivo(denuncia.reason)}</div>
-                </div>
-                
-                <div class="report-meta">
-                    <small>Data: ${new Date(denuncia.created_at).toLocaleString('pt-BR')}</small>
-                    ${denuncia.reported?.email ? `<br><small>Email: ${denuncia.reported.email}</small>` : ''}
-                </div>
-
-                ${denuncia.evidence ? `
-                    <div class="report-evidence">
-                        <strong>Motivo detalhado:</strong> "${denuncia.evidence}"
+                    
+                    <div class="notification-meta">
+                        <strong>Para:</strong> ${traduzirDestinatarios(notif.destinatarios)} | 
+                        <strong>Enviada:</strong> ${new Date(notif.created_at).toLocaleString('pt-BR')} |
+                        <strong>Validade:</strong> ${new Date(notif.data_validade).toLocaleString('pt-BR')}
                     </div>
-                ` : ''}
-
-                <div class="report-actions">
-                    <button class="btn btn-danger" onclick="tomarAcao('${denuncia.id}', '${denuncia.reported_user_id}', 'banir', '${denuncia.reported?.email || ''}')">
-                        🚫 Banir Permanentemente
-                    </button>
-                    <button class="btn btn-warning" onclick="tomarAcao('${denuncia.id}', '${denuncia.reported_user_id}', 'advertir')">
-                        ⚠️ Advertir
-                    </button>
-                    <button class="btn btn-success" onclick="tomarAcao('${denuncia.id}', null, 'resolver')">
-                        ✅ Resolver
-                    </button>
+                    
+                    <div class="notification-message">
+                        ${notif.message}
+                    </div>
+                    
+                    ${notif.bonus_value ? `
+                        <div style="background: var(--success); color: white; padding: 0.5rem; border-radius: 5px; margin: 0.5rem 0;">
+                            <strong>🎁 Bônus:</strong> R$ ${notif.bonus_value} 
+                            ${notif.bonus_code ? `| Código: ${notif.bonus_code}` : ''}
+                        </div>
+                    ` : ''}
+                    
+                    <div class="notification-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">${totalDestinatarios}</div>
+                            <div class="stat-label">Destinatários</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${entregues}</div>
+                            <div class="stat-label">Entregues</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${lidas}</div>
+                            <div class="stat-label">Lidas</div>
+                        </div>
+                        ${notif.tipo === 'bonus' ? `
+                        <div class="stat-item">
+                            <div class="stat-number">${resgatados}</div>
+                            <div class="stat-label">Resgatados</div>
+                        </div>
+                        ` : ''}
+                    </div>
                 </div>
-            </div>
-        `).join('');
-
-    } catch (erro) {
-        console.error('Erro ao carregar denúncias:', erro);
+            `;
+        }).join('');
+        
+    } catch (error) {
         container.innerHTML = `
             <div class="empty-state">
                 <div class="icon">❌</div>
-                <h3>Erro ao carregar denúncias</h3>
+                <h3>Erro ao carregar histórico</h3>
                 <p>Tente novamente mais tarde.</p>
-                <button class="btn btn-primary" onclick="carregarTudo()" style="margin-top: 1rem;">
+                <button class="btn btn-primary" onclick="carregarHistorico()" style="margin-top: 1rem;">
                     🔄 Tentar Novamente
                 </button>
             </div>
@@ -143,257 +398,93 @@ async function carregarDenuncias() {
     }
 }
 
-async function tomarAcao(idDenuncia, idUsuario, acao, emailUsuario = '') {
-    if (!verificarAutenticacao()) return;
-    
-    const textoAcao = {
-        'banir': 'BANIR PERMANENTEMENTE este usuário',
-        'advertir': 'advertir este usuário', 
-        'resolver': 'resolver esta denúncia'
-    }[acao];
-    
-    if (acao === 'banir') {
-        if (!confirm(`🚨🚨🚨 BANIMENTO PERMANENTE 🚨🚨🚨\n\nEsta ação é IRREVERSÍVEL!\n\n• Email será BLOQUEADO PARA SEMPRE\n• Usuário NUNCA poderá criar nova conta\n• Todos os dados serão removidos\n\nTem certeza absoluta?`)) {
-            return;
-        }
-    } else {
-        if (!confirm(`Tem certeza que deseja ${textoAcao}?`)) return;
-    }
-
-    try {
-        if (acao === 'banir' && idUsuario) {
-            await banirUsuario(idUsuario, emailUsuario, idDenuncia);
-        } else if (acao === 'advertir' && idUsuario) {
-            await advertirUsuario(idUsuario, idDenuncia);
-        }
-        
-        const updateData = { 
-            status: 'resolved',
-            resolved_at: new Date().toISOString(),
-            action_taken: acao
-        };
-
-        const { error: reportError } = await supabase
-            .from('user_reports')
-            .update(updateData)
-            .eq('id', idDenuncia);
-
-        if (reportError) throw reportError;
-
-        let mensagem = '';
-        if (acao === 'banir') {
-            mensagem = '🚫 USUÁRIO BANIDO PERMANENTEMENTE!\n\n• Email BLOQUEADO para sempre\n• Não pode criar nova conta\n• Dados removidos do sistema';
-        } else if (acao === 'advertir') {
-            mensagem = '⚠️ Advertência administrativa registrada!\n\nUsuário foi notificado sobre a violação.';
-        } else {
-            mensagem = '✅ Denúncia resolvida sem ações adicionais.';
-        }
-        
-        alert(mensagem);
-        carregarTudo();
-
-    } catch (erro) {
-        console.error('Erro ao processar ação:', erro);
-        alert('Erro ao processar ação: ' + (erro.message || 'Erro desconhecido'));
-    }
-}
-
-async function banirUsuario(userId, email, denunciaId) {
-    try {
-        let emailParaBanir = email;
-        
-        if (!emailParaBanir) {
-            const { data: usuario, error: userError } = await supabase
-                .from('profiles')
-                .select('email')
-                .eq('id', userId)
-                .single();
-                
-            if (userError) throw new Error('Usuário não encontrado');
-            emailParaBanir = usuario.email;
-        }
-        
-        const motivoDenuncia = await obterMotivoDenuncia(denunciaId);
-        const motivo = `BANIMENTO ADMIN: ${motivoDenuncia}`;
-        
-        const { error: banError } = await supabase
-            .from('banned_emails')
-            .insert({
-                email: emailParaBanir,
-                reason: motivo,
-                permanent_ban: true,
-                related_user_id: userId,
-                banned_at: new Date().toISOString()
-            });
-            
-        if (banError && banError.code !== '23505') {
-            throw new Error('Erro ao banir email');
-        }
-        
-        await limparDadosUsuario(userId);
-        
-    } catch (erro) {
-        throw erro;
-    }
-}
-
-async function obterMotivoDenuncia(denunciaId) {
-    try {
-        const { data: denuncia, error } = await supabase
-            .from('user_reports')
-            .select('reason, evidence')
-            .eq('id', denunciaId)
-            .single();
-            
-        if (error) throw error;
-        return denuncia?.evidence || denuncia?.reason || 'Violação grave das regras';
-    } catch (erro) {
-        return 'Violação grave das regras';
-    }
-}
-
-async function advertirUsuario(userId, denunciaId) {
-    try {
-        const motivo = await obterMotivoDenuncia(denunciaId);
-        
-        const { error: warnError } = await supabase
-            .from('user_warnings')
-            .insert({
-                user_id: userId,
-                reason: `⚠️ ADVERTÊNCIA ADMIN: ${motivo}`,
-                severity: 'high',
-                created_at: new Date().toISOString(),
-                admin_notice: 'Próxima violação resultará em banimento permanente'
-            });
-
-        if (warnError) {
-            await supabase
-                .from('profiles')
-                .update({
-                    warning_count: 1,
-                    last_warning_at: new Date().toISOString()
-                })
-                .eq('id', userId);
-        }
-
-    } catch (erro) {
-        throw erro;
-    }
-}
-
-async function limparDadosUsuario(userId) {
-    try {
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .update({
-                nickname: '[Usuário Banido]',
-                full_name: 'Usuário Removido',
-                bio: 'Esta conta foi removida permanentemente por violação grave das regras da comunidade.',
-                avatar_url: null,
-                banned: true,
-                banned_at: new Date().toISOString(),
-                banned_reason: 'Banimento administrativo permanente - Violação de regras',
-                is_active: false,
-                last_online_at: new Date().toISOString()
-            })
-            .eq('id', userId);
-
-        if (profileError) throw profileError;
-        
-    } catch (erro) {
-        throw erro;
-    }
-}
-
-function traduzirMotivo(motivo) {
-    const motivos = {
-        'spam': '📢 Spam',
-        'inappropriate': '🔞 Conteúdo Inadequado',
-        'harassment': '🚨 Assédio',
-        'fake_profile': '👤 Perfil Falso', 
-        'scam': '💸 Golpe/Fraude',
-        'other': '❓ Outro'
-    };
-    return motivos[motivo] || motivo;
-}
-
-// ==================== SEÇÃO ESTATÍSTICAS ====================
-async function carregarEstatisticasDetalhadas() {
+// ==================== CARREGAR ESTATÍSTICAS ====================
+async function carregarEstatisticas() {
     if (!verificarAutenticacao()) return;
     
     const container = document.getElementById('estatisticasContainer');
     
     try {
-        const { data: denunciasPorMotivo } = await supabase
-            .from('user_reports')
-            .select('reason, status')
-            .limit(1000);
-
-        const { data: usuariosAtivos } = await supabase
-            .from('profiles')
-            .select('created_at, is_premium')
-            .eq('is_active', true);
-
+        const { data: notificacoes, error: notifError } = await supabase
+            .from('notifications')
+            .select('tipo, created_at, is_active');
+        
+        const { data: recipients, error: recipError } = await supabase
+            .from('notification_recipients')
+            .select('delivered, read_status, bonus_redeemed');
+        
+        if (notifError || recipError) throw notifError || recipError;
+        
         const stats = {
-            totalDenuncias: denunciasPorMotivo?.length || 0,
-            denunciasPorMotivo: {},
-            usuariosAtivos: usuariosAtivos?.length || 0,
-            usuariosPremium: usuariosAtivos?.filter(u => u.is_premium)?.length || 0,
-            usuariosUltimaSemana: usuariosAtivos?.filter(u => 
-                new Date(u.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-            )?.length || 0
+            totalNotificacoes: notificacoes?.length || 0,
+            notificacoesAtivas: notificacoes?.filter(n => n.is_active)?.length || 0,
+            porTipo: {},
+            totalEntregues: recipients?.filter(r => r.delivered)?.length || 0,
+            totalLidas: recipients?.filter(r => r.read_status)?.length || 0,
+            totalResgatados: recipients?.filter(r => r.bonus_redeemed)?.length || 0
         };
-
-        if (denunciasPorMotivo) {
-            denunciasPorMotivo.forEach(denuncia => {
-                stats.denunciasPorMotivo[denuncia.reason] = (stats.denunciasPorMotivo[denuncia.reason] || 0) + 1;
+        
+        if (notificacoes) {
+            notificacoes.forEach(notif => {
+                stats.porTipo[notif.tipo] = (stats.porTipo[notif.tipo] || 0) + 1;
             });
         }
-
-        let html = `
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+        
+        const taxaEntrega = stats.totalNotificacoes > 0 ? 
+            ((stats.totalEntregues / (stats.totalNotificacoes * (recipients?.length || 1))) * 100).toFixed(1) : 0;
+        
+        const taxaleitura = stats.totalEntregues > 0 ? 
+            ((stats.totalLidas / stats.totalEntregues) * 100).toFixed(1) : 0;
+        
+        container.innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
                 <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 10px;">
-                    <h3 style="color: var(--primary); margin-bottom: 1rem;">📈 Estatísticas de Usuários</h3>
+                    <h3 style="color: var(--primary); margin-bottom: 1rem;">📈 Estatísticas Gerais</h3>
                     <div style="display: flex; flex-direction: column; gap: 0.8rem;">
                         <div style="display: flex; justify-content: space-between;">
-                            <span>Usuários Ativos:</span>
-                            <strong>${stats.usuariosAtivos}</strong>
+                            <span>Total de Notificações:</span>
+                            <strong>${stats.totalNotificacoes}</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between;">
-                            <span>Usuários Premium:</span>
-                            <strong style="color: var(--success);">${stats.usuariosPremium}</strong>
+                            <span>Notificações Ativas:</span>
+                            <strong style="color: var(--success);">${stats.notificacoesAtivas}</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between;">
-                            <span>Novos (7 dias):</span>
-                            <strong style="color: var(--info);">${stats.usuariosUltimaSemana}</strong>
+                            <span>Taxa de Entrega:</span>
+                            <strong style="color: var(--info);">${taxaEntrega}%</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Taxa de Leitura:</span>
+                            <strong style="color: var(--info);">${taxaleitura}%</strong>
                         </div>
                     </div>
                 </div>
 
                 <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 10px;">
-                    <h3 style="color: var(--primary); margin-bottom: 1rem;">📊 Denúncias por Motivo</h3>
+                    <h3 style="color: var(--primary); margin-bottom: 1rem;">📊 Distribuição por Tipo</h3>
                     <div style="display: flex; flex-direction: column; gap: 0.8rem;">
-        `;
-
-        Object.entries(stats.denunciasPorMotivo).forEach(([motivo, quantidade]) => {
-            html += `
-                <div style="display: flex; justify-content: space-between;">
-                    <span>${traduzirMotivo(motivo)}:</span>
-                    <strong>${quantidade}</strong>
-                </div>
-            `;
-        });
-
-        html += `
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>🎁 Bônus:</span>
+                            <strong>${stats.porTipo.bonus || 0}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>⚠️ Advertências:</span>
+                            <strong>${stats.porTipo.advertencia || 0}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>📢 Avisos:</span>
+                            <strong>${stats.porTipo.aviso || 0}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>🎁 Bônus Resgatados:</span>
+                            <strong style="color: var(--success);">${stats.totalResgatados}</strong>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
-
-        container.innerHTML = html;
-
-    } catch (erro) {
-        console.error('Erro ao carregar estatísticas detalhadas:', erro);
+        
+    } catch (error) {
         container.innerHTML = `
             <div class="empty-state">
                 <div class="icon">❌</div>
@@ -404,201 +495,50 @@ async function carregarEstatisticasDetalhadas() {
     }
 }
 
-// ==================== SEÇÃO USUÁRIOS ====================
-async function carregarUsuarios() {
-    if (!verificarAutenticacao()) return;
-    
-    const container = document.getElementById('usuariosContainer');
-    
-    try {
-        const { data: usuarios, error } = await supabase
-            .from('profiles')
-            .select('id, nickname, email, created_at, is_premium, is_active, avatar_url')
-            .order('created_at', { ascending: false })
-            .limit(50);
-
-        if (error) throw error;
-
-        if (!usuarios || usuarios.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div class="icon">👥</div>
-                    <h3>Nenhum usuário encontrado</h3>
-                    <p>Não há usuários no sistema.</p>
-                </div>
-            `;
-            return;
-        }
-
-        let html = `
-            <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <button class="btn btn-primary" onclick="filtrarUsuarios('all')">
-                    👥 Todos (${usuarios.length})
-                </button>
-                <button class="btn" onclick="filtrarUsuarios('premium')" style="background: var(--success); color: white;">
-                    ⭐ Premium (${usuarios.filter(u => u.is_premium).length})
-                </button>
-                <button class="btn" onclick="filtrarUsuarios('free')" style="background: var(--info); color: white;">
-                    🆓 Free (${usuarios.filter(u => !u.is_premium).length})
-                </button>
-            </div>
-            <div id="listaUsuarios">
-        `;
-
-        usuarios.forEach(usuario => {
-            const iniciais = usuario.nickname ? 
-                usuario.nickname.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : 'U';
-            
-            html += `
-                <div class="user-card" data-user-id="${usuario.id}" data-premium="${usuario.is_premium}">
-                    <div class="user-header">
-                        <div class="user-info">
-                            <div class="user-avatar">
-                                ${usuario.avatar_url ? 
-                                    `<img src="${usuario.avatar_url}" alt="${usuario.nickname}" style="width: 100%; height: 100%; border-radius: 50%;">` : 
-                                    iniciais
-                                }
-                            </div>
-                            <div>
-                                <h4>${usuario.nickname || 'Sem nome'}</h4>
-                                <p style="color: var(--gray); font-size: 0.9rem;">${usuario.email}</p>
-                                <p style="color: var(--gray); font-size: 0.8rem;">
-                                    Cadastrado em: ${new Date(usuario.created_at).toLocaleDateString('pt-BR')}
-                                    ${usuario.is_premium ? ' | ⭐ Premium' : ' | 🆓 Free'}
-                                </p>
-                            </div>
-                        </div>
-                        <div class="report-actions">
-                            <button class="btn btn-warning" onclick="advertirUsuarioDireto('${usuario.id}')">
-                                ⚠️ Advertir
-                            </button>
-                            <button class="btn btn-danger" onclick="banirUsuarioDireto('${usuario.id}', '${usuario.email}')">
-                                🚫 Banir
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-
-        html += '</div>';
-        container.innerHTML = html;
-
-    } catch (erro) {
-        console.error('Erro ao carregar usuários:', erro);
-        container.innerHTML = `
-            <div class="empty-state">
-                <div class="icon">❌</div>
-                <h3>Erro ao carregar usuários</h3>
-                <p>Tente novamente mais tarde.</p>
-            </div>
-        `;
-    }
+// ==================== FUNÇÕES AUXILIARES ====================
+function traduzirDestinatarios(destinatarios) {
+    const traducoes = {
+        'all': '👥 Todos os usuários',
+        'free': '🆓 Usuários Free', 
+        'premium': '⭐ Usuários Premium',
+        'specific': '🎯 Usuários Específicos'
+    };
+    return traducoes[destinatarios] || destinatarios;
 }
 
-function filtrarUsuarios(filtro) {
-    const usuarios = document.querySelectorAll('.user-card');
-    
-    usuarios.forEach(usuario => {
-        switch(filtro) {
-            case 'premium':
-                usuario.style.display = usuario.dataset.premium === 'true' ? 'block' : 'none';
-                break;
-            case 'free':
-                usuario.style.display = usuario.dataset.premium === 'false' ? 'block' : 'none';
-                break;
-            default:
-                usuario.style.display = 'block';
-        }
-    });
-}
-
-async function advertirUsuarioDireto(userId) {
-    const motivo = prompt('Digite o motivo da advertência:');
-    if (!motivo) return;
-
-    try {
-        const { error } = await supabase
-            .from('user_warnings')
-            .insert({
-                user_id: userId,
-                reason: `⚠️ ADVERTÊNCIA ADMIN: ${motivo}`,
-                severity: 'medium',
-                created_at: new Date().toISOString()
-            });
-
-        if (error) throw error;
-
-        alert('✅ Advertência enviada!');
-    } catch (erro) {
-        console.error('Erro ao advertir usuário:', erro);
-        alert('Erro ao enviar advertência');
-    }
-}
-
-async function banirUsuarioDireto(userId, email) {
-    if (!confirm(`Banir permanentemente este usuário?\n\nEmail: ${email}\n\nEsta ação é IRREVERSÍVEL!`)) {
-        return;
-    }
-
-    try {
-        await banirUsuario(userId, email, 'banimento_direto');
-        alert('✅ Usuário banido permanentemente!');
-        carregarUsuarios();
-    } catch (erro) {
-        console.error('Erro ao banir usuário:', erro);
-        alert('Erro ao banir usuário: ' + (erro.message || 'Erro desconhecido'));
-    }
-}
-
-// ==================== FUNÇÕES GERAIS ====================
 function showSection(sectionName) {
-    // Esconder todas as seções
     document.querySelectorAll('.content-section').forEach(section => {
         section.classList.remove('active');
     });
     
-    // Remover active de todos os botões
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('active');
     });
 
-    // Mostrar seção selecionada
     document.getElementById(sectionName).classList.add('active');
     
-    // Encontrar e ativar o botão correto
     const activeButton = document.querySelector(`.nav-btn[onclick*="${sectionName}"]`);
     if (activeButton) {
         activeButton.classList.add('active');
     }
 
-    // Carregar conteúdo da seção
     switch(sectionName) {
+        case 'historico':
+            carregarHistorico();
+            break;
         case 'estatisticas':
-            carregarEstatisticasDetalhadas();
-            break;
-        case 'usuarios':
-            carregarUsuarios();
-            break;
-        case 'denuncias':
-            carregarDenuncias();
+            carregarEstatisticas();
             break;
     }
-}
-
-function carregarTudo() {
-    carregarEstatisticas();
-    carregarDenuncias();
 }
 
 // ==================== INICIALIZAÇÃO ====================
 document.addEventListener('DOMContentLoaded', function() {
     if (!verificarAutenticacao()) return;
     
-    carregarTudo();
+    const defaultDate = new Date();
+    defaultDate.setDate(defaultDate.getDate() + 7);
+    document.getElementById('dataValidade').value = defaultDate.toISOString().slice(0, 16);
     
-    // Atualizar estatísticas a cada 30 segundos
-    setInterval(() => {
-        carregarEstatisticas();
-    }, 30000);
+    carregarHistorico();
 });
