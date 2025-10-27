@@ -14,28 +14,38 @@ class NotificationManager {
 
     async loadCategories() {
         try {
-            // Simulação - substitua pela sua API real
+            const { data, error } = await supabase
+                .from('notification_categories')
+                .select('*')
+                .order('name');
+
+            if (error) throw error;
+            
+            this.categories = data || [];
+            this.populateCategorySelect();
+        } catch (error) {
+            console.error('Erro ao carregar categorias:', error);
+            // Fallback para categorias padrão
             this.categories = [
                 { id: 1, name: 'Bônus', color: '#28a745' },
                 { id: 2, name: 'Avisos', color: '#ffc107' },
                 { id: 3, name: 'Advertências', color: '#dc3545' },
                 { id: 4, name: 'Informações', color: '#17a2b8' }
             ];
-            
             this.populateCategorySelect();
-        } catch (error) {
-            console.error('Erro ao carregar categorias:', error);
         }
     }
 
     async loadUserTypes() {
         try {
-            // Simulação - substitua pela sua API real
-            this.userTypes = [
-                { id: 1, name: 'Todos' },
-                { id: 2, name: 'Free' },
-                { id: 3, name: 'Premium' }
-            ];
+            const { data, error } = await supabase
+                .from('user_types')
+                .select('*')
+                .order('name');
+
+            if (error) throw error;
+            
+            this.userTypes = data || [];
         } catch (error) {
             console.error('Erro ao carregar tipos de usuário:', error);
         }
@@ -77,16 +87,12 @@ class NotificationManager {
         const options = document.querySelectorAll('.expiration-option');
         options.forEach(option => {
             option.addEventListener('click', () => {
-                // Remove seleção anterior
                 options.forEach(opt => opt.classList.remove('selected'));
-                // Adiciona seleção atual
                 option.classList.add('selected');
-                // Marca o radio button
                 const radio = option.querySelector('input[type="radio"]');
                 radio.checked = true;
             });
 
-            // Inicializa seleção padrão
             if (option.querySelector('input[type="radio"]').checked) {
                 option.classList.add('selected');
             }
@@ -142,7 +148,7 @@ class NotificationManager {
             message: document.getElementById('notificationMessage').value.trim(),
             category_id: parseInt(document.getElementById('notificationCategory').value),
             user_type: userType,
-            specific_user_id: userType === 'specific' ? parseInt(document.getElementById('specificUserId').value) : null,
+            specific_user_id: userType === 'specific' ? document.getElementById('specificUserId').value.trim() : null,
             expiration_days: parseInt(document.querySelector('input[name="expiration"]:checked').value)
         };
     }
@@ -172,37 +178,106 @@ class NotificationManager {
     }
 
     async sendNotification(data) {
-        // Simulação do envio - substitua pela sua API real
-        console.log('Enviando notificação:', data);
-        
-        // Exemplo de como seria com fetch:
-        /*
-        const response = await fetch('/api/notifications', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        });
+        try {
+            // 1. Primeiro, criar a notificação principal
+            const notificationData = {
+                title: data.title,
+                message: data.message,
+                category_id: data.category_id,
+                expiration_days: data.expiration_days,
+                is_active: true
+            };
 
-        if (!response.ok) {
-            throw new Error('Erro na requisição');
+            console.log('Enviando notificação:', notificationData);
+
+            const { data: notification, error: notificationError } = await supabase
+                .from('notifications')
+                .insert(notificationData)
+                .select()
+                .single();
+
+            if (notificationError) {
+                console.error('Erro ao criar notificação:', notificationError);
+                throw new Error('Falha ao criar notificação: ' + notificationError.message);
+            }
+
+            // 2. Agora, processar os destinatários
+            await this.processRecipients(notification.id, data);
+            
+            return notification;
+
+        } catch (error) {
+            console.error('Erro completo no envio:', error);
+            throw error;
         }
+    }
 
-        return await response.json();
-        */
-        
-        // Simulando delay de rede
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return { success: true, id: Math.random() * 1000 };
+    async processRecipients(notificationId, data) {
+        try {
+            if (data.user_type === 'specific') {
+                // Usuário específico
+                await this.addUserToNotification(notificationId, data.specific_user_id);
+            } else {
+                // Grupo de usuários (Todos, Free, Premium)
+                const users = await this.getUsersByType(data.user_type);
+                
+                for (const user of users) {
+                    await this.addUserToNotification(notificationId, user.id);
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao processar destinatários:', error);
+            throw new Error('Erro ao definir destinatários: ' + error.message);
+        }
+    }
+
+    async getUsersByType(userType) {
+        try {
+            let query = supabase
+                .from('profiles')
+                .select('id, is_premium');
+
+            if (userType === 'free') {
+                query = query.eq('is_premium', false);
+            } else if (userType === 'premium') {
+                query = query.eq('is_premium', true);
+            }
+            // 'all' não precisa de filtro
+
+            const { data, error } = await query;
+
+            if (error) throw error;
+            return data || [];
+
+        } catch (error) {
+            console.error('Erro ao buscar usuários:', error);
+            return [];
+        }
+    }
+
+    async addUserToNotification(notificationId, userId) {
+        try {
+            const { error } = await supabase
+                .from('notification_users')
+                .insert({
+                    notification_id: notificationId,
+                    user_id: userId
+                });
+
+            if (error) throw error;
+
+        } catch (error) {
+            console.error('Erro ao adicionar usuário à notificação:', error);
+            throw error;
+        }
     }
 
     showSuccess(message) {
-        alert('✅ ' + message); // Você pode substituir por um toast mais elegante
+        alert('✅ ' + message);
     }
 
     showError(message) {
-        alert('❌ ' + message); // Você pode substituir por um toast mais elegante
+        alert('❌ ' + message);
     }
 
     resetForm() {
@@ -210,10 +285,9 @@ class NotificationManager {
         document.getElementById('userSpecific').style.display = 'none';
         document.getElementById('notificationPreview').style.display = 'none';
         
-        // Resetar seleção visual dos expiration options
         const options = document.querySelectorAll('.expiration-option');
         options.forEach(option => option.classList.remove('selected'));
-        options[1].classList.add('selected'); // Seleciona 7 dias
+        options[1].classList.add('selected');
     }
 }
 
@@ -221,36 +295,3 @@ class NotificationManager {
 document.addEventListener('DOMContentLoaded', () => {
     new NotificationManager();
 });
-
-// Funções auxiliares para integração com seu sistema
-class NotificationAPI {
-    static async createNotification(notificationData) {
-        // Implemente a integração com sua API aqui
-        const response = await fetch('/api/notifications/create', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + localStorage.getItem('admin_token')
-            },
-            body: JSON.stringify(notificationData)
-        });
-        
-        if (!response.ok) {
-            throw new Error('Falha ao criar notificação');
-        }
-        
-        return await response.json();
-    }
-
-    static async getCategories() {
-        // Implemente para buscar categorias do banco
-        const response = await fetch('/api/notification-categories');
-        return await response.json();
-    }
-
-    static async getUserTypes() {
-        // Implemente para buscar tipos de usuário do banco
-        const response = await fetch('/api/user-types');
-        return await response.json();
-    }
-}
