@@ -53,21 +53,10 @@ async function atualizarContadorNotificacoes() {
         if (!error) {
             const count = notificacoes ? notificacoes.length : 0;
             const notificationCount = document.getElementById('notificationCount');
-            const bellLink = document.querySelector('.bell-link');
             
             if (notificationCount) {
                 notificationCount.textContent = count;
-                // Mostrar/ocultar baseado no count
                 notificationCount.style.display = count > 0 ? 'flex' : 'none';
-                
-                // Adicionar classe de animação se houver notificações
-                if (bellLink) {
-                    if (count > 0) {
-                        bellLink.classList.add('has-notifications');
-                    } else {
-                        bellLink.classList.remove('has-notifications');
-                    }
-                }
             }
         }
     } catch (error) {
