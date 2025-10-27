@@ -1,4 +1,3 @@
-// home.js - VERSÃO COMPLETA COM SISTEMA DE DENÚNCIA
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -6,6 +5,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUser = null;
 let currentFilter = 'all';
 let currentBlockingUser = null;
+let notificationInterval = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
@@ -17,6 +17,8 @@ async function initializeApp() {
         setupEventListeners();
         await loadUserProfile();
         await loadUsers();
+        await loadNotificationCount();
+        startNotificationPolling();
     }
 }
 
@@ -629,9 +631,124 @@ function closeAllModals() {
 }
 
 // === SISTEMA DE NOTIFICAÇÕES ===
+async function loadNotificationCount() {
+    try {
+        const { data: notifications, error } = await supabase
+            .from('notifications')
+            .select('id, type, is_read')
+            .eq('user_id', currentUser.id)
+            .eq('is_read', false);
+
+        if (!error && notifications) {
+            updateNotificationBadge(notifications);
+        } else if (error) {
+            console.error('Erro ao carregar notificações:', error);
+        }
+    } catch (error) {
+        console.error('Erro no sistema de notificações:', error);
+    }
+}
+
+function updateNotificationBadge(notifications) {
+    const badge = document.getElementById('notificationBadge');
+    if (!badge) return;
+
+    const unreadCount = notifications.filter(n => !n.is_read).length;
+    
+    if (unreadCount > 0) {
+        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+        badge.style.display = 'flex';
+        
+        // Adiciona classe de urgência se houver muitas notificações
+        if (unreadCount > 5) {
+            badge.classList.add('urgent');
+        } else {
+            badge.classList.remove('urgent');
+        }
+
+        // Adiciona animação de pulso para notificações importantes
+        const hasImportantNotifications = notifications.some(n => 
+            n.type === 'new_like' || n.type === 'new_message' || n.type === 'new_match'
+        );
+        
+        if (hasImportantNotifications) {
+            badge.classList.add('pulse');
+        } else {
+            badge.classList.remove('pulse');
+        }
+    } else {
+        badge.style.display = 'none';
+        badge.classList.remove('urgent', 'pulse');
+    }
+}
+
+function startNotificationPolling() {
+    // Atualiza notificações a cada 30 segundos
+    notificationInterval = setInterval(async () => {
+        if (currentUser) {
+            await loadNotificationCount();
+        }
+    }, 30000);
+}
+
+function stopNotificationPolling() {
+    if (notificationInterval) {
+        clearInterval(notificationInterval);
+        notificationInterval = null;
+    }
+}
+
+// Função para marcar notificações como lidas
+async function markNotificationsAsRead() {
+    try {
+        const { error } = await supabase
+            .from('notifications')
+            .update({ is_read: true })
+            .eq('user_id', currentUser.id)
+            .eq('is_read', false);
+
+        if (!error) {
+            // Atualiza o badge imediatamente
+            const badge = document.getElementById('notificationBadge');
+            if (badge) {
+                badge.style.display = 'none';
+                badge.classList.remove('urgent', 'pulse');
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao marcar notificações como lidas:', error);
+    }
+}
+
+// Função para criar uma nova notificação (útil para testes)
+async function createTestNotification(type = 'info', title = 'Teste', message = 'Esta é uma notificação de teste') {
+    try {
+        const { error } = await supabase
+            .from('notifications')
+            .insert({
+                user_id: currentUser.id,
+                type: type,
+                title: title,
+                message: message,
+                is_read: false,
+                created_at: new Date().toISOString()
+            });
+
+        if (!error) {
+            await loadNotificationCount();
+            showNotification('Notificação de teste criada!');
+        }
+    } catch (error) {
+        console.error('Erro ao criar notificação de teste:', error);
+    }
+}
+
+// === SISTEMA DE NOTIFICAÇÕES VISUAIS ===
 function showNotification(message, type = 'success') {
     const notification = document.createElement('div');
-    const backgroundColor = type === 'error' ? 'var(--error)' : 'var(--success)';
+    const backgroundColor = type === 'error' ? 'var(--error)' : 
+                           type === 'warning' ? 'var(--warning)' : 
+                           'var(--success)';
     
     notification.style.cssText = `
         position: fixed;
@@ -646,8 +763,19 @@ function showNotification(message, type = 'success') {
         animation: slideInRight 0.3s ease-out;
         max-width: 300px;
         font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     `;
-    notification.textContent = message;
+    
+    // Ícone baseado no tipo
+    const icon = type === 'error' ? '❌' : 
+                type === 'warning' ? '⚠️' : '✅';
+    
+    notification.innerHTML = `
+        <span style="font-size: 1.2rem;">${icon}</span>
+        <span>${message}</span>
+    `;
     
     document.body.appendChild(notification);
     
@@ -667,8 +795,14 @@ function goToMensagens() { window.location.href = 'mensagens.html'; }
 function goToBusca() { window.location.href = 'busca.html'; }
 function goToBloqueados() { window.location.href = 'bloqueados.html'; }
 function goToPricing() { window.location.href = 'pricing.html'; }
+function goToNotificacoes() { 
+    // Marca notificações como lidas ao acessar a página
+    markNotificationsAsRead();
+    window.location.href = 'notifica.html'; 
+}
 
 async function logout() {
+    stopNotificationPolling();
     const { error } = await supabase.auth.signOut();
     if (!error) window.location.href = 'login.html';
 }
@@ -689,9 +823,57 @@ window.goToMensagens = goToMensagens;
 window.goToBusca = goToBusca;
 window.goToBloqueados = goToBloqueados;
 window.goToPricing = goToPricing;
+window.goToNotificacoes = goToNotificacoes;
 window.logout = logout;
+
+// Funções de teste (pode remover em produção)
+window.createTestNotification = createTestNotification;
 
 // Listener de autenticação
 supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_OUT') window.location.href = 'login.html';
+    if (event === 'SIGNED_OUT') {
+        stopNotificationPolling();
+        window.location.href = 'login.html';
+    } else if (event === 'SIGNED_IN' && session) {
+        currentUser = session.user;
+        startNotificationPolling();
+    }
+});
+
+// Adiciona CSS dinâmico para notificações
+const notificationCSS = `
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOutRight {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+}
+
+.notification-badge.urgent {
+    background: var(--error) !important;
+    animation: pulse 1s infinite !important;
+}
+
+.notification-badge.pulse {
+    animation: pulse 2s infinite !important;
+}
+`;
+
+// Injeta o CSS na página
+const style = document.createElement('style');
+style.textContent = notificationCSS;
+document.head.appendChild(style);
+
+// Cleanup quando a página for fechada
+window.addEventListener('beforeunload', () => {
+    stopNotificationPolling();
 });

@@ -1218,3 +1218,109 @@ footer {
         font-size: 0.8rem;
     }
 }
+
+/* ===== BOTÃO DE NOTIFICAÇÕES ===== */
+.notification-link {
+    position: relative;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--burgundy);
+    color: var(--text-white);
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--dark-bg);
+    animation: pulse 2s infinite;
+}
+
+.notification-link:hover .notification-badge {
+    background: var(--dark-burgundy);
+    transform: scale(1.1);
+}
+
+/* Animação de pulsar para notificações não lidas */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(166, 91, 91, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(166, 91, 91, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(166, 91, 91, 0);
+    }
+}
+
+/* Estado ativo das notificações */
+.notification-link.active .notification-badge {
+    background: var(--gold);
+    color: var(--dark-bg);
+}
+
+/* ===== BOTÃO DE NOTIFICAÇÕES ===== */
+.notification-link {
+    position: relative;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--burgundy);
+    color: var(--text-white);
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--dark-bg);
+}
+
+.notification-link:hover .notification-badge {
+    background: var(--dark-burgundy);
+    transform: scale(1.1);
+}
+
+.notification-badge.urgent {
+    background: var(--error) !important;
+    animation: pulse 1s infinite !important;
+}
+
+.notification-badge.pulse {
+    animation: pulse 2s infinite !important;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(166, 91, 91, 0.7);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(166, 91, 91, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(166, 91, 91, 0);
+    }
+}
+
+/* Estado ativo das notificações */
+.notification-link.active .notification-badge {
+    background: var(--gold);
+    color: var(--dark-bg);
+}
