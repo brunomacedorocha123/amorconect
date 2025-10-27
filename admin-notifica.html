@@ -25,7 +25,6 @@
             --white: #ffffff;
             --gray: #718096;
             --light-gray: #edf2f7;
-            --border: #e2e8f0;
         }
 
         body {
@@ -36,11 +35,10 @@
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
-        /* HEADER */
         .header {
             text-align: center;
             margin-bottom: 2rem;
@@ -56,7 +54,7 @@
             font-size: 2.5rem;
         }
 
-        .admin-nav {
+        .nav-buttons {
             display: flex;
             gap: 1rem;
             justify-content: center;
@@ -64,61 +62,45 @@
             flex-wrap: wrap;
         }
 
-        .nav-btn {
+        .btn {
             padding: 0.8rem 1.5rem;
-            background: var(--light-gray);
             border: none;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s ease;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            text-decoration: none;
+            font-size: 0.9rem;
         }
 
-        .nav-btn.active {
+        .btn-primary {
             background: var(--primary);
             color: var(--white);
         }
 
-        .nav-btn:hover {
+        .btn-secondary {
+            background: var(--secondary);
+            color: var(--white);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .btn:hover {
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
-        /* STATS GRID */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: var(--white);
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            text-align: center;
-            transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        .stat-label {
-            color: var(--gray);
-            font-size: 0.9rem;
-        }
-
-        /* CONTENT SECTIONS */
         .content-section {
             background: var(--white);
             border-radius: 15px;
@@ -142,57 +124,114 @@
             gap: 1rem;
         }
 
-        /* BUTTONS */
-        .btn {
-            padding: 0.7rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
             gap: 0.5rem;
-            font-size: 0.9rem;
-            text-decoration: none;
         }
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        .form-group.full-width {
+            grid-column: 1 / -1;
         }
 
-        .btn-primary {
-            background: var(--primary);
-            color: var(--white);
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: var(--white);
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: var(--white);
-        }
-
-        .btn-warning {
-            background: var(--warning);
-            color: var(--white);
-        }
-
-        .btn-info {
-            background: var(--info);
-            color: var(--white);
-        }
-
-        .btn-secondary {
-            background: var(--light-gray);
+        label {
+            font-weight: 600;
             color: var(--text);
         }
 
-        /* LOADING STATES */
+        input, select, textarea {
+            padding: 0.8rem;
+            border: 2px solid var(--light-gray);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .card {
+            background: var(--white);
+            border: 1px solid var(--light-gray);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: var(--primary);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .card-meta {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .badge-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .badge-info {
+            background: var(--info);
+            color: white;
+        }
+
+        .badge-danger {
+            background: var(--danger);
+            color: white;
+        }
+
         .loading {
             text-align: center;
             padding: 3rem;
@@ -226,434 +265,204 @@
             opacity: 0.5;
         }
 
-        /* NOTIFICATION CARDS */
-        .notification-card {
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            background: var(--white);
-            transition: all 0.3s ease;
-        }
-
-        .notification-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            border-color: var(--primary);
-        }
-
-        .notification-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .notification-title {
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: var(--text);
-        }
-
-        .notification-badge {
-            background: var(--primary);
-            color: var(--white);
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 500;
-        }
-
-        .notification-meta {
-            display: flex;
-            gap: 1rem;
-            font-size: 0.8rem;
-            color: var(--gray);
-            flex-wrap: wrap;
-            margin-bottom: 1rem;
-        }
-
-        .notification-message {
-            color: var(--text);
-            line-height: 1.5;
-            margin-bottom: 1rem;
-        }
-
-        .notification-actions {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        /* FORMS */
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: var(--text);
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 0.8rem;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .form-select {
-            width: 100%;
-            padding: 0.8rem;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            font-size: 1rem;
-            background: var(--white);
-        }
-
-        .form-textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .expiration-options {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-        }
-
-        .expiration-option {
-            padding: 1rem;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .expiration-option.selected {
-            border-color: var(--primary);
-            background: var(--light-gray);
-        }
-
-        .expiration-option:hover {
-            border-color: var(--primary);
-        }
-
-        /* TARGET SELECTION */
-        .target-section {
-            background: var(--light-gray);
-            padding: 1.5rem;
-            border-radius: 10px;
-            margin-bottom: 1.5rem;
-        }
-
-        .target-options {
+        .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
-            margin-top: 1rem;
+            margin-bottom: 2rem;
         }
 
-        .target-option {
-            padding: 1rem;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .target-option.selected {
-            border-color: var(--primary);
+        .stat-card {
             background: var(--white);
-        }
-
-        .user-search-results {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            margin-top: 0.5rem;
-            background: var(--white);
-        }
-
-        .user-result {
-            padding: 0.8rem;
-            border-bottom: 1px solid var(--border);
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .user-result:hover {
-            background: var(--light-gray);
-        }
-
-        .user-result:last-child {
-            border-bottom: none;
-        }
-
-        /* TEMPLATES GRID */
-        .templates-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1rem;
-        }
-
-        .template-card {
-            border: 1px solid var(--border);
-            border-radius: 10px;
             padding: 1.5rem;
-            background: var(--white);
-            transition: all 0.3s ease;
-        }
-
-        .template-card:hover {
+            border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
         }
 
-        .template-actions {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
+        .stat-card:hover {
+            transform: translateY(-5px);
         }
 
-        /* BOTÕES SUPERIORES */
-        .logout-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--danger);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            z-index: 1000;
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
         }
 
-        .admin-btn {
-            position: fixed;
-            top: 20px;
-            right: 120px;
-            background: var(--info);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        /* MODAL */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: var(--white);
-            padding: 2rem;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
+        .stat-label {
             color: var(--gray);
+            font-size: 0.9rem;
         }
 
-        /* RESPONSIVE */
         @media (max-width: 768px) {
-            .admin-nav {
-                flex-direction: column;
-            }
-            
-            .nav-btn {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .form-row {
+            .form-grid {
                 grid-template-columns: 1fr;
             }
             
-            .target-options {
-                grid-template-columns: 1fr;
-            }
-            
-            .notification-header {
+            .card-header {
                 flex-direction: column;
                 align-items: start;
             }
             
-            .notification-actions {
+            .card-actions {
                 flex-direction: column;
             }
             
             .btn {
                 width: 100%;
-                justify-content: center;
-            }
-            
-            .templates-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .admin-btn {
-                right: 80px;
-                padding: 0.4rem 0.8rem;
-                font-size: 0.8rem;
+                text-align: center;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Botões Superiores -->
-    <button class="admin-btn" onclick="irParaAdmin()">
-        ⚙️ Admin
-    </button>
-    <button class="logout-btn" onclick="logoutAdmin()">🚪 Sair</button>
-
     <div class="container">
         <!-- Header -->
         <div class="header">
             <h1>📨 Gestor de Notificações</h1>
-            <p>Amor Conect - Sistema Completo de Comunicação</p>
-            <div style="margin-top: 1rem;">
-                <small id="lastUpdate">Última atualização: --</small>
-            </div>
-
-            <!-- Navegação -->
-            <div class="admin-nav">
-                <button class="nav-btn active" onclick="showSection('overview')">
-                    📊 Visão Geral
-                </button>
-                <button class="nav-btn" onclick="showSection('send')">
+            <p>Amor Conect - Envie notificações para seus usuários</p>
+            
+            <div class="nav-buttons">
+                <button class="btn btn-primary" onclick="showSection('enviar')">
                     ✉️ Enviar Notificação
                 </button>
-                <button class="nav-btn" onclick="showSection('templates')">
-                    🎯 Templates
+                <button class="btn btn-secondary" onclick="showSection('templates')">
+                    📝 Gerenciar Templates
                 </button>
-                <button class="nav-btn" onclick="showSection('history')">
-                    📋 Histórico
+                <button class="btn btn-success" onclick="showSection('historico')">
+                    📊 Histórico de Envios
                 </button>
+                <a href="admin.html" class="btn btn-danger">
+                    ← Voltar ao Painel Admin
+                </a>
             </div>
         </div>
 
         <!-- Estatísticas -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-number" id="totalNotifications">0</div>
-                <div class="stat-label">Total de Notificações</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="unreadNotifications">0</div>
-                <div class="stat-label">Não Lidas</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="totalUsers">0</div>
-                <div class="stat-label">Usuários Totais</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="activeTemplates">0</div>
+                <div class="stat-number" id="totalTemplates">0</div>
                 <div class="stat-label">Templates Ativos</div>
             </div>
-        </div>
-
-        <!-- SEÇÃO: VISÃO GERAL -->
-        <div id="overview" class="content-section active">
-            <div class="section-title">
-                <h2>📊 Visão Geral do Sistema</h2>
-                <button class="btn btn-primary" onclick="carregarTudo()">
-                    🔄 Atualizar Tudo
-                </button>
+            <div class="stat-card">
+                <div class="stat-number" id="totalEnviadas">0</div>
+                <div class="stat-label">Notificações Enviadas</div>
             </div>
-            <div id="overviewContent">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Carregando dados do sistema...</p>
-                </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalLidas">0</div>
+                <div class="stat-label">Notificações Lidas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalUsuarios">0</div>
+                <div class="stat-label">Usuários Ativos</div>
             </div>
         </div>
 
         <!-- SEÇÃO: ENVIAR NOTIFICAÇÃO -->
-        <div id="send" class="content-section">
+        <div id="enviar" class="content-section active">
             <div class="section-title">
-                <h2>✉️ Enviar Notificação</h2>
-                <div>
-                    <button class="btn btn-secondary" onclick="limparFormulario()">
-                        🗑️ Limpar
+                <h2>✉️ Enviar Nova Notificação</h2>
+            </div>
+            
+            <form id="formNotificacao">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="templateSelect">Usar Template Existente</label>
+                        <select id="templateSelect" onchange="carregarTemplate()">
+                            <option value="">-- Selecionar Template --</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="categoria">Categoria</label>
+                        <select id="categoria" required>
+                            <option value="system">🔧 Sistema</option>
+                            <option value="bonus">🎁 Bônus</option>
+                            <option value="warning">⚠️ Advertência</option>
+                            <option value="info">ℹ️ Informação</option>
+                            <option value="promo">🏷️ Promoção</option>
+                            <option value="update">🔄 Atualização</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="titulo">Título da Notificação</label>
+                        <input type="text" id="titulo" placeholder="Ex: Bônus de Boas-vindas!" required>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="mensagem">Mensagem</label>
+                        <textarea id="mensagem" placeholder="Digite a mensagem da notificação..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="prioridade">Prioridade</label>
+                        <select id="prioridade">
+                            <option value="low">🔵 Baixa</option>
+                            <option value="normal">🟢 Normal</option>
+                            <option value="high">🟡 Alta</option>
+                            <option value="urgent">🔴 Urgente</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tipoUsuario">Destinatários</label>
+                        <select id="tipoUsuario" required>
+                            <option value="all">👥 Todos os Usuários</option>
+                            <option value="free">🆓 Apenas Free</option>
+                            <option value="premium">⭐ Apenas Premium</option>
+                            <option value="specific">🎯 Usuários Específicos</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="usuariosEspecificosGroup" style="display: none;">
+                        <label for="usuariosEspecificos">IDs de Usuários (separados por vírgula)</label>
+                        <input type="text" id="usuariosEspecificos" placeholder="id1, id2, id3...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="validade">Validade da Notificação</label>
+                        <select id="validade" required>
+                            <option value="1">⏰ 1 Dia</option>
+                            <option value="7">📅 7 Dias</option>
+                            <option value="30">🗓️ 1 Mês (30 dias)</option>
+                            <option value="365">📆 1 Ano</option>
+                            <option value="never">∞ Nunca Expira</option>
+                            <option value="specific">📅 Data Específica</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="dataEspecificaGroup" style="display: none;">
+                        <label for="dataExpiracao">Data de Expiração</label>
+                        <input type="datetime-local" id="dataExpiracao">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <button type="submit" class="btn btn-success">
+                        📨 Enviar Notificação
                     </button>
-                    <button class="btn btn-primary" onclick="salvarComoTemplate()">
+                    <button type="button" class="btn btn-secondary" onclick="salvarComoTemplate()">
                         💾 Salvar como Template
                     </button>
+                    <button type="reset" class="btn btn-danger">
+                        🗑️ Limpar Formulário
+                    </button>
                 </div>
-            </div>
-            <div id="sendContent">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Carregando formulário...</p>
-                </div>
-            </div>
+            </form>
         </div>
 
         <!-- SEÇÃO: TEMPLATES -->
         <div id="templates" class="content-section">
             <div class="section-title">
-                <h2>🎯 Templates de Notificação</h2>
-                <button class="btn btn-success" onclick="mostrarModalNovoTemplate()">
+                <h2>📝 Templates de Notificação</h2>
+                <button class="btn btn-primary" onclick="abrirCriarTemplate()">
                     ➕ Novo Template
                 </button>
             </div>
-            <div id="templatesContent">
+            <div id="templatesContainer">
                 <div class="loading">
                     <div class="spinner"></div>
                     <p>Carregando templates...</p>
@@ -662,14 +471,14 @@
         </div>
 
         <!-- SEÇÃO: HISTÓRICO -->
-        <div id="history" class="content-section">
+        <div id="historico" class="content-section">
             <div class="section-title">
-                <h2>📋 Histórico de Envios</h2>
+                <h2>📊 Histórico de Envios</h2>
                 <button class="btn btn-primary" onclick="carregarHistorico()">
                     🔄 Atualizar
                 </button>
             </div>
-            <div id="historyContent">
+            <div id="historicoContainer">
                 <div class="loading">
                     <div class="spinner"></div>
                     <p>Carregando histórico...</p>
@@ -678,58 +487,6 @@
         </div>
     </div>
 
-    <!-- MODAL NOVO TEMPLATE -->
-    <div id="modalTemplate" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>🎯 Novo Template</h3>
-                <button class="modal-close" onclick="fecharModalTemplate()">×</button>
-            </div>
-            <form id="formNovoTemplate">
-                <div class="form-group">
-                    <label class="form-label">Nome do Template *</label>
-                    <input type="text" class="form-control" id="templateName" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Categoria *</label>
-                    <select class="form-select" id="templateCategory" required>
-                        <option value="system">🔄 Sistema</option>
-                        <option value="bonus">🎁 Bônus</option>
-                        <option value="warning">⚠️ Advertência</option>
-                        <option value="info">ℹ️ Informativo</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Título *</label>
-                    <input type="text" class="form-control" id="templateTitle" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Mensagem *</label>
-                    <textarea class="form-control form-textarea" id="templateMessage" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Expiração Padrão</label>
-                    <select class="form-select" id="templateExpiration">
-                        <option value="days:7">7 dias</option>
-                        <option value="days:30" selected>30 dias</option>
-                        <option value="days:90">90 dias</option>
-                        <option value="days:365">1 ano</option>
-                        <option value="never">Nunca expira</option>
-                    </select>
-                </div>
-                <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.5rem;">
-                    <button type="button" class="btn btn-secondary" onclick="fecharModalTemplate()">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-success">
-                        💾 Salvar Template
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- JavaScript -->
     <script src="admin-notifica.js"></script>
 </body>
 </html>
