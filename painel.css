@@ -1231,10 +1231,15 @@ footer {
     height: 22px;
     font-size: 0.7rem;
     font-weight: bold;
-    display: flex;
+    display: none; /* COMEÇA ESCONDIDO */
     align-items: center;
     justify-content: center;
     border: 2px solid var(--card-bg);
+}
+
+/* MOSTRAR QUANDO HOUVER NOTIFICAÇÕES */
+.notification-count:not([style*="display: none"]) {
+    display: flex;
     animation: pulse 2s infinite;
 }
 

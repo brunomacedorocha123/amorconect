@@ -21,6 +21,54 @@ async function initializeApp() {
             await PremiumManager.updateUIWithPremiumStatus();
             await updateInvisibleModeUI(); // Atualizar UI do modo invisível
         }, 500);
+        
+        // INICIAR CONTADOR DE NOTIFICAÇÕES
+        iniciarContadorNotificacoes();
+    }
+}
+
+// ==================== CONTADOR DE NOTIFICAÇÕES ====================
+async function iniciarContadorNotificacoes() {
+    // Atualizar imediatamente
+    await atualizarContadorNotificacoes();
+    
+    // Atualizar a cada 30 segundos
+    setInterval(atualizarContadorNotificacoes, 30000);
+}
+
+async function atualizarContadorNotificacoes() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: notificacoes, error } = await supabase
+            .from('notification_recipients')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('read_status', false);
+
+        if (!error) {
+            const count = notificacoes ? notificacoes.length : 0;
+            const notificationCount = document.getElementById('notificationCount');
+            const bellLink = document.querySelector('.bell-link');
+            
+            if (notificationCount) {
+                notificationCount.textContent = count;
+                // Mostrar/ocultar baseado no count
+                notificationCount.style.display = count > 0 ? 'flex' : 'none';
+                
+                // Adicionar classe de animação se houver notificações
+                if (bellLink) {
+                    if (count > 0) {
+                        bellLink.classList.add('has-notifications');
+                    } else {
+                        bellLink.classList.remove('has-notifications');
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao atualizar contador:', error);
     }
 }
 
