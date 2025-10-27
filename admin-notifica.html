@@ -682,30 +682,31 @@ function voltarParaAdmin() {
 // ==================== DISTRIBUIDOR DE NOTIFICAÇÕES ====================
 async function distribuirNotificacao(notificationId, destinatarios, userIds = []) {
     try {
-        console.log('🚀 INICIANDO DISTRIBUIÇÃO:', { notificationId, destinatarios, userIds });
-        
         let usersToInsert = [];
 
-        // 1. USUÁRIOS ESPECÍFICOS
+        // 1. USUÁRIOS ESPECÍFICOS - usa os IDs selecionados
         if (destinatarios === 'specific' && userIds.length > 0) {
-            console.log('🎯 Modo: Usuários específicos', userIds.length);
             usersToInsert = userIds.map(userId => ({
                 notification_id: notificationId,
                 user_id: userId,
                 created_at: new Date().toISOString()
             }));
         } 
-        // 2. TODOS OS USUÁRIOS (FREE + PREMIUM)
-        else if (destinatarios === 'all') {
-            console.log('👥 Modo: Todos os usuários');
-            const { data: users, error } = await supabase
-                .from('profiles')
-                .select('id')
-                .limit(50); // Limite para não sobrecarregar
+        // 2. BUSCAR USUÁRIOS DA TABELA PROFILES
+        else {
+            let query = supabase.from('profiles').select('id');
+            
+            if (destinatarios === 'free') {
+                query = query.eq('is_premium', false);
+            } else if (destinatarios === 'premium') {
+                query = query.eq('is_premium', true);
+            }
 
+            const { data: users, error } = await query;
+            
             if (error) {
-                console.error('❌ Erro ao buscar usuários:', error);
-                throw error;
+                console.error('Erro ao buscar usuários:', error);
+                return 0;
             }
             
             if (users && users.length > 0) {
@@ -714,86 +715,28 @@ async function distribuirNotificacao(notificationId, destinatarios, userIds = []
                     user_id: user.id,
                     created_at: new Date().toISOString()
                 }));
-                console.log(`📋 Encontrados ${users.length} usuários para "Todos"`);
-            } else {
-                console.log('⚠️ Nenhum usuário encontrado na tabela profiles');
-            }
-        }
-        // 3. APENAS USUÁRIOS FREE
-        else if (destinatarios === 'free') {
-            console.log('🆓 Modo: Apenas usuários Free');
-            const { data: users, error } = await supabase
-                .from('profiles')
-                .select('id')
-                .eq('is_premium', false)
-                .limit(50);
-
-            if (error) {
-                console.error('❌ Erro ao buscar usuários free:', error);
-                throw error;
-            }
-            
-            if (users && users.length > 0) {
-                usersToInsert = users.map(user => ({
-                    notification_id: notificationId,
-                    user_id: user.id,
-                    created_at: new Date().toISOString()
-                }));
-                console.log(`📋 Encontrados ${users.length} usuários Free`);
-            } else {
-                console.log('⚠️ Nenhum usuário free encontrado');
-            }
-        }
-        // 4. APENAS USUÁRIOS PREMIUM
-        else if (destinatarios === 'premium') {
-            console.log('⭐ Modo: Apenas usuários Premium');
-            const { data: users, error } = await supabase
-                .from('profiles')
-                .select('id')
-                .eq('is_premium', true)
-                .limit(50);
-
-            if (error) {
-                console.error('❌ Erro ao buscar usuários premium:', error);
-                throw error;
-            }
-            
-            if (users && users.length > 0) {
-                usersToInsert = users.map(user => ({
-                    notification_id: notificationId,
-                    user_id: user.id,
-                    created_at: new Date().toISOString()
-                }));
-                console.log(`📋 Encontrados ${users.length} usuários Premium`);
-            } else {
-                console.log('⚠️ Nenhum usuário premium encontrado');
             }
         }
 
-        // 5. INSERIR NA TABELA DE DESTINATÁRIOS
+        // 3. INSERIR NA TABELA DE DESTINATÁRIOS
         if (usersToInsert.length > 0) {
-            console.log(`📦 Inserindo ${usersToInsert.length} destinatários...`);
-            
             const { error } = await supabase
                 .from('notification_recipients')
                 .insert(usersToInsert);
             
             if (error) {
-                console.error('❌ Erro ao inserir destinatários:', error);
-                throw error;
+                console.error('Erro ao inserir destinatários:', error);
+                return 0;
             }
             
-            console.log(`✅ DISTRIBUIÇÃO CONCLUÍDA: ${usersToInsert.length} usuários`);
             return usersToInsert.length;
-        } else {
-            console.log('⚠️ Nenhum usuário encontrado para distribuição');
-            // Mesmo sem usuários, consideramos sucesso para não bloquear o envio
-            return 0;
         }
         
+        return 0;
+        
     } catch (error) {
-        console.error('❌ ERRO NA DISTRIBUIÇÃO:', error);
-        throw new Error('Falha na distribuição: ' + error.message);
+        console.error('Erro na distribuição:', error);
+        return 0;
     }
 }
 
@@ -843,10 +786,7 @@ async function searchUsers(query) {
             .or(`nickname.ilike.%${query}%,email.ilike.%${query}%`)
             .limit(10);
         
-        if (error) {
-            console.error('Erro na busca:', error);
-            return;
-        }
+        if (error) return;
         
         if (users && users.length > 0) {
             resultsContainer.innerHTML = users.map(user => `
@@ -924,7 +864,6 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
     
     if (!verificarAutenticacao()) return;
     
-    // Mostrar loading no botão
     const submitBtn = document.querySelector('#notificationForm button[type="submit"]');
     const originalText = submitBtn.innerHTML;
     submitBtn.innerHTML = '⏳ Enviando...';
@@ -941,7 +880,6 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             userIds: selectedUsers.map(u => u.id)
         };
         
-        // Validações
         if (!formData.tipo || !formData.titulo || !formData.mensagem || !formData.destinatarios || !formData.dataValidade) {
             alert('❌ Preencha todos os campos obrigatórios');
             return;
@@ -952,10 +890,8 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             return;
         }
 
-        // UUID fixo para o sistema
         const createdByUUID = '00000000-0000-0000-0000-000000000000';
 
-        // Preparar dados da notificação
         const notificationData = {
             title: formData.titulo,
             message: formData.mensagem,
@@ -969,7 +905,6 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             status: 'active'
         };
 
-        // Campos específicos por tipo
         if (formData.tipo === 'bonus') {
             const bonusValue = document.getElementById('bonusValue').value;
             const bonusCode = document.getElementById('bonusCode').value;
@@ -987,9 +922,6 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             notificationData.alert_category = document.getElementById('alertCategory').value;
         }
 
-        console.log('📝 Criando notificação principal...');
-        
-        // 1. CRIAR NOTIFICAÇÃO PRINCIPAL
         const { data: notification, error: notifError } = await supabase
             .from('notifications')
             .insert(notificationData)
@@ -1000,37 +932,24 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
             throw new Error('Erro ao criar notificação: ' + notifError.message);
         }
 
-        console.log('✅ Notificação principal criada:', notification.id);
+        const destinatariosCount = await distribuirNotificacao(
+            notification.id, 
+            formData.destinatarios, 
+            formData.userIds
+        );
 
-        // 2. DISTRIBUIR PARA OS USUÁRIOS
-        console.log('🚀 Iniciando distribuição...');
-        let destinatariosCount = 0;
-        try {
-            destinatariosCount = await distribuirNotificacao(
-                notification.id, 
-                formData.destinatarios, 
-                formData.userIds
-            );
-        } catch (distError) {
-            console.warn('⚠️ Distribuição falhou, mas notificação foi criada:', distError);
-            // Continua mesmo com erro na distribuição
-        }
-
-        // 3. SUCESSO
         if (destinatariosCount > 0) {
             alert(`✅ Notificação enviada com sucesso!\n📨 Distribuída para ${destinatariosCount} usuários`);
         } else {
-            alert(`✅ Notificação criada com sucesso!\n⚠️ Mas não foi distribuída para nenhum usuário (tabela profiles vazia ou sem permissão)`);
+            alert(`✅ Notificação criada com sucesso!\n⚠️ Configure a tabela profiles com usuários para distribuição automática`);
         }
         
         limparFormulario();
         carregarHistorico();
         
     } catch (error) {
-        console.error('❌ ERRO NO ENVIO:', error);
         alert('❌ Erro: ' + error.message);
     } finally {
-        // Restaurar botão
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
     }
@@ -1063,31 +982,21 @@ async function carregarHistorico() {
             return;
         }
 
-        // Buscar estatísticas de destinatários
         const notificacoesComStats = await Promise.all(
             notificacoes.map(async (notif) => {
-                try {
-                    const { data: recipients, error: recError } = await supabase
-                        .from('notification_recipients')
-                        .select('id, read_status')
-                        .eq('notification_id', notif.id);
+                const { data: recipients } = await supabase
+                    .from('notification_recipients')
+                    .select('id, read_status')
+                    .eq('notification_id', notif.id);
 
-                    const totalDestinatarios = recipients?.length || 0;
-                    const lidas = recipients?.filter(r => r.read_status)?.length || 0;
+                const totalDestinatarios = recipients?.length || 0;
+                const lidas = recipients?.filter(r => r.read_status)?.length || 0;
 
-                    return {
-                        ...notif,
-                        totalDestinatarios,
-                        lidas
-                    };
-                } catch (error) {
-                    console.warn('Erro ao buscar destinatários para notificação:', notif.id, error);
-                    return {
-                        ...notif,
-                        totalDestinatarios: 0,
-                        lidas: 0
-                    };
-                }
+                return {
+                    ...notif,
+                    totalDestinatarios,
+                    lidas
+                };
             })
         );
         
@@ -1166,21 +1075,20 @@ async function carregarEstatisticas() {
         
         if (notifError) throw notifError;
         
-        // Buscar estatísticas de destinatários
         let totalDestinatarios = 0;
         let notificacoesLidas = 0;
         
         try {
-            const { data: recipients, error: recError } = await supabase
+            const { data: recipients } = await supabase
                 .from('notification_recipients')
                 .select('read_status');
             
-            if (!recError && recipients) {
+            if (recipients) {
                 totalDestinatarios = recipients.length;
                 notificacoesLidas = recipients.filter(r => r.read_status).length;
             }
         } catch (error) {
-            console.warn('Erro ao buscar estatísticas de destinatários:', error);
+            console.warn('Erro ao buscar estatísticas de destinatários');
         }
         
         const stats = {
