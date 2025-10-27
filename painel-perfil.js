@@ -4,63 +4,23 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
+let currentFilter = 'all';
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', function() {
-    initializeApp();
+    initializeNotifications();
 });
 
-// Sistema principal
-async function initializeApp() {
+// Sistema principal de notificações
+async function initializeNotifications() {
     const authenticated = await checkAuthentication();
     if (authenticated) {
-        setupEventListeners();
-        await loadUserProfile();
+        setupNotificationEventListeners();
+        await loadNotifications();
+        updateNotificationStats();
         
-        // AGUARDAR O PREMIUM MANAGER ATUALIZAR A UI
-        setTimeout(async () => {
-            if (window.PremiumManager && typeof window.PremiumManager.updateUIWithPremiumStatus === 'function') {
-                await window.PremiumManager.updateUIWithPremiumStatus();
-            }
-            await updateInvisibleModeUI(); // Atualizar UI do modo invisível
-        }, 500);
-        
-        // INICIAR CONTADOR DE NOTIFICAÇÕES
-        iniciarContadorNotificacoes();
-    }
-}
-
-// ==================== CONTADOR DE NOTIFICAÇÕES ====================
-async function iniciarContadorNotificacoes() {
-    // Atualizar imediatamente
-    await atualizarContadorNotificacoes();
-    
-    // Atualizar a cada 30 segundos
-    setInterval(atualizarContadorNotificacoes, 30000);
-}
-
-async function atualizarContadorNotificacoes() {
-    try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: notificacoes, error } = await supabase
-            .from('notification_recipients')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('read_status', false);
-
-        if (!error) {
-            const count = notificacoes ? notificacoes.length : 0;
-            const notificationCount = document.getElementById('notificationCount');
-            
-            if (notificationCount) {
-                notificationCount.textContent = count;
-                notificationCount.style.display = count > 0 ? 'flex' : 'none';
-            }
-        }
-    } catch (error) {
-        console.error('Erro ao atualizar contador:', error);
+        // Atualizar contador no header também
+        await updateHeaderNotificationCount();
     }
 }
 
@@ -80,477 +40,334 @@ async function checkAuthentication() {
     }
 }
 
-// Configurar eventos
-function setupEventListeners() {
-    const profileForm = document.getElementById('profileForm');
-    if (profileForm) {
-        profileForm.addEventListener('submit', handleProfileSave);
-    }
-
-    // Máscaras
-    const cpfInput = document.getElementById('cpf');
-    const phoneInput = document.getElementById('phone');
-    const zipCodeInput = document.getElementById('zipCode');
-    
-    if (cpfInput) cpfInput.addEventListener('input', maskCPF);
-    if (phoneInput) phoneInput.addEventListener('input', maskPhone);
-    if (zipCodeInput) zipCodeInput.addEventListener('input', maskCEP);
-
-    // Contador de caracteres
-    const description = document.getElementById('description');
-    if (description) {
-        description.addEventListener('input', updateCharCount);
-    }
-
-    // Botão de upgrade
-    const upgradeBtn = document.getElementById('upgradePlanBtn');
-    if (upgradeBtn) {
-        upgradeBtn.addEventListener('click', () => {
-            window.location.href = 'pricing.html';
+// Configurar eventos das notificações
+function setupNotificationEventListeners() {
+    // Filtros
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remover classe active de todos
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            // Adicionar classe active no clicado
+            this.classList.add('active');
+            
+            currentFilter = this.getAttribute('data-filter');
+            loadNotifications();
         });
+    });
+
+    // Limpar todas as notificações
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', clearAllNotifications);
     }
 
-    // Modo invisível
-    const invisibleCheckbox = document.getElementById('isInvisible');
-    if (invisibleCheckbox) {
-        invisibleCheckbox.addEventListener('change', handleInvisibleToggle);
-    }
-
-    // Busca automática de CEP
-    const zipCodeInputCEP = document.getElementById('zipCode');
-    if (zipCodeInputCEP) {
-        zipCodeInputCEP.addEventListener('blur', function(e) {
-            const cep = e.target.value.replace(/\D/g, '');
-            if (cep.length === 8) {
-                buscarCEP(cep);
-            }
-        });
-    }
+    // Atualizar contador a cada 30 segundos
+    setInterval(updateHeaderNotificationCount, 30000);
 }
 
-// Carregar perfil do usuário
-async function loadUserProfile() {
+// Carregar notificações do usuário
+async function loadNotifications() {
     try {
-        if (!currentUser) {
-            throw new Error('Usuário não autenticado');
-        }
+        if (!currentUser) return;
 
-        // Carregar dados principais
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', currentUser.id)
-            .single();
+        const notificationsList = document.getElementById('notificationsList');
+        if (!notificationsList) return;
 
-        if (profileError) {
-            throw new Error('Erro ao carregar perfil');
-        }
+        // Mostrar loading
+        notificationsList.innerHTML = `
+            <div class="notification-loading">
+                <i class="fas fa-spinner"></i>
+                <p>Carregando notificações...</p>
+            </div>
+        `;
 
-        // Carregar detalhes públicos
-        const { data: userDetails, error: detailsError } = await supabase
-            .from('user_details')
-            .select('*')
+        // Buscar notificações do usuário
+        const { data: notifications, error } = await supabase
+            .from('notification_recipients')
+            .select(`
+                id,
+                read_status,
+                created_at,
+                notifications (
+                    id,
+                    title,
+                    message,
+                    type,
+                    created_at,
+                    sender_id,
+                    profiles!notifications_sender_id_fkey(nickname)
+                )
+            `)
             .eq('user_id', currentUser.id)
-            .single();
+            .order('created_at', { ascending: false });
 
-        if (detailsError && detailsError.code !== 'PGRST116') {
-            // PGRST116 é "Não encontrado", o que é normal para novos usuários
-            console.warn('Erro ao carregar detalhes:', detailsError);
+        if (error) {
+            throw new Error('Erro ao carregar notificações: ' + error.message);
         }
 
-        // Preencher formulário E ATUALIZAR HEADER
-        fillProfileForm(profile, userDetails || {});
-        
+        // Filtrar notificações baseado no filtro atual
+        let filteredNotifications = notifications || [];
+        if (currentFilter === 'unread') {
+            filteredNotifications = filteredNotifications.filter(n => !n.read_status);
+        } else if (currentFilter === 'read') {
+            filteredNotifications = filteredNotifications.filter(n => n.read_status);
+        }
+
+        // Renderizar notificações
+        renderNotifications(filteredNotifications, notificationsList);
+
+        // Atualizar estatísticas
+        updateNotificationStats(filteredNotifications, notifications || []);
+
     } catch (error) {
-        console.error('Erro ao carregar perfil:', error);
-        showNotification('Erro ao carregar perfil', 'error');
-    }
-}
-
-// Preencher formulário com dados reais
-function fillProfileForm(profile, userDetails) {
-    if (!profile) return;
-
-    // Dados principais
-    setValue('email', currentUser.email);
-    setValue('fullName', profile.full_name);
-    setValue('nickname', profile.nickname);
-    setValue('birthDate', profile.birth_date);
-    setValue('cpf', profile.cpf);
-    setValue('phone', profile.phone);
-    
-    // ATUALIZAR NICKNAME NO HEADER - CORREÇÃO PRINCIPAL
-    const userNicknameElement = document.getElementById('userNickname');
-    if (userNicknameElement && profile.nickname) {
-        userNicknameElement.textContent = profile.nickname;
-    }
-    
-    // Endereço
-    setValue('street', profile.street);
-    setValue('number', profile.number);
-    setValue('neighborhood', profile.neighborhood);
-    setValue('city', profile.city);
-    setValue('state', profile.state);
-    setValue('zipCode', profile.zip_code);
-    setValue('displayCity', profile.display_city);
-
-    // Modo Invisível
-    const invisibleCheckbox = document.getElementById('isInvisible');
-    if (invisibleCheckbox) {
-        invisibleCheckbox.checked = profile.is_invisible || false;
-    }
-
-    // Dados públicos
-    setValue('relationshipStatus', userDetails.relationship_status);
-    setValue('gender', userDetails.gender);
-    setValue('sexualOrientation', userDetails.sexual_orientation);
-    setValue('profession', userDetails.profession);
-    setValue('education', userDetails.education);
-    setValue('zodiac', userDetails.zodiac);
-    setValue('lookingFor', userDetails.looking_for);
-    setValue('description', userDetails.description);
-    setValue('religion', userDetails.religion);
-    setValue('drinking', userDetails.drinking);
-    setValue('smoking', userDetails.smoking);
-    setValue('exercise', userDetails.exercise);
-    setValue('exerciseDetails', userDetails.exercise_details);
-    setValue('hasPets', userDetails.has_pets);
-    setValue('petsDetails', userDetails.pets_details);
-
-    // Interesses
-    if (userDetails.interests) {
-        userDetails.interests.forEach(interest => {
-            const checkbox = document.querySelector(`input[name="interests"][value="${interest}"]`);
-            if (checkbox) checkbox.checked = true;
-        });
-    }
-
-    // Características
-    if (userDetails.characteristics) {
-        userDetails.characteristics.forEach(characteristic => {
-            const checkbox = document.querySelector(`input[name="characteristics"][value="${characteristic}"]`);
-            if (checkbox) checkbox.checked = true;
-        });
-    }
-
-    updateCharCount();
-}
-
-// Atualizar UI do modo invisível
-async function updateInvisibleModeUI() {
-    try {
-        let isPremium = false;
-        
-        // Verificar se PremiumManager existe
-        if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
-            isPremium = await window.PremiumManager.checkPremiumStatus();
+        console.error('Erro ao carregar notificações:', error);
+        const notificationsList = document.getElementById('notificationsList');
+        if (notificationsList) {
+            notificationsList.innerHTML = `
+                <div class="empty-notifications">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Erro ao carregar</h3>
+                    <p>Não foi possível carregar as notificações. Tente novamente.</p>
+                </div>
+            `;
         }
-        
-        const invisibleControl = document.getElementById('invisibleModeControl');
-        const upgradeCTA = document.getElementById('invisibleUpgradeCTA');
-        const featureStatus = document.getElementById('invisibleFeatureStatus');
-        const invisibleCheckbox = document.getElementById('isInvisible');
+    }
+}
 
-        if (isPremium) {
-            // Usuário Premium - mostrar controle
-            if (invisibleControl) invisibleControl.style.display = 'block';
-            if (upgradeCTA) upgradeCTA.style.display = 'none';
-            
-            // ✅ CORREÇÃO: Mostrar status baseado no checkbox
-            const isCurrentlyInvisible = invisibleCheckbox ? invisibleCheckbox.checked : false;
-            
-            if (featureStatus) {
-                if (isCurrentlyInvisible) {
-                    featureStatus.innerHTML = `
-                        <span class="premium-feature-active">
-                            <i class="fas fa-eye-slash"></i> Modo Ativo
-                        </span>
-                    `;
-                } else {
-                    featureStatus.innerHTML = `
-                        <span class="premium-feature-inactive">
-                            <i class="fas fa-eye"></i> Modo Inativo
-                        </span>
-                    `;
-                }
+// Renderizar notificações na lista
+function renderNotifications(notifications, container) {
+    if (!notifications || notifications.length === 0) {
+        container.innerHTML = `
+            <div class="empty-notifications">
+                <i class="fas fa-bell-slash"></i>
+                <h3>Nenhuma notificação</h3>
+                <p>Quando você receber notificações, elas aparecerão aqui.</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = notifications.map(notification => {
+        const notifData = notification.notifications;
+        const isUnread = !notification.read_status;
+        const timeAgo = getTimeAgo(new Date(notification.created_at));
+        const icon = getNotificationIcon(notifData.type);
+        const senderName = notifData.profiles?.nickname || 'Sistema';
+
+        return `
+            <div class="notification-item ${isUnread ? 'unread' : 'read'}" data-notification-id="${notification.id}">
+                ${isUnread ? '<div class="notification-badge"></div>' : ''}
+                <div class="notification-icon notification-type-${notifData.type}">
+                    <i class="${icon}"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">
+                        ${notifData.title}
+                        ${notifData.type === 'message' ? `<span style="color: var(--beige); font-weight: normal; font-size: 0.9em;">• De: ${senderName}</span>` : ''}
+                    </div>
+                    <div class="notification-message">${notifData.message}</div>
+                    <div class="notification-time">
+                        <i class="far fa-clock"></i> ${timeAgo}
+                    </div>
+                    <div class="notification-actions">
+                        ${isUnread ? `
+                            <button class="btn-mark-read" onclick="markAsRead('${notification.id}')">
+                                <i class="fas fa-check"></i> Marcar como lida
+                            </button>
+                        ` : ''}
+                        <button class="btn-delete-notification" onclick="deleteNotification('${notification.id}')">
+                            <i class="fas fa-trash"></i> Excluir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Adicionar evento de clique para marcar como lida ao clicar na notificação
+    container.querySelectorAll('.notification-item.unread').forEach(item => {
+        item.addEventListener('click', function(e) {
+            if (!e.target.closest('.notification-actions')) {
+                const notificationId = this.getAttribute('data-notification-id');
+                markAsRead(notificationId);
             }
-        } else {
-            // Usuário Free - mostrar CTA de upgrade
-            if (invisibleControl) invisibleControl.style.display = 'none';
-            if (upgradeCTA) upgradeCTA.style.display = 'block';
-            if (featureStatus) {
-                featureStatus.innerHTML = `
-                    <span class="premium-feature-locked">
-                        <i class="fas fa-lock"></i> Bloqueado
-                    </span>
-                `;
-            }
-        }
-    } catch (error) {
-        console.error('Erro ao atualizar UI do modo invisível:', error);
-    }
+        });
+    });
 }
 
-// Manipular toggle do modo invisível
-async function handleInvisibleToggle(event) {
-    const isInvisible = event.target.checked;
-    
+// Marcar notificação como lida
+async function markAsRead(notificationId) {
     try {
-        if (!currentUser) {
-            throw new Error('Usuário não autenticado');
-        }
-
         const { error } = await supabase
-            .from('profiles')
-            .update({
-                is_invisible: isInvisible,
-                updated_at: new Date().toISOString()
+            .from('notification_recipients')
+            .update({ 
+                read_status: true,
+                read_at: new Date().toISOString()
             })
-            .eq('id', currentUser.id);
+            .eq('id', notificationId)
+            .eq('user_id', currentUser.id);
 
         if (error) throw error;
 
-        // ✅ CORREÇÃO: Atualizar UI imediatamente após mudança
-        await updateInvisibleModeUI();
+        // Recarregar notificações
+        await loadNotifications();
+        
+        // Atualizar contador no header
+        await updateHeaderNotificationCount();
 
-        showNotification(
-            `Modo invisível ${isInvisible ? 'ativado' : 'desativado'} com sucesso!`,
-            'success'
-        );
+        showNotification('Notificação marcada como lida', 'success');
 
     } catch (error) {
-        console.error('Erro ao atualizar modo invisível:', error);
-        showNotification('Erro ao atualizar modo invisível', 'error');
-        // Reverter o checkbox em caso de erro
-        event.target.checked = !isInvisible;
+        console.error('Erro ao marcar notificação como lida:', error);
+        showNotification('Erro ao marcar notificação como lida', 'error');
     }
 }
 
-// Salvar perfil
-async function handleProfileSave(event) {
-    event.preventDefault();
-    
-    const saveButton = document.getElementById('saveButton');
-    if (!saveButton) return;
-
-    const originalText = saveButton.innerHTML;
-    
+// Excluir notificação
+async function deleteNotification(notificationId) {
     try {
-        saveButton.innerHTML = 'Salvando...';
-        saveButton.disabled = true;
-
-        // Coletar dados do formulário
-        const profileData = collectProfileData();
-        const userDetailsData = collectUserDetailsData();
-
-        // Validações
-        if (!validateProfileData(profileData, userDetailsData)) {
-            saveButton.innerHTML = originalText;
-            saveButton.disabled = false;
+        if (!confirm('Tem certeza que deseja excluir esta notificação?')) {
             return;
         }
 
-        // Salvar no banco
-        await saveProfileToDatabase(profileData, userDetailsData);
+        const { error } = await supabase
+            .from('notification_recipients')
+            .delete()
+            .eq('id', notificationId)
+            .eq('user_id', currentUser.id);
+
+        if (error) throw error;
+
+        // Recarregar notificações
+        await loadNotifications();
         
-        // ATUALIZAR NICKNAME NO HEADER APÓS SALVAR
-        const userNicknameElement = document.getElementById('userNickname');
-        if (userNicknameElement && profileData.nickname) {
-            userNicknameElement.textContent = profileData.nickname;
-        }
-        
-        showNotification('Perfil salvo com sucesso!', 'success');
-        
+        // Atualizar contador no header
+        await updateHeaderNotificationCount();
+
+        showNotification('Notificação excluída', 'success');
+
     } catch (error) {
-        console.error('Erro ao salvar perfil:', error);
-        showNotification('Erro ao salvar perfil: ' + error.message, 'error');
-    } finally {
-        saveButton.innerHTML = originalText;
-        saveButton.disabled = false;
+        console.error('Erro ao excluir notificação:', error);
+        showNotification('Erro ao excluir notificação', 'error');
     }
 }
 
-// Coletar dados do perfil
-function collectProfileData() {
-    const invisibleCheckbox = document.getElementById('isInvisible');
-    const isInvisible = invisibleCheckbox ? invisibleCheckbox.checked : false;
+// Limpar todas as notificações
+async function clearAllNotifications() {
+    try {
+        if (!confirm('Tem certeza que deseja limpar TODAS as notificações? Esta ação não pode ser desfeita.')) {
+            return;
+        }
 
-    return {
-        full_name: getValue('fullName'),
-        nickname: getValue('nickname'),
-        birth_date: getValue('birthDate'),
-        cpf: getValue('cpf').replace(/\D/g, ''),
-        phone: getValue('phone').replace(/\D/g, ''),
-        street: getValue('street'),
-        number: getValue('number'),
-        neighborhood: getValue('neighborhood'),
-        city: getValue('city'),
-        state: getValue('state'),
-        zip_code: getValue('zipCode').replace(/\D/g, ''),
-        display_city: getValue('displayCity'),
-        is_invisible: isInvisible
-    };
+        const { error } = await supabase
+            .from('notification_recipients')
+            .delete()
+            .eq('user_id', currentUser.id);
+
+        if (error) throw error;
+
+        // Recarregar notificações
+        await loadNotifications();
+        
+        // Atualizar contador no header
+        await updateHeaderNotificationCount();
+
+        showNotification('Todas as notificações foram limpas', 'success');
+
+    } catch (error) {
+        console.error('Erro ao limpar notificações:', error);
+        showNotification('Erro ao limpar notificações', 'error');
+    }
 }
 
-// Coletar dados públicos
-function collectUserDetailsData() {
-    const interests = Array.from(document.querySelectorAll('input[name="interests"]:checked'))
-        .map(checkbox => checkbox.value);
+// Atualizar estatísticas das notificações
+function updateNotificationStats(filteredNotifications = [], allNotifications = []) {
+    const statsElement = document.querySelector('.notifications-stats');
+    if (!statsElement) return;
 
-    const characteristics = Array.from(document.querySelectorAll('input[name="characteristics"]:checked'))
-        .map(checkbox => checkbox.value);
+    const totalNotifications = allNotifications.length;
+    const unreadCount = allNotifications.filter(n => !n.read_status).length;
+    const filteredCount = filteredNotifications.length;
 
-    return {
-        relationship_status: getValue('relationshipStatus'),
-        gender: getValue('gender'),
-        sexual_orientation: getValue('sexualOrientation'),
-        profession: getValue('profession'),
-        education: getValue('education'),
-        zodiac: getValue('zodiac'),
-        looking_for: getValue('lookingFor'),
-        description: getValue('description'),
-        religion: getValue('religion'),
-        drinking: getValue('drinking'),
-        smoking: getValue('smoking'),
-        exercise: getValue('exercise'),
-        exercise_details: getValue('exerciseDetails'),
-        has_pets: getValue('hasPets'),
-        pets_details: getValue('petsDetails'),
-        interests: interests,
-        characteristics: characteristics
-    };
+    let statsText = '';
+    
+    if (currentFilter === 'all') {
+        statsText = `${filteredCount} notificação${filteredCount !== 1 ? 's' : ''} • <span class="unread-count">${unreadCount} não lida${unreadCount !== 1 ? 's' : ''}</span>`;
+    } else if (currentFilter === 'unread') {
+        statsText = `${filteredCount} notificação${filteredCount !== 1 ? 's' : ''} não lida${filteredCount !== 1 ? 's' : ''}`;
+    } else if (currentFilter === 'read') {
+        statsText = `${filteredCount} notificação${filteredCount !== 1 ? 's' : ''} lida${filteredCount !== 1 ? 's' : ''}`;
+    }
+
+    statsElement.innerHTML = statsText;
+
+    // Atualizar estado do botão limpar todas
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    if (clearAllBtn) {
+        clearAllBtn.disabled = totalNotifications === 0;
+    }
 }
 
-// Validar dados antes de salvar
-function validateProfileData(profileData, userDetailsData) {
-    if (!profileData.nickname) {
-        showNotification('Informe um nickname!', 'error');
-        return false;
-    }
-    
-    if (!profileData.birth_date) {
-        showNotification('Informe a data de nascimento!', 'error');
-        return false;
-    }
+// Atualizar contador no header
+async function updateHeaderNotificationCount() {
+    try {
+        if (!currentUser) return;
 
-    // Validar idade mínima
-    const birthDate = new Date(profileData.birth_date);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-    }
-    
-    if (age < 18) {
-        showNotification('Você deve ter pelo menos 18 anos!', 'error');
-        return false;
-    }
-    
-    if (!userDetailsData.relationship_status) {
-        showNotification('Informe seu status de relacionamento!', 'error');
-        return false;
-    }
-    
-    if (!userDetailsData.gender) {
-        showNotification('Informe o gênero!', 'error');
-        return false;
-    }
-    
-    if (!userDetailsData.looking_for) {
-        showNotification('Informe o que você procura!', 'error');
-        return false;
-    }
+        const { data: notifications, error } = await supabase
+            .from('notification_recipients')
+            .select('id')
+            .eq('user_id', currentUser.id)
+            .eq('read_status', false);
 
-    return true;
-}
-
-// Salvar no banco
-async function saveProfileToDatabase(profileData, userDetailsData) {
-    if (!currentUser) {
-        throw new Error('Usuário não autenticado');
+        if (!error) {
+            const count = notifications ? notifications.length : 0;
+            const notificationCount = document.getElementById('notificationCount');
+            
+            if (notificationCount) {
+                notificationCount.textContent = count;
+                notificationCount.style.display = count > 0 ? 'flex' : 'none';
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao atualizar contador:', error);
     }
-
-    // Atualizar perfil principal
-    const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-            id: currentUser.id,
-            ...profileData,
-            updated_at: new Date().toISOString()
-        });
-
-    if (profileError) throw new Error(`Perfil: ${profileError.message}`);
-
-    // Atualizar detalhes públicos
-    const { error: detailsError } = await supabase
-        .from('user_details')
-        .upsert({
-            user_id: currentUser.id,
-            ...userDetailsData,
-            updated_at: new Date().toISOString()
-        });
-
-    if (detailsError) throw new Error(`Detalhes: ${detailsError.message}`);
 }
 
 // Funções auxiliares
-function getValue(id) {
-    const element = document.getElementById(id);
-    return element ? element.value.trim() : '';
+function getNotificationIcon(type) {
+    const icons = {
+        'message': 'fas fa-envelope',
+        'match': 'fas fa-heart',
+        'system': 'fas fa-info-circle',
+        'premium': 'fas fa-crown',
+        'warning': 'fas fa-exclamation-triangle',
+        'success': 'fas fa-check-circle'
+    };
+    return icons[type] || 'fas fa-bell';
 }
 
-function setValue(id, value) {
-    const element = document.getElementById(id);
-    if (element && value) element.value = value;
-}
-
-// Máscaras
-function maskCPF(e) {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length <= 11) {
-        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    }
-    e.target.value = value;
-}
-
-function maskPhone(e) {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length <= 11) {
-        value = value.replace(/(\d{2})(\d)/, '($1) $2');
-        value = value.replace(/(\d{5})(\d)/, '$1-$2');
-    }
-    e.target.value = value;
-}
-
-function maskCEP(e) {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length <= 8) {
-        value = value.replace(/(\d{5})(\d)/, '$1-$2');
-    }
-    e.target.value = value;
-}
-
-// Contador de caracteres
-function updateCharCount() {
-    const textarea = document.getElementById('description');
-    const charCount = document.getElementById('charCount');
+function getTimeAgo(date) {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
     
-    if (textarea && charCount) {
-        const count = textarea.value.length;
-        charCount.textContent = `${count}/100`;
-        
-        if (count > 100) {
-            textarea.value = textarea.value.substring(0, 100);
-            updateCharCount();
-        }
+    if (diffInSeconds < 60) {
+        return 'Agora mesmo';
+    } else if (diffInSeconds < 3600) {
+        const minutes = Math.floor(diffInSeconds / 60);
+        return `Há ${minutes} minuto${minutes !== 1 ? 's' : ''}`;
+    } else if (diffInSeconds < 86400) {
+        const hours = Math.floor(diffInSeconds / 3600);
+        return `Há ${hours} hora${hours !== 1 ? 's' : ''}`;
+    } else if (diffInSeconds < 2592000) {
+        const days = Math.floor(diffInSeconds / 86400);
+        return `Há ${days} dia${days !== 1 ? 's' : ''}`;
+    } else {
+        return date.toLocaleDateString('pt-BR');
     }
 }
 
-// Sistema de notificações
+// Sistema de notificações toast
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
@@ -581,36 +398,34 @@ function showNotification(message, type = 'info') {
     notification.querySelector('.notification-close').onclick = () => notification.remove();
 
     setTimeout(() => {
-        if (notification.parentElement) notification.remove();
+        if (notification.parentElement) {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }
     }, 5000);
 }
 
-// Função para buscar CEP
-async function buscarCEP(cep) {
-    try {
-        const cepLimpo = cep.replace(/\D/g, '');
-        if (cepLimpo.length !== 8) return;
-        
-        const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
-        const data = await response.json();
-        
-        if (!data.erro) {
-            setValue('street', data.logradouro);
-            setValue('neighborhood', data.bairro);
-            setValue('city', data.localidade);
-            setValue('state', data.uf);
-            setValue('displayCity', `${data.localidade}, ${data.uf}`);
+// Adicionar animação de saída
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
         }
-    } catch (error) {
-        console.log('Erro ao buscar CEP:', error);
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
     }
-}
+`;
+document.head.appendChild(style);
 
 // Exportar para uso global
-window.supabase = supabase;
-window.profileManager = {
-    loadUserProfile,
-    saveProfile: handleProfileSave,
-    showNotification,
-    updateInvisibleModeUI
+window.notificationManager = {
+    loadNotifications,
+    markAsRead,
+    deleteNotification,
+    clearAllNotifications,
+    updateHeaderNotificationCount
 };
