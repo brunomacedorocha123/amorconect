@@ -701,9 +701,12 @@ async function distribuirNotificacao(notificationId, destinatarios, userIds = []
             const { data: users, error } = await supabase
                 .from('profiles')
                 .select('id')
-                .limit(100); // Limite para não sobrecarregar
+                .limit(50); // Limite para não sobrecarregar
 
-            if (error) throw error;
+            if (error) {
+                console.error('❌ Erro ao buscar usuários:', error);
+                throw error;
+            }
             
             if (users && users.length > 0) {
                 usersToInsert = users.map(user => ({
@@ -712,6 +715,8 @@ async function distribuirNotificacao(notificationId, destinatarios, userIds = []
                     created_at: new Date().toISOString()
                 }));
                 console.log(`📋 Encontrados ${users.length} usuários para "Todos"`);
+            } else {
+                console.log('⚠️ Nenhum usuário encontrado na tabela profiles');
             }
         }
         // 3. APENAS USUÁRIOS FREE
@@ -721,9 +726,12 @@ async function distribuirNotificacao(notificationId, destinatarios, userIds = []
                 .from('profiles')
                 .select('id')
                 .eq('is_premium', false)
-                .limit(100);
+                .limit(50);
 
-            if (error) throw error;
+            if (error) {
+                console.error('❌ Erro ao buscar usuários free:', error);
+                throw error;
+            }
             
             if (users && users.length > 0) {
                 usersToInsert = users.map(user => ({
@@ -732,6 +740,8 @@ async function distribuirNotificacao(notificationId, destinatarios, userIds = []
                     created_at: new Date().toISOString()
                 }));
                 console.log(`📋 Encontrados ${users.length} usuários Free`);
+            } else {
+                console.log('⚠️ Nenhum usuário free encontrado');
             }
         }
         // 4. APENAS USUÁRIOS PREMIUM
@@ -741,9 +751,12 @@ async function distribuirNotificacao(notificationId, destinatarios, userIds = []
                 .from('profiles')
                 .select('id')
                 .eq('is_premium', true)
-                .limit(100);
+                .limit(50);
 
-            if (error) throw error;
+            if (error) {
+                console.error('❌ Erro ao buscar usuários premium:', error);
+                throw error;
+            }
             
             if (users && users.length > 0) {
                 usersToInsert = users.map(user => ({
@@ -752,6 +765,8 @@ async function distribuirNotificacao(notificationId, destinatarios, userIds = []
                     created_at: new Date().toISOString()
                 }));
                 console.log(`📋 Encontrados ${users.length} usuários Premium`);
+            } else {
+                console.log('⚠️ Nenhum usuário premium encontrado');
             }
         }
 
@@ -772,6 +787,7 @@ async function distribuirNotificacao(notificationId, destinatarios, userIds = []
             return usersToInsert.length;
         } else {
             console.log('⚠️ Nenhum usuário encontrado para distribuição');
+            // Mesmo sem usuários, consideramos sucesso para não bloquear o envio
             return 0;
         }
         
@@ -827,7 +843,10 @@ async function searchUsers(query) {
             .or(`nickname.ilike.%${query}%,email.ilike.%${query}%`)
             .limit(10);
         
-        if (error) return;
+        if (error) {
+            console.error('Erro na busca:', error);
+            return;
+        }
         
         if (users && users.length > 0) {
             resultsContainer.innerHTML = users.map(user => `
@@ -985,14 +1004,25 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
 
         // 2. DISTRIBUIR PARA OS USUÁRIOS
         console.log('🚀 Iniciando distribuição...');
-        const destinatariosCount = await distribuirNotificacao(
-            notification.id, 
-            formData.destinatarios, 
-            formData.userIds
-        );
+        let destinatariosCount = 0;
+        try {
+            destinatariosCount = await distribuirNotificacao(
+                notification.id, 
+                formData.destinatarios, 
+                formData.userIds
+            );
+        } catch (distError) {
+            console.warn('⚠️ Distribuição falhou, mas notificação foi criada:', distError);
+            // Continua mesmo com erro na distribuição
+        }
 
         // 3. SUCESSO
-        alert(`✅ Notificação enviada com sucesso!\n📨 Distribuída para ${destinatariosCount} usuários`);
+        if (destinatariosCount > 0) {
+            alert(`✅ Notificação enviada com sucesso!\n📨 Distribuída para ${destinatariosCount} usuários`);
+        } else {
+            alert(`✅ Notificação criada com sucesso!\n⚠️ Mas não foi distribuída para nenhum usuário (tabela profiles vazia ou sem permissão)`);
+        }
+        
         limparFormulario();
         carregarHistorico();
         
@@ -1036,19 +1066,28 @@ async function carregarHistorico() {
         // Buscar estatísticas de destinatários
         const notificacoesComStats = await Promise.all(
             notificacoes.map(async (notif) => {
-                const { data: recipients, error: recError } = await supabase
-                    .from('notification_recipients')
-                    .select('id, read_status')
-                    .eq('notification_id', notif.id);
+                try {
+                    const { data: recipients, error: recError } = await supabase
+                        .from('notification_recipients')
+                        .select('id, read_status')
+                        .eq('notification_id', notif.id);
 
-                const totalDestinatarios = recipients?.length || 0;
-                const lidas = recipients?.filter(r => r.read_status)?.length || 0;
+                    const totalDestinatarios = recipients?.length || 0;
+                    const lidas = recipients?.filter(r => r.read_status)?.length || 0;
 
-                return {
-                    ...notif,
-                    totalDestinatarios,
-                    lidas
-                };
+                    return {
+                        ...notif,
+                        totalDestinatarios,
+                        lidas
+                    };
+                } catch (error) {
+                    console.warn('Erro ao buscar destinatários para notificação:', notif.id, error);
+                    return {
+                        ...notif,
+                        totalDestinatarios: 0,
+                        lidas: 0
+                    };
+                }
             })
         );
         
@@ -1128,15 +1167,27 @@ async function carregarEstatisticas() {
         if (notifError) throw notifError;
         
         // Buscar estatísticas de destinatários
-        const { data: recipients, error: recError } = await supabase
-            .from('notification_recipients')
-            .select('notification_id, read_status');
+        let totalDestinatarios = 0;
+        let notificacoesLidas = 0;
+        
+        try {
+            const { data: recipients, error: recError } = await supabase
+                .from('notification_recipients')
+                .select('read_status');
+            
+            if (!recError && recipients) {
+                totalDestinatarios = recipients.length;
+                notificacoesLidas = recipients.filter(r => r.read_status).length;
+            }
+        } catch (error) {
+            console.warn('Erro ao buscar estatísticas de destinatários:', error);
+        }
         
         const stats = {
             totalNotificacoes: notificacoes?.length || 0,
             notificacoesAtivas: notificacoes?.filter(n => n.is_active)?.length || 0,
-            totalDestinatarios: recipients?.length || 0,
-            notificacoesLidas: recipients?.filter(r => r.read_status)?.length || 0,
+            totalDestinatarios: totalDestinatarios,
+            notificacoesLidas: notificacoesLidas,
             porTipo: {}
         };
         
