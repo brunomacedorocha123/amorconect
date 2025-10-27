@@ -98,7 +98,7 @@ async function carregarEstatisticas() {
         document.getElementById('totalUsuarios').textContent = totalUsuarios || 0;
 
     } catch (erro) {
-        console.error('Erro ao carregar estatísticas:', erro);
+        alert('Erro ao carregar estatísticas');
     }
 }
 
@@ -108,7 +108,6 @@ async function enviarNotificacao(event) {
     
     if (!verificarAutenticacao()) return;
 
-    const formData = new FormData(event.target);
     const titulo = document.getElementById('titulo').value;
     const mensagem = document.getElementById('mensagem').value;
     const categoria = document.getElementById('categoria').value;
@@ -161,7 +160,6 @@ async function enviarNotificacao(event) {
         carregarHistorico();
 
     } catch (erro) {
-        console.error('Erro ao enviar notificação:', erro);
         alert('❌ Erro ao enviar notificação: ' + (erro.message || 'Erro desconhecido'));
     }
 }
@@ -386,7 +384,7 @@ async function carregarTemplatesSelect() {
         });
 
     } catch (erro) {
-        console.error('Erro ao carregar templates para select:', erro);
+        alert('Erro ao carregar templates');
     }
 }
 
