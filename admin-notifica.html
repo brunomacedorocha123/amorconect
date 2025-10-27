@@ -96,6 +96,11 @@
             color: var(--white);
         }
 
+        .btn-warning {
+            background: var(--warning);
+            color: var(--white);
+        }
+
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
@@ -296,6 +301,31 @@
             font-size: 0.9rem;
         }
 
+        .usuarios-lista {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--light-gray);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .usuario-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .usuario-item:last-child {
+            border-bottom: none;
+        }
+
+        .usuario-checkbox {
+            margin-right: 0.5rem;
+        }
+
         @media (max-width: 768px) {
             .form-grid {
                 grid-template-columns: 1fr;
@@ -401,7 +431,7 @@
                         <label for="prioridade">Prioridade</label>
                         <select id="prioridade">
                             <option value="low">🔵 Baixa</option>
-                            <option value="normal">🟢 Normal</option>
+                            <option value="normal" selected>🟢 Normal</option>
                             <option value="high">🟡 Alta</option>
                             <option value="urgent">🔴 Urgente</option>
                         </select>
@@ -409,24 +439,36 @@
 
                     <div class="form-group">
                         <label for="tipoUsuario">Destinatários</label>
-                        <select id="tipoUsuario" required>
+                        <select id="tipoUsuario" required onchange="toggleCamposUsuarios()">
                             <option value="all">👥 Todos os Usuários</option>
                             <option value="free">🆓 Apenas Free</option>
                             <option value="premium">⭐ Apenas Premium</option>
                             <option value="specific">🎯 Usuários Específicos</option>
+                            <option value="selected">👤 Selecionar Usuários</option>
                         </select>
                     </div>
 
-                    <div class="form-group" id="usuariosEspecificosGroup" style="display: none;">
+                    <div class="form-group full-width" id="usuariosEspecificosGroup" style="display: none;">
                         <label for="usuariosEspecificos">IDs de Usuários (separados por vírgula)</label>
                         <input type="text" id="usuariosEspecificos" placeholder="id1, id2, id3...">
+                        <small style="color: var(--gray);">Digite os IDs dos usuários separados por vírgula</small>
+                    </div>
+
+                    <div class="form-group full-width" id="usuariosSelecionadosGroup" style="display: none;">
+                        <label>Selecionar Usuários Específicos</label>
+                        <div class="usuarios-lista" id="listaUsuarios">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <p>Carregando usuários...</p>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">
                         <label for="validade">Validade da Notificação</label>
-                        <select id="validade" required>
+                        <select id="validade" required onchange="toggleDataExpiracao()">
                             <option value="1">⏰ 1 Dia</option>
-                            <option value="7">📅 7 Dias</option>
+                            <option value="7" selected>📅 7 Dias</option>
                             <option value="30">🗓️ 1 Mês (30 dias)</option>
                             <option value="365">📆 1 Ano</option>
                             <option value="never">∞ Nunca Expira</option>
@@ -447,7 +489,7 @@
                     <button type="button" class="btn btn-secondary" onclick="salvarComoTemplate()">
                         💾 Salvar como Template
                     </button>
-                    <button type="reset" class="btn btn-danger">
+                    <button type="button" class="btn btn-danger" onclick="limparFormulario()">
                         🗑️ Limpar Formulário
                     </button>
                 </div>
