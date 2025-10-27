@@ -435,7 +435,7 @@
             margin-top: 1rem;
         }
 
-        /* LOGOUT */
+        /* BOTÕES SUPERIORES */
         .logout-btn {
             position: fixed;
             top: 20px;
@@ -448,6 +448,23 @@
             cursor: pointer;
             font-weight: 600;
             z-index: 1000;
+        }
+
+        .admin-btn {
+            position: fixed;
+            top: 20px;
+            right: 120px;
+            background: var(--info);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         /* MODAL */
@@ -529,11 +546,20 @@
             .templates-grid {
                 grid-template-columns: 1fr;
             }
+
+            .admin-btn {
+                right: 80px;
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Botão Logout -->
+    <!-- Botões Superiores -->
+    <button class="admin-btn" onclick="irParaAdmin()">
+        ⚙️ Admin
+    </button>
     <button class="logout-btn" onclick="logoutAdmin()">🚪 Sair</button>
 
     <div class="container">
@@ -612,7 +638,6 @@
                 </div>
             </div>
             <div id="sendContent">
-                <!-- Formulário será carregado via JavaScript -->
                 <div class="loading">
                     <div class="spinner"></div>
                     <p>Carregando formulário...</p>
@@ -705,6 +730,6 @@
     </div>
 
     <!-- JavaScript -->
-   <script src="admin-notifica.js?v=2"></script>
+    <script src="admin-notifica.js"></script>
 </body>
 </html>
