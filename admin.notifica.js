@@ -42,6 +42,7 @@ async function inicializarSistema() {
         await carregarEstatisticas();
         await carregarVisaoGeral();
     } catch (error) {
+        console.error('Erro ao inicializar sistema:', error);
         mostrarErro('Erro ao inicializar sistema');
     }
 }
@@ -51,23 +52,27 @@ async function carregarEstatisticas() {
     if (!verificarAutenticacao()) return;
     
     try {
-        const { count: totalNotificacoes } = await supabase
+        const { count: totalNotificacoes, error: error1 } = await supabase
             .from('user_notifications')
             .select('*', { count: 'exact', head: true });
 
-        const { count: naoLidas } = await supabase
+        const { count: naoLidas, error: error2 } = await supabase
             .from('user_notifications')
             .select('*', { count: 'exact', head: true })
             .eq('is_read', false);
 
-        const { count: totalUsuarios } = await supabase
+        const { count: totalUsuarios, error: error3 } = await supabase
             .from('profiles')
             .select('*', { count: 'exact', head: true });
 
-        const { count: templatesAtivos } = await supabase
+        const { count: templatesAtivos, error: error4 } = await supabase
             .from('notification_templates')
             .select('*', { count: 'exact', head: true })
             .eq('is_active', true);
+
+        if (error1 || error2 || error3 || error4) {
+            throw new Error('Erro ao carregar estatísticas');
+        }
 
         document.getElementById('totalNotifications').textContent = totalNotificacoes || 0;
         document.getElementById('unreadNotifications').textContent = naoLidas || 0;
@@ -85,6 +90,7 @@ async function carregarEstatisticas() {
 // ==================== SEÇÃO: VISÃO GERAL ====================
 async function carregarVisaoGeral() {
     const container = document.getElementById('overviewContent');
+    if (!container) return;
     
     try {
         container.innerHTML = `
@@ -94,6 +100,7 @@ async function carregarVisaoGeral() {
             </div>
         `;
 
+        // Carregar notificações recentes
         const { data: notificacoes, error } = await supabase
             .from('user_notifications')
             .select(`
@@ -105,22 +112,25 @@ async function carregarVisaoGeral() {
 
         if (error) throw error;
 
+        // Carregar estatísticas detalhadas
+        const estatisticas = await carregarEstatisticasDetalhadasVisaoGeral();
+
         let html = `
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
                 <div>
                     <h3 style="color: var(--primary); margin-bottom: 1rem;">📈 Estatísticas Rápidas</h3>
                     <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 10px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 0.8rem;">
                             <span>Notificações Hoje:</span>
-                            <strong id="notificacoesHoje">0</strong>
+                            <strong>${estatisticas.notificacoesHoje}</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 0.8rem;">
                             <span>Taxa de Leitura:</span>
-                            <strong id="taxaLeitura">0%</strong>
+                            <strong>${estatisticas.taxaLeitura}%</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between;">
                             <span>Usuários Ativos:</span>
-                            <strong id="usuariosAtivos">0</strong>
+                            <strong>${estatisticas.usuariosAtivos}</strong>
                         </div>
                     </div>
                 </div>
@@ -141,7 +151,7 @@ async function carregarVisaoGeral() {
                 </div>
             </div>
             
-            <div style="margin-top: 2rem;">
+            <div>
                 <h3 style="color: var(--primary); margin-bottom: 1rem;">📨 Últimas Notificações</h3>
         `;
         
@@ -153,25 +163,25 @@ async function carregarVisaoGeral() {
                 </div>
             `;
         } else {
-            html += '<div class="notifications-grid">';
+            html += '<div style="display: flex; flex-direction: column; gap: 1rem;">';
             
             notificacoes.forEach(notificacao => {
                 const badgeColor = getBadgeColor(notificacao.category);
                 html += `
-                    <div class="notification-card">
-                        <div class="notification-header">
-                            <div class="notification-title">${escapeHtml(notificacao.title)}</div>
-                            <div class="notification-badge" style="background: ${badgeColor}">
+                    <div style="border: 1px solid var(--light-gray); border-radius: 10px; padding: 1.5rem; background: white;">
+                        <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 1rem;">
+                            <div style="font-weight: bold; flex: 1;">${escapeHtml(notificacao.title)}</div>
+                            <div style="background: ${badgeColor}; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem;">
                                 ${getCategoryLabel(notificacao.category)}
                             </div>
                         </div>
-                        <div class="notification-meta">
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1rem; font-size: 0.9rem; color: var(--gray);">
                             <span>Para: ${notificacao.user?.nickname || 'Usuário'}</span>
                             <span>${formatarData(notificacao.created_at)}</span>
                             ${notificacao.is_read ? '<span>✅ Lida</span>' : '<span style="color: var(--danger);">🔴 Não lida</span>'}
                         </div>
-                        <div class="notification-message">${escapeHtml(notificacao.message)}</div>
-                        <div class="notification-meta">
+                        <div style="margin-bottom: 1rem;">${escapeHtml(notificacao.message)}</div>
+                        <div style="font-size: 0.8rem; color: var(--gray);">
                             <small>Expira: ${formatarData(notificacao.expires_at)}</small>
                         </div>
                     </div>
@@ -182,9 +192,9 @@ async function carregarVisaoGeral() {
         }
 
         container.innerHTML = html;
-        await carregarEstatisticasDetalhadas();
 
     } catch (error) {
+        console.error('Erro ao carregar visão geral:', error);
         container.innerHTML = `
             <div class="empty-state">
                 <div class="icon">❌</div>
@@ -195,7 +205,7 @@ async function carregarVisaoGeral() {
     }
 }
 
-async function carregarEstatisticasDetalhadas() {
+async function carregarEstatisticasDetalhadasVisaoGeral() {
     try {
         // Notificações de hoje
         const hoje = new Date();
@@ -230,63 +240,69 @@ async function carregarEstatisticasDetalhadas() {
             .gte('last_online_at', umDiaAtras.toISOString())
             .eq('is_active', true);
 
-        // Atualizar UI
-        if (document.getElementById('notificacoesHoje')) {
-            document.getElementById('notificacoesHoje').textContent = notificacoesHoje || 0;
-            document.getElementById('taxaLeitura').textContent = taxaLeitura + '%';
-            document.getElementById('usuariosAtivos').textContent = usuariosAtivos || 0;
-        }
+        return {
+            notificacoesHoje: notificacoesHoje || 0,
+            taxaLeitura: taxaLeitura,
+            usuariosAtivos: usuariosAtivos || 0
+        };
 
     } catch (error) {
         console.error('Erro ao carregar estatísticas detalhadas:', error);
+        return {
+            notificacoesHoje: 0,
+            taxaLeitura: 0,
+            usuariosAtivos: 0
+        };
     }
 }
 
 // ==================== SEÇÃO: ENVIAR NOTIFICAÇÃO ====================
 async function carregarFormularioEnvio() {
     const container = document.getElementById('sendContent');
+    if (!container) return;
     
     try {
         container.innerHTML = `
             <form id="formEnvioNotificacao" onsubmit="enviarNotificacao(event)">
                 <!-- SELEÇÃO DE DESTINATÁRIOS -->
-                <div class="target-section">
+                <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
                     <h4 style="color: var(--primary); margin-bottom: 1rem;">🎯 Escolher Destinatários</h4>
                     
-                    <div class="target-options">
-                        <div class="target-option selected" data-target="all" onclick="selecionarDestino('all')">
-                            <div>📧</div>
-                            <div><strong>Todos os Usuários</strong></div>
-                            <small>Todos os usuários do sistema</small>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                        <div class="target-option selected" data-target="all" onclick="selecionarDestino('all')" style="border: 2px solid var(--primary); background: white; padding: 1rem; border-radius: 8px; text-align: center; cursor: pointer;">
+                            <div style="font-size: 1.5rem;">📧</div>
+                            <div style="font-weight: bold;">Todos os Usuários</div>
+                            <small style="color: var(--gray);">Todos os usuários do sistema</small>
                         </div>
-                        <div class="target-option" data-target="free" onclick="selecionarDestino('free')">
-                            <div>🆓</div>
-                            <div><strong>Usuários Free</strong></div>
-                            <small>Apenas usuários gratuitos</small>
+                        <div class="target-option" data-target="free" onclick="selecionarDestino('free')" style="border: 1px solid var(--light-gray); background: white; padding: 1rem; border-radius: 8px; text-align: center; cursor: pointer;">
+                            <div style="font-size: 1.5rem;">🆓</div>
+                            <div style="font-weight: bold;">Usuários Free</div>
+                            <small style="color: var(--gray);">Apenas usuários gratuitos</small>
                         </div>
-                        <div class="target-option" data-target="premium" onclick="selecionarDestino('premium')">
-                            <div>⭐</div>
-                            <div><strong>Usuários Premium</strong></div>
-                            <small>Apenas usuários premium</small>
+                        <div class="target-option" data-target="premium" onclick="selecionarDestino('premium')" style="border: 1px solid var(--light-gray); background: white; padding: 1rem; border-radius: 8px; text-align: center; cursor: pointer;">
+                            <div style="font-size: 1.5rem;">⭐</div>
+                            <div style="font-weight: bold;">Usuários Premium</div>
+                            <small style="color: var(--gray);">Apenas usuários premium</small>
                         </div>
-                        <div class="target-option" data-target="specific" onclick="selecionarDestino('specific')">
-                            <div>👤</div>
-                            <div><strong>Usuário Específico</strong></div>
-                            <small>Buscar usuário específico</small>
+                        <div class="target-option" data-target="specific" onclick="selecionarDestino('specific')" style="border: 1px solid var(--light-gray); background: white; padding: 1rem; border-radius: 8px; text-align: center; cursor: pointer;">
+                            <div style="font-size: 1.5rem;">👤</div>
+                            <div style="font-weight: bold;">Usuário Específico</div>
+                            <small style="color: var(--gray);">Buscar usuário específico</small>
                         </div>
                     </div>
 
                     <!-- BUSCA DE USUÁRIO ESPECÍFICO -->
                     <div id="usuarioEspecificoContainer" style="display: none; margin-top: 1rem;">
-                        <label class="form-label">Buscar Usuário</label>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Buscar Usuário</label>
                         <div style="display: flex; gap: 0.5rem;">
                             <input type="text" id="buscarUsuarioInput" placeholder="Digite nickname ou email..." 
-                                class="form-control" oninput="buscarUsuarios(this.value)">
+                                style="flex: 1; padding: 0.7rem; border: 1px solid var(--light-gray); border-radius: 6px;" 
+                                oninput="buscarUsuarios(this.value)">
                             <button type="button" class="btn btn-primary" onclick="buscarUsuarios(document.getElementById('buscarUsuarioInput').value)">
                                 🔍 Buscar
                             </button>
                         </div>
-                        <div id="resultadosBuscaUsuarios" class="user-search-results" style="display: none;"></div>
+                        <div id="resultadosBuscaUsuarios" style="display: none; margin-top: 0.5rem; border: 1px solid var(--light-gray); border-radius: 6px; max-height: 200px; overflow-y: auto;"></div>
                     </div>
 
                     <!-- RESUMO DOS DESTINATÁRIOS -->
@@ -301,10 +317,10 @@ async function carregarFormularioEnvio() {
                 <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
                     <h4 style="color: var(--primary); margin-bottom: 1rem;">📝 Conteúdo da Notificação</h4>
                     
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Categoria *</label>
-                            <select class="form-select" id="categoriaNotificacao" required>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Categoria *</label>
+                            <select style="width: 100%; padding: 0.7rem; border: 1px solid var(--light-gray); border-radius: 6px;" id="categoriaNotificacao" required>
                                 <option value="system">🔄 Sistema</option>
                                 <option value="bonus">🎁 Bônus</option>
                                 <option value="warning">⚠️ Advertência</option>
@@ -312,9 +328,9 @@ async function carregarFormularioEnvio() {
                             </select>
                         </div>
                         
-                        <div class="form-group">
-                            <label class="form-label">Prioridade *</label>
-                            <select class="form-select" id="prioridadeNotificacao" required>
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Prioridade *</label>
+                            <select style="width: 100%; padding: 0.7rem; border: 1px solid var(--light-gray); border-radius: 6px;" id="prioridadeNotificacao" required>
                                 <option value="low">🔵 Baixa</option>
                                 <option value="normal" selected>🟢 Normal</option>
                                 <option value="high">🟡 Alta</option>
@@ -323,46 +339,46 @@ async function carregarFormularioEnvio() {
                         </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label class="form-label">Título *</label>
-                        <input type="text" class="form-control" id="tituloNotificacao" 
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Título *</label>
+                        <input type="text" style="width: 100%; padding: 0.7rem; border: 1px solid var(--light-gray); border-radius: 6px;" id="tituloNotificacao" 
                             placeholder="Ex: 🎉 Bônus Exclusivo para Premium!" required>
                     </div>
                     
-                    <div class="form-group">
-                        <label class="form-label">Mensagem *</label>
-                        <textarea class="form-control form-textarea" id="mensagemNotificacao" 
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Mensagem *</label>
+                        <textarea style="width: 100%; padding: 0.7rem; border: 1px solid var(--light-gray); border-radius: 6px; min-height: 120px; resize: vertical;" id="mensagemNotificacao" 
                             placeholder="Digite a mensagem da notificação..." required></textarea>
                     </div>
 
                     <!-- SISTEMA DE EXPIRAÇÃO -->
-                    <div class="form-group">
-                        <label class="form-label">⏰ Configurar Expiração</label>
-                        <div class="expiration-options">
-                            <div class="expiration-option selected" data-expiration="never" onclick="selecionarExpiracao('never')">
-                                <div>∞</div>
-                                <div><strong>Nunca expira</strong></div>
+                    <div>
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">⏰ Configurar Expiração</label>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem; margin-bottom: 1rem;">
+                            <div class="expiration-option selected" data-expiration="never" onclick="selecionarExpiracao('never')" style="border: 2px solid var(--primary); background: white; padding: 1rem; border-radius: 8px; text-align: center; cursor: pointer;">
+                                <div style="font-size: 1.2rem;">∞</div>
+                                <div style="font-weight: bold;">Nunca expira</div>
                             </div>
-                            <div class="expiration-option" data-expiration="days:7" onclick="selecionarExpiracao('days:7')">
-                                <div>7d</div>
-                                <div><strong>7 dias</strong></div>
+                            <div class="expiration-option" data-expiration="days:7" onclick="selecionarExpiracao('days:7')" style="border: 1px solid var(--light-gray); background: white; padding: 1rem; border-radius: 8px; text-align: center; cursor: pointer;">
+                                <div style="font-size: 1.2rem;">7d</div>
+                                <div style="font-weight: bold;">7 dias</div>
                             </div>
-                            <div class="expiration-option" data-expiration="days:30" onclick="selecionarExpiracao('days:30')">
-                                <div>30d</div>
-                                <div><strong>30 dias</strong></div>
+                            <div class="expiration-option" data-expiration="days:30" onclick="selecionarExpiracao('days:30')" style="border: 1px solid var(--light-gray); background: white; padding: 1rem; border-radius: 8px; text-align: center; cursor: pointer;">
+                                <div style="font-size: 1.2rem;">30d</div>
+                                <div style="font-weight: bold;">30 dias</div>
                             </div>
-                            <div class="expiration-option" data-expiration="custom" onclick="selecionarExpiracao('custom')">
-                                <div>📅</div>
-                                <div><strong>Personalizado</strong></div>
+                            <div class="expiration-option" data-expiration="custom" onclick="selecionarExpiracao('custom')" style="border: 1px solid var(--light-gray); background: white; padding: 1rem; border-radius: 8px; text-align: center; cursor: pointer;">
+                                <div style="font-size: 1.2rem;">📅</div>
+                                <div style="font-weight: bold;">Personalizado</div>
                             </div>
                         </div>
 
                         <!-- DIAS PERSONALIZADOS -->
                         <div id="diasPersonalizadosContainer" style="display: none; margin-top: 1rem;">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <label class="form-label">Expirar após:</label>
-                                <input type="number" id="diasPersonalizados" class="form-control" 
-                                    style="width: 100px;" min="1" max="3650" value="7">
+                                <label style="font-weight: bold;">Expirar após:</label>
+                                <input type="number" id="diasPersonalizados" style="width: 100px; padding: 0.5rem; border: 1px solid var(--light-gray); border-radius: 6px;" 
+                                    min="1" max="3650" value="7">
                                 <span>dias</span>
                             </div>
                         </div>
@@ -371,7 +387,7 @@ async function carregarFormularioEnvio() {
 
                 <!-- AÇÕES -->
                 <div style="display: flex; gap: 1rem; justify-content: flex-end; flex-wrap: wrap;">
-                    <button type="button" class="btn btn-secondary" onclick="previsualizarNotificacao()">
+                    <button type="button" class="btn" style="background: var(--gray); color: white;" onclick="previsualizarNotificacao()">
                         👁️ Pré-visualizar
                     </button>
                     <button type="submit" class="btn btn-success">
@@ -382,6 +398,7 @@ async function carregarFormularioEnvio() {
         `;
 
     } catch (error) {
+        console.error('Erro ao carregar formulário:', error);
         container.innerHTML = `
             <div class="empty-state">
                 <div class="icon">❌</div>
@@ -397,19 +414,24 @@ function selecionarDestino(destino) {
     destinoSelecionado = destino;
     
     document.querySelectorAll('.target-option').forEach(opt => {
-        opt.classList.remove('selected');
+        opt.style.border = '1px solid var(--light-gray)';
+        opt.style.borderColor = 'var(--light-gray)';
     });
     
-    document.querySelector(`[data-target="${destino}"]`).classList.add('selected');
+    const selected = document.querySelector(`[data-target="${destino}"]`);
+    if (selected) {
+        selected.style.border = '2px solid var(--primary)';
+        selected.style.borderColor = 'var(--primary)';
+    }
     
     const usuarioContainer = document.getElementById('usuarioEspecificoContainer');
     const resultadosBusca = document.getElementById('resultadosBuscaUsuarios');
     
     if (destino === 'specific') {
-        usuarioContainer.style.display = 'block';
+        if (usuarioContainer) usuarioContainer.style.display = 'block';
     } else {
-        usuarioContainer.style.display = 'none';
-        resultadosBusca.style.display = 'none';
+        if (usuarioContainer) usuarioContainer.style.display = 'none';
+        if (resultadosBusca) resultadosBusca.style.display = 'none';
         usuarioEspecificoSelecionado = null;
     }
     
@@ -418,6 +440,7 @@ function selecionarDestino(destino) {
 
 async function buscarUsuarios(termo) {
     const container = document.getElementById('resultadosBuscaUsuarios');
+    if (!container) return;
     
     if (!termo || termo.length < 2) {
         container.style.display = 'none';
@@ -434,7 +457,7 @@ async function buscarUsuarios(termo) {
         if (error) throw error;
 
         if (!usuarios || usuarios.length === 0) {
-            container.innerHTML = '<div class="user-result">Nenhum usuário encontrado</div>';
+            container.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--gray);">Nenhum usuário encontrado</div>';
             container.style.display = 'block';
             return;
         }
@@ -443,7 +466,10 @@ async function buscarUsuarios(termo) {
         usuarios.forEach(usuario => {
             const tipo = usuario.is_premium ? '⭐' : '🆓';
             html += `
-                <div class="user-result" onclick="selecionarUsuario('${usuario.id}', '${usuario.nickname || usuario.email}')">
+                <div style="padding: 0.8rem; border-bottom: 1px solid var(--light-gray); cursor: pointer; transition: background 0.2s;" 
+                     onmouseover="this.style.background='var(--light-gray)'" 
+                     onmouseout="this.style.background='white'"
+                     onclick="selecionarUsuario('${usuario.id}', '${(usuario.nickname || usuario.email).replace(/'/g, "\\'")}')">
                     <strong>${tipo} ${usuario.nickname || 'Sem nickname'}</strong>
                     <br><small>${usuario.email}</small>
                 </div>
@@ -454,7 +480,8 @@ async function buscarUsuarios(termo) {
         container.style.display = 'block';
 
     } catch (error) {
-        container.innerHTML = '<div class="user-result">Erro na busca</div>';
+        console.error('Erro na busca de usuários:', error);
+        container.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--danger);">Erro na busca</div>';
         container.style.display = 'block';
     }
 }
@@ -462,8 +489,11 @@ async function buscarUsuarios(termo) {
 function selecionarUsuario(usuarioId, usuarioNome) {
     usuarioEspecificoSelecionado = { id: usuarioId, nome: usuarioNome };
     
-    document.getElementById('resultadosBuscaUsuarios').style.display = 'none';
-    document.getElementById('buscarUsuarioInput').value = usuarioNome;
+    const resultadosBusca = document.getElementById('resultadosBuscaUsuarios');
+    const buscarInput = document.getElementById('buscarUsuarioInput');
+    
+    if (resultadosBusca) resultadosBusca.style.display = 'none';
+    if (buscarInput) buscarInput.value = usuarioNome;
     
     atualizarResumoDestinatarios();
 }
@@ -472,6 +502,8 @@ function atualizarResumoDestinatarios() {
     const resumo = document.getElementById('resumoDestinatarios');
     const texto = document.getElementById('textoResumoDestinatarios');
     const contador = document.getElementById('contadorDestinatarios');
+    
+    if (!resumo || !texto || !contador) return;
     
     let textoResumo = '';
     let count = '';
@@ -509,16 +541,23 @@ function selecionarExpiracao(expiracao) {
     expiracaoSelecionada = expiracao;
     
     document.querySelectorAll('.expiration-option').forEach(opt => {
-        opt.classList.remove('selected');
+        opt.style.border = '1px solid var(--light-gray)';
+        opt.style.borderColor = 'var(--light-gray)';
     });
     
-    document.querySelector(`[data-expiration="${expiracao}"]`).classList.add('selected');
+    const selected = document.querySelector(`[data-expiration="${expiracao}"]`);
+    if (selected) {
+        selected.style.border = '2px solid var(--primary)';
+        selected.style.borderColor = 'var(--primary)';
+    }
     
     const diasContainer = document.getElementById('diasPersonalizadosContainer');
-    if (expiracao === 'custom') {
-        diasContainer.style.display = 'block';
-    } else {
-        diasContainer.style.display = 'none';
+    if (diasContainer) {
+        if (expiracao === 'custom') {
+            diasContainer.style.display = 'block';
+        } else {
+            diasContainer.style.display = 'none';
+        }
     }
 }
 
@@ -528,10 +567,18 @@ async function enviarNotificacao(event) {
     
     if (!verificarAutenticacao()) return;
     
+    const tituloInput = document.getElementById('tituloNotificacao');
+    const mensagemInput = document.getElementById('mensagemNotificacao');
+    
+    if (!tituloInput || !mensagemInput) {
+        mostrarErro('Formulário não carregado corretamente');
+        return;
+    }
+    
     const dadosNotificacao = {
         category: document.getElementById('categoriaNotificacao').value,
-        title: document.getElementById('tituloNotificacao').value.trim(),
-        message: document.getElementById('mensagemNotificacao').value.trim(),
+        title: tituloInput.value.trim(),
+        message: mensagemInput.value.trim(),
         priority: document.getElementById('prioridadeNotificacao').value,
         expiration_type: expiracaoSelecionada.startsWith('days:') ? 'days' : 
                         expiracaoSelecionada === 'custom' ? 'days' : 
@@ -555,6 +602,7 @@ async function enviarNotificacao(event) {
             return;
         }
     } catch (error) {
+        console.error('Erro ao buscar destinatários:', error);
         mostrarErro('Erro ao buscar destinatários');
         return;
     }
@@ -585,16 +633,21 @@ async function enviarNotificacao(event) {
         
         mostrarSucesso(`✅ Notificação enviada para ${userIDs.length} usuário(s)!`);
         
-        document.getElementById('formEnvioNotificacao').reset();
+        // Limpar formulário
+        const form = document.getElementById('formEnvioNotificacao');
+        if (form) form.reset();
+        
         selecionarDestino('all');
         selecionarExpiracao('never');
         usuarioEspecificoSelecionado = null;
         
+        // Recarregar dados
         carregarEstatisticas();
         carregarVisaoGeral();
         
     } catch (error) {
-        mostrarErro('❌ Erro ao enviar notificação');
+        console.error('Erro ao enviar notificação:', error);
+        mostrarErro('❌ Erro ao enviar notificação: ' + error.message);
     }
 }
 
@@ -646,6 +699,7 @@ async function buscarUsuariosPorTipo(tipo) {
 // ==================== SEÇÃO: TEMPLATES ====================
 async function carregarTemplates() {
     const container = document.getElementById('templatesContent');
+    if (!container) return;
     
     try {
         const { data: templates, error } = await supabase
@@ -675,34 +729,34 @@ async function carregarTemplates() {
                     ➕ Novo Template
                 </button>
             </div>
-            <div class="templates-grid">
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
         `;
 
         templates.forEach(template => {
             const badgeColor = getBadgeColor(template.category);
             html += `
-                <div class="template-card">
-                    <div class="notification-header">
-                        <div class="notification-title">${escapeHtml(template.name)}</div>
-                        <div class="notification-badge" style="background: ${badgeColor}">
+                <div style="border: 1px solid var(--light-gray); border-radius: 10px; padding: 1.5rem; background: white;">
+                    <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 1rem;">
+                        <div style="font-weight: bold; flex: 1;">${escapeHtml(template.name)}</div>
+                        <div style="background: ${badgeColor}; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem;">
                             ${getCategoryLabel(template.category)}
                         </div>
                     </div>
                     <div style="margin-bottom: 1rem;">
                         <strong>Título:</strong> ${escapeHtml(template.title_template)}
                     </div>
-                    <div class="notification-message">
+                    <div style="margin-bottom: 1rem;">
                         <strong>Mensagem:</strong> ${escapeHtml(template.message_template)}
                     </div>
-                    <div class="notification-meta">
+                    <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 1rem; font-size: 0.9rem; color: var(--gray);">
                         <small>Expiração: ${template.expiration_type === 'never' ? 'Nunca' : template.default_expiration_days + ' dias'}</small>
                         ${template.is_active ? '<span>✅ Ativo</span>' : '<span>⏸️ Inativo</span>'}
                     </div>
-                    <div class="template-actions">
+                    <div style="display: flex; gap: 0.5rem;">
                         <button class="btn btn-primary" onclick="usarTemplate('${template.id}')">
                             ✉️ Usar
                         </button>
-                        <button class="btn btn-warning" onclick="editarTemplate('${template.id}')">
+                        <button class="btn" style="background: var(--warning); color: white;" onclick="editarTemplate('${template.id}')">
                             ✏️ Editar
                         </button>
                         <button class="btn btn-danger" onclick="excluirTemplate('${template.id}')">
@@ -717,6 +771,7 @@ async function carregarTemplates() {
         container.innerHTML = html;
 
     } catch (error) {
+        console.error('Erro ao carregar templates:', error);
         container.innerHTML = `
             <div class="empty-state">
                 <div class="icon">❌</div>
@@ -729,28 +784,69 @@ async function carregarTemplates() {
 
 // ==================== MODAL TEMPLATES ====================
 function mostrarModalNovoTemplate() {
-    document.getElementById('modalTemplate').classList.add('active');
-    document.getElementById('formNovoTemplate').reset();
+    // Implementação simplificada - criar template diretamente
+    const nome = prompt('Nome do template:');
+    if (!nome) return;
+    
+    const titulo = prompt('Título do template:');
+    if (!titulo) return;
+    
+    const mensagem = prompt('Mensagem do template:');
+    if (!mensagem) return;
+    
+    criarTemplate(nome, titulo, mensagem);
+}
+
+async function criarTemplate(nome, titulo, mensagem) {
+    try {
+        const { error } = await supabase
+            .from('notification_templates')
+            .insert({
+                name: nome,
+                title_template: titulo,
+                message_template: mensagem,
+                category: 'system',
+                priority: 'normal',
+                expiration_type: 'days',
+                default_expiration_days: 30,
+                is_active: true
+            });
+
+        if (error) throw error;
+
+        mostrarSucesso('✅ Template criado com sucesso!');
+        carregarTemplates();
+
+    } catch (error) {
+        console.error('Erro ao criar template:', error);
+        mostrarErro('❌ Erro ao criar template');
+    }
 }
 
 function fecharModalTemplate() {
-    document.getElementById('modalTemplate').classList.remove('active');
+    // Implementação do modal seria aqui
+    console.log('Fechar modal template');
 }
 
 // ==================== SEÇÃO: HISTÓRICO ====================
 async function carregarHistorico() {
     const container = document.getElementById('historyContent');
+    if (!container) return;
     
     try {
-        const { data: batches, error } = await supabase
-            .from('notification_batches')
-            .select('*')
+        // Como não temos a tabela notification_batches, vamos usar user_notifications
+        const { data: notificacoes, error } = await supabase
+            .from('user_notifications')
+            .select(`
+                *,
+                user:user_id(nickname)
+            `)
             .order('created_at', { ascending: false })
             .limit(50);
 
         if (error) throw error;
 
-        if (!batches || batches.length === 0) {
+        if (!notificacoes || notificacoes.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="icon">📋</div>
@@ -761,27 +857,26 @@ async function carregarHistorico() {
             return;
         }
 
-        let html = '<div class="notifications-grid">';
+        let html = '<div style="display: flex; flex-direction: column; gap: 1rem;">';
         
-        batches.forEach(batch => {
-            const badgeColor = getBadgeColor(batch.category);
+        notificacoes.forEach(notificacao => {
+            const badgeColor = getBadgeColor(notificacao.category);
             html += `
-                <div class="notification-card">
-                    <div class="notification-header">
-                        <div class="notification-title">${escapeHtml(batch.title)}</div>
-                        <div class="notification-badge" style="background: ${badgeColor}">
-                            ${getCategoryLabel(batch.category)}
+                <div style="border: 1px solid var(--light-gray); border-radius: 10px; padding: 1.5rem; background: white;">
+                    <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 1rem;">
+                        <div style="font-weight: bold; flex: 1;">${escapeHtml(notificacao.title)}</div>
+                        <div style="background: ${badgeColor}; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem;">
+                            ${getCategoryLabel(notificacao.category)}
                         </div>
                     </div>
-                    <div class="notification-meta">
-                        <span>${formatarData(batch.created_at)}</span>
-                        <span>${batch.total_recipients} destinatários</span>
-                        <span>${batch.total_sent} enviados</span>
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem; font-size: 0.9rem; color: var(--gray); flex-wrap: wrap;">
+                        <span>${formatarData(notificacao.created_at)}</span>
+                        <span>Para: ${notificacao.user?.nickname || 'Usuário'}</span>
+                        <span>${notificacao.is_read ? '✅ Lida' : '🔴 Não lida'}</span>
                     </div>
-                    <div class="notification-message">${escapeHtml(batch.message)}</div>
-                    <div class="notification-meta">
-                        <small>Destino: ${getTargetLabel(batch.target_type)}</small>
-                        <small>Expira: ${batch.expiration_type === 'never' ? 'Nunca' : batch.expiration_days + ' dias'}</small>
+                    <div style="margin-bottom: 1rem;">${escapeHtml(notificacao.message)}</div>
+                    <div style="font-size: 0.8rem; color: var(--gray);">
+                        <small>Expira: ${formatarData(notificacao.expires_at)}</small>
                     </div>
                 </div>
             `;
@@ -791,6 +886,7 @@ async function carregarHistorico() {
         container.innerHTML = html;
 
     } catch (error) {
+        console.error('Erro ao carregar histórico:', error);
         container.innerHTML = `
             <div class="empty-state">
                 <div class="icon">❌</div>
@@ -803,16 +899,28 @@ async function carregarHistorico() {
 
 // ==================== FUNÇÕES AUXILIARES ====================
 function showSection(sectionName) {
+    // Esconder todas as seções
     document.querySelectorAll('.content-section').forEach(section => {
         section.classList.remove('active');
     });
+    
+    // Remover active de todos os botões
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('active');
     });
-
-    document.getElementById(sectionName).classList.add('active');
-    event.target.classList.add('active');
-
+    
+    // Mostrar seção selecionada
+    const section = document.getElementById(sectionName);
+    if (section) {
+        section.classList.add('active');
+    }
+    
+    // Ativar botão clicado
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
+    
+    // Carregar conteúdo específico
     switch(sectionName) {
         case 'overview':
             carregarVisaoGeral();
@@ -836,7 +944,8 @@ function carregarTudo() {
 
 function limparFormulario() {
     if (confirm('Limpar todo o formulário?')) {
-        document.getElementById('formEnvioNotificacao').reset();
+        const form = document.getElementById('formEnvioNotificacao');
+        if (form) form.reset();
         selecionarDestino('all');
         selecionarExpiracao('never');
         usuarioEspecificoSelecionado = null;
@@ -844,9 +953,18 @@ function limparFormulario() {
 }
 
 function previsualizarNotificacao() {
-    const titulo = document.getElementById('tituloNotificacao').value;
-    const mensagem = document.getElementById('mensagemNotificacao').value;
-    const categoria = document.getElementById('categoriaNotificacao').value;
+    const tituloInput = document.getElementById('tituloNotificacao');
+    const mensagemInput = document.getElementById('mensagemNotificacao');
+    const categoriaSelect = document.getElementById('categoriaNotificacao');
+    
+    if (!tituloInput || !mensagemInput || !categoriaSelect) {
+        mostrarErro('Formulário não carregado');
+        return;
+    }
+    
+    const titulo = tituloInput.value;
+    const mensagem = mensagemInput.value;
+    const categoria = categoriaSelect.value;
     
     if (!titulo || !mensagem) {
         mostrarErro('Preencha o título e a mensagem para ver a prévia');
@@ -862,6 +980,7 @@ function formatarData(data) {
 }
 
 function escapeHtml(text) {
+    if (!text) return '';
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
@@ -930,11 +1049,12 @@ async function excluirTemplate(templateId) {
         carregarTemplates();
 
     } catch (error) {
+        console.error('Erro ao excluir template:', error);
         mostrarErro('❌ Erro: ' + error.message);
     }
 }
 
-// ==================== EXPORTAÇÕES ====================
+// ==================== EXPORTAÇÕES PARA HTML ====================
 window.showSection = showSection;
 window.carregarTudo = carregarTudo;
 window.logoutAdmin = logoutAdmin;
@@ -955,3 +1075,4 @@ window.excluirTemplate = excluirTemplate;
 window.carregarHistorico = carregarHistorico;
 window.carregarFormularioEnvio = carregarFormularioEnvio;
 window.carregarTemplates = carregarTemplates;
+window.carregarVisaoGeral = carregarVisaoGeral;
