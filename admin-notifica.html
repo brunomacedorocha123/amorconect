@@ -13,29 +13,15 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        :root {
-            --primary: #667eea;
-            --secondary: #764ba2;
-            --background: #f8fafc;
-            --text: #2d3748;
-            --success: #48bb78;
-            --warning: #ed8936;
-            --danger: #f56565;
-            --info: #4299e1;
-            --white: #ffffff;
-            --gray: #718096;
-            --light-gray: #edf2f7;
-        }
-
         body {
-            background: var(--background);
-            color: var(--text);
+            background: #f8fafc;
+            color: #2d3748;
             padding: 20px;
             min-height: 100vh;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
         }
 
@@ -43,125 +29,44 @@
             text-align: center;
             margin-bottom: 2rem;
             padding: 2rem;
-            background: var(--white);
+            background: white;
             border-radius: 15px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
         .header h1 {
-            color: var(--primary);
+            color: #667eea;
             margin-bottom: 0.5rem;
-            font-size: 2.5rem;
         }
 
-        .nav-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            margin-top: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 0.8rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: var(--white);
-        }
-
-        .btn-secondary {
-            background: var(--secondary);
-            color: var(--white);
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: var(--white);
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: var(--white);
-        }
-
-        .btn-warning {
-            background: var(--warning);
-            color: var(--white);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-
-        .content-section {
-            background: var(--white);
+        .form-section {
+            background: white;
             border-radius: 15px;
             padding: 2rem;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
-            display: none;
-        }
-
-        .content-section.active {
-            display: block;
-        }
-
-        .section-title {
-            color: var(--primary);
-            margin-bottom: 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
         }
 
         .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .form-group.full-width {
-            grid-column: 1 / -1;
+            margin-bottom: 1.5rem;
         }
 
         label {
             font-weight: 600;
-            color: var(--text);
+            display: block;
+            margin-bottom: 0.5rem;
         }
 
         input, select, textarea {
+            width: 100%;
             padding: 0.8rem;
-            border: 2px solid var(--light-gray);
+            border: 2px solid #e2e8f0;
             border-radius: 8px;
             font-size: 1rem;
-            transition: border-color 0.3s ease;
         }
 
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: var(--primary);
+            border-color: #667eea;
         }
 
         textarea {
@@ -169,366 +74,140 @@
             resize: vertical;
         }
 
-        .card {
-            background: var(--white);
-            border: 1px solid var(--light-gray);
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            border-color: var(--primary);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .card-title {
-            font-size: 1.2rem;
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
             font-weight: 600;
-            color: var(--primary);
-        }
-
-        .card-meta {
-            color: var(--gray);
-            font-size: 0.9rem;
+            font-size: 1rem;
+            margin-right: 1rem;
             margin-bottom: 1rem;
         }
 
-        .card-actions {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .badge {
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        .badge-success {
-            background: var(--success);
+        .btn-enviar {
+            background: #48bb78;
             color: white;
         }
 
-        .badge-warning {
-            background: var(--warning);
+        .btn-limpar {
+            background: #f56565;
             color: white;
         }
 
-        .badge-info {
-            background: var(--info);
+        .btn-voltar {
+            background: #718096;
             color: white;
+            text-decoration: none;
+            display: inline-block;
         }
 
-        .badge-danger {
-            background: var(--danger);
-            color: white;
+        .hidden {
+            display: none;
         }
 
         .loading {
             text-align: center;
-            padding: 3rem;
-            color: var(--gray);
+            padding: 2rem;
+            color: #718096;
         }
 
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid var(--light-gray);
-            border-top: 4px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: var(--gray);
-        }
-
-        .empty-state .icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: var(--white);
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            text-align: center;
-            transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        .stat-label {
-            color: var(--gray);
-            font-size: 0.9rem;
-        }
-
-        .usuarios-lista {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid var(--light-gray);
-            border-radius: 8px;
+        .success {
+            background: #c6f6d5;
+            color: #2d3748;
             padding: 1rem;
-            margin-top: 0.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
         }
 
-        .usuario-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem;
-            border-bottom: 1px solid var(--light-gray);
-        }
-
-        .usuario-item:last-child {
-            border-bottom: none;
-        }
-
-        .usuario-checkbox {
-            margin-right: 0.5rem;
-        }
-
-        @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .card-header {
-                flex-direction: column;
-                align-items: start;
-            }
-            
-            .card-actions {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-                text-align: center;
-            }
+        .error {
+            background: #fed7d7;
+            color: #2d3748;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
         <div class="header">
-            <h1>📨 Gestor de Notificações</h1>
+            <h1>📨 Enviar Notificação</h1>
             <p>Amor Conect - Envie notificações para seus usuários</p>
-            
-            <div class="nav-buttons">
-                <button class="btn btn-primary" onclick="showSection('enviar')">
-                    ✉️ Enviar Notificação
-                </button>
-                <button class="btn btn-secondary" onclick="showSection('templates')">
-                    📝 Gerenciar Templates
-                </button>
-                <button class="btn btn-success" onclick="showSection('historico')">
-                    📊 Histórico de Envios
-                </button>
-                <a href="admin.html" class="btn btn-danger">
-                    ← Voltar ao Painel Admin
-                </a>
-            </div>
         </div>
 
-        <!-- Estatísticas -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number" id="totalTemplates">0</div>
-                <div class="stat-label">Templates Ativos</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="totalEnviadas">0</div>
-                <div class="stat-label">Notificações Enviadas</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="totalLidas">0</div>
-                <div class="stat-label">Notificações Lidas</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="totalUsuarios">0</div>
-                <div class="stat-label">Usuários Ativos</div>
-            </div>
-        </div>
-
-        <!-- SEÇÃO: ENVIAR NOTIFICAÇÃO -->
-        <div id="enviar" class="content-section active">
-            <div class="section-title">
-                <h2>✉️ Enviar Nova Notificação</h2>
-            </div>
-            
+        <div class="form-section">
             <form id="formNotificacao">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="templateSelect">Usar Template Existente</label>
-                        <select id="templateSelect" onchange="carregarTemplate()">
-                            <option value="">-- Selecionar Template --</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="categoria">Categoria</label>
-                        <select id="categoria" required>
-                            <option value="system">🔧 Sistema</option>
-                            <option value="bonus">🎁 Bônus</option>
-                            <option value="warning">⚠️ Advertência</option>
-                            <option value="info">ℹ️ Informação</option>
-                            <option value="promo">🏷️ Promoção</option>
-                            <option value="update">🔄 Atualização</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group full-width">
-                        <label for="titulo">Título da Notificação</label>
-                        <input type="text" id="titulo" placeholder="Ex: Bônus de Boas-vindas!" required>
-                    </div>
-
-                    <div class="form-group full-width">
-                        <label for="mensagem">Mensagem</label>
-                        <textarea id="mensagem" placeholder="Digite a mensagem da notificação..." required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="prioridade">Prioridade</label>
-                        <select id="prioridade">
-                            <option value="low">🔵 Baixa</option>
-                            <option value="normal" selected>🟢 Normal</option>
-                            <option value="high">🟡 Alta</option>
-                            <option value="urgent">🔴 Urgente</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="tipoUsuario">Destinatários</label>
-                        <select id="tipoUsuario" required onchange="toggleCamposUsuarios()">
-                            <option value="all">👥 Todos os Usuários</option>
-                            <option value="free">🆓 Apenas Free</option>
-                            <option value="premium">⭐ Apenas Premium</option>
-                            <option value="specific">🎯 Usuários Específicos</option>
-                            <option value="selected">👤 Selecionar Usuários</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group full-width" id="usuariosEspecificosGroup" style="display: none;">
-                        <label for="usuariosEspecificos">IDs de Usuários (separados por vírgula)</label>
-                        <input type="text" id="usuariosEspecificos" placeholder="id1, id2, id3...">
-                        <small style="color: var(--gray);">Digite os IDs dos usuários separados por vírgula</small>
-                    </div>
-
-                    <div class="form-group full-width" id="usuariosSelecionadosGroup" style="display: none;">
-                        <label>Selecionar Usuários Específicos</label>
-                        <div class="usuarios-lista" id="listaUsuarios">
-                            <div class="loading">
-                                <div class="spinner"></div>
-                                <p>Carregando usuários...</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="validade">Validade da Notificação</label>
-                        <select id="validade" required onchange="toggleDataExpiracao()">
-                            <option value="1">⏰ 1 Dia</option>
-                            <option value="7" selected>📅 7 Dias</option>
-                            <option value="30">🗓️ 1 Mês (30 dias)</option>
-                            <option value="365">📆 1 Ano</option>
-                            <option value="never">∞ Nunca Expira</option>
-                            <option value="specific">📅 Data Específica</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group" id="dataEspecificaGroup" style="display: none;">
-                        <label for="dataExpiracao">Data de Expiração</label>
-                        <input type="datetime-local" id="dataExpiracao">
-                    </div>
+                <!-- CATEGORIA -->
+                <div class="form-group">
+                    <label for="categoria">Categoria</label>
+                    <select id="categoria" required>
+                        <option value="bonus">🎁 Bônus</option>
+                        <option value="aviso">⚠️ Aviso</option>
+                        <option value="advertencia">🚫 Advertência</option>
+                        <option value="sistema">🔧 Sistema</option>
+                        <option value="promocao">🏷️ Promoção</option>
+                        <option value="atualizacao">🔄 Atualização</option>
+                    </select>
                 </div>
 
-                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                    <button type="submit" class="btn btn-success">
-                        📨 Enviar Notificação
-                    </button>
-                    <button type="button" class="btn btn-secondary" onclick="salvarComoTemplate()">
-                        💾 Salvar como Template
-                    </button>
-                    <button type="button" class="btn btn-danger" onclick="limparFormulario()">
-                        🗑️ Limpar Formulário
-                    </button>
+                <!-- DESTINATÁRIOS -->
+                <div class="form-group">
+                    <label for="tipoUsuario">Enviar para</label>
+                    <select id="tipoUsuario" required>
+                        <option value="all">👥 Todos os Usuários</option>
+                        <option value="free">🆓 Apenas Free</option>
+                        <option value="premium">⭐ Apenas Premium</option>
+                        <option value="specific">🎯 Usuário Específico</option>
+                    </select>
+                </div>
+
+                <!-- USUÁRIO ESPECÍFICO -->
+                <div class="form-group hidden" id="usuarioEspecificoGroup">
+                    <label for="usuarioEspecifico">ID do Usuário</label>
+                    <input type="text" id="usuarioEspecifico" placeholder="Cole o ID do usuário aqui">
+                </div>
+
+                <!-- TÍTULO -->
+                <div class="form-group">
+                    <label for="titulo">Título da Notificação</label>
+                    <input type="text" id="titulo" placeholder="Ex: Bônus de Boas-vindas!" required>
+                </div>
+
+                <!-- MENSAGEM -->
+                <div class="form-group">
+                    <label for="mensagem">Mensagem</label>
+                    <textarea id="mensagem" placeholder="Digite a mensagem da notificação..." required></textarea>
+                </div>
+
+                <!-- VALIDADE -->
+                <div class="form-group">
+                    <label for="validade">Validade da Notificação</label>
+                    <select id="validade" required>
+                        <option value="1">⏰ 1 Dia</option>
+                        <option value="7" selected>📅 7 Dias</option>
+                        <option value="30">🗓️ 30 Dias</option>
+                        <option value="90">📆 90 Dias</option>
+                        <option value="never">∞ Nunca Expira</option>
+                    </select>
+                </div>
+
+                <!-- BOTÕES -->
+                <div>
+                    <button type="submit" class="btn btn-enviar">📨 Enviar Notificação</button>
+                    <button type="button" class="btn btn-limpar" onclick="limparFormulario()">🗑️ Limpar</button>
+                    <a href="admin.html" class="btn btn-voltar">← Voltar</a>
                 </div>
             </form>
         </div>
 
-        <!-- SEÇÃO: TEMPLATES -->
-        <div id="templates" class="content-section">
-            <div class="section-title">
-                <h2>📝 Templates de Notificação</h2>
-                <button class="btn btn-primary" onclick="abrirCriarTemplate()">
-                    ➕ Novo Template
-                </button>
-            </div>
-            <div id="templatesContainer">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Carregando templates...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- SEÇÃO: HISTÓRICO -->
-        <div id="historico" class="content-section">
-            <div class="section-title">
-                <h2>📊 Histórico de Envios</h2>
-                <button class="btn btn-primary" onclick="carregarHistorico()">
-                    🔄 Atualizar
-                </button>
-            </div>
-            <div id="historicoContainer">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Carregando histórico...</p>
-                </div>
-            </div>
-        </div>
+        <!-- MENSAGENS -->
+        <div id="mensagemSucesso" class="success hidden"></div>
+        <div id="mensagemErro" class="error hidden"></div>
     </div>
 
-    <script src="admin-notifica.js"></script>
+    <script src="admin-notifica-simples.js"></script>
 </body>
 </html>
