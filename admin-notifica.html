@@ -679,28 +679,29 @@ function voltarParaAdmin() {
     window.location.href = 'admin.html';
 }
 
-// ==================== DISTRIBUIDOR SIMPLIFICADO ====================
+// ==================== DISTRIBUIDOR SIMPLES ====================
 async function distribuirNotificacao(notificationId, destinatarios, userIds = []) {
     try {
         let usersToInsert = [];
 
-        // 1. USUÁRIOS ESPECÍFICOS
         if (destinatarios === 'specific' && userIds.length > 0) {
             usersToInsert = userIds.map(userId => ({
                 notification_id: notificationId,
                 user_id: userId,
                 created_at: new Date().toISOString()
             }));
-        } 
-        // 2. BUSCAR DA TABELA PROFILES
-        else {
-            const { data: users, error } = await supabase
-                .from('profiles')
-                .select('id');
+        } else {
+            let query = supabase.from('profiles').select('id');
 
-            if (error) {
-                return 0;
+            if (destinatarios === 'free') {
+                query = query.eq('is_premium', false);
+            } else if (destinatarios === 'premium') {
+                query = query.eq('is_premium', true);
             }
+
+            const { data: users, error } = await query;
+
+            if (error) return 0;
 
             if (users && users.length > 0) {
                 usersToInsert = users.map(user => ({
@@ -711,15 +712,12 @@ async function distribuirNotificacao(notificationId, destinatarios, userIds = []
             }
         }
 
-        // 3. INSERIR DESTINATÁRIOS
         if (usersToInsert.length > 0) {
             const { error } = await supabase
                 .from('notification_recipients')
                 .insert(usersToInsert);
             
-            if (error) {
-                return 0;
-            }
+            if (error) return 0;
             
             return usersToInsert.length;
         }
@@ -932,7 +930,7 @@ document.getElementById('notificationForm').addEventListener('submit', async fun
         if (destinatariosCount > 0) {
             alert(`✅ Notificação enviada com sucesso!\n📨 Distribuída para ${destinatariosCount} usuários`);
         } else {
-            alert(`✅ Notificação criada com sucesso!\n⚠️ Configure a tabela profiles com usuários para distribuição automática`);
+            alert(`✅ Notificação criada com sucesso!\n⚠️ Não foi possível distribuir para usuários`);
         }
         
         limparFormulario();
