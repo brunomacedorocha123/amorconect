@@ -7,13 +7,11 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 class NotificationManager {
     constructor() {
         this.categories = [];
-        this.userTypes = [];
         this.init();
     }
 
     async init() {
         await this.loadCategories();
-        await this.loadUserTypes();
         this.setupEventListeners();
         this.setupExpirationOptions();
         this.updatePreview();
@@ -21,9 +19,6 @@ class NotificationManager {
 
     async loadCategories() {
         try {
-            const select = document.getElementById('notificationCategory');
-            select.innerHTML = '<option value="">Carregando...</option>';
-
             const { data, error } = await supabase
                 .from('notification_categories')
                 .select('*')
@@ -45,40 +40,14 @@ class NotificationManager {
         }
     }
 
-    async loadUserTypes() {
-        try {
-            const { data, error } = await supabase
-                .from('user_types')
-                .select('*')
-                .order('name');
-
-            if (error) throw error;
-            
-            this.userTypes = data || [];
-            
-        } catch (error) {
-            console.error('Erro ao carregar tipos de usuário');
-        }
-    }
-
     populateCategorySelect() {
         const select = document.getElementById('notificationCategory');
-        
-        if (this.categories.length === 0) {
-            select.innerHTML = '<option value="">Nenhuma categoria encontrada</option>';
-            return;
-        }
-
         select.innerHTML = '<option value="">Selecione uma categoria</option>';
         
         this.categories.forEach(category => {
             const option = document.createElement('option');
             option.value = category.id;
             option.textContent = category.name;
-            if (category.color) {
-                option.style.color = category.color;
-                option.style.fontWeight = '500';
-            }
             select.appendChild(option);
         });
     }
@@ -106,7 +75,6 @@ class NotificationManager {
         options.forEach(option => {
             option.addEventListener('click', (e) => {
                 e.preventDefault();
-                e.stopPropagation();
                 
                 options.forEach(opt => {
                     opt.classList.remove('selected');
@@ -141,41 +109,10 @@ class NotificationManager {
         
         if (categoryId) {
             const category = this.categories.find(cat => cat.id == categoryId);
-            if (category) {
-                document.getElementById('previewCategory').textContent = `Categoria: ${category.name}`;
-                document.getElementById('previewCategory').style.color = category.color || '#666';
-            }
+            document.getElementById('previewCategory').textContent = category ? `Categoria: ${category.name}` : 'Categoria: Não selecionada';
         } else {
             document.getElementById('previewCategory').textContent = 'Categoria: Não selecionada';
-            document.getElementById('previewCategory').style.color = '#666';
         }
-
-        let destinatarios = '';
-        switch(userType) {
-            case 'all':
-                destinatarios = '👥 Todos os usuários';
-                break;
-            case 'free':
-                destinatarios = '🆓 Usuários Free';
-                break;
-            case 'premium':
-                destinatarios = '⭐ Usuários Premium';
-                break;
-            case 'specific':
-                destinatarios = specificUserId ? `👤 Usuário específico: ${specificUserId}` : '👤 Usuário específico: (ID não informado)';
-                break;
-        }
-        
-        let destinatarioElement = document.getElementById('previewDestinatarios');
-        if (!destinatarioElement) {
-                destinatarioElement = document.createElement('div');
-                destinatarioElement.id = 'previewDestinatarios';
-                destinatarioElement.style.marginTop = '10px';
-                destinatarioElement.style.fontSize = '0.9em';
-                destinatarioElement.style.color = '#666';
-                document.querySelector('.preview-content').appendChild(destinatarioElement);
-        }
-        destinatarioElement.textContent = `Para: ${destinatarios}`;
     }
 
     async handleSubmit(e) {
@@ -199,7 +136,7 @@ class NotificationManager {
             this.resetForm();
             
         } catch (error) {
-            this.showError('Erro ao enviar notificação: ' + (error.message || 'Erro desconhecido'));
+            this.showError('Erro ao enviar notificação: ' + error.message);
         } finally {
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
@@ -246,84 +183,56 @@ class NotificationManager {
 
     async sendNotification(data) {
         try {
+            // Buscar user_type_id baseado no nome
+            const userTypeId = await this.getUserTypeId(data.user_type);
+            
             const notificationData = {
                 title: data.title,
                 message: data.message,
                 category_id: data.category_id,
+                user_type_id: userTypeId,
                 expiration_days: data.expiration_days,
                 is_active: true
             };
 
-            const { data: notification, error: notificationError } = await supabase
+            const { data: notification, error } = await supabase
                 .from('notifications')
                 .insert(notificationData)
                 .select()
                 .single();
 
-            if (notificationError) {
-                throw new Error('Falha ao criar notificação: ' + notificationError.message);
+            if (error) throw error;
+
+            // Se for usuário específico, adicionar na tabela notification_users
+            if (data.user_type === 'specific' && data.specific_user_id) {
+                await supabase
+                    .from('notification_users')
+                    .insert({
+                        notification_id: notification.id,
+                        user_id: data.specific_user_id
+                    });
             }
 
-            await this.processRecipients(notification.id, data);
-            
             return notification;
 
         } catch (error) {
-            throw error;
+            throw new Error('Falha ao enviar notificação: ' + error.message);
         }
     }
 
-    async processRecipients(notificationId, data) {
+    async getUserTypeId(userTypeName) {
         try {
-            if (data.user_type === 'specific') {
-                await this.addUserToNotification(notificationId, data.specific_user_id);
-            } else {
-                const users = await this.getUsersByType(data.user_type);
-                
-                for (const user of users) {
-                    await this.addUserToNotification(notificationId, user.id);
-                }
-            }
-        } catch (error) {
-            throw new Error('Erro ao definir destinatários: ' + error.message);
-        }
-    }
-
-    async getUsersByType(userType) {
-        try {
-            let query = supabase
-                .from('profiles')
-                .select('id, is_premium');
-
-            if (userType === 'free') {
-                query = query.eq('is_premium', false);
-            } else if (userType === 'premium') {
-                query = query.eq('is_premium', true);
-            }
-
-            const { data, error } = await query;
+            const { data, error } = await supabase
+                .from('user_types')
+                .select('id')
+                .eq('name', userTypeName === 'all' ? 'Todos' : 
+                            userTypeName === 'free' ? 'Free' : 'Premium')
+                .single();
 
             if (error) throw error;
-            return data || [];
-
+            return data.id;
         } catch (error) {
-            return [];
-        }
-    }
-
-    async addUserToNotification(notificationId, userId) {
-        try {
-            const { error } = await supabase
-                .from('notification_users')
-                .insert({
-                    notification_id: notificationId,
-                    user_id: userId
-                });
-
-            if (error) throw error;
-
-        } catch (error) {
-            throw error;
+            return 1; // Fallback para 'Todos'
         }
     }
 
