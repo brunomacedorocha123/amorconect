@@ -271,28 +271,27 @@ class MessagesSystem {
             </div>
         `).join('');
 
+        // Adicionar event listeners após renderizar
         this.addConversationClickListeners();
     }
 
+    // NOVO MÉTODO: Adicionar listeners de clique
     addConversationClickListeners() {
         const conversationItems = document.querySelectorAll('.conversation-item');
         conversationItems.forEach(item => {
-            item.removeEventListener('click', this.handleConversationClick);
-            item.addEventListener('click', this.handleConversationClick.bind(this));
+            item.addEventListener('click', (e) => {
+                const userId = item.getAttribute('data-user-id');
+                if (userId) {
+                    this.selectConversation(userId);
+                }
+            });
         });
     }
 
-    handleConversationClick(event) {
-        const conversationItem = event.currentTarget;
-        const userId = conversationItem.getAttribute('data-user-id');
-        
-        if (userId && userId !== this.currentConversation) {
-            this.selectConversation(userId);
-        }
-    }
-
+    // FUNÇÃO PRINCIPAL CORRIGIDA: Selecionar conversa
     async selectConversation(otherUserId) {
         try {
+            // Atualizar UI - remover active de todos e adicionar ao clicado
             document.querySelectorAll('.conversation-item').forEach(item => {
                 item.classList.remove('active');
             });
@@ -303,8 +302,14 @@ class MessagesSystem {
             }
 
             this.currentConversation = otherUserId;
+            
+            // Carregar mensagens da conversa
             await this.loadConversationMessages(otherUserId);
+            
+            // Mostrar área do chat
             this.showChatArea();
+            
+            // Atualizar header do chat
             this.updateChatHeader(otherUserId);
             
         } catch (error) {
@@ -340,7 +345,8 @@ class MessagesSystem {
         }
     }
 
-    async loadConversationMessagesFallback(otherUserId) {
+    // CONTINUA NA PRÓXIMA PARTE...
+        async loadConversationMessagesFallback(otherUserId) {
         try {
             const { data: messages, error } = await this.supabase
                 .from('messages')
@@ -468,7 +474,114 @@ class MessagesSystem {
         return 'Enviada';
     }
 
-    // CONTINUA NA PRÓXIMA PARTE...
+    // FUNÇÃO CORRIGIDA: Mostrar área do chat
+    showChatArea() {
+        const inputArea = document.getElementById('messageInputArea');
+        const chatHeader = document.getElementById('chatHeader');
+        const placeholder = document.querySelector('.chat-header-placeholder');
+        const emptyChat = document.querySelector('.empty-chat');
+        
+        // Mostrar área de digitação
+        if (inputArea) {
+            inputArea.style.display = 'block';
+        }
+        
+        // Esconder placeholder do header
+        if (placeholder) {
+            placeholder.style.display = 'none';
+        }
+        
+        // Esconder estado vazio do chat
+        if (emptyChat) {
+            emptyChat.style.display = 'none';
+        }
+        
+        // Garantir que o header do chat está visível
+        if (chatHeader) {
+            chatHeader.style.display = 'flex';
+        }
+    }
+
+    // FUNÇÃO CORRIGIDA: Atualizar header do chat
+    async updateChatHeader(otherUserId) {
+        const chatHeader = document.getElementById('chatHeader');
+        if (!chatHeader) return;
+        
+        const conversation = this.conversations.find(c => c.other_user_id === otherUserId);
+        
+        if (!conversation) {
+            // Se não encontrou na lista, buscar informações do usuário
+            try {
+                const { data: userProfile, error } = await this.supabase
+                    .from('profiles')
+                    .select('nickname, avatar_url, last_online_at')
+                    .eq('id', otherUserId)
+                    .single();
+                    
+                if (userProfile) {
+                    chatHeader.innerHTML = `
+                        <div class="chat-header-user">
+                            <div class="chat-user-avatar">
+                                ${userProfile.avatar_url ? 
+                                    `<img src="${userProfile.avatar_url}" alt="${userProfile.nickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
+                                    ''
+                                }
+                                <div class="avatar-fallback" style="${userProfile.avatar_url ? 'display: none;' : ''}">
+                                    ${this.getUserInitials(userProfile.nickname)}
+                                </div>
+                            </div>
+                            <div class="chat-user-info">
+                                <h3>${this.escapeHtml(userProfile.nickname)}</h3>
+                                <div class="chat-user-status">
+                                    <span class="${this.isUserOnline(userProfile.last_online_at) ? 'status-online' : 'status-offline'}">
+                                        <span class="status-dot"></span>
+                                        ${this.isUserOnline(userProfile.last_online_at) ? 'Online' : 'Offline'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-header-actions">
+                            <button class="chat-action-btn" onclick="MessagesSystem.showUserInfo('${otherUserId}')" title="Informações do usuário">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar informações do usuário:', error);
+            }
+            return;
+        }
+
+        // Usar informações da conversa
+        chatHeader.innerHTML = `
+            <div class="chat-header-user">
+                <div class="chat-user-avatar">
+                    ${conversation.other_user_avatar_url ? 
+                        `<img src="${conversation.other_user_avatar_url}" alt="${conversation.other_user_nickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
+                        ''
+                    }
+                    <div class="avatar-fallback" style="${conversation.other_user_avatar_url ? 'display: none;' : ''}">
+                        ${this.getUserInitials(conversation.other_user_nickname)}
+                    </div>
+                </div>
+                <div class="chat-user-info">
+                    <h3>${this.escapeHtml(conversation.other_user_nickname)}</h3>
+                    <div class="chat-user-status">
+                        <span class="${conversation.other_user_online ? 'status-online' : 'status-offline'}">
+                            <span class="status-dot"></span>
+                            ${conversation.other_user_online ? 'Online' : 'Offline'}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-header-actions">
+                <button class="chat-action-btn" onclick="MessagesSystem.showUserInfo('${otherUserId}')" title="Informações do usuário">
+                    <i class="fas fa-info-circle"></i>
+                </button>
+            </div>
+        `;
+    }
 
     async sendMessage() {
         const messageInput = document.getElementById('messageInput');
@@ -493,14 +606,12 @@ class MessagesSystem {
             this.setSendButtonState(true);
             this.showMessageStatus('Enviando...', 'info');
 
-            // Verificar se pode enviar mensagem
             const canSend = await this.checkCanSendMessage();
             if (!canSend.can_send) {
                 this.handleSendError(canSend.reason);
                 return;
             }
 
-            // Enviar mensagem via RPC
             const { data, error } = await this.supabase
                 .rpc('send_message', {
                     p_sender_id: this.currentUser.id,
@@ -515,7 +626,6 @@ class MessagesSystem {
                 this.updateCharCounter();
                 this.showMessageStatus('Mensagem enviada!', 'success');
                 
-                // Recarregar mensagens e conversas
                 await this.loadConversationMessages(this.currentConversation);
                 await this.loadConversations();
                 this.updateMessageCounter();
@@ -526,8 +636,6 @@ class MessagesSystem {
 
         } catch (error) {
             this.showMessageStatus('Erro ao enviar mensagem', 'error');
-            
-            // Tentar método alternativo se a RPC falhar
             await this.sendMessageFallback(message);
         } finally {
             this.setSendButtonState(false);
@@ -535,8 +643,8 @@ class MessagesSystem {
         }
     }
 
-    // Método fallback para enviar mensagem
-    async sendMessageFallback(message) {
+    // CONTINUA NA TERCEIRA PARTE...
+        async sendMessageFallback(message) {
         try {
             const { data, error } = await this.supabase
                 .from('messages')
@@ -561,17 +669,14 @@ class MessagesSystem {
         }
     }
 
-    // FUNÇÃO DO CONTADOR CORRIGIDA - SIMPLES E FUNCIONAL
     async checkCanSendMessage() {
         try {
             const isPremium = this.currentUser.profile?.is_premium;
             
-            // Usuário premium pode enviar sem limites
             if (isPremium) {
                 return { can_send: true, reason: null };
             }
 
-            // Buscar limites do usuário
             const { data: limits, error } = await this.supabase
                 .from('user_message_limits')
                 .select('messages_sent_today, last_reset_date')
@@ -579,29 +684,14 @@ class MessagesSystem {
                 .single();
 
             if (error) {
-                // Se não encontrar registro, permitir envio (será criado no primeiro envio)
                 return { can_send: true, reason: null };
             }
 
-            // Verificar se é um novo dia (precisa resetar)
-            const today = new Date().toDateString();
-            const lastReset = new Date(limits.last_reset_date).toDateString();
-            
-            if (today !== lastReset) {
-                // Novo dia - resetar contador
-                await this.supabase
-                    .from('user_message_limits')
-                    .update({
-                        messages_sent_today: 0,
-                        last_reset_date: new Date().toISOString()
-                    })
-                    .eq('user_id', this.currentUser.id);
-                
+            if (limits && new Date(limits.last_reset_date).toDateString() !== new Date().toDateString()) {
                 return { can_send: true, reason: null };
             }
 
-            // Verificar se atingiu o limite
-            const sentToday = limits.messages_sent_today || 0;
+            const sentToday = limits?.messages_sent_today || 0;
             
             if (sentToday >= this.messageLimit) {
                 return { can_send: false, reason: 'limit_reached' };
@@ -610,7 +700,6 @@ class MessagesSystem {
             return { can_send: true, reason: null };
             
         } catch (error) {
-            console.error('Erro ao verificar limites:', error);
             return { can_send: true, reason: null };
         }
     }
@@ -644,36 +733,14 @@ class MessagesSystem {
                 return;
             }
 
-            // Buscar contador atual
             const { data: limits, error } = await this.supabase
                 .from('user_message_limits')
-                .select('messages_sent_today, last_reset_date')
+                .select('messages_sent_today')
                 .eq('user_id', this.currentUser.id)
                 .single();
 
-            let sentToday = 0;
-            
-            if (!error && limits) {
-                // Verificar se precisa resetar (novo dia)
-                const today = new Date().toDateString();
-                const lastReset = new Date(limits.last_reset_date).toDateString();
-                
-                if (today !== lastReset) {
-                    // Resetar para novo dia
-                    await this.supabase
-                        .from('user_message_limits')
-                        .update({
-                            messages_sent_today: 0,
-                            last_reset_date: new Date().toISOString()
-                        })
-                        .eq('user_id', this.currentUser.id);
-                    sentToday = 0;
-                } else {
-                    sentToday = limits.messages_sent_today || 0;
-                }
-            }
+            const sentToday = limits?.messages_sent_today || 0;
 
-            // Atualizar contador na interface
             counter.innerHTML = `
                 <span class="counter-text">Mensagens hoje: </span>
                 <span class="counter-number">${sentToday}/${this.messageLimit}</span>
@@ -718,11 +785,6 @@ class MessagesSystem {
                 this.filterConversations(e.target.value);
             });
         }
-
-        // Adicionar listeners quando pesquisar
-        searchInput.addEventListener('input', () => {
-            setTimeout(() => this.addConversationClickListeners(), 100);
-        });
     }
 
     updateCharCounter() {
@@ -773,55 +835,7 @@ class MessagesSystem {
         }
     }
 
-    showChatArea() {
-        const inputArea = document.getElementById('messageInputArea');
-        const chatHeader = document.getElementById('chatHeader');
-        
-        if (inputArea) inputArea.style.display = 'block';
-        
-        const placeholder = document.querySelector('.chat-header-placeholder');
-        if (placeholder) placeholder.style.display = 'none';
-    }
-
-    async updateChatHeader(otherUserId) {
-        const chatHeader = document.getElementById('chatHeader');
-        if (!chatHeader) return;
-        
-        const conversation = this.conversations.find(c => c.other_user_id === otherUserId);
-        
-        if (!conversation) return;
-
-        chatHeader.innerHTML = `
-            <div class="chat-header-user">
-                <div class="chat-user-avatar">
-                    ${conversation.other_user_avatar_url ? 
-                        `<img src="${conversation.other_user_avatar_url}" alt="${conversation.other_user_nickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
-                        ''
-                    }
-                    <div class="avatar-fallback" style="${conversation.other_user_avatar_url ? 'display: none;' : ''}">
-                        ${this.getUserInitials(conversation.other_user_nickname)}
-                    </div>
-                </div>
-                <div class="chat-user-info">
-                    <h3>${this.escapeHtml(conversation.other_user_nickname)}</h3>
-                    <div class="chat-user-status">
-                        <span class="${conversation.other_user_online ? 'status-online' : 'status-offline'}">
-                            <span class="status-dot"></span>
-                            ${conversation.other_user_online ? 'Online' : 'Offline'}
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div class="chat-header-actions">
-                <button class="chat-action-btn" onclick="MessagesSystem.showUserInfo('${otherUserId}')" title="Informações do usuário">
-                    <i class="fas fa-info-circle"></i>
-                </button>
-            </div>
-        `;
-    }
-
-    // CONTINUA NA TERCEIRA PARTE...
-        async showUserInfo(userId) {
+    async showUserInfo(userId) {
         this.showNotification('Funcionalidade em desenvolvimento', 'info');
     }
 
@@ -840,7 +854,6 @@ class MessagesSystem {
                 await this.loadConversationMessages(this.currentConversation);
             }
             
-            this.updateMessageCounter();
             this.showNotification('Conversas atualizadas', 'success');
         } catch (error) {
             console.error('Erro ao atualizar:', error);
@@ -889,7 +902,6 @@ class MessagesSystem {
                 await this.loadConversationMessages(this.currentConversation);
             }
             await this.loadConversations();
-            this.updateMessageCounter();
         }, 30000);
     }
 
