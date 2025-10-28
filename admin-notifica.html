@@ -435,7 +435,7 @@
                     
                     <div class="form-actions">
                         <button type="button" class="btn btn-secondary" onclick="limparFormulario()">Limpar</button>
-                        <button type="button" class="btn btn-primary" onclick="enviarNotificacao()">Enviar Notificação</button>
+                       <button type="submit" class="btn btn-primary">Enviar Notificação</button>
                     </div>
                 </form>
             </div>
@@ -451,7 +451,7 @@
         </div>
     </div>
 
-             <script>
+                <script>
         // ==================== CONFIGURAÇÃO SUPABASE ====================
         const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
@@ -482,6 +482,7 @@
             carregarUsuarios();
             carregarNotificacoes();
             
+            // Configurar radio buttons
             userTypeRadios.forEach(radio => {
                 radio.addEventListener('change', function() {
                     if (this.value === 'specific') {
@@ -491,6 +492,21 @@
                     }
                 });
             });
+
+            // Configurar submit do formulário
+            notificationForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                enviarNotificacao();
+            });
+
+            // Configurar clique direto no botão (backup)
+            const btnEnviar = document.querySelector('.btn-primary');
+            if (btnEnviar) {
+                btnEnviar.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    enviarNotificacao();
+                });
+            }
         });
 
         // ==================== FUNÇÕES PRINCIPAIS ====================
@@ -640,7 +656,7 @@
                     return;
                 }
 
-                // 2. Buscar um usuário admin (usar qualquer usuário como admin para teste)
+                // 2. Buscar um usuário admin
                 const { data: usuariosAdmin, error: adminError } = await supabase
                     .from('profiles')
                     .select('id')
@@ -670,7 +686,7 @@
                     .single();
 
                 if (notifError) {
-                    mostrarAlerta('error', 'Erro ao salvar notificação: ' + notifError.message);
+                    mostrarAlerta('error', 'Erro ao salvar notificação.');
                     return;
                 }
 
@@ -695,7 +711,7 @@
                 const { data: usuarios, error: usersError } = await query;
                 
                 if (usersError) {
-                    mostrarAlerta('error', 'Erro ao buscar destinatários: ' + usersError.message);
+                    mostrarAlerta('error', 'Erro ao buscar destinatários.');
                     return;
                 }
 
@@ -711,7 +727,7 @@
                         .insert(destinatarios);
 
                     if (destError) {
-                        mostrarAlerta('error', 'Erro ao salvar destinatários: ' + destError.message);
+                        mostrarAlerta('error', 'Erro ao salvar destinatários.');
                         return;
                     }
                 }
@@ -721,7 +737,7 @@
                 carregarNotificacoes();
 
             } catch (erro) {
-                mostrarAlerta('error', 'Erro ao enviar notificação: ' + erro.message);
+                mostrarAlerta('error', 'Erro ao enviar notificação.');
             }
         }
 
