@@ -468,6 +468,8 @@ class MessagesSystem {
         return 'Enviada';
     }
 
+    // CONTINUA NA PRÓXIMA PARTE...
+
     async sendMessage() {
         const messageInput = document.getElementById('messageInput');
         const message = messageInput.value.trim();
@@ -491,12 +493,14 @@ class MessagesSystem {
             this.setSendButtonState(true);
             this.showMessageStatus('Enviando...', 'info');
 
+            // Verificar se pode enviar mensagem
             const canSend = await this.checkCanSendMessage();
             if (!canSend.can_send) {
                 this.handleSendError(canSend.reason);
                 return;
             }
 
+            // Enviar mensagem via RPC
             const { data, error } = await this.supabase
                 .rpc('send_message', {
                     p_sender_id: this.currentUser.id,
@@ -511,6 +515,7 @@ class MessagesSystem {
                 this.updateCharCounter();
                 this.showMessageStatus('Mensagem enviada!', 'success');
                 
+                // Recarregar mensagens e conversas
                 await this.loadConversationMessages(this.currentConversation);
                 await this.loadConversations();
                 this.updateMessageCounter();
@@ -521,6 +526,8 @@ class MessagesSystem {
 
         } catch (error) {
             this.showMessageStatus('Erro ao enviar mensagem', 'error');
+            
+            // Tentar método alternativo se a RPC falhar
             await this.sendMessageFallback(message);
         } finally {
             this.setSendButtonState(false);
@@ -528,6 +535,7 @@ class MessagesSystem {
         }
     }
 
+    // Método fallback para enviar mensagem
     async sendMessageFallback(message) {
         try {
             const { data, error } = await this.supabase
@@ -553,8 +561,7 @@ class MessagesSystem {
         }
     }
 
-    // CONTINUA - PRÓXIMA PARTE...
-        // CORREÇÃO DO CONTADOR - FUNÇÃO PRINCIPAL
+    // FUNÇÃO DO CONTADOR CORRIGIDA - SIMPLES E FUNCIONAL
     async checkCanSendMessage() {
         try {
             const isPremium = this.currentUser.profile?.is_premium;
@@ -572,25 +579,30 @@ class MessagesSystem {
                 .single();
 
             if (error) {
-                console.error('Erro ao verificar limites:', error);
-                // Se não encontrar registro, criar um
-                await this.createUserLimitRecord();
+                // Se não encontrar registro, permitir envio (será criado no primeiro envio)
                 return { can_send: true, reason: null };
             }
 
-            // Verificar se precisa resetar (novo dia)
+            // Verificar se é um novo dia (precisa resetar)
             const today = new Date().toDateString();
-            const lastResetDate = new Date(limits.last_reset_date).toDateString();
+            const lastReset = new Date(limits.last_reset_date).toDateString();
             
-            if (today !== lastResetDate) {
-                // Resetar contador para novo dia
-                await this.resetDailyLimit();
+            if (today !== lastReset) {
+                // Novo dia - resetar contador
+                await this.supabase
+                    .from('user_message_limits')
+                    .update({
+                        messages_sent_today: 0,
+                        last_reset_date: new Date().toISOString()
+                    })
+                    .eq('user_id', this.currentUser.id);
+                
                 return { can_send: true, reason: null };
             }
 
-            const sentToday = limits?.messages_sent_today || 0;
+            // Verificar se atingiu o limite
+            const sentToday = limits.messages_sent_today || 0;
             
-            // CORREÇÃO: Verificar se atingiu o limite
             if (sentToday >= this.messageLimit) {
                 return { can_send: false, reason: 'limit_reached' };
             }
@@ -598,38 +610,8 @@ class MessagesSystem {
             return { can_send: true, reason: null };
             
         } catch (error) {
-            console.error('Erro ao verificar se pode enviar:', error);
-            return { can_send: true, reason: null }; // Fallback em caso de erro
-        }
-    }
-
-    // Criar registro de limites se não existir
-    async createUserLimitRecord() {
-        try {
-            const { error } = await this.supabase
-                .from('user_message_limits')
-                .insert({
-                    user_id: this.currentUser.id,
-                    messages_sent_today: 0,
-                    last_reset_date: new Date().toISOString()
-                });
-        } catch (error) {
-            console.error('Erro ao criar registro de limites:', error);
-        }
-    }
-
-    // Resetar limite diário
-    async resetDailyLimit() {
-        try {
-            const { error } = await this.supabase
-                .from('user_message_limits')
-                .update({
-                    messages_sent_today: 0,
-                    last_reset_date: new Date().toISOString()
-                })
-                .eq('user_id', this.currentUser.id);
-        } catch (error) {
-            console.error('Erro ao resetar limite diário:', error);
+            console.error('Erro ao verificar limites:', error);
+            return { can_send: true, reason: null };
         }
     }
 
@@ -662,19 +644,36 @@ class MessagesSystem {
                 return;
             }
 
+            // Buscar contador atual
             const { data: limits, error } = await this.supabase
                 .from('user_message_limits')
-                .select('messages_sent_today')
+                .select('messages_sent_today, last_reset_date')
                 .eq('user_id', this.currentUser.id)
                 .single();
 
             let sentToday = 0;
             
             if (!error && limits) {
-                sentToday = limits.messages_sent_today || 0;
+                // Verificar se precisa resetar (novo dia)
+                const today = new Date().toDateString();
+                const lastReset = new Date(limits.last_reset_date).toDateString();
+                
+                if (today !== lastReset) {
+                    // Resetar para novo dia
+                    await this.supabase
+                        .from('user_message_limits')
+                        .update({
+                            messages_sent_today: 0,
+                            last_reset_date: new Date().toISOString()
+                        })
+                        .eq('user_id', this.currentUser.id);
+                    sentToday = 0;
+                } else {
+                    sentToday = limits.messages_sent_today || 0;
+                }
             }
 
-            // CORREÇÃO: Garantir que o contador mostra o valor correto
+            // Atualizar contador na interface
             counter.innerHTML = `
                 <span class="counter-text">Mensagens hoje: </span>
                 <span class="counter-number">${sentToday}/${this.messageLimit}</span>
@@ -720,6 +719,7 @@ class MessagesSystem {
             });
         }
 
+        // Adicionar listeners quando pesquisar
         searchInput.addEventListener('input', () => {
             setTimeout(() => this.addConversationClickListeners(), 100);
         });
@@ -820,7 +820,8 @@ class MessagesSystem {
         `;
     }
 
-    async showUserInfo(userId) {
+    // CONTINUA NA TERCEIRA PARTE...
+        async showUserInfo(userId) {
         this.showNotification('Funcionalidade em desenvolvimento', 'info');
     }
 
@@ -839,6 +840,7 @@ class MessagesSystem {
                 await this.loadConversationMessages(this.currentConversation);
             }
             
+            this.updateMessageCounter();
             this.showNotification('Conversas atualizadas', 'success');
         } catch (error) {
             console.error('Erro ao atualizar:', error);
@@ -887,6 +889,7 @@ class MessagesSystem {
                 await this.loadConversationMessages(this.currentConversation);
             }
             await this.loadConversations();
+            this.updateMessageCounter();
         }, 30000);
     }
 
