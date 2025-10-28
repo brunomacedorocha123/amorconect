@@ -92,6 +92,35 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .filters {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--light-gray);
+            background: var(--white);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
         }
 
         .btn {
@@ -124,6 +153,7 @@
             border-radius: 0 10px 10px 0;
             transition: all 0.3s ease;
             cursor: pointer;
+            position: relative;
         }
 
         .notification-item:hover {
@@ -135,6 +165,17 @@
             background: var(--white);
             border-left-color: var(--info);
             border: 2px solid var(--info);
+        }
+
+        .notification-item.unread::before {
+            content: "";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 8px;
+            height: 8px;
+            background: var(--info);
+            border-radius: 50%;
         }
 
         .notification-header {
@@ -163,6 +204,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
         .badge {
@@ -171,7 +214,6 @@
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 600;
-            margin-left: 10px;
         }
 
         .badge-warning {
@@ -266,6 +308,29 @@
             color: white;
         }
 
+        .mark-all-read-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .notification-count {
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            margin-left: 0.5rem;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 0 10px;
@@ -291,6 +356,10 @@
                 left: 0;
                 margin-bottom: 1rem;
             }
+
+            .filters {
+                justify-content: center;
+            }
         }
     </style>
 </head>
@@ -310,6 +379,7 @@
                 <div>
                     <div id="userName">Carregando...</div>
                     <small id="userEmail"></small>
+                    <div id="userPlan" style="font-size: 0.8rem; margin-top: 0.2rem;"></div>
                 </div>
             </div>
         </div>
@@ -317,9 +387,36 @@
         <!-- Notificações -->
         <div class="notifications-container">
             <div class="section-title">
-                <h2>📨 Notificações Recebidas</h2>
-                <button class="btn btn-primary" onclick="carregarNotificacoes()">
-                    🔄 Atualizar
+                <h2>
+                    📨 Notificações Recebidas
+                    <span id="unreadCount" class="notification-count" style="display: none;"></span>
+                </h2>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button class="mark-all-read-btn" onclick="marcarTodasComoLidas()" id="markAllReadBtn" style="display: none;">
+                        ✅ Marcar Todas como Lidas
+                    </button>
+                    <button class="btn btn-primary" onclick="carregarNotificacoes()">
+                        🔄 Atualizar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="filters">
+                <button class="filter-btn active" onclick="filtrarNotificacoes('all')" data-filter="all">
+                    📋 Todas
+                </button>
+                <button class="filter-btn" onclick="filtrarNotificacoes('unread')" data-filter="unread">
+                    📬 Não Lidas
+                </button>
+                <button class="filter-btn" onclick="filtrarNotificacoes('bonus')" data-filter="bonus">
+                    🎁 Bônus
+                </button>
+                <button class="filter-btn" onclick="filtrarNotificacoes('advertencia')" data-filter="advertencia">
+                    ⚠️ Advertências
+                </button>
+                <button class="filter-btn" onclick="filtrarNotificacoes('aviso')" data-filter="aviso">
+                    📢 Avisos
                 </button>
             </div>
             
@@ -332,218 +429,451 @@
         </div>
     </div>
 
-  <script>
-// Configuração Supabase
-const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <script>
+        // ==================== CONFIGURAÇÃO SUPABASE ====================
+        const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// VARIÁVEIS GLOBAIS
-let usuarioAtual = null;
+        // ==================== VARIÁVEIS GLOBAIS ====================
+        let usuarioAtual = null;
+        let todasNotificacoes = [];
+        let filtroAtual = 'all';
 
-// FUNÇÕES PRINCIPAIS
-async function inicializarPagina() {
-    await simularUsuarioLogado();
-    await carregarNotificacoes();
-}
-
-// SIMULAR USUÁRIO LOGADO (COM USUÁRIO REAL)
-async function simularUsuarioLogado() {
-    try {
-        // Buscar um usuário REAL do banco para teste
-        const { data: usuarios, error } = await supabase
-            .from('profiles')
-            .select('id, nickname, email, is_premium, premium_expires_at')
-            .not('nickname', 'is', null)
-            .limit(1)
-            .single();
-
-        if (error) throw error;
-
-        usuarioAtual = usuarios;
-        
-        // Atualizar interface
-        document.getElementById('userName').textContent = usuarios.nickname || 'Usuário';
-        document.getElementById('userEmail').textContent = usuarios.email;
-        
-        const avatarElement = document.getElementById('userAvatar');
-        const iniciais = usuarios.nickname ? 
-            usuarios.nickname.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : 'U';
-        avatarElement.textContent = iniciais;
-
-        // Mostrar se é premium ou free
-        const isPremiumAtivo = usuarios.is_premium && 
-            usuarios.premium_expires_at && 
-            new Date(usuarios.premium_expires_at) > new Date();
-        
-        if (isPremiumAtivo) {
-            document.getElementById('userName').textContent += ' ⭐ Premium';
+        // ==================== FUNÇÕES PRINCIPAIS ====================
+        async function inicializarPagina() {
+            await carregarUsuarioAtual();
+            await carregarNotificacoes();
+            configurarRealtime();
         }
 
-    } catch (erro) {
-        console.error('Erro ao carregar usuário:', erro);
-        // Fallback
-        usuarioAtual = { id: 'test-user', nickname: 'Usuário Teste', email: 'teste@email.com' };
-        document.getElementById('userName').textContent = 'Usuário Teste';
-        document.getElementById('userEmail').textContent = 'teste@email.com';
-    }
-}
+        // ==================== CARREGAR USUÁRIO ATUAL ====================
+        async function carregarUsuarioAtual() {
+            try {
+                // Buscar um usuário REAL do banco para teste
+                const { data: usuarios, error } = await supabase
+                    .from('profiles')
+                    .select('id, nickname, email, is_premium, premium_expires_at')
+                    .not('nickname', 'is', null)
+                    .limit(1)
+                    .single();
 
-// CARREGAR NOTIFICAÇÕES DO USUÁRIO REAL
-async function carregarNotificacoes() {
-    if (!usuarioAtual) return;
+                if (error) {
+                    // Fallback para usuário de teste
+                    usuarioAtual = { 
+                        id: '00000000-0000-0000-0000-000000000000', 
+                        nickname: 'Usuário Teste', 
+                        email: 'teste@email.com',
+                        is_premium: false 
+                    };
+                } else {
+                    usuarioAtual = usuarios;
+                }
 
-    const container = document.getElementById('notificationsList');
-    
-    try {
-        // Buscar notificações DO USUÁRIO ATUAL REAL
-        const { data: notificacoes, error } = await supabase
-            .from('user_notifications')
-            .select(`
-                id,
-                is_read,
-                read_at,
-                created_at,
-                notification:notifications (
-                    id,
-                    title,
-                    message,
-                    notification_type,
-                    created_at
-                )
-            `)
-            .eq('user_id', usuarioAtual.id)
-            .order('created_at', { ascending: false });
+                // Atualizar interface do usuário
+                atualizarInterfaceUsuario();
 
-        if (error) throw error;
-
-        container.innerHTML = '';
-
-        if (!notificacoes || notificacoes.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div class="icon">📭</div>
-                    <h3>Nenhuma notificação</h3>
-                    <p>Você não tem nenhuma notificação no momento.</p>
-                    <p style="font-size: 0.9rem; margin-top: 1rem; color: #718096;">
-                        As notificações do admin aparecerão aqui.
-                    </p>
-                </div>
-            `;
-            return;
+            } catch (erro) {
+                console.error('Erro ao carregar usuário:', erro);
+                // Fallback final
+                usuarioAtual = { 
+                    id: '00000000-0000-0000-0000-000000000000', 
+                    nickname: 'Usuário', 
+                    email: 'usuario@email.com',
+                    is_premium: false 
+                };
+                atualizarInterfaceUsuario();
+            }
         }
 
-        let html = '';
-
-        notificacoes.forEach(item => {
-            const notificacao = item.notification;
-            const dataNotificacao = new Date(notificacao.created_at);
-            const dataFormatada = dataNotificacao.toLocaleDateString('pt-BR');
-            const horaFormatada = dataNotificacao.toLocaleTimeString('pt-BR', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            });
-
-            let badgeClass = '';
-            let badgeText = '';
+        function atualizarInterfaceUsuario() {
+            document.getElementById('userName').textContent = usuarioAtual.nickname || 'Usuário';
+            document.getElementById('userEmail').textContent = usuarioAtual.email;
             
-            switch(notificacao.notification_type) {
-                case 'advertencia':
-                    badgeClass = 'badge-warning';
-                    badgeText = 'Advertência';
+            const avatarElement = document.getElementById('userAvatar');
+            const iniciais = usuarioAtual.nickname ? 
+                usuarioAtual.nickname.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : 'U';
+            avatarElement.textContent = iniciais;
+
+            // Mostrar se é premium ou free
+            const isPremiumAtivo = usuarioAtual.is_premium && 
+                usuarioAtual.premium_expires_at && 
+                new Date(usuarioAtual.premium_expires_at) > new Date();
+            
+            document.getElementById('userPlan').textContent = isPremiumAtivo ? 
+                '⭐ Plano Premium' : '🆓 Plano Free';
+        }
+
+        // ==================== CARREGAR NOTIFICAÇÕES ====================
+        async function carregarNotificacoes() {
+            if (!usuarioAtual) return;
+
+            const container = document.getElementById('notificationsList');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Carregando suas notificações...</p></div>';
+            
+            try {
+                // Buscar notificações DO USUÁRIO ATUAL
+                const { data: notificacoesUsuario, error } = await supabase
+                    .from('user_notifications')
+                    .select(`
+                        id,
+                        is_read,
+                        read_at,
+                        created_at,
+                        delivered_at,
+                        notification:admin_notifications (
+                            id,
+                            title,
+                            message,
+                            category,
+                            created_at,
+                            sent_by
+                        )
+                    `)
+                    .eq('user_id', usuarioAtual.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                todasNotificacoes = notificacoesUsuario || [];
+                
+                // Atualizar contador de não lidas
+                atualizarContadorNaoLidas();
+                
+                // Aplicar filtro atual
+                aplicarFiltro();
+
+            } catch (erro) {
+                console.error('Erro ao carregar notificações:', erro);
+                mostrarErroCarregamento();
+            }
+        }
+
+        function aplicarFiltro() {
+            let notificacoesFiltradas = [...todasNotificacoes];
+
+            // Aplicar filtro por categoria ou status
+            switch (filtroAtual) {
+                case 'unread':
+                    notificacoesFiltradas = notificacoesFiltradas.filter(n => !n.is_read);
                     break;
                 case 'bonus':
-                    badgeClass = 'badge-bonus';
-                    badgeText = 'Bônus';
+                    notificacoesFiltradas = notificacoesFiltradas.filter(n => 
+                        n.notification?.category === 'bonus'
+                    );
+                    break;
+                case 'advertencia':
+                    notificacoesFiltradas = notificacoesFiltradas.filter(n => 
+                        n.notification?.category === 'advertencia'
+                    );
                     break;
                 case 'aviso':
-                default:
-                    badgeClass = 'badge-info';
-                    badgeText = 'Aviso';
+                    notificacoesFiltradas = notificacoesFiltradas.filter(n => 
+                        n.notification?.category === 'aviso'
+                    );
+                    break;
+                // 'all' - mostra todas
             }
 
-            const isUnread = !item.is_read;
-            const notificationClass = isUnread ? 'notification-item unread' : 'notification-item';
+            exibirNotificacoes(notificacoesFiltradas);
+        }
 
-            html += `
-                <div class="${notificationClass}" onclick="marcarComoLida('${item.id}')">
-                    <div class="notification-header">
-                        <div class="notification-title">
-                            ${notificacao.title}
-                            <span class="badge ${badgeClass}">${badgeText}</span>
-                            ${isUnread ? '<span class="badge badge-new">NOVO</span>' : ''}
+        function exibirNotificacoes(notificacoes) {
+            const container = document.getElementById('notificationsList');
+            
+            if (!notificacoes || notificacoes.length === 0) {
+                let mensagemVazio = '';
+                switch (filtroAtual) {
+                    case 'unread':
+                        mensagemVazio = '🎉 Nenhuma notificação não lida!';
+                        break;
+                    case 'bonus':
+                        mensagemVazio = '📭 Nenhuma notificação de bônus';
+                        break;
+                    case 'advertencia':
+                        mensagemVazio = '📭 Nenhuma advertência';
+                        break;
+                    case 'aviso':
+                        mensagemVazio = '📭 Nenhum aviso geral';
+                        break;
+                    default:
+                        mensagemVazio = '📭 Nenhuma notificação recebida';
+                }
+
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <h3>${mensagemVazio}</h3>
+                        <p>Novas notificações do admin aparecerão aqui.</p>
+                        ${filtroAtual !== 'all' ? 
+                            '<button class="btn btn-primary" onclick="filtrarNotificacoes(\'all\')" style="margin-top: 1rem;">Ver Todas as Notificações</button>' : 
+                            ''
+                        }
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+
+            notificacoes.forEach(item => {
+                const notificacao = item.notification;
+                if (!notificacao) return; // Pular se não tiver notificação principal
+
+                const dataNotificacao = new Date(notificacao.created_at);
+                const dataFormatada = dataNotificacao.toLocaleDateString('pt-BR');
+                const horaFormatada = dataNotificacao.toLocaleTimeString('pt-BR', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+
+                let badgeClass = '';
+                let badgeText = '';
+                let icone = '';
+                
+                switch(notificacao.category) {
+                    case 'advertencia':
+                        badgeClass = 'badge-warning';
+                        badgeText = '⚠️ Advertência';
+                        icone = '⚠️';
+                        break;
+                    case 'bonus':
+                        badgeClass = 'badge-bonus';
+                        badgeText = '🎁 Bônus';
+                        icone = '🎁';
+                        break;
+                    case 'aviso':
+                    default:
+                        badgeClass = 'badge-info';
+                        badgeText = '📢 Aviso';
+                        icone = '📢';
+                }
+
+                const isUnread = !item.is_read;
+                const notificationClass = isUnread ? 'notification-item unread' : 'notification-item';
+
+                html += `
+                    <div class="${notificationClass}" onclick="marcarComoLida('${item.id}')">
+                        <div class="notification-header">
+                            <div class="notification-title">
+                                ${icone} ${notificacao.title}
+                                <span class="badge ${badgeClass}">${badgeText}</span>
+                                ${isUnread ? '<span class="badge badge-new">NOVO</span>' : ''}
+                            </div>
+                            ${isUnread ? `
+                                <button class="mark-read-btn" onclick="event.stopPropagation(); marcarComoLida('${item.id}')">
+                                    Marcar como lida
+                                </button>
+                            ` : ''}
                         </div>
-                        ${isUnread ? `
-                            <button class="mark-read-btn" onclick="event.stopPropagation(); marcarComoLida('${item.id}')">
-                                Marcar como lida
-                            </button>
-                        ` : ''}
+                        <div class="notification-message">
+                            ${notificacao.message}
+                        </div>
+                        <div class="notification-meta">
+                            <span>📅 ${dataFormatada} 🕒 ${horaFormatada}</span>
+                            <span>${isUnread ? '📬 Não lida' : '✅ Lida'}</span>
+                        </div>
                     </div>
-                    <div class="notification-message">
-                        ${notificacao.message}
-                    </div>
-                    <div class="notification-meta">
-                        <span>${dataFormatada} às ${horaFormatada}</span>
-                        <span>${isUnread ? '📬 Não lida' : '📭 Lida'}</span>
-                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // ==================== FUNÇÕES DE INTERAÇÃO ====================
+        async function marcarComoLida(notificationId) {
+            try {
+                const { error } = await supabase
+                    .from('user_notifications')
+                    .update({
+                        is_read: true,
+                        read_at: new Date().toISOString()
+                    })
+                    .eq('id', notificationId);
+
+                if (error) throw error;
+
+                // Atualizar estatísticas na tabela de stats
+                await atualizarEstatisticasLeitura(notificationId);
+
+                // Recarregar a lista
+                await carregarNotificacoes();
+
+            } catch (erro) {
+                console.error('Erro ao marcar como lida:', erro);
+                alert('Erro ao marcar notificação como lida');
+            }
+        }
+
+        async function marcarTodasComoLidas() {
+            const naoLidas = todasNotificacoes.filter(n => !n.is_read);
+            
+            if (naoLidas.length === 0) {
+                alert('✅ Todas as notificações já estão marcadas como lidas!');
+                return;
+            }
+
+            if (!confirm(`Deseja marcar todas as ${naoLidas.length} notificações não lidas como lidas?`)) {
+                return;
+            }
+
+            try {
+                const idsNaoLidas = naoLidas.map(n => n.id);
+                
+                const { error } = await supabase
+                    .from('user_notifications')
+                    .update({
+                        is_read: true,
+                        read_at: new Date().toISOString()
+                    })
+                    .in('id', idsNaoLidas);
+
+                if (error) throw error;
+
+                // Atualizar estatísticas para cada notificação
+                for (const notificacao of naoLidas) {
+                    await atualizarEstatisticasLeitura(notificacao.id);
+                }
+
+                alert(`✅ ${naoLidas.length} notificações marcadas como lidas!`);
+                await carregarNotificacoes();
+
+            } catch (erro) {
+                console.error('Erro ao marcar todas como lidas:', erro);
+                alert('Erro ao marcar notificações como lidas');
+            }
+        }
+
+        async function atualizarEstatisticasLeitura(userNotificationId) {
+            try {
+                // Buscar a notificação principal
+                const { data: userNotif } = await supabase
+                    .from('user_notifications')
+                    .select('notification_id')
+                    .eq('id', userNotificationId)
+                    .single();
+
+                if (!userNotif) return;
+
+                // Buscar estatísticas atuais
+                const { data: stats } = await supabase
+                    .from('notification_stats')
+                    .select('read_count')
+                    .eq('notification_id', userNotif.notification_id)
+                    .single();
+
+                if (stats) {
+                    // Incrementar contador de leituras
+                    await supabase
+                        .from('notification_stats')
+                        .update({ 
+                            read_count: (stats.read_count || 0) + 1 
+                        })
+                        .eq('notification_id', userNotif.notification_id);
+                }
+
+            } catch (erro) {
+                console.error('Erro ao atualizar estatísticas:', erro);
+            }
+        }
+
+        // ==================== FILTROS ====================
+        function filtrarNotificacoes(filtro) {
+            filtroAtual = filtro;
+            
+            // Atualizar botões de filtro
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.filter-btn[data-filter="${filtro}"]`).classList.add('active');
+            
+            // Aplicar filtro
+            aplicarFiltro();
+        }
+
+        function atualizarContadorNaoLidas() {
+            const naoLidas = todasNotificacoes.filter(n => !n.is_read).length;
+            const countElement = document.getElementById('unreadCount');
+            const markAllBtn = document.getElementById('markAllReadBtn');
+            
+            if (naoLidas > 0) {
+                countElement.textContent = naoLidas;
+                countElement.style.display = 'inline-flex';
+                markAllBtn.style.display = 'inline-block';
+            } else {
+                countElement.style.display = 'none';
+                markAllBtn.style.display = 'none';
+            }
+        }
+
+        // ==================== REALTIME SUPABASE ====================
+        function configurarRealtime() {
+            // Escutar por novas notificações em tempo real
+            const subscription = supabase
+                .channel('notifications-changes')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'user_notifications',
+                        filter: `user_id=eq.${usuarioAtual.id}`
+                    },
+                    (payload) => {
+                        console.log('Nova notificação recebida em tempo real!', payload);
+                        // Recarregar notificações quando receber uma nova
+                        carregarNotificacoes();
+                        
+                        // Mostrar notificação push (se suportado)
+                        if (Notification.permission === 'granted') {
+                            new Notification('Nova Notificação - Amor Conect', {
+                                body: 'Você recebeu uma nova notificação',
+                                icon: '/icon.png'
+                            });
+                        }
+                    }
+                )
+                .subscribe();
+
+            // Solicitar permissão para notificações push
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+
+            return subscription;
+        }
+
+        // ==================== FUNÇÕES DE ERRO ====================
+        function mostrarErroCarregamento() {
+            const container = document.getElementById('notificationsList');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">❌</div>
+                    <h3>Erro ao carregar notificações</h3>
+                    <p>Tente novamente mais tarde.</p>
+                    <button class="btn btn-primary" onclick="carregarNotificacoes()" style="margin-top: 1rem;">
+                        🔄 Tentar Novamente
+                    </button>
                 </div>
             `;
-        });
-
-        container.innerHTML = html;
-
-    } catch (erro) {
-        console.error('Erro ao carregar notificações:', erro);
-        container.innerHTML = `
-            <div class="empty-state">
-                <div class="icon">❌</div>
-                <h3>Erro ao carregar notificações</h3>
-                <p>Tente novamente mais tarde.</p>
-                <button class="btn btn-primary" onclick="carregarNotificacoes()" style="margin-top: 1rem;">
-                    🔄 Tentar Novamente
-                </button>
-            </div>
-        `;
-    }
-}
-
-// MARCAR NOTIFICAÇÃO COMO LIDA
-async function marcarComoLida(notificationId) {
-    try {
-        const { error } = await supabase
-            .from('user_notifications')
-            .update({
-                is_read: true,
-                read_at: new Date().toISOString()
-            })
-            .eq('id', notificationId);
-
-        if (error) throw error;
-
-        // Recarregar a lista
-        await carregarNotificacoes();
-
-    } catch (erro) {
-        console.error('Erro ao marcar como lida:', erro);
-    }
-}
-
-function voltarParaApp() {
-    alert('Voltando para o aplicativo principal...');
-    // window.location.href = 'index.html';
-}
-
-// INICIALIZAÇÃO
-document.addEventListener('DOMContentLoaded', function() {
-    inicializarPagina();
-    
-    // Atualizar notificações a cada 30 segundos
-    setInterval(() => {
-        if (usuarioAtual) {
-            carregarNotificacoes();
         }
-    }, 30000);
-});
-</script>
+
+        function voltarParaApp() {
+            // window.location.href = 'index.html';
+            alert('Voltando para o aplicativo principal...');
+        }
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            inicializarPagina();
+            
+            // Atualizar notificações a cada 30 segundos
+            setInterval(() => {
+                if (usuarioAtual) {
+                    carregarNotificacoes();
+                }
+            }, 30000);
+        });
+    </script>
 </body>
 </html>
