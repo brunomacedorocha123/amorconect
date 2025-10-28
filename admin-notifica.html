@@ -535,7 +535,7 @@
     </div>
 
     <script>
-      // ==================== CONFIGURAÇÃO SUPABASE ====================
+ // ==================== CONFIGURAÇÃO SUPABASE ====================
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -566,19 +566,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function inicializarAdmin() {
     try {
-        // Buscar o primeiro usuário admin (ou usar um fixo)
+        // Buscar o primeiro usuário admin
         const { data: usuarios, error } = await supabase
             .from('profiles')
             .select('id')
             .limit(1)
             .single();
 
-        if (error) throw error;
-        adminUserId = usuarios.id;
+        if (error) {
+            console.log('Usando admin padrão');
+            adminUserId = '00000000-0000-0000-0000-000000000000';
+        } else {
+            adminUserId = usuarios.id;
+        }
 
     } catch (erro) {
         console.error('Erro ao inicializar admin:', erro);
-        // Fallback - usar um ID temporário
         adminUserId = '00000000-0000-0000-0000-000000000000';
     }
 }
@@ -654,7 +657,7 @@ async function enviarNotificacao() {
             throw new Error('Nenhum usuário encontrado para enviar notificação');
         }
 
-        // 3. CRIAR NOTIFICAÇÕES INDIVIDUAIS - USANDO FUNÇÃO SQL (CORRIGIDO)
+        // 3. CRIAR NOTIFICAÇÕES INDIVIDUAIS - USANDO FUNÇÃO SQL
         const userIds = destinatarios.map(user => user.id);
         
         const { error: functionError } = await supabase.rpc(
@@ -811,8 +814,7 @@ async function carregarNotificacoes() {
             .select(`
                 *,
                 sender:profiles!sent_by(nickname),
-                stats:notification_stats(total_recipients, read_count),
-                user_notifications!inner(id)
+                stats:notification_stats(total_recipients, read_count)
             `)
             .order('created_at', { ascending: false })
             .limit(20);
