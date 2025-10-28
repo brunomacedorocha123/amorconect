@@ -451,7 +451,7 @@
         </div>
     </div>
 
-           <script>
+             <script>
         // ==================== CONFIGURAÇÃO SUPABASE ====================
         const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
@@ -490,12 +490,6 @@
                         specificUserGroup.style.display = 'none';
                     }
                 });
-            });
-
-            // Adicionar evento de submit no formulário
-            notificationForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                enviarNotificacao();
             });
         });
 
@@ -646,17 +640,18 @@
                     return;
                 }
 
-                // 2. Buscar um usuário admin
-                const { data: adminUser, error: adminError } = await supabase
+                // 2. Buscar um usuário admin (usar qualquer usuário como admin para teste)
+                const { data: usuariosAdmin, error: adminError } = await supabase
                     .from('profiles')
                     .select('id')
-                    .limit(1)
-                    .single();
+                    .limit(1);
 
-                if (adminError) {
-                    mostrarAlerta('error', 'Erro: Nenhum administrador encontrado.');
+                if (adminError || !usuariosAdmin || usuariosAdmin.length === 0) {
+                    mostrarAlerta('error', 'Erro: Nenhum usuário encontrado.');
                     return;
                 }
+
+                const adminUser = usuariosAdmin[0];
 
                 // 3. Inserir notificação
                 const { data: novaNotificacao, error: notifError } = await supabase
@@ -675,7 +670,7 @@
                     .single();
 
                 if (notifError) {
-                    mostrarAlerta('error', 'Erro ao salvar notificação.');
+                    mostrarAlerta('error', 'Erro ao salvar notificação: ' + notifError.message);
                     return;
                 }
 
@@ -700,7 +695,7 @@
                 const { data: usuarios, error: usersError } = await query;
                 
                 if (usersError) {
-                    mostrarAlerta('error', 'Erro ao buscar destinatários.');
+                    mostrarAlerta('error', 'Erro ao buscar destinatários: ' + usersError.message);
                     return;
                 }
 
@@ -716,17 +711,17 @@
                         .insert(destinatarios);
 
                     if (destError) {
-                        mostrarAlerta('error', 'Erro ao salvar destinatários.');
+                        mostrarAlerta('error', 'Erro ao salvar destinatários: ' + destError.message);
                         return;
                     }
                 }
 
-                mostrarAlerta('success', 'Notificação enviada com sucesso!');
+                mostrarAlerta('success', 'Notificação enviada com sucesso para ' + usuarios.length + ' usuários!');
                 limparFormulario();
                 carregarNotificacoes();
 
             } catch (erro) {
-                mostrarAlerta('error', 'Erro ao enviar notificação. Tente novamente.');
+                mostrarAlerta('error', 'Erro ao enviar notificação: ' + erro.message);
             }
         }
 
@@ -754,11 +749,12 @@
                     return;
                 }
 
-                const { data: adminUser } = await supabase
+                const { data: usuariosAdmin } = await supabase
                     .from('profiles')
                     .select('id')
-                    .limit(1)
-                    .single();
+                    .limit(1);
+
+                const adminUser = usuariosAdmin[0];
 
                 const { data: novaNotificacao, error: novaError } = await supabase
                     .from('notifications')
