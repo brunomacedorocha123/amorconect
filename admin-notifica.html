@@ -634,7 +634,7 @@ async function enviarNotificacao() {
         const userIds = destinatarios.map(user => user.id);
 
         // 2. USAR FUNÇÃO SQL ÚNICA PARA CRIAR TUDO
-        const { data, error } = await supabase.rpc(
+        const { data: notificationId, error } = await supabase.rpc(
             'criar_notificacao_completa',
             {
                 p_titulo: titulo,
@@ -648,6 +648,11 @@ async function enviarNotificacao() {
         );
 
         if (error) throw error;
+
+        // VERIFICAR SE A NOTIFICAÇÃO FOI CRIADA
+        if (!notificationId) {
+            throw new Error('Falha ao criar notificação no banco de dados');
+        }
 
         mostrarAlerta('success', `✅ Notificação enviada para ${destinatarios.length} usuários!`);
         
