@@ -1,4 +1,4 @@
-/* mensagens.css - Estilos COMPLETOS do sistema de mensagens */
+/* mensagens.css - Estilos COMPLETOS do sistema de mensagens incluindo Vibe Exclusive */
 :root {
     --gold: #C6A664;
     --light-gold: #D4B978;
@@ -20,6 +20,7 @@
     --error: #f56565;
     --success: #48bb78;
     --warning: #ed8936;
+    --info: #4299e1;
     --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
     --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.05);
@@ -235,6 +236,12 @@ nav a.active {
     border: 2px solid var(--burgundy);
 }
 
+.btn-danger {
+    background: var(--error);
+    color: var(--text-white);
+    border: 2px solid var(--error);
+}
+
 .btn-outline:hover {
     background: var(--gold);
     color: var(--dark-bg);
@@ -244,6 +251,12 @@ nav a.active {
 .btn-primary:hover {
     background: var(--dark-burgundy);
     border-color: var(--dark-burgundy);
+    transform: translateY(-2px);
+}
+
+.btn-danger:hover {
+    background: #e53e3e;
+    border-color: #e53e3e;
     transform: translateY(-2px);
 }
 
@@ -434,6 +447,7 @@ nav a.active {
     margin-bottom: 0.5rem;
     background: var(--white);
     border: 1px solid transparent;
+    position: relative;
 }
 
 .conversation-item:hover {
@@ -444,6 +458,25 @@ nav a.active {
 .conversation-item.active {
     background: rgba(198, 166, 100, 0.15);
     border-color: var(--gold);
+}
+
+.conversation-item.fidelity-active {
+    border-left: 4px solid var(--gold);
+    background: linear-gradient(135deg, rgba(198, 166, 100, 0.08), transparent);
+}
+
+.conversation-fidelity-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: var(--gold);
+    color: var(--dark-bg);
+    border-radius: 10px;
+    padding: 2px 6px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .conversation-avatar {
@@ -646,6 +679,34 @@ nav a.active {
     background: var(--section-bg);
     border-color: var(--gold);
     color: var(--gold);
+}
+
+/* Botão Vibe Exclusive Especial */
+.fidelity-btn {
+    background: linear-gradient(135deg, var(--gold), var(--light-gold)) !important;
+    border: 2px solid var(--gold) !important;
+    color: var(--dark-bg) !important;
+    font-weight: 700 !important;
+    animation: pulse-gold 2s infinite;
+}
+
+.fidelity-btn:hover {
+    background: linear-gradient(135deg, var(--light-gold), var(--gold)) !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 4px 12px rgba(198, 166, 100, 0.4) !important;
+}
+
+.fidelity-btn.active {
+    background: linear-gradient(135deg, var(--burgundy), var(--dark-burgundy)) !important;
+    border-color: var(--dark-burgundy) !important;
+    color: var(--text-white) !important;
+    animation: none;
+}
+
+@keyframes pulse-gold {
+    0% { box-shadow: 0 0 0 0 rgba(198, 166, 100, 0.4); }
+    70% { box-shadow: 0 0 0 6px rgba(198, 166, 100, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(198, 166, 100, 0); }
 }
 
 .chat-header-placeholder {
@@ -865,6 +926,193 @@ nav a.active {
     color: var(--text-light);
 }
 
+/* ===== MODAIS VIBE EXCLUSIVE ===== */
+.fidelity-proposal {
+    text-align: center;
+}
+
+.proposal-header {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(198, 166, 100, 0.1), rgba(166, 91, 91, 0.1));
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(198, 166, 100, 0.3);
+}
+
+.proposal-header i {
+    font-size: 3rem;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+}
+
+.proposal-header h4 {
+    color: var(--text-primary);
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.proposal-content {
+    text-align: left;
+}
+
+.proposal-content p {
+    margin-bottom: 1.5rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.fidelity-benefits, .fidelity-terms {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--section-bg);
+    border-radius: var(--border-radius-sm);
+    border-left: 4px solid var(--gold);
+}
+
+.fidelity-benefits h5, .fidelity-terms h5 {
+    color: var(--text-primary);
+    margin-bottom: 0.8rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.fidelity-benefits ul, .fidelity-terms ul {
+    list-style: none;
+    padding: 0;
+}
+
+.fidelity-benefits li, .fidelity-terms li {
+    padding: 0.3rem 0;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.fidelity-benefits li:before {
+    content: "•";
+    color: var(--success);
+    font-weight: bold;
+}
+
+.fidelity-terms li:before {
+    content: "•";
+    color: var(--info);
+    font-weight: bold;
+}
+
+.proposal-warning {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem;
+    background: rgba(237, 137, 54, 0.1);
+    border: 1px solid rgba(237, 137, 54, 0.3);
+    border-radius: var(--border-radius-sm);
+    color: var(--warning);
+    font-size: 0.9rem;
+}
+
+.proposal-warning i {
+    font-size: 1.1rem;
+}
+
+/* Modal Gerenciar Vibe Exclusive */
+.manage-fidelity {
+    text-align: center;
+}
+
+.fidelity-status {
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(198, 166, 100, 0.1), rgba(166, 91, 91, 0.1));
+    border-radius: var(--border-radius);
+    border: 2px solid var(--gold);
+}
+
+.fidelity-status i {
+    font-size: 3rem;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+}
+
+.fidelity-status h4 {
+    color: var(--text-primary);
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.fidelity-status p {
+    color: var(--text-secondary);
+    margin-bottom: 0.3rem;
+}
+
+.fidelity-stats {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--section-bg);
+    border-radius: var(--border-radius-sm);
+}
+
+.fidelity-stats h5 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.stat-item {
+    padding: 1rem;
+    background: var(--white);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 0.3rem;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.fidelity-actions {
+    margin-top: 1.5rem;
+}
+
+.action-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: rgba(245, 101, 101, 0.1);
+    border: 1px solid rgba(245, 101, 101, 0.3);
+    border-radius: var(--border-radius-sm);
+    color: var(--error);
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+.action-warning i {
+    font-size: 1.1rem;
+    margin-top: 0.1rem;
+}
+
 /* Estados de Loading */
 .loading-state {
     text-align: center;
@@ -893,6 +1141,14 @@ nav a.active {
     font-size: 3rem;
     margin-bottom: 1rem;
     color: #e2e8f0;
+}
+
+.error-state {
+    color: var(--error);
+}
+
+.error-state i {
+    color: var(--error);
 }
 
 /* Badge Premium */
@@ -1019,6 +1275,7 @@ footer {
     z-index: 10000;
     align-items: center;
     justify-content: center;
+    padding: 20px;
 }
 
 .modal-content {
@@ -1046,6 +1303,9 @@ footer {
     color: var(--text-primary);
     margin: 0;
     font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .modal-close {
@@ -1071,6 +1331,8 @@ footer {
 
 .modal-body {
     padding: 1.5rem;
+    max-height: 60vh;
+    overflow-y: auto;
 }
 
 .modal-footer {
@@ -1081,24 +1343,109 @@ footer {
     justify-content: flex-end;
 }
 
+/* Notificações */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    color: white;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: slideInRight 0.3s ease;
+}
+
+.notification-success {
+    background: var(--success);
+}
+
+.notification-error {
+    background: var(--error);
+}
+
+.notification-warning {
+    background: var(--warning);
+}
+
+.notification-info {
+    background: var(--info);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
 /* Scrollbar Personalizada */
 .conversations-list::-webkit-scrollbar,
-.messages-history::-webkit-scrollbar {
+.messages-history::-webkit-scrollbar,
+.modal-body::-webkit-scrollbar {
     width: 6px;
 }
 
 .conversations-list::-webkit-scrollbar-track,
-.messages-history::-webkit-scrollbar-track {
+.messages-history::-webkit-scrollbar-track,
+.modal-body::-webkit-scrollbar-track {
     background: transparent;
 }
 
 .conversations-list::-webkit-scrollbar-thumb,
-.messages-history::-webkit-scrollbar-thumb {
+.messages-history::-webkit-scrollbar-thumb,
+.modal-body::-webkit-scrollbar-thumb {
     background: rgba(198, 166, 100, 0.3);
     border-radius: 3px;
 }
 
 .conversations-list::-webkit-scrollbar-thumb:hover,
-.messages-history::-webkit-scrollbar-thumb:hover {
+.messages-history::-webkit-scrollbar-thumb:hover,
+.modal-body::-webkit-scrollbar-thumb:hover {
     background: rgba(198, 166, 100, 0.5);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .messages-container {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    .conversations-sidebar {
+        width: 100%;
+        height: 300px;
+        border-right: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .chat-area {
+        height: 400px;
+    }
+    
+    .message {
+        max-width: 85%;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+    }
+    
+    .modal-footer .btn {
+        width: 100%;
+        justify-content: center;
+    }
 }

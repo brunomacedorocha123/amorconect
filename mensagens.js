@@ -1,4 +1,4 @@
-// mensagens.js - Sistema completo CORRIGIDO
+// mensagens.js - Sistema completo ATUALIZADO com Vibe Exclusive
 class MessagesSystem {
     constructor() {
         this.supabase = supabase;
@@ -8,6 +8,9 @@ class MessagesSystem {
         this.messages = [];
         this.messageLimit = 4;
         this.isLoading = false;
+        
+        // ⭐ NOVA LINHA - Referência ao Sistema Vibe
+        this.sistemaVibe = null;
         
         this.initialize();
     }
@@ -23,8 +26,25 @@ class MessagesSystem {
             this.startPeriodicChecks();
             this.checkUrlParams();
             
+            // ⭐ INICIALIZAR SISTEMA VIBE (sem afetar fluxo atual)
+            this.initializeSistemaVibe();
+            
         } catch (error) {
             this.showNotification('Erro ao carregar mensagens', 'error');
+        }
+    }
+
+    // ⭐ NOVA FUNÇÃO - Inicializar Sistema Vibe separadamente
+    async initializeSistemaVibe() {
+        try {
+            if (window.SistemaVibe && this.currentUser) {
+                this.sistemaVibe = new SistemaVibe();
+                await this.sistemaVibe.initialize(this.currentUser);
+                console.log('✅ Sistema Vibe integrado com sucesso');
+            }
+        } catch (error) {
+            // ⭐ SILENCIOSO - não afeta o chat se der erro
+            console.log('⚠️ Sistema Vibe não inicializado (não crítico)');
         }
     }
 
@@ -175,8 +195,7 @@ class MessagesSystem {
         }
     }
 
-    // CONTINUA NA PRÓXIMA PARTE...
-        async loadConversationsFallback() {
+    async loadConversationsFallback() {
         try {
             const { data: messages, error } = await this.supabase
                 .from('messages')
@@ -224,7 +243,7 @@ class MessagesSystem {
         }
     }
 
-    renderConversations() {
+        renderConversations() {
         const container = document.getElementById('conversationsList');
         if (!container) return;
         
@@ -301,7 +320,7 @@ class MessagesSystem {
             this.currentConversation = otherUserId;
             await this.loadConversationMessages(otherUserId);
             this.showChatArea();
-            this.updateChatHeader(otherUserId);
+            await this.updateChatHeader(otherUserId); // ⭐ AGORA É ASYNC
             
         } catch (error) {
             this.showNotification('Erro ao carregar conversa', 'error');
@@ -476,6 +495,7 @@ class MessagesSystem {
         if (chatHeader) chatHeader.style.display = 'flex';
     }
 
+    // ⭐ FUNÇÃO ATUALIZADA - Agora inclui o botão Vibe Exclusive
     async updateChatHeader(otherUserId) {
         const chatHeader = document.getElementById('chatHeader');
         if (!chatHeader) return;
@@ -513,6 +533,10 @@ class MessagesSystem {
                             </div>
                         </div>
                         <div class="chat-header-actions">
+                            <!-- ⭐ BOTÃO VIBE EXCLUSIVE ADICIONADO -->
+                            <button class="chat-action-btn" id="fidelityProposeBtn" style="display: none;" title="Propor Vibe Exclusive">
+                                <i class="fas fa-gem"></i>
+                            </button>
                             <button class="chat-action-btn" onclick="MessagesSystem.showUserInfo('${otherUserId}')" title="Informações do usuário">
                                 <i class="fas fa-info-circle"></i>
                             </button>
@@ -522,39 +546,51 @@ class MessagesSystem {
             } catch (error) {
                 console.error('Erro ao carregar informações do usuário:', error);
             }
-            return;
+        } else {
+            chatHeader.innerHTML = `
+                <div class="chat-header-user">
+                    <div class="chat-user-avatar">
+                        ${conversation.other_user_avatar_url ? 
+                            `<img src="${conversation.other_user_avatar_url}" alt="${conversation.other_user_nickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
+                            ''
+                        }
+                        <div class="avatar-fallback" style="${conversation.other_user_avatar_url ? 'display: none;' : ''}">
+                            ${this.getUserInitials(conversation.other_user_nickname)}
+                        </div>
+                    </div>
+                    <div class="chat-user-info">
+                        <h3>${this.escapeHtml(conversation.other_user_nickname)}</h3>
+                        <div class="chat-user-status">
+                            <span class="${conversation.other_user_online ? 'status-online' : 'status-offline'}">
+                                <span class="status-dot"></span>
+                                ${conversation.other_user_online ? 'Online' : 'Offline'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-header-actions">
+                    <!-- ⭐ BOTÃO VIBE EXCLUSIVE ADICIONADO -->
+                    <button class="chat-action-btn" id="fidelityProposeBtn" style="display: none;" title="Propor Vibe Exclusive">
+                        <i class="fas fa-gem"></i>
+                    </button>
+                    <button class="chat-action-btn" onclick="MessagesSystem.showUserInfo('${otherUserId}')" title="Informações do usuário">
+                        <i class="fas fa-info-circle"></i>
+                    </button>
+                </div>
+            `;
         }
 
-        chatHeader.innerHTML = `
-            <div class="chat-header-user">
-                <div class="chat-user-avatar">
-                    ${conversation.other_user_avatar_url ? 
-                        `<img src="${conversation.other_user_avatar_url}" alt="${conversation.other_user_nickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
-                        ''
-                    }
-                    <div class="avatar-fallback" style="${conversation.other_user_avatar_url ? 'display: none;' : ''}">
-                        ${this.getUserInitials(conversation.other_user_nickname)}
-                    </div>
-                </div>
-                <div class="chat-user-info">
-                    <h3>${this.escapeHtml(conversation.other_user_nickname)}</h3>
-                    <div class="chat-user-status">
-                        <span class="${conversation.other_user_online ? 'status-online' : 'status-offline'}">
-                            <span class="status-dot"></span>
-                            ${conversation.other_user_online ? 'Online' : 'Offline'}
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div class="chat-header-actions">
-                <button class="chat-action-btn" onclick="MessagesSystem.showUserInfo('${otherUserId}')" title="Informações do usuário">
-                    <i class="fas fa-info-circle"></i>
-                </button>
-            </div>
-        `;
+        // ⭐ ATUALIZAR BOTÃO VIBE EXCLUSIVE
+        await this.updateFidelityButton(otherUserId);
     }
 
-    // CONTINUA NA TERCEIRA PARTE COM CONTADOR CORRIGIDO...
+    // ⭐ NOVA FUNÇÃO - Atualizar botão Vibe Exclusive
+    async updateFidelityButton(otherUserId) {
+        if (this.sistemaVibe && typeof this.sistemaVibe.onConversationSelected === 'function') {
+            await this.sistemaVibe.onConversationSelected(otherUserId);
+        }
+    }
+
         async sendMessage() {
         const messageInput = document.getElementById('messageInput');
         const message = messageInput.value.trim();
@@ -642,7 +678,13 @@ class MessagesSystem {
 
     async checkCanSendMessage() {
         try {
-            const isPremium = this.currentUser.profile?.is_premium;
+            // ⭐ USANDO PREMIUM MANAGER EXISTENTE
+            let isPremium = false;
+            if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
+                isPremium = await PremiumManager.checkPremiumStatus();
+            } else if (this.currentUser.profile?.is_premium) {
+                isPremium = this.currentUser.profile.is_premium;
+            }
             
             if (isPremium) {
                 return { can_send: true, reason: null };
@@ -658,7 +700,6 @@ class MessagesSystem {
                 return { can_send: true, reason: null };
             }
 
-            // Verificação simples - não reseta aqui, só na função updateMessageCounter
             const sentToday = limits.messages_sent_today || 0;
             
             if (sentToday >= this.messageLimit) {
@@ -685,10 +726,16 @@ class MessagesSystem {
         }
     }
 
-    // CONTADOR CORRIGIDO - FUNCIONANDO
     async updateMessageCounter() {
         try {
-            const isPremium = this.currentUser.profile?.is_premium;
+            // ⭐ USANDO PREMIUM MANAGER EXISTENTE
+            let isPremium = false;
+            if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
+                isPremium = await PremiumManager.checkPremiumStatus();
+            } else if (this.currentUser.profile?.is_premium) {
+                isPremium = this.currentUser.profile.is_premium;
+            }
+            
             const counter = document.getElementById('messageCounter');
             
             if (!counter) return;
@@ -711,11 +758,9 @@ class MessagesSystem {
             let sentToday = 0;
             
             if (!error && limits) {
-                // CORREÇÃO: Só mostra o valor atual, NÃO reseta aqui
                 sentToday = limits.messages_sent_today || 0;
             }
 
-            // Atualiza o contador com o valor REAL do banco
             counter.innerHTML = `
                 <span class="counter-text">Mensagens hoje: </span>
                 <span class="counter-number">${sentToday}/${this.messageLimit}</span>
@@ -878,7 +923,7 @@ class MessagesSystem {
                 await this.loadConversationMessages(this.currentConversation);
             }
             await this.loadConversations();
-            this.updateMessageCounter(); // Atualiza contador periodicamente
+            this.updateMessageCounter();
         }, 30000);
     }
 
@@ -997,12 +1042,12 @@ class MessagesSystem {
     }
 }
 
-// Inicializar quando o DOM estiver pronto
+// ⭐ INICIALIZAÇÃO GLOBAL - MANTIDA EXATAMENTE IGUAL
 document.addEventListener('DOMContentLoaded', function() {
     window.MessagesSystem = new MessagesSystem();
 });
 
-// Funções globais para uso no HTML
+// ⭐ FUNÇÕES GLOBAIS - MANTIDAS EXATAMENTE IGUAIS
 window.refreshMessages = function() {
     if (window.MessagesSystem) {
         window.MessagesSystem.refreshMessages();
@@ -1032,7 +1077,7 @@ async function logout() {
     }
 }
 
-// Monitorar estado de autenticação
+// ⭐ MONITOR DE AUTENTICAÇÃO - MANTIDO EXATAMENTE IGUAL
 supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
         window.location.href = 'login.html';
