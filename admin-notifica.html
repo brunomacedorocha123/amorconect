@@ -451,7 +451,7 @@
         </div>
     </div>
 
-        <script>
+       <script>
         // ==================== CONFIGURAÇÃO SUPABASE ====================
         const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
@@ -479,13 +479,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             if (!verificarAutenticacao()) return;
             
-            // Carregar usuários para o dropdown
             carregarUsuarios();
-            
-            // Carregar histórico de notificações
             carregarNotificacoes();
             
-            // Configurar listeners para os radio buttons
             userTypeRadios.forEach(radio => {
                 radio.addEventListener('change', function() {
                     if (this.value === 'specific') {
@@ -508,54 +504,33 @@
 
                 if (error) throw error;
 
-                // Limpar dropdown
                 specificUserId.innerHTML = '<option value="">Selecione um usuário</option>';
                 
-                // Adicionar usuários ao dropdown
                 usuarios.forEach(usuario => {
                     const option = document.createElement('option');
                     option.value = usuario.id;
-                    option.textContent = `${usuario.nickname || 'Sem nome'} (${usuario.email}) - ${usuario.user_type || 'free'}`;
+                    option.textContent = `${usuario.nickname || 'Sem nome'} (${usuario.email})`;
                     specificUserId.appendChild(option);
                 });
             } catch (erro) {
                 console.error('Erro ao carregar usuários:', erro);
-                // Fallback para dados de exemplo se der erro
-                const usuarios = [
-                    { id: 1, nome: 'João Silva', tipo: 'premium' },
-                    { id: 2, nome: 'Maria Santos', tipo: 'free' },
-                    { id: 3, nome: 'Pedro Oliveira', tipo: 'premium' },
-                    { id: 4, nome: 'Ana Costa', tipo: 'free' }
-                ];
-                
-                specificUserId.innerHTML = '<option value="">Selecione um usuário</option>';
-                usuarios.forEach(usuario => {
-                    const option = document.createElement('option');
-                    option.value = usuario.id;
-                    option.textContent = `${usuario.nome} (${usuario.tipo})`;
-                    specificUserId.appendChild(option);
-                });
             }
         }
 
         async function carregarNotificacoes() {
             try {
-                // Buscar notificações reais do Supabase
                 const { data: notificacoes, error } = await supabase
                     .from('notifications')
                     .select(`
                         *,
                         categories:category_id(name, color, icon),
-                        specific_user:profiles!notifications_specific_user_id_fkey(nickname, email),
-                        admin_user:profiles!notifications_sent_by_fkey(nickname)
+                        specific_user:profiles!notifications_specific_user_id_fkey(nickname)
                     `)
                     .eq('is_sent', true)
-                    .order('created_at', { ascending: false })
-                    .limit(20);
+                    .order('created_at', { ascending: false });
 
                 if (error) throw error;
 
-                // Limpar lista
                 notificationsList.innerHTML = '';
 
                 if (!notificacoes || notificacoes.length === 0) {
@@ -569,7 +544,6 @@
                     return;
                 }
 
-                // Adicionar notificações à lista
                 notificacoes.forEach(notificacao => {
                     const item = document.createElement('div');
                     item.className = 'notification-item';
@@ -616,7 +590,6 @@
                             <p>${notificacao.message}</p>
                             <div class="notification-meta">
                                 Para: ${destinatario} | ${new Date(notificacao.created_at).toLocaleString('pt-BR')}
-                                ${notificacao.admin_user?.nickname ? ` | Por: ${notificacao.admin_user.nickname}` : ''}
                             </div>
                         </div>
                         <div class="notification-actions">
@@ -630,65 +603,6 @@
 
             } catch (erro) {
                 console.error('Erro ao carregar notificações:', erro);
-                // Fallback para dados de exemplo
-                const notificacoes = [
-                    {
-                        id: 1,
-                        tipo: 'advertencia',
-                        titulo: 'Uso inadequado da plataforma',
-                        mensagem: 'Foi identificado comportamento inadequado em sua conta. Por favor, revise nossos termos de uso.',
-                        destinatario: 'Usuário Específico (João Silva)',
-                        data: '2024-01-15 14:30:00'
-                    },
-                    {
-                        id: 2,
-                        tipo: 'bonus',
-                        titulo: 'Bônus de bem-vindo',
-                        mensagem: 'Parabéns! Você recebeu um bônus de 7 dias premium por ser um novo usuário.',
-                        destinatario: 'Todos os usuários Free',
-                        data: '2024-01-14 10:15:00'
-                    }
-                ];
-                
-                notificationsList.innerHTML = '';
-                notificacoes.forEach(notificacao => {
-                    const item = document.createElement('div');
-                    item.className = 'notification-item';
-                    
-                    let badgeClass = '';
-                    let badgeText = '';
-                    
-                    switch(notificacao.tipo) {
-                        case 'advertencia':
-                            badgeClass = 'badge-warning';
-                            badgeText = 'Advertência';
-                            break;
-                        case 'bonus':
-                            badgeClass = 'badge-bonus';
-                            badgeText = 'Bônus';
-                            break;
-                        case 'aviso':
-                            badgeClass = 'badge-info';
-                            badgeText = 'Aviso';
-                            break;
-                    }
-                    
-                    item.innerHTML = `
-                        <div class="notification-info">
-                            <h4>${notificacao.titulo} <span class="badge ${badgeClass}">${badgeText}</span></h4>
-                            <p>${notificacao.mensagem}</p>
-                            <div class="notification-meta">
-                                Para: ${notificacao.destinatario} | ${notificacao.data}
-                            </div>
-                        </div>
-                        <div class="notification-actions">
-                            <button class="btn btn-small btn-secondary" onclick="reenviarNotificacao(${notificacao.id})">Reenviar</button>
-                            <button class="btn btn-small btn-danger" onclick="excluirNotificacao(${notificacao.id})">Excluir</button>
-                        </div>
-                    `;
-                    
-                    notificationsList.appendChild(item);
-                });
             }
         }
 
@@ -701,7 +615,6 @@
             const titulo = document.getElementById('notificationTitle').value;
             const mensagem = document.getElementById('notificationMessage').value;
             
-            // Validação básica
             if (!titulo || !mensagem) {
                 mostrarAlerta('error', 'Preencha todos os campos obrigatórios.');
                 return;
@@ -713,7 +626,7 @@
             }
 
             try {
-                // Buscar ID da categoria
+                // 1. Buscar ID da categoria
                 const { data: categoria, error: catError } = await supabase
                     .from('notification_categories')
                     .select('id')
@@ -722,10 +635,16 @@
 
                 if (catError) throw new Error('Categoria não encontrada');
 
-                // Buscar ID do admin atual
-                const adminUser = await getCurrentAdminUser();
+                // 2. Buscar um usuário admin (usar o primeiro disponível)
+                const { data: adminUser, error: adminError } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .limit(1)
+                    .single();
 
-                // Inserir notificação
+                if (adminError) throw new Error('Nenhum usuário encontrado');
+
+                // 3. Inserir notificação
                 const { data: novaNotificacao, error: notifError } = await supabase
                     .from('notifications')
                     .insert({
@@ -743,76 +662,49 @@
 
                 if (notifError) throw notifError;
 
-                // Inserir destinatários
-                await inserirDestinatarios(novaNotificacao.id, userType, userId);
+                // 4. Buscar usuários destinatários
+                let query = supabase.from('profiles').select('id');
+                
+                switch(userType) {
+                    case 'all':
+                        query = query.eq('is_active', true);
+                        break;
+                    case 'free':
+                        query = query.eq('is_active', true).eq('user_type', 'free');
+                        break;
+                    case 'premium':
+                        query = query.eq('is_active', true).eq('user_type', 'premium');
+                        break;
+                    case 'specific':
+                        query = query.eq('id', userId);
+                        break;
+                }
+
+                const { data: usuarios, error: usersError } = await query;
+                
+                if (usersError) throw usersError;
+
+                // 5. Inserir destinatários
+                if (usuarios && usuarios.length > 0) {
+                    const destinatarios = usuarios.map(user => ({
+                        notification_id: novaNotificacao.id,
+                        user_id: user.id
+                    }));
+
+                    const { error: destError } = await supabase
+                        .from('notification_recipients')
+                        .insert(destinatarios);
+
+                    if (destError) throw destError;
+                }
 
                 mostrarAlerta('success', 'Notificação enviada com sucesso!');
                 limparFormulario();
-                carregarNotificacoes(); // Recarregar a lista
+                carregarNotificacoes();
 
             } catch (erro) {
                 console.error('Erro ao enviar notificação:', erro);
-                mostrarAlerta('error', 'Erro ao enviar notificação: ' + (erro.message || 'Tente novamente.'));
-            }
-        }
-
-        async function getCurrentAdminUser() {
-            // Simular usuário admin - em produção, buscar do sessionStorage ou do banco
-            const { data: adminUser, error } = await supabase
-                .from('profiles')
-                .select('id')
-                .eq('email', 'admin@amorconect.com')
-                .single();
-
-            if (error) {
-                // Fallback - usar o primeiro usuário admin encontrado
-                const { data: admins, error: adminError } = await supabase
-                    .from('profiles')
-                    .select('id')
-                    .limit(1);
-
-                if (adminError || !admins || admins.length === 0) {
-                    throw new Error('Nenhum usuário admin encontrado');
-                }
-                return admins[0];
-            }
-
-            return adminUser;
-        }
-
-        async function inserirDestinatarios(notificationId, userType, specificUserId) {
-            let query = supabase.from('profiles').select('id');
-
-            switch(userType) {
-                case 'all':
-                    query = query.eq('is_active', true);
-                    break;
-                case 'free':
-                    query = query.eq('is_active', true).eq('user_type', 'free');
-                    break;
-                case 'premium':
-                    query = query.eq('is_active', true).eq('user_type', 'premium');
-                    break;
-                case 'specific':
-                    query = query.eq('id', specificUserId);
-                    break;
-            }
-
-            const { data: usuarios, error } = await query;
-
-            if (error) throw error;
-
-            if (usuarios && usuarios.length > 0) {
-                const destinatarios = usuarios.map(user => ({
-                    notification_id: notificationId,
-                    user_id: user.id
-                }));
-
-                const { error: destError } = await supabase
-                    .from('notification_recipients')
-                    .insert(destinatarios);
-
-                if (destError) throw destError;
+                mostrarAlerta('error', 'Erro ao enviar notificação. Verifique o console.');
             }
         }
 
@@ -825,7 +717,6 @@
             if (!verificarAutenticacao()) return;
 
             try {
-                // Buscar a notificação original
                 const { data: notificacao, error } = await supabase
                     .from('notifications')
                     .select('*')
@@ -834,7 +725,12 @@
 
                 if (error) throw error;
 
-                // Criar nova notificação baseada na original
+                const { data: adminUser } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .limit(1)
+                    .single();
+
                 const { data: novaNotificacao, error: novaError } = await supabase
                     .from('notifications')
                     .insert({
@@ -843,7 +739,7 @@
                         message: notificacao.message,
                         target_audience: notificacao.target_audience,
                         specific_user_id: notificacao.specific_user_id,
-                        sent_by: notificacao.sent_by,
+                        sent_by: adminUser.id,
                         is_sent: true,
                         sent_at: new Date().toISOString()
                     })
@@ -852,8 +748,36 @@
 
                 if (novaError) throw novaError;
 
-                // Inserir destinatários
-                await inserirDestinatarios(novaNotificacao.id, notificacao.target_audience, notificacao.specific_user_id);
+                // Buscar e inserir destinatários
+                let query = supabase.from('profiles').select('id');
+                
+                switch(notificacao.target_audience) {
+                    case 'all':
+                        query = query.eq('is_active', true);
+                        break;
+                    case 'free':
+                        query = query.eq('is_active', true).eq('user_type', 'free');
+                        break;
+                    case 'premium':
+                        query = query.eq('is_active', true).eq('user_type', 'premium');
+                        break;
+                    case 'specific':
+                        query = query.eq('id', notificacao.specific_user_id);
+                        break;
+                }
+
+                const { data: usuarios } = await query;
+
+                if (usuarios && usuarios.length > 0) {
+                    const destinatarios = usuarios.map(user => ({
+                        notification_id: novaNotificacao.id,
+                        user_id: user.id
+                    }));
+
+                    await supabase
+                        .from('notification_recipients')
+                        .insert(destinatarios);
+                }
 
                 mostrarAlerta('success', 'Notificação reenviada com sucesso!');
                 carregarNotificacoes();
