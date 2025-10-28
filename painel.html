@@ -3,211 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notificações - Amor Conect</title>
+    <title>Meu Perfil - Amor Conect</title>
     <link rel="stylesheet" href="painel.css">
+    <link rel="stylesheet" href="painel-mobile.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        /* ESTILOS ESPECÍFICOS PARA NOTIFICAÇÕES - NÃO INTERFERE EM NADA */
-        .notifications-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem 0;
-        }
-
-        .notifications-header {
-            text-align: center;
-            margin-bottom: 2rem;
-            padding: 2rem;
-            background: var(--card-bg);
-            border-radius: 15px;
-            box-shadow: var(--shadow);
-            border: 2px solid var(--gold);
-        }
-
-        .notifications-header h1 {
-            font-size: 2.5rem;
-            color: var(--gold);
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-        }
-
-        .notifications-list {
-            background: var(--card-bg);
-            border-radius: 15px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--gold);
-            overflow: hidden;
-        }
-
-        .notification-item {
-            padding: 1.5rem;
-            border-bottom: 1px solid rgba(198, 166, 100, 0.3);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-        }
-
-        .notification-item:last-child {
-            border-bottom: none;
-        }
-
-        .notification-item:hover {
-            background: rgba(198, 166, 100, 0.1);
-        }
-
-        .notification-item.unread {
-            background: rgba(166, 91, 91, 0.1);
-            border-left: 4px solid var(--burgundy);
-        }
-
-        .notification-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--burgundy);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.2rem;
-            flex-shrink: 0;
-        }
-
-        .notification-content {
-            flex: 1;
-        }
-
-        .notification-title {
-            font-weight: 600;
-            color: var(--white);
-            margin-bottom: 0.5rem;
-            font-size: 1.1rem;
-        }
-
-        .notification-message {
-            color: var(--beige);
-            line-height: 1.5;
-            margin-bottom: 0.5rem;
-        }
-
-        .notification-time {
-            color: var(--gold);
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .notification-actions {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-        }
-
-        .btn-mark-read {
-            background: transparent;
-            border: 1px solid var(--gold);
-            color: var(--gold);
-            padding: 0.3rem 0.8rem;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-mark-read:hover {
-            background: var(--gold);
-            color: var(--dark-bg);
-        }
-
-        .empty-notifications {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: var(--beige);
-        }
-
-        .empty-notifications i {
-            font-size: 4rem;
-            color: var(--gold);
-            margin-bottom: 1.5rem;
-        }
-
-        .empty-notifications h3 {
-            color: var(--gold);
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-        }
-
-        .notifications-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            padding: 1rem;
-            background: var(--card-bg);
-            border-radius: 10px;
-            border: 1px solid var(--gold);
-        }
-
-        .notifications-stats {
-            color: var(--beige);
-            font-size: 0.9rem;
-        }
-
-        .btn-clear-all {
-            background: transparent;
-            border: 1px solid #dc2626;
-            color: #dc2626;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-        }
-
-        .btn-clear-all:hover {
-            background: #dc2626;
-            color: white;
-        }
-
-        .notification-filters {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-        }
-
-        .filter-btn {
-            padding: 0.5rem 1rem;
-            background: var(--section-bg);
-            border: 1px solid var(--gold);
-            color: var(--beige);
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-        }
-
-        .filter-btn.active {
-            background: var(--gold);
-            color: var(--dark-bg);
-            font-weight: 600;
-        }
-
-        .filter-btn:hover {
-            background: var(--gold);
-            color: var(--dark-bg);
-        }
-    </style>
 </head>
 <body>
-    <!-- Header IDÊNTICO ao seu painel -->
+    <!-- Header -->
     <header>
         <div class="container">
             <div class="header-content">
@@ -221,76 +24,605 @@
                         <li><a href="busca.html"><i class="fas fa-search"></i> Buscar</a></li>
                     </ul>
                 </nav>
+              
+    <div class="user-menu">
+    <div class="user-info">
+        <div class="user-avatar">
+            <div class="user-avatar-fallback">U</div>
+            <img class="avatar-image" style="display: none;" alt="Avatar do usuário">
+            <div class="avatar-overlay">
+                <i class="fas fa-camera"></i>
+            </div>
+        </div>
+        <span id="userNickname">Usuário</span>
+        <div id="premiumBadge" class="premium-badge free">
+            <i class="fas fa-user"></i> Free
+        </div>
+    </div>
+</div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <section class="page-header">
+                <h1><i class="fas fa-user-edit"></i> Meu Perfil</h1>
+                <p>Complete suas informações para melhorar suas conexões</p>
                 
-                <div class="user-menu">
-                    <!-- 🔔 BOTÃO DE NOTIFICAÇÕES - MESMO ESTILO DO PAINEL -->
-                    <div class="notification-button" id="notificationButton">
-                        <a href="notifica.html" class="btn-notifications">
-                            <i class="fas fa-bell"></i>
-                            Notificações
-                            <span class="notification-count" id="notificationCount" style="display: none;">0</span>
+                <!-- STATUS DO PLANO -->
+                <div id="planInfo" class="plan-info-container">
+                    <!-- Será preenchido automaticamente pelo JavaScript -->
+                </div>
+            </section>
+
+            <!-- Seção de Avatar -->
+            <section class="form-section">
+                <h3><i class="fas fa-camera"></i> Foto do Perfil</h3>
+                <p class="section-description">Adicione uma foto para se destacar. Formatos: JPG, PNG, WebP (máx. 5MB)</p>
+                
+                <div class="avatar-upload-container">
+                    <div class="avatar-preview-large">
+                        <div class="user-avatar-large">
+                            <div class="user-avatar-fallback-large">U</div>
+                            <img class="avatar-image-large" style="display: none;" alt="Preview do avatar">
+                            <div class="avatar-overlay-large">
+                                <i class="fas fa-camera"></i>
+                                <span>Clique para alterar</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="avatar-upload-actions">
+                        <button type="button" class="btn btn-secondary" id="uploadAvatarBtn">
+                            <i class="fas fa-upload"></i> Escolher Foto
+                        </button>
+                        <button type="button" class="btn btn-outline" id="removeAvatarBtn" style="display: none;">
+                            <i class="fas fa-trash"></i> Remover Foto
+                        </button>
+                        
+                        <!-- BOTÃO UPGRADE - MANTIDO -->
+                        <a href="pricing.html" class="btn btn-premium" id="upgradePlanBtn">
+                            <i class="fas fa-crown"></i> Fazer Upgrade
                         </a>
                     </div>
                     
-                    <div class="user-info">
-                        <div class="user-avatar">
-                            <div class="user-avatar-fallback">U</div>
-                            <img class="avatar-image" style="display: none;" alt="Avatar do usuário">
-                            <div class="avatar-overlay">
-                                <i class="fas fa-camera"></i>
+                    <div class="upload-progress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                        <span class="progress-text">Enviando...</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profile Form -->
+            <section class="profile-form">
+                <form id="profileForm">
+                    <!-- Dados Pessoais -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-user-shield"></i> Dados Pessoais</h3>
+                        <p class="section-description">Informações confidenciais - apenas você tem acesso</p>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="fullName">Nome Completo *</label>
+                                <input type="text" id="fullName" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="nickname">Apelido/Nickname *</label>
+                                <input type="text" id="nickname" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="birthDate">Data de Nascimento *</label>
+                                <input type="date" id="birthDate" class="form-control" readonly style="background-color: #f5f5f5; color: #666;">
+                                <small>Data de nascimento - não editável</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">E-mail</label>
+                                <input type="email" id="email" class="form-control" readonly style="background-color: #f5f5f5; color: #666;">
+                                <small>E-mail verificado - não editável</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="cpf">CPF</label>
+                                <input type="text" id="cpf" class="form-control" placeholder="000.000.000-00">
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">Telefone</label>
+                                <input type="tel" id="phone" class="form-control" placeholder="(11) 99999-9999">
                             </div>
                         </div>
-                        <span id="userNickname">Usuário</span>
-                        <div id="premiumBadge" class="premium-badge free">
-                            <i class="fas fa-user"></i> Free
+                    </div>
+
+                    <!-- Endereço -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-map-marker-alt"></i> Endereço</h3>
+                        <p class="section-description">Informações de localização para verificação</p>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="street">Rua</label>
+                                <input type="text" id="street" class="form-control" placeholder="Nome da rua">
+                            </div>
+                            <div class="form-group">
+                                <label for="number">Número</label>
+                                <input type="text" id="number" class="form-control" placeholder="123">
+                            </div>
+                            <div class="form-group">
+                                <label for="neighborhood">Bairro</label>
+                                <input type="text" id="neighborhood" class="form-control" placeholder="Nome do bairro">
+                            </div>
+                            <div class="form-group">
+                                <label for="city">Cidade</label>
+                                <input type="text" id="city" class="form-control" placeholder="Nome da cidade">
+                            </div>
+                            <div class="form-group">
+                                <label for="state">Estado</label>
+                                <select id="state" class="form-control">
+                                    <option value="">Selecione...</option>
+                                    <option value="AC">Acre</option>
+                                    <option value="AL">Alagoas</option>
+                                    <option value="AP">Amapá</option>
+                                    <option value="AM">Amazonas</option>
+                                    <option value="BA">Bahia</option>
+                                    <option value="CE">Ceará</option>
+                                    <option value="DF">Distrito Federal</option>
+                                    <option value="ES">Espírito Santo</option>
+                                    <option value="GO">Goiás</option>
+                                    <option value="MA">Maranhão</option>
+                                    <option value="MT">Mato Grosso</option>
+                                    <option value="MS">Mato Grosso do Sul</option>
+                                    <option value="MG">Minas Gerais</option>
+                                    <option value="PA">Pará</option>
+                                    <option value="PB">Paraíba</option>
+                                    <option value="PR">Paraná</option>
+                                    <option value="PE">Pernambuco</option>
+                                    <option value="PI">Piauí</option>
+                                    <option value="RJ">Rio de Janeiro</option>
+                                    <option value="RN">Rio Grande do Norte</option>
+                                    <option value="RS">Rio Grande do Sul</option>
+                                    <option value="RO">Rondônia</option>
+                                    <option value="RR">Roraima</option>
+                                    <option value="SC">Santa Catarina</option>
+                                    <option value="SP">São Paulo</option>
+                                    <option value="SE">Sergipe</option>
+                                    <option value="TO">Tocantins</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="zipCode">CEP</label>
+                                <input type="text" id="zipCode" class="form-control" placeholder="00000-000">
+                            </div>
+                            <div class="form-group">
+                                <label for="displayCity">Localização Pública *</label>
+                                <input type="text" id="displayCity" class="form-control" placeholder="Ex: São Paulo, SP" required>
+                                <small>Cidade e estado visíveis para outros usuários</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Informações Públicas -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-heart"></i> Sobre Você</h3>
+                        <p class="section-description">Informações visíveis para outros usuários</p>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="relationshipStatus">Status de Relacionamento *</label>
+                                <select id="relationshipStatus" class="form-control" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="solteiro">Solteiro</option>
+                                    <option value="solteira">Solteira</option>
+                                    <option value="divorciado">Divorciado</option>
+                                    <option value="divorciada">Divorciada</option>
+                                    <option value="casado">Casado</option>
+                                    <option value="casada">Casada</option>
+                                    <option value="viúvo">Viúvo</option>
+                                    <option value="viúva">Viúva</option>
+                                    <option value="noivo">Noivo</option>
+                                    <option value="noiva">Noiva</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="gender">Gênero *</label>
+                                <select id="gender" class="form-control" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="feminino">Feminino</option>
+                                    <option value="masculino">Masculino</option>
+                                    <option value="nao_informar">Prefiro não informar</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="sexualOrientation">Orientação Sexual</label>
+                                <select id="sexualOrientation" class="form-control">
+                                    <option value="">Selecione...</option>
+                                    <option value="heterossexual">Heterossexual</option>
+                                    <option value="homossexual">Homossexual</option>
+                                    <option value="bissexual">Bissexual</option>
+                                    <option value="outro">Outro</option>
+                                    <option value="prefiro_nao_informar">Prefiro não informar</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="profession">Profissão</label>
+                                <input type="text" id="profession" class="form-control" placeholder="Sua profissão">
+                            </div>
+                            <div class="form-group">
+                                <label for="education">Escolaridade</label>
+                                <select id="education" class="form-control">
+                                    <option value="">Selecione...</option>
+                                    <option value="fundamental_incompleto">Fundamental Incompleto</option>
+                                    <option value="fundamental_completo">Fundamental Completo</option>
+                                    <option value="medio_incompleto">Médio Incompleto</option>
+                                    <option value="medio_completo">Médio Completo</option>
+                                    <option value="superior_incompleto">Superior Incompleto</option>
+                                    <option value="superior_completo">Superior Completo</option>
+                                    <option value="pos_graduacao">Pós-graduação</option>
+                                    <option value="mestrado">Mestrado</option>
+                                    <option value="doutorado">Doutorado</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="zodiac">Signo</label>
+                                <select id="zodiac" class="form-control">
+                                    <option value="">Selecione...</option>
+                                    <option value="aries">♈ Áries</option>
+                                    <option value="touro">♉ Touro</option>
+                                    <option value="gemeos">♊ Gêmeos</option>
+                                    <option value="cancer">♋ Câncer</option>
+                                    <option value="leao">♌ Leão</option>
+                                    <option value="virgem">♍ Virgem</option>
+                                    <option value="libra">♎ Libra</option>
+                                    <option value="escorpiao">♏ Escorpião</option>
+                                    <option value="sagitario">♐ Sagitário</option>
+                                    <option value="capricornio">♑ Capricórnio</option>
+                                    <option value="aquario">♒ Aquário</option>
+                                    <option value="peixes">♓ Peixes</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modo Invisível -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-eye-slash"></i> Modo Invisível</h3>
+                        <p class="section-description">Controle sua visibilidade na plataforma</p>
+                        
+                        <div class="premium-feature-container">
+                            <div class="premium-feature-header">
+                                <div class="premium-feature-info">
+                                    <h4><i class="fas fa-crown"></i> Recurso Premium</h4>
+                                    <p>Ocultar seu perfil e atividade online</p>
+                                </div>
+                                <div class="premium-feature-status" id="invisibleFeatureStatus">
+                                    <!-- Será preenchido pelo JavaScript -->
+                                </div>
+                            </div>
+
+                            <div class="invisible-mode-control" id="invisibleModeControl" style="display: none;">
+                                <div class="form-group">
+                                    <label class="checkbox-label premium-checkbox">
+                                        <input type="checkbox" id="isInvisible">
+                                        <span class="checkmark"></span>
+                                        <i class="fas fa-eye-slash"></i>
+                                        Ativar Modo Invisível
+                                    </label>
+                                    <small>Quando ativado, seu perfil não aparecerá nas buscas e sua atividade ficará oculta</small>
+                                </div>
+                            </div>
+
+                            <div class="premium-upgrade-cta" id="invisibleUpgradeCTA">
+                                <div class="upgrade-content">
+                                    <i class="fas fa-lock"></i>
+                                    <div class="upgrade-text">
+                                        <h4>Recurso Bloqueado</h4>
+                                        <p>Faça upgrade para Premium para ativar o modo invisível</p>
+                                    </div>
+                                    <a href="pricing.html" class="btn btn-premium btn-sm">
+                                        <i class="fas fa-crown"></i> Tornar-se Premium
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Características Pessoais -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-user-tag"></i> Características Pessoais</h3>
+                        <p class="section-description">Selecione as características que melhor te definem</p>
+                        
+                        <div class="characteristics-grid">
+                            <label class="characteristic-checkbox">
+                                <input type="checkbox" name="characteristics" value="Romântico(a)">
+                                <i class="fas fa-heart"></i> Romântico(a)
+                            </label>
+                            <label class="characteristic-checkbox">
+                                <input type="checkbox" name="characteristics" value="Divertido(a)">
+                                <i class="fas fa-laugh"></i> Divertido(a)
+                            </label>
+                            <label class="characteristic-checkbox">
+                                <input type="checkbox" name="characteristics" value="Carinhoso(a)">
+                                <i class="fas fa-hands-heart"></i> Carinhoso(a)
+                            </label>
+                            <label class="characteristic-checkbox">
+                                <input type="checkbox" name="characteristics" value="Sério(a)">
+                                <i class="fas fa-user-tie"></i> Sério(a)
+                            </label>
+                            <label class="characteristic-checkbox">
+                                <input type="checkbox" name="characteristics" value="Faltante">
+                                <i class="fas fa-user-clock"></i> Falante
+                            </label>
+                            <label class="characteristic-checkbox">
+                                <input type="checkbox" name="characteristics" value="Dominante">
+                                <i class="fas fa-crown"></i> Dominante
+                            </label>
+                            <label class="characteristic-checkbox">
+                                <input type="checkbox" name="characteristics" value="Intelectual">
+                                <i class="fas fa-brain"></i> Intelectual
+                            </label>
+                            <label class="characteristic-checkbox">
+                                <input type="checkbox" name="characteristics" value="Sensual">
+                                <i class="fas fa-fire"></i> Sensual
+                            </label>
+                            <label class="characteristic-checkbox">
+                                <input type="checkbox" name="characteristics" value="Sentimental">
+                                <i class="fas fa-tear"></i> Sentimental
+                            </label>
+                            <label class="characteristic-checkbox">
+                                <input type="checkbox" name="characteristics" value="Flexível">
+                                <i class="fas fa-exchange-alt"></i> Flexível
+                            </label>
+                            <label class="characteristic-checkbox">
+                                <input type="checkbox" name="characteristics" value="Organizado(a)">
+                                <i class="fas fa-tasks"></i> Organizado(a)
+                            </label>
+                            <label class="characteristic-checkbox">
+                                <input type="checkbox" name="characteristics" value="Descontraído(a)">
+                                <i class="fas fa-smile"></i> Descontraído(a)
+                            </label>
+                            <label class="characteristic-checkbox">
+                                <input type="checkbox" name="characteristics" value="Determinado(a)">
+                                <i class="fas fa-bullseye"></i> Determinado(a)
+                            </label>
+                            <label class="characteristic-checkbox">
+                                <input type="checkbox" name="characteristics" value="Aventureiro(a)">
+                                <i class="fas fa-mountain"></i> Aventureiro(a)
+                            </label>
+                            <label class="characteristic-checkbox">
+                                <input type="checkbox" name="characteristics" value="Conservador(a)">
+                                <i class="fas fa-shield-alt"></i> Conservador(a)
+                            </label>
+                            <label class="characteristic-checkbox">
+                                <input type="checkbox" name="characteristics" value="Reservado(a)">
+                                <i class="fas fa-user-secret"></i> Reservado(a)
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Estilo de Vida -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-running"></i> Estilo de Vida</h3>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="religion">Religião</label>
+                                <select id="religion" class="form-control">
+                                    <option value="">Selecione...</option>
+                                    <option value="catolica">Católica</option>
+                                    <option value="evangelica">Evangélica</option>
+                                    <option value="espirita">Espírita</option>
+                                    <option value="umbanda_candomble">Umbanda/Candomblé</option>
+                                    <option value="budista">Budista</option>
+                                    <option value="judaica">Judaica</option>
+                                    <option value="islamica">Islâmica</option>
+                                    <option value="outra">Outra</option>
+                                    <option value="nenhuma">Nenhuma</option>
+                                    <option value="prefiro_nao_informar">Prefiro não informar</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="drinking">Bebida</label>
+                                <select id="drinking" class="form-control">
+                                    <option value="">Selecione...</option>
+                                    <option value="nao_bebo">Não bebo</option>
+                                    <option value="socialmente">Socialmente</option>
+                                    <option value="frequentemente">Com frequência</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="smoking">Fumo</label>
+                                <select id="smoking" class="form-control">
+                                    <option value="">Selecione...</option>
+                                    <option value="nao_fumo">Não fumo</option>
+                                    <option value="socialmente">Socialmente</option>
+                                    <option value="frequentemente">Com frequência</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="exercise">Exercício Físico</label>
+                                <select id="exercise" class="form-control">
+                                    <option value="">Selecione...</option>
+                                    <option value="nao_pratico">Não pratico</option>
+                                    <option value="ocasionalmente">Ocasionalmente</option>
+                                    <option value="regularmente">Regularmente</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="exerciseDetails">Detalhes do Exercício</label>
+                                <input type="text" id="exerciseDetails" class="form-control" placeholder="Ex: musculação, corrida, yoga...">
+                            </div>
+                            <div class="form-group">
+                                <label for="hasPets">Tem animais de estimação?</label>
+                                <select id="hasPets" class="form-control">
+                                    <option value="">Selecione...</option>
+                                    <option value="sim">Sim</option>
+                                    <option value="nao">Não</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="petsDetails">Detalhes dos Pets</label>
+                                <input type="text" id="petsDetails" class="form-control" placeholder="Ex: 2 gatos, 1 cachorro...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preferências -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-search"></i> Preferências</h3>
+                        
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="lookingFor">Procura por *</label>
+                                <select id="lookingFor" class="form-control" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="amizade">Amizade</option>
+                                    <option value="namoro">Namoro</option>
+                                    <option value="relacionamento_serio">Relacionamento Sério</option>
+                                    <option value="conversa">Apenas Conversa</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interesses -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-star"></i> Interesses</h3>
+                        
+                        <div class="interests-grid">
+                            <label class="interest-checkbox">
+                                <input type="checkbox" name="interests" value="Cinema">
+                                <i class="fas fa-film"></i> Cinema
+                            </label>
+                            <label class="interest-checkbox">
+                                <input type="checkbox" name="interests" value="Música">
+                                <i class="fas fa-music"></i> Música
+                            </label>
+                            <label class="interest-checkbox">
+                                <input type="checkbox" name="interests" value="Esportes">
+                                <i class="fas fa-futbol"></i> Esportes
+                            </label>
+                            <label class="interest-checkbox">
+                                <input type="checkbox" name="interests" value="Viagens">
+                                <i class="fas fa-plane"></i> Viagens
+                            </label>
+                            <label class="interest-checkbox">
+                                <input type="checkbox" name="interests" value="Leitura">
+                                <i class="fas fa-book"></i> Leitura
+                            </label>
+                            <label class="interest-checkbox">
+                                <input type="checkbox" name="interests" value="Culinária">
+                                <i class="fas fa-utensils"></i> Culinária
+                            </label>
+                            <label class="interest-checkbox">
+                                <input type="checkbox" name="interests" value="Jogos">
+                                <i class="fas fa-gamepad"></i> Jogos
+                            </label>
+                            <label class="interest-checkbox">
+                                <input type="checkbox" name="interests" value="Arte">
+                                <i class="fas fa-palette"></i> Arte
+                            </label>
+                            <label class="interest-checkbox">
+                                <input type="checkbox" name="interests" value="Tecnologia">
+                                <i class="fas fa-laptop"></i> Tecnologia
+                            </label>
+                            <label class="interest-checkbox">
+                                <input type="checkbox" name="interests" value="Natureza">
+                                <i class="fas fa-tree"></i> Natureza
+                            </label>
+                            <label class="interest-checkbox">
+                                <input type="checkbox" name="interests" value="Fotografia">
+                                <i class="fas fa-camera"></i> Fotografia
+                            </label>
+                            <label class="interest-checkbox">
+                                <input type="checkbox" name="interests" value="Dança">
+                                <i class="fas fa-music"></i> Dança
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Descrição Pessoal -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-edit"></i> Descrição Pessoal</h3>
+                        
+                        <div class="form-group">
+                            <label for="description">Conte um pouco sobre você</label>
+                            <textarea id="description" class="form-control" placeholder="Fale sobre seus hobbies, personalidade, objetivos... (máx. 100 caracteres)" maxlength="100"></textarea>
+                            <div class="char-count">
+                                <span id="charCount">0</span>/100 caracteres
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="saveButton">
+                            <i class="fas fa-save"></i> Salvar Perfil
+                        </button>
+                        <a href="home.html" class="btn btn-secondary">
+                            <i class="fas fa-home"></i> Voltar para Home
+                        </a>
+                    </div>
+                </form>
+            </section>
+
+            <!-- SEÇÃO: Galeria Premium -->
+            <section class="form-section">
+                <h3><i class="fas fa-images"></i> Minha Galeria Premium</h3>
+                
+                <div id="galleryManager" style="display: none;">
+                    <div class="section-description">
+                        <p>Armazene e visualize suas fotos especiais</p>
+                        <div class="storage-status">
+                            <div class="storage-info">
+                                <span id="storageUsed">0MB de 10MB usados</span>
+                                <div class="storage-bar">
+                                    <div class="storage-fill" id="storageFill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gallery-upload">
+                        <button type="button" class="btn btn-primary" id="uploadGalleryBtn">
+                            <i class="fas fa-plus"></i> Adicionar Fotos
+                        </button>
+                        <input type="file" id="galleryUpload" multiple accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" style="display: none;">
+                    </div>
+
+                    <div id="galleryGrid" class="gallery-grid">
+                        <div class="empty-gallery">
+                            <i class="fas fa-images"></i>
+                            <p>Sua galeria está vazia</p>
                         </div>
                     </div>
                 </div>
-            </div>
+
+                <div id="galleryUpgradeCTA" class="empty-gallery" style="display: block;">
+                    <i class="fas fa-crown"></i>
+                    <p>Galeria Premium Bloqueada</p>
+                    <a href="pricing.html" class="btn btn-premium" style="margin-top: 1rem;">
+                        <i class="fas fa-crown"></i> Tornar-se Premium
+                    </a>
+                </div>
+            </section>
         </div>
-    </header>
 
-    <!-- Conteúdo Principal das Notificações -->
-    <main class="main-content">
-        <div class="container">
-            <div class="notifications-container">
-                <!-- Cabeçalho -->
-                <section class="notifications-header">
-                    <h1><i class="fas fa-bell"></i> Notificações</h1>
-                    <p>Gerencie suas notificações e mantenha-se atualizado</p>
-                </section>
-
-                <!-- Filtros -->
-                <div class="notification-filters">
-                    <button class="filter-btn active" data-filter="all">Todas</button>
-                    <button class="filter-btn" data-filter="unread">Não lidas</button>
-                    <button class="filter-btn" data-filter="read">Lidas</button>
-                </div>
-
-                <!-- Ações -->
-                <div class="notifications-actions">
-                    <div class="notifications-stats">
-                        <span id="statsText">Carregando...</span>
-                    </div>
-                    <button class="btn-clear-all" id="clearAllBtn">
-                        <i class="fas fa-trash"></i> Limpar todas
-                    </button>
-                </div>
-
-                <!-- Lista de Notificações -->
-                <div class="notifications-list" id="notificationsList">
-                    <!-- Será preenchido pelo JavaScript -->
-                    <div class="empty-notifications">
-                        <i class="fas fa-bell-slash"></i>
-                        <h3>Nenhuma notificação</h3>
-                        <p>Quando você receber notificações, elas aparecerão aqui.</p>
-                    </div>
+        <!-- MODAL PARA IMAGEM AMPLIADA -->
+        <div id="imageModal" class="image-modal">
+            <div class="modal-overlay"></div>
+            <div class="modal-container">
+                <button class="modal-close-btn" id="closeModalBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="modal-image-wrapper">
+                    <img id="modalImageView" src="" alt="Imagem ampliada">
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Footer IDÊNTICO ao seu painel -->
+    <!-- Footer -->
     <footer>
         <div class="container">
             <div class="footer-content">
@@ -321,7 +653,14 @@
         </div>
     </footer>
 
-    <!-- Scripts -->
-    <script src="notifica.js"></script>
+    <!-- Inputs hidden para upload -->
+    <input type="file" id="avatarUpload" accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;">
+
+    <!-- Scripts na ordem correta -->
+    <script src="painel-perfil.js"></script>
+    <script src="premium-check.js"></script>
+    <script src="avatar.js"></script>
+    <script src="galeria.js"></script>
+
 </body>
 </html>
