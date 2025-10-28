@@ -332,226 +332,218 @@
         </div>
     </div>
 
-    <script>
-        // ==================== CONFIGURAÇÃO SUPABASE ====================
-        const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  <script>
+// Configuração Supabase
+const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // ==================== VARIÁVEIS GLOBAIS ====================
-        let usuarioAtual = null;
+// VARIÁVEIS GLOBAIS
+let usuarioAtual = null;
 
-        // ==================== FUNÇÕES PRINCIPAIS ====================
-        async function inicializarPagina() {
-            // Em um cenário real, você teria o usuário logado
-            // Por enquanto, vamos simular um usuário para teste
-            await simularUsuarioLogado();
-            await carregarNotificacoes();
+// FUNÇÕES PRINCIPAIS
+async function inicializarPagina() {
+    await simularUsuarioLogado();
+    await carregarNotificacoes();
+}
+
+// SIMULAR USUÁRIO LOGADO (COM USUÁRIO REAL)
+async function simularUsuarioLogado() {
+    try {
+        // Buscar um usuário REAL do banco para teste
+        const { data: usuarios, error } = await supabase
+            .from('profiles')
+            .select('id, nickname, email, is_premium, premium_expires_at')
+            .not('nickname', 'is', null)
+            .limit(1)
+            .single();
+
+        if (error) throw error;
+
+        usuarioAtual = usuarios;
+        
+        // Atualizar interface
+        document.getElementById('userName').textContent = usuarios.nickname || 'Usuário';
+        document.getElementById('userEmail').textContent = usuarios.email;
+        
+        const avatarElement = document.getElementById('userAvatar');
+        const iniciais = usuarios.nickname ? 
+            usuarios.nickname.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : 'U';
+        avatarElement.textContent = iniciais;
+
+        // Mostrar se é premium ou free
+        const isPremiumAtivo = usuarios.is_premium && 
+            usuarios.premium_expires_at && 
+            new Date(usuarios.premium_expires_at) > new Date();
+        
+        if (isPremiumAtivo) {
+            document.getElementById('userName').textContent += ' ⭐ Premium';
         }
 
-        async function simularUsuarioLogado() {
-            try {
-                // Buscar um usuário qualquer do banco para teste
-                const { data: usuarios, error } = await supabase
-                    .from('profiles')
-                    .select('id, nickname, email, avatar_url')
-                    .eq('is_active', true)
-                    .limit(1)
-                    .single();
+    } catch (erro) {
+        console.error('Erro ao carregar usuário:', erro);
+        // Fallback
+        usuarioAtual = { id: 'test-user', nickname: 'Usuário Teste', email: 'teste@email.com' };
+        document.getElementById('userName').textContent = 'Usuário Teste';
+        document.getElementById('userEmail').textContent = 'teste@email.com';
+    }
+}
 
-                if (error) throw error;
+// CARREGAR NOTIFICAÇÕES DO USUÁRIO REAL
+async function carregarNotificacoes() {
+    if (!usuarioAtual) return;
 
-                usuarioAtual = usuarios;
-                
-                // Atualizar interface do usuário
-                document.getElementById('userName').textContent = usuarios.nickname || 'Usuário';
-                document.getElementById('userEmail').textContent = usuarios.email;
-                
-                const avatarElement = document.getElementById('userAvatar');
-                if (usuarios.avatar_url) {
-                    avatarElement.innerHTML = `<img src="${usuarios.avatar_url}" alt="${usuarios.nickname}" style="width: 100%; height: 100%; border-radius: 50%;">`;
-                } else {
-                    const iniciais = usuarios.nickname ? 
-                        usuarios.nickname.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : 'U';
-                    avatarElement.textContent = iniciais;
-                }
+    const container = document.getElementById('notificationsList');
+    
+    try {
+        // Buscar notificações DO USUÁRIO ATUAL REAL
+        const { data: notificacoes, error } = await supabase
+            .from('user_notifications')
+            .select(`
+                id,
+                is_read,
+                read_at,
+                created_at,
+                notification:notifications (
+                    id,
+                    title,
+                    message,
+                    notification_type,
+                    created_at
+                )
+            `)
+            .eq('user_id', usuarioAtual.id)
+            .order('created_at', { ascending: false });
 
-            } catch (erro) {
-                console.error('Erro ao carregar usuário:', erro);
-                // Fallback para usuário de teste
-                usuarioAtual = { id: 'test-user', nickname: 'Usuário Teste', email: 'teste@email.com' };
-                document.getElementById('userName').textContent = 'Usuário Teste';
-                document.getElementById('userEmail').textContent = 'teste@email.com';
-            }
+        if (error) throw error;
+
+        container.innerHTML = '';
+
+        if (!notificacoes || notificacoes.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">📭</div>
+                    <h3>Nenhuma notificação</h3>
+                    <p>Você não tem nenhuma notificação no momento.</p>
+                    <p style="font-size: 0.9rem; margin-top: 1rem; color: #718096;">
+                        As notificações do admin aparecerão aqui.
+                    </p>
+                </div>
+            `;
+            return;
         }
 
-        async function carregarNotificacoes() {
-            if (!usuarioAtual) return;
+        let html = '';
 
-            const container = document.getElementById('notificationsList');
+        notificacoes.forEach(item => {
+            const notificacao = item.notification;
+            const dataNotificacao = new Date(notificacao.created_at);
+            const dataFormatada = dataNotificacao.toLocaleDateString('pt-BR');
+            const horaFormatada = dataNotificacao.toLocaleTimeString('pt-BR', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+
+            let badgeClass = '';
+            let badgeText = '';
             
-            try {
-                // Buscar notificações do usuário atual
-                const { data: notificacoes, error } = await supabase
-                    .from('notification_recipients')
-                    .select(`
-                        *,
-                        notification:notifications(
-                            id,
-                            title,
-                            message,
-                            created_at,
-                            categories:category_id(name, color, icon)
-                        )
-                    `)
-                    .eq('user_id', usuarioAtual.id)
-                    .order('created_at', { ascending: false });
+            switch(notificacao.notification_type) {
+                case 'advertencia':
+                    badgeClass = 'badge-warning';
+                    badgeText = 'Advertência';
+                    break;
+                case 'bonus':
+                    badgeClass = 'badge-bonus';
+                    badgeText = 'Bônus';
+                    break;
+                case 'aviso':
+                default:
+                    badgeClass = 'badge-info';
+                    badgeText = 'Aviso';
+            }
 
-                if (error) throw error;
+            const isUnread = !item.is_read;
+            const notificationClass = isUnread ? 'notification-item unread' : 'notification-item';
 
-                container.innerHTML = '';
-
-                if (!notificacoes || notificacoes.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <div class="icon">📭</div>
-                            <h3>Nenhuma notificação</h3>
-                            <p>Você não tem nenhuma notificação no momento.</p>
-                            <p style="font-size: 0.9rem; margin-top: 1rem; color: var(--gray);">
-                                As notificações do admin aparecerão aqui.
-                            </p>
+            html += `
+                <div class="${notificationClass}" onclick="marcarComoLida('${item.id}')">
+                    <div class="notification-header">
+                        <div class="notification-title">
+                            ${notificacao.title}
+                            <span class="badge ${badgeClass}">${badgeText}</span>
+                            ${isUnread ? '<span class="badge badge-new">NOVO</span>' : ''}
                         </div>
-                    `;
-                    return;
-                }
-
-                // Agrupar notificações por data
-                const hoje = new Date().toDateString();
-                const ontem = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
-
-                let html = '';
-
-                notificacoes.forEach(item => {
-                    const notificacao = item.notification;
-                    const dataNotificacao = new Date(notificacao.created_at);
-                    const dataFormatada = dataNotificacao.toLocaleDateString('pt-BR');
-                    const horaFormatada = dataNotificacao.toLocaleTimeString('pt-BR', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                    });
-
-                    let dataHeader = '';
-                    if (dataNotificacao.toDateString() === hoje) {
-                        dataHeader = 'Hoje';
-                    } else if (dataNotificacao.toDateString() === ontem) {
-                        dataHeader = 'Ontem';
-                    } else {
-                        dataHeader = dataFormatada;
-                    }
-
-                    let badgeClass = '';
-                    let badgeText = notificacao.categories?.name || 'aviso';
-                    
-                    switch(notificacao.categories?.name) {
-                        case 'advertencia':
-                            badgeClass = 'badge-warning';
-                            badgeText = 'Advertência';
-                            break;
-                        case 'bonus':
-                            badgeClass = 'badge-bonus';
-                            badgeText = 'Bônus';
-                            break;
-                        case 'aviso':
-                            badgeClass = 'badge-info';
-                            badgeText = 'Aviso';
-                            break;
-                        default:
-                            badgeClass = 'badge-info';
-                    }
-
-                    const isUnread = !item.is_read;
-                    const notificationClass = isUnread ? 'notification-item unread' : 'notification-item';
-
-                    html += `
-                        <div class="${notificationClass}" onclick="marcarComoLida('${item.id}')">
-                            <div class="notification-header">
-                                <div class="notification-title">
-                                    ${notificacao.title}
-                                    <span class="badge ${badgeClass}">${badgeText}</span>
-                                    ${isUnread ? '<span class="badge badge-new">NOVO</span>' : ''}
-                                </div>
-                                ${isUnread ? `
-                                    <button class="mark-read-btn" onclick="event.stopPropagation(); marcarComoLida('${item.id}')">
-                                        Marcar como lida
-                                    </button>
-                                ` : ''}
-                            </div>
-                            <div class="notification-message">
-                                ${notificacao.message}
-                            </div>
-                            <div class="notification-meta">
-                                <span>${dataHeader} às ${horaFormatada}</span>
-                                <span>${isUnread ? '📬 Não lida' : '📭 Lida'}</span>
-                            </div>
-                        </div>
-                    `;
-                });
-
-                container.innerHTML = html;
-
-            } catch (erro) {
-                console.error('Erro ao carregar notificações:', erro);
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="icon">❌</div>
-                        <h3>Erro ao carregar notificações</h3>
-                        <p>Tente novamente mais tarde.</p>
-                        <button class="btn btn-primary" onclick="carregarNotificacoes()" style="margin-top: 1rem;">
-                            🔄 Tentar Novamente
-                        </button>
+                        ${isUnread ? `
+                            <button class="mark-read-btn" onclick="event.stopPropagation(); marcarComoLida('${item.id}')">
+                                Marcar como lida
+                            </button>
+                        ` : ''}
                     </div>
-                `;
-            }
-        }
-
-        async function marcarComoLida(recipientId) {
-            try {
-                const { error } = await supabase
-                    .from('notification_recipients')
-                    .update({
-                        is_read: true,
-                        read_at: new Date().toISOString()
-                    })
-                    .eq('id', recipientId);
-
-                if (error) throw error;
-
-                // Recarregar a lista para atualizar o visual
-                await carregarNotificacoes();
-
-            } catch (erro) {
-                console.error('Erro ao marcar como lida:', erro);
-            }
-        }
-
-        function voltarParaApp() {
-            // Em um cenário real, isso voltaria para a página principal do app
-            // Por enquanto, vamos apenas mostrar um alerta
-            alert('Voltando para o aplicativo principal...');
-            // window.location.href = 'index.html'; // Descomente quando tiver a página principal
-        }
-
-        // ==================== INICIALIZAÇÃO ====================
-        document.addEventListener('DOMContentLoaded', function() {
-            inicializarPagina();
-            
-            // Atualizar notificações a cada 30 segundos
-            setInterval(() => {
-                if (usuarioAtual) {
-                    carregarNotificacoes();
-                }
-            }, 30000);
+                    <div class="notification-message">
+                        ${notificacao.message}
+                    </div>
+                    <div class="notification-meta">
+                        <span>${dataFormatada} às ${horaFormatada}</span>
+                        <span>${isUnread ? '📬 Não lida' : '📭 Lida'}</span>
+                    </div>
+                </div>
+            `;
         });
-    </script>
+
+        container.innerHTML = html;
+
+    } catch (erro) {
+        console.error('Erro ao carregar notificações:', erro);
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="icon">❌</div>
+                <h3>Erro ao carregar notificações</h3>
+                <p>Tente novamente mais tarde.</p>
+                <button class="btn btn-primary" onclick="carregarNotificacoes()" style="margin-top: 1rem;">
+                    🔄 Tentar Novamente
+                </button>
+            </div>
+        `;
+    }
+}
+
+// MARCAR NOTIFICAÇÃO COMO LIDA
+async function marcarComoLida(notificationId) {
+    try {
+        const { error } = await supabase
+            .from('user_notifications')
+            .update({
+                is_read: true,
+                read_at: new Date().toISOString()
+            })
+            .eq('id', notificationId);
+
+        if (error) throw error;
+
+        // Recarregar a lista
+        await carregarNotificacoes();
+
+    } catch (erro) {
+        console.error('Erro ao marcar como lida:', erro);
+    }
+}
+
+function voltarParaApp() {
+    alert('Voltando para o aplicativo principal...');
+    // window.location.href = 'index.html';
+}
+
+// INICIALIZAÇÃO
+document.addEventListener('DOMContentLoaded', function() {
+    inicializarPagina();
+    
+    // Atualizar notificações a cada 30 segundos
+    setInterval(() => {
+        if (usuarioAtual) {
+            carregarNotificacoes();
+        }
+    }, 30000);
+});
+</script>
 </body>
 </html>
