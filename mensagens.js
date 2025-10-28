@@ -553,14 +553,18 @@ class MessagesSystem {
         }
     }
 
+    // CONTINUA - PRÓXIMA PARTE...
+        // CORREÇÃO DO CONTADOR - FUNÇÃO PRINCIPAL
     async checkCanSendMessage() {
         try {
             const isPremium = this.currentUser.profile?.is_premium;
             
+            // Usuário premium pode enviar sem limites
             if (isPremium) {
                 return { can_send: true, reason: null };
             }
 
+            // Buscar limites do usuário
             const { data: limits, error } = await this.supabase
                 .from('user_message_limits')
                 .select('messages_sent_today, last_reset_date')
@@ -568,15 +572,25 @@ class MessagesSystem {
                 .single();
 
             if (error) {
+                console.error('Erro ao verificar limites:', error);
+                // Se não encontrar registro, criar um
+                await this.createUserLimitRecord();
                 return { can_send: true, reason: null };
             }
 
-            if (limits && new Date(limits.last_reset_date).toDateString() !== new Date().toDateString()) {
+            // Verificar se precisa resetar (novo dia)
+            const today = new Date().toDateString();
+            const lastResetDate = new Date(limits.last_reset_date).toDateString();
+            
+            if (today !== lastResetDate) {
+                // Resetar contador para novo dia
+                await this.resetDailyLimit();
                 return { can_send: true, reason: null };
             }
 
             const sentToday = limits?.messages_sent_today || 0;
             
+            // CORREÇÃO: Verificar se atingiu o limite
             if (sentToday >= this.messageLimit) {
                 return { can_send: false, reason: 'limit_reached' };
             }
@@ -584,14 +598,45 @@ class MessagesSystem {
             return { can_send: true, reason: null };
             
         } catch (error) {
-            return { can_send: true, reason: null };
+            console.error('Erro ao verificar se pode enviar:', error);
+            return { can_send: true, reason: null }; // Fallback em caso de erro
+        }
+    }
+
+    // Criar registro de limites se não existir
+    async createUserLimitRecord() {
+        try {
+            const { error } = await this.supabase
+                .from('user_message_limits')
+                .insert({
+                    user_id: this.currentUser.id,
+                    messages_sent_today: 0,
+                    last_reset_date: new Date().toISOString()
+                });
+        } catch (error) {
+            console.error('Erro ao criar registro de limites:', error);
+        }
+    }
+
+    // Resetar limite diário
+    async resetDailyLimit() {
+        try {
+            const { error } = await this.supabase
+                .from('user_message_limits')
+                .update({
+                    messages_sent_today: 0,
+                    last_reset_date: new Date().toISOString()
+                })
+                .eq('user_id', this.currentUser.id);
+        } catch (error) {
+            console.error('Erro ao resetar limite diário:', error);
         }
     }
 
     handleSendError(reason) {
         switch (reason) {
             case 'limit_reached':
-                this.showNotification('Limite diário de mensagens atingido! Volte amanhã.', 'error');
+                this.showNotification('Limite diário de 4 mensagens atingido! Volte amanhã.', 'error');
                 break;
             case 'blocked':
                 this.showNotification('Não é possível enviar mensagem para este usuário.', 'error');
@@ -623,8 +668,13 @@ class MessagesSystem {
                 .eq('user_id', this.currentUser.id)
                 .single();
 
-            const sentToday = limits?.messages_sent_today || 0;
+            let sentToday = 0;
+            
+            if (!error && limits) {
+                sentToday = limits.messages_sent_today || 0;
+            }
 
+            // CORREÇÃO: Garantir que o contador mostra o valor correto
             counter.innerHTML = `
                 <span class="counter-text">Mensagens hoje: </span>
                 <span class="counter-number">${sentToday}/${this.messageLimit}</span>
