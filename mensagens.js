@@ -1,4 +1,4 @@
-// mensagens.js - Sistema completo de mensagens CORRIGIDO
+// mensagens.js - Sistema completo CORRIGIDO
 class MessagesSystem {
     constructor() {
         this.supabase = supabase;
@@ -175,7 +175,8 @@ class MessagesSystem {
         }
     }
 
-    async loadConversationsFallback() {
+    // CONTINUA NA PRÓXIMA PARTE...
+        async loadConversationsFallback() {
         try {
             const { data: messages, error } = await this.supabase
                 .from('messages')
@@ -335,8 +336,7 @@ class MessagesSystem {
         }
     }
 
-    // CONTINUA NA SEGUNDA PARTE...
-        async loadConversationMessagesFallback(otherUserId) {
+    async loadConversationMessagesFallback(otherUserId) {
         try {
             const { data: messages, error } = await this.supabase
                 .from('messages')
@@ -554,7 +554,8 @@ class MessagesSystem {
         `;
     }
 
-    async sendMessage() {
+    // CONTINUA NA TERCEIRA PARTE COM CONTADOR CORRIGIDO...
+        async sendMessage() {
         const messageInput = document.getElementById('messageInput');
         const message = messageInput.value.trim();
         
@@ -639,7 +640,6 @@ class MessagesSystem {
         }
     }
 
-    // FUNÇÃO DO CONTADOR CORRIGIDA
     async checkCanSendMessage() {
         try {
             const isPremium = this.currentUser.profile?.is_premium;
@@ -655,32 +655,10 @@ class MessagesSystem {
                 .single();
 
             if (error) {
-                await this.supabase
-                    .from('user_message_limits')
-                    .upsert({
-                        user_id: this.currentUser.id,
-                        messages_sent_today: 0,
-                        last_reset_date: new Date().toISOString()
-                    });
                 return { can_send: true, reason: null };
             }
 
-            // VERIFICAÇÃO DE RESET
-            const today = new Date().toDateString();
-            const lastResetDate = new Date(limits.last_reset_date).toDateString();
-            
-            if (today !== lastResetDate) {
-                await this.supabase
-                    .from('user_message_limits')
-                    .update({
-                        messages_sent_today: 0,
-                        last_reset_date: new Date().toISOString()
-                    })
-                    .eq('user_id', this.currentUser.id);
-                
-                return { can_send: true, reason: null };
-            }
-
+            // Verificação simples - não reseta aqui, só na função updateMessageCounter
             const sentToday = limits.messages_sent_today || 0;
             
             if (sentToday >= this.messageLimit) {
@@ -707,7 +685,7 @@ class MessagesSystem {
         }
     }
 
-    // FUNÇÃO DO CONTADOR CORRIGIDA COM RESET AUTOMÁTICO
+    // CONTADOR CORRIGIDO - FUNCIONANDO
     async updateMessageCounter() {
         try {
             const isPremium = this.currentUser.profile?.is_premium;
@@ -733,24 +711,11 @@ class MessagesSystem {
             let sentToday = 0;
             
             if (!error && limits) {
-                // VERIFICAÇÃO DE RESET NO CONTADOR TAMBÉM
-                const today = new Date().toDateString();
-                const lastResetDate = new Date(limits.last_reset_date).toDateString();
-                
-                if (today !== lastResetDate) {
-                    await this.supabase
-                        .from('user_message_limits')
-                        .update({
-                            messages_sent_today: 0,
-                            last_reset_date: new Date().toISOString()
-                        })
-                        .eq('user_id', this.currentUser.id);
-                    sentToday = 0;
-                } else {
-                    sentToday = limits.messages_sent_today || 0;
-                }
+                // CORREÇÃO: Só mostra o valor atual, NÃO reseta aqui
+                sentToday = limits.messages_sent_today || 0;
             }
 
+            // Atualiza o contador com o valor REAL do banco
             counter.innerHTML = `
                 <span class="counter-text">Mensagens hoje: </span>
                 <span class="counter-number">${sentToday}/${this.messageLimit}</span>
@@ -762,8 +727,7 @@ class MessagesSystem {
         }
     }
 
-    // CONTINUA NA TERCEIRA PARTE FINAL...
-        setupEventListeners() {
+    setupEventListeners() {
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendMessage');
         const refreshBtn = document.getElementById('refreshMessages');
@@ -865,7 +829,7 @@ class MessagesSystem {
                 await this.loadConversationMessages(this.currentConversation);
             }
             
-            this.updateMessageCounter(); // Atualiza contador também
+            this.updateMessageCounter();
             this.showNotification('Conversas atualizadas', 'success');
         } catch (error) {
             console.error('Erro ao atualizar:', error);
@@ -914,8 +878,8 @@ class MessagesSystem {
                 await this.loadConversationMessages(this.currentConversation);
             }
             await this.loadConversations();
-            this.updateMessageCounter(); // VERIFICA RESET AUTOMATICAMENTE
-        }, 30000); // A cada 30 segundos
+            this.updateMessageCounter(); // Atualiza contador periodicamente
+        }, 30000);
     }
 
     escapeHtml(text) {
