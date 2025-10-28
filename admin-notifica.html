@@ -560,13 +560,11 @@ document.addEventListener('DOMContentLoaded', function() {
     carregarEstatisticas();
     carregarNotificacoes();
     
-    // Configurar eventos
     configurarEventos();
 });
 
 async function inicializarAdmin() {
     try {
-        // Buscar o primeiro usuário admin
         const { data: usuarios, error } = await supabase
             .from('profiles')
             .select('id')
@@ -574,20 +572,17 @@ async function inicializarAdmin() {
             .single();
 
         if (error) {
-            console.log('Usando admin padrão');
             adminUserId = '00000000-0000-0000-0000-000000000000';
         } else {
             adminUserId = usuarios.id;
         }
 
     } catch (erro) {
-        console.error('Erro ao inicializar admin:', erro);
         adminUserId = '00000000-0000-0000-0000-000000000000';
     }
 }
 
 function configurarEventos() {
-    // Mostrar/ocultar seleção de usuário específico
     document.querySelectorAll('input[name="userType"]').forEach(radio => {
         radio.addEventListener('change', function() {
             document.getElementById('specificUserGroup').style.display = 
@@ -595,7 +590,6 @@ function configurarEventos() {
         });
     });
 
-    // Envio do formulário
     document.getElementById('notificationForm').addEventListener('submit', function(e) {
         e.preventDefault();
         enviarNotificacao();
@@ -609,14 +603,12 @@ async function enviarNotificacao() {
         return;
     }
 
-    // Coletar dados do formulário
     const tipo = document.getElementById('notificationType').value;
     const userType = document.querySelector('input[name="userType"]:checked').value;
     const userId = userType === 'specific' ? document.getElementById('specificUserId').value : null;
     const titulo = document.getElementById('notificationTitle').value.trim();
     const mensagem = document.getElementById('notificationMessage').value.trim();
     
-    // Validação
     if (!tipo || !titulo || !mensagem) {
         alert('Preencha todos os campos obrigatórios');
         return;
@@ -627,13 +619,17 @@ async function enviarNotificacao() {
         return;
     }
 
-    // Mostrar processando
     const btn = document.getElementById('submitBtn');
     btn.innerHTML = '⏳ Enviando...';
     btn.disabled = true;
 
     try {
-        // 1. CRIAR NOTIFICAÇÃO PRINCIPAL
+        let destinatarios = await buscarDestinatarios(userType, userId);
+        
+        if (destinatarios.length === 0) {
+            throw new Error('Nenhum usuário encontrado para enviar notificação');
+        }
+
         const { data: notificacao, error: notifError } = await supabase
             .from('admin_notifications')
             .insert({
@@ -650,14 +646,6 @@ async function enviarNotificacao() {
 
         if (notifError) throw notifError;
 
-        // 2. BUSCAR USUÁRIOS DESTINATÁRIOS
-        let destinatarios = await buscarDestinatarios(userType, userId);
-        
-        if (destinatarios.length === 0) {
-            throw new Error('Nenhum usuário encontrado para enviar notificação');
-        }
-
-        // 3. CRIAR NOTIFICAÇÕES INDIVIDUAIS - USANDO FUNÇÃO SQL
         const userIds = destinatarios.map(user => user.id);
         
         const { error: functionError } = await supabase.rpc(
@@ -670,7 +658,6 @@ async function enviarNotificacao() {
 
         if (functionError) throw functionError;
 
-        // 4. SALVAR ESTATÍSTICAS
         const freeCount = destinatarios.filter(u => !u.is_premium).length;
         const premiumCount = destinatarios.filter(u => u.is_premium).length;
 
@@ -685,19 +672,15 @@ async function enviarNotificacao() {
                 delivery_success: true
             });
 
-        // 5. SUCESSO
         mostrarAlerta('success', `✅ Notificação enviada para ${destinatarios.length} usuários!`);
         
-        // Limpar e recarregar
         limparFormulario();
         carregarEstatisticas();
         carregarNotificacoes();
 
     } catch (erro) {
-        console.error('Erro ao enviar notificação:', erro);
         mostrarAlerta('error', `❌ Erro: ${erro.message}`);
     } finally {
-        // Restaurar botão
         btn.innerHTML = '📨 Enviar Notificação';
         btn.disabled = false;
     }
@@ -746,17 +729,14 @@ function mostrarAlerta(tipo, mensagem) {
 // ==================== CARREGAR DADOS ====================
 async function carregarEstatisticas() {
     try {
-        // Total de notificações enviadas
         const { count: totalNotificacoes } = await supabase
             .from('admin_notifications')
             .select('*', { count: 'exact', head: true });
 
-        // Total de usuários
         const { count: totalUsuarios } = await supabase
             .from('profiles')
             .select('*', { count: 'exact', head: true });
 
-        // Usuários free vs premium
         const { count: usuariosFree } = await supabase
             .from('profiles')
             .select('*', { count: 'exact', head: true })
@@ -767,17 +747,15 @@ async function carregarEstatisticas() {
             .select('*', { count: 'exact', head: true })
             .eq('is_premium', true);
 
-        // Atualizar UI
         document.getElementById('totalEnviadas').textContent = totalNotificacoes || 0;
         document.getElementById('totalUsuarios').textContent = totalUsuarios || 0;
         document.getElementById('usuariosFree').textContent = usuariosFree || 0;
         document.getElementById('usuariosPremium').textContent = usuariosPremium || 0;
 
-        // Carregar usuários para o select
         await carregarUsuariosSelect();
 
     } catch (erro) {
-        console.error('Erro ao carregar estatísticas:', erro);
+        // Silencioso
     }
 }
 
@@ -801,7 +779,7 @@ async function carregarUsuariosSelect() {
             });
         }
     } catch (erro) {
-        console.error('Erro ao carregar usuários:', erro);
+        // Silencioso
     }
 }
 
@@ -851,7 +829,6 @@ async function carregarNotificacoes() {
                 'bonus': '🎁 Bônus'
             }[notificacao.category] || 'Aviso';
 
-            // Info do destinatário
             let destinatarioInfo = '';
             if (notificacao.target_type === 'specific') {
                 destinatarioInfo = `Para: Usuário específico`;
@@ -875,7 +852,6 @@ async function carregarNotificacoes() {
         });
 
     } catch (erro) {
-        console.error('Erro ao carregar notificações:', erro);
         container.innerHTML = `
             <div style="text-align: center; padding: 2rem; color: #718096;">
                 ❌ Erro ao carregar notificações
