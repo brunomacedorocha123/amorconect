@@ -271,11 +271,9 @@ class MessagesSystem {
             </div>
         `).join('');
 
-        // Adicionar event listeners após renderizar
         this.addConversationClickListeners();
     }
 
-    // NOVO MÉTODO: Adicionar listeners de clique
     addConversationClickListeners() {
         const conversationItems = document.querySelectorAll('.conversation-item');
         conversationItems.forEach(item => {
@@ -288,10 +286,8 @@ class MessagesSystem {
         });
     }
 
-    // FUNÇÃO PRINCIPAL CORRIGIDA: Selecionar conversa
     async selectConversation(otherUserId) {
         try {
-            // Atualizar UI - remover active de todos e adicionar ao clicado
             document.querySelectorAll('.conversation-item').forEach(item => {
                 item.classList.remove('active');
             });
@@ -302,14 +298,8 @@ class MessagesSystem {
             }
 
             this.currentConversation = otherUserId;
-            
-            // Carregar mensagens da conversa
             await this.loadConversationMessages(otherUserId);
-            
-            // Mostrar área do chat
             this.showChatArea();
-            
-            // Atualizar header do chat
             this.updateChatHeader(otherUserId);
             
         } catch (error) {
@@ -345,7 +335,7 @@ class MessagesSystem {
         }
     }
 
-    // CONTINUA NA PRÓXIMA PARTE...
+    // CONTINUA NA SEGUNDA PARTE...
         async loadConversationMessagesFallback(otherUserId) {
         try {
             const { data: messages, error } = await this.supabase
@@ -474,35 +464,18 @@ class MessagesSystem {
         return 'Enviada';
     }
 
-    // FUNÇÃO CORRIGIDA: Mostrar área do chat
     showChatArea() {
         const inputArea = document.getElementById('messageInputArea');
         const chatHeader = document.getElementById('chatHeader');
         const placeholder = document.querySelector('.chat-header-placeholder');
         const emptyChat = document.querySelector('.empty-chat');
         
-        // Mostrar área de digitação
-        if (inputArea) {
-            inputArea.style.display = 'block';
-        }
-        
-        // Esconder placeholder do header
-        if (placeholder) {
-            placeholder.style.display = 'none';
-        }
-        
-        // Esconder estado vazio do chat
-        if (emptyChat) {
-            emptyChat.style.display = 'none';
-        }
-        
-        // Garantir que o header do chat está visível
-        if (chatHeader) {
-            chatHeader.style.display = 'flex';
-        }
+        if (inputArea) inputArea.style.display = 'block';
+        if (placeholder) placeholder.style.display = 'none';
+        if (emptyChat) emptyChat.style.display = 'none';
+        if (chatHeader) chatHeader.style.display = 'flex';
     }
 
-    // FUNÇÃO CORRIGIDA: Atualizar header do chat
     async updateChatHeader(otherUserId) {
         const chatHeader = document.getElementById('chatHeader');
         if (!chatHeader) return;
@@ -510,7 +483,6 @@ class MessagesSystem {
         const conversation = this.conversations.find(c => c.other_user_id === otherUserId);
         
         if (!conversation) {
-            // Se não encontrou na lista, buscar informações do usuário
             try {
                 const { data: userProfile, error } = await this.supabase
                     .from('profiles')
@@ -553,7 +525,6 @@ class MessagesSystem {
             return;
         }
 
-        // Usar informações da conversa
         chatHeader.innerHTML = `
             <div class="chat-header-user">
                 <div class="chat-user-avatar">
@@ -643,8 +614,7 @@ class MessagesSystem {
         }
     }
 
-    // CONTINUA NA TERCEIRA PARTE...
-        async sendMessageFallback(message) {
+    async sendMessageFallback(message) {
         try {
             const { data, error } = await this.supabase
                 .from('messages')
@@ -669,6 +639,7 @@ class MessagesSystem {
         }
     }
 
+    // FUNÇÃO DO CONTADOR CORRIGIDA
     async checkCanSendMessage() {
         try {
             const isPremium = this.currentUser.profile?.is_premium;
@@ -684,14 +655,33 @@ class MessagesSystem {
                 .single();
 
             if (error) {
+                await this.supabase
+                    .from('user_message_limits')
+                    .upsert({
+                        user_id: this.currentUser.id,
+                        messages_sent_today: 0,
+                        last_reset_date: new Date().toISOString()
+                    });
                 return { can_send: true, reason: null };
             }
 
-            if (limits && new Date(limits.last_reset_date).toDateString() !== new Date().toDateString()) {
+            // VERIFICAÇÃO DE RESET
+            const today = new Date().toDateString();
+            const lastResetDate = new Date(limits.last_reset_date).toDateString();
+            
+            if (today !== lastResetDate) {
+                await this.supabase
+                    .from('user_message_limits')
+                    .update({
+                        messages_sent_today: 0,
+                        last_reset_date: new Date().toISOString()
+                    })
+                    .eq('user_id', this.currentUser.id);
+                
                 return { can_send: true, reason: null };
             }
 
-            const sentToday = limits?.messages_sent_today || 0;
+            const sentToday = limits.messages_sent_today || 0;
             
             if (sentToday >= this.messageLimit) {
                 return { can_send: false, reason: 'limit_reached' };
@@ -717,6 +707,7 @@ class MessagesSystem {
         }
     }
 
+    // FUNÇÃO DO CONTADOR CORRIGIDA COM RESET AUTOMÁTICO
     async updateMessageCounter() {
         try {
             const isPremium = this.currentUser.profile?.is_premium;
@@ -735,11 +726,30 @@ class MessagesSystem {
 
             const { data: limits, error } = await this.supabase
                 .from('user_message_limits')
-                .select('messages_sent_today')
+                .select('messages_sent_today, last_reset_date')
                 .eq('user_id', this.currentUser.id)
                 .single();
 
-            const sentToday = limits?.messages_sent_today || 0;
+            let sentToday = 0;
+            
+            if (!error && limits) {
+                // VERIFICAÇÃO DE RESET NO CONTADOR TAMBÉM
+                const today = new Date().toDateString();
+                const lastResetDate = new Date(limits.last_reset_date).toDateString();
+                
+                if (today !== lastResetDate) {
+                    await this.supabase
+                        .from('user_message_limits')
+                        .update({
+                            messages_sent_today: 0,
+                            last_reset_date: new Date().toISOString()
+                        })
+                        .eq('user_id', this.currentUser.id);
+                    sentToday = 0;
+                } else {
+                    sentToday = limits.messages_sent_today || 0;
+                }
+            }
 
             counter.innerHTML = `
                 <span class="counter-text">Mensagens hoje: </span>
@@ -752,7 +762,8 @@ class MessagesSystem {
         }
     }
 
-    setupEventListeners() {
+    // CONTINUA NA TERCEIRA PARTE FINAL...
+        setupEventListeners() {
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendMessage');
         const refreshBtn = document.getElementById('refreshMessages');
@@ -854,6 +865,7 @@ class MessagesSystem {
                 await this.loadConversationMessages(this.currentConversation);
             }
             
+            this.updateMessageCounter(); // Atualiza contador também
             this.showNotification('Conversas atualizadas', 'success');
         } catch (error) {
             console.error('Erro ao atualizar:', error);
@@ -902,7 +914,8 @@ class MessagesSystem {
                 await this.loadConversationMessages(this.currentConversation);
             }
             await this.loadConversations();
-        }, 30000);
+            this.updateMessageCounter(); // VERIFICA RESET AUTOMATICAMENTE
+        }, 30000); // A cada 30 segundos
     }
 
     escapeHtml(text) {
