@@ -541,7 +541,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ==================== VARIÁVEIS GLOBAIS ====================
-let adminUserId = null;
+let adminUserId = '60844a06-213d-41ad-b5d9-df45748e552c'; // Akalanata como admin fixo
 
 // ==================== VERIFICAÇÃO DE AUTENTICAÇÃO ====================
 function verificarAutenticacao() {
@@ -556,31 +556,11 @@ function verificarAutenticacao() {
 document.addEventListener('DOMContentLoaded', function() {
     if (!verificarAutenticacao()) return;
     
-    inicializarAdmin();
     carregarEstatisticas();
     carregarNotificacoes();
     
     configurarEventos();
 });
-
-async function inicializarAdmin() {
-    try {
-        const { data: usuarios, error } = await supabase
-            .from('profiles')
-            .select('id')
-            .limit(1)
-            .single();
-
-        if (error) {
-            adminUserId = '00000000-0000-0000-0000-000000000000';
-        } else {
-            adminUserId = usuarios.id;
-        }
-
-    } catch (erro) {
-        adminUserId = '00000000-0000-0000-0000-000000000000';
-    }
-}
 
 function configurarEventos() {
     document.querySelectorAll('input[name="userType"]').forEach(radio => {
@@ -598,11 +578,6 @@ function configurarEventos() {
 
 // ==================== FUNÇÃO PRINCIPAL - ENVIAR NOTIFICAÇÃO ====================
 async function enviarNotificacao() {
-    if (!adminUserId) {
-        alert('Erro: Admin não inicializado');
-        return;
-    }
-
     const tipo = document.getElementById('notificationType').value;
     const userType = document.querySelector('input[name="userType"]:checked').value;
     const userId = userType === 'specific' ? document.getElementById('specificUserId').value : null;
@@ -633,7 +608,7 @@ async function enviarNotificacao() {
 
         const userIds = destinatarios.map(user => user.id);
 
-        // 2. USAR FUNÇÃO SQL ÚNICA PARA CRIAR TUDO
+        // 2. USAR FUNÇÃO SQL PARA CRIAR TUDO
         const { data: notificationId, error } = await supabase.rpc(
             'criar_notificacao_completa',
             {
