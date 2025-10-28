@@ -624,53 +624,30 @@ async function enviarNotificacao() {
     btn.disabled = true;
 
     try {
+        // 1. BUSCAR DESTINATÁRIOS
         let destinatarios = await buscarDestinatarios(userType, userId);
         
         if (destinatarios.length === 0) {
             throw new Error('Nenhum usuário encontrado para enviar notificação');
         }
 
-        const { data: notificacao, error: notifError } = await supabase
-            .from('admin_notifications')
-            .insert({
-                title: titulo,
-                message: mensagem,
-                category: tipo,
-                target_type: userType,
-                specific_user_id: userId,
-                sent_by: adminUserId,
-                status: 'sent'
-            })
-            .select()
-            .single();
-
-        if (notifError) throw notifError;
-
         const userIds = destinatarios.map(user => user.id);
-        
-        const { error: functionError } = await supabase.rpc(
-            'insert_user_notifications_bulk',
+
+        // 2. USAR FUNÇÃO SQL ÚNICA PARA CRIAR TUDO
+        const { data, error } = await supabase.rpc(
+            'criar_notificacao_completa',
             {
-                p_notification_id: notificacao.id,
+                p_titulo: titulo,
+                p_mensagem: mensagem,
+                p_categoria: tipo,
+                p_tipo_destino: userType,
+                p_usuario_especifico: userId,
+                p_admin_id: adminUserId,
                 p_user_ids: userIds
             }
         );
 
-        if (functionError) throw functionError;
-
-        const freeCount = destinatarios.filter(u => !u.is_premium).length;
-        const premiumCount = destinatarios.filter(u => u.is_premium).length;
-
-        await supabase
-            .from('notification_stats')
-            .insert({
-                notification_id: notificacao.id,
-                total_recipients: destinatarios.length,
-                free_recipients: freeCount,
-                premium_recipients: premiumCount,
-                read_count: 0,
-                delivery_success: true
-            });
+        if (error) throw error;
 
         mostrarAlerta('success', `✅ Notificação enviada para ${destinatarios.length} usuários!`);
         
