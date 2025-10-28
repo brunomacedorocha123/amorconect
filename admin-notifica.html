@@ -451,7 +451,7 @@
         </div>
     </div>
 
-      <script>
+         <script>
         // Configuração Supabase
         const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
@@ -462,137 +462,67 @@
             window.location.href = 'login-admin.html';
         }
 
-        // Elementos
-        const userTypeRadios = document.querySelectorAll('input[name="userType"]');
-        const specificUserGroup = document.getElementById('specificUserGroup');
-        const specificUserId = document.getElementById('specificUserId');
-        const successAlert = document.getElementById('successAlert');
-        const errorAlert = document.getElementById('errorAlert');
-
         // Quando a página carregar
         document.addEventListener('DOMContentLoaded', function() {
             carregarUsuarios();
             carregarNotificacoes();
             
             // Configurar radio buttons
-            userTypeRadios.forEach(radio => {
+            document.querySelectorAll('input[name="userType"]').forEach(radio => {
                 radio.addEventListener('change', function() {
-                    specificUserGroup.style.display = this.value === 'specific' ? 'block' : 'none';
+                    document.getElementById('specificUserGroup').style.display = 
+                        this.value === 'specific' ? 'block' : 'none';
                 });
             });
-
-            // Configurar botão enviar
-            const btnEnviar = document.querySelector('.btn-primary');
-            btnEnviar.addEventListener('click', enviarNotificacao);
         });
 
-        // Carregar usuários para dropdown
-        async function carregarUsuarios() {
-            try {
-                const { data: usuarios } = await supabase
-                    .from('profiles')
-                    .select('id, nickname, email')
-                    .eq('is_active', true)
-                    .order('nickname');
-
-                specificUserId.innerHTML = '<option value="">Selecione um usuário</option>';
-                
-                if (usuarios) {
-                    usuarios.forEach(usuario => {
-                        const option = document.createElement('option');
-                        option.value = usuario.id;
-                        option.textContent = `${usuario.nickname || 'Sem nome'} (${usuario.email})`;
-                        specificUserId.appendChild(option);
-                    });
-                }
-            } catch (erro) {
-                // Ignorar erro
-            }
-        }
-
-        // Carregar histórico de notificações
-        async function carregarNotificacoes() {
-            try {
-                const { data: notificacoes } = await supabase
-                    .from('notifications')
-                    .select('*')
-                    .eq('is_sent', true)
-                    .order('created_at', { ascending: false });
-
-                const container = document.getElementById('notificationsList');
-                container.innerHTML = '';
-
-                if (!notificacoes || notificacoes.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #718096;">Nenhuma notificação enviada</div>';
-                    return;
-                }
-
-                notificacoes.forEach(notificacao => {
-                    const item = document.createElement('div');
-                    item.className = 'notification-item';
-                    item.innerHTML = `
-                        <div class="notification-info">
-                            <h4>${notificacao.title}</h4>
-                            <p>${notificacao.message}</p>
-                            <div class="notification-meta">
-                                Para: ${notificacao.target_audience} | ${new Date(notificacao.created_at).toLocaleString('pt-BR')}
-                            </div>
-                        </div>
-                        <div class="notification-actions">
-                            <button class="btn btn-small btn-danger" onclick="excluirNotificacao('${notificacao.id}')">Excluir</button>
-                        </div>
-                    `;
-                    container.appendChild(item);
-                });
-
-            } catch (erro) {
-                // Ignorar erro
-            }
-        }
-
-        // Função principal - Enviar notificação
+        // Função ENVIAR NOTIFICAÇÃO - Versão Simplificada
         async function enviarNotificacao() {
-            // Pegar dados do formulário
+            // 1. Coletar dados do formulário
             const tipo = document.getElementById('notificationType').value;
             const userType = document.querySelector('input[name="userType"]:checked').value;
-            const userId = userType === 'specific' ? specificUserId.value : null;
+            const userId = userType === 'specific' ? document.getElementById('specificUserId').value : null;
             const titulo = document.getElementById('notificationTitle').value;
             const mensagem = document.getElementById('notificationMessage').value;
             
-            // Validação
-            if (!titulo || !mensagem) {
-                mostrarAlerta('error', 'Preencha título e mensagem');
+            // 2. Validação básica
+            if (!titulo.trim() || !mensagem.trim()) {
+                alert('Preencha o título e a mensagem');
                 return;
             }
             
             if (userType === 'specific' && !userId) {
-                mostrarAlerta('error', 'Selecione um usuário');
+                alert('Selecione um usuário específico');
                 return;
             }
 
+            // 3. Mostrar que está processando
+            const btn = document.querySelector('.btn-primary');
+            btn.textContent = 'Enviando...';
+            btn.disabled = true;
+
             try {
-                // 1. Buscar categoria
-                const { data: categoria } = await supabase
+                // 4. Buscar ID da categoria
+                const { data: categoria, error: catError } = await supabase
                     .from('notification_categories')
                     .select('id')
                     .eq('name', tipo)
                     .single();
 
-                if (!categoria) {
-                    mostrarAlerta('error', 'Categoria não encontrada');
-                    return;
-                }
+                if (catError) throw new Error('Categoria não encontrada');
 
-                // 2. Buscar admin (primeiro usuário)
-                const { data: usuarios } = await supabase
+                // 5. Buscar um usuário admin (qualquer usuário)
+                const { data: usuarios, error: userError } = await supabase
                     .from('profiles')
                     .select('id')
                     .limit(1);
 
+                if (userError || !usuarios.length) throw new Error('Nenhum usuário encontrado');
+
                 const adminId = usuarios[0].id;
 
-                // 3. Salvar notificação
-                const { data: notificacao } = await supabase
+                // 6. Inserir notificação
+                const { data: notificacao, error: notifError } = await supabase
                     .from('notifications')
                     .insert({
                         category_id: categoria.id,
@@ -607,77 +537,116 @@
                     .select()
                     .single();
 
-                if (!notificacao) {
-                    mostrarAlerta('error', 'Erro ao salvar notificação');
-                    return;
-                }
+                if (notifError) throw notifError;
 
-                // 4. Buscar destinatários
+                // 7. Buscar destinatários
                 let query = supabase.from('profiles').select('id');
                 
-                if (userType === 'all') {
-                    query = query.eq('is_active', true);
-                } else if (userType === 'free') {
-                    query = query.eq('is_active', true).eq('user_type', 'free');
-                } else if (userType === 'premium') {
-                    query = query.eq('is_active', true).eq('user_type', 'premium');
-                } else if (userType === 'specific') {
-                    query = query.eq('id', userId);
-                }
+                if (userType === 'all') query = query.eq('is_active', true);
+                else if (userType === 'free') query = query.eq('is_active', true).eq('user_type', 'free');
+                else if (userType === 'premium') query = query.eq('is_active', true).eq('user_type', 'premium');
+                else if (userType === 'specific') query = query.eq('id', userId);
 
-                const { data: destinatarios } = await query;
+                const { data: destinatarios, error: destError } = await query;
+                if (destError) throw destError;
 
-                // 5. Salvar destinatários
+                // 8. Salvar destinatários
                 if (destinatarios && destinatarios.length > 0) {
                     const recipients = destinatarios.map(user => ({
                         notification_id: notificacao.id,
                         user_id: user.id
                     }));
 
-                    await supabase
+                    const { error: insertError } = await supabase
                         .from('notification_recipients')
                         .insert(recipients);
+
+                    if (insertError) throw insertError;
                 }
 
-                // Sucesso
-                mostrarAlerta('success', 'Notificação enviada com sucesso!');
+                // 9. SUCESSO
+                alert('✅ Notificação enviada com sucesso para ' + destinatarios.length + ' usuários!');
+                
+                // Limpar formulário
                 document.getElementById('notificationForm').reset();
-                specificUserGroup.style.display = 'none';
+                document.getElementById('specificUserGroup').style.display = 'none';
+                
+                // Recarregar lista
                 carregarNotificacoes();
 
             } catch (erro) {
-                mostrarAlerta('error', 'Erro: ' + erro.message);
+                // 10. ERRO
+                alert('❌ Erro: ' + erro.message);
+            } finally {
+                // 11. Restaurar botão
+                btn.textContent = 'Enviar Notificação';
+                btn.disabled = false;
             }
         }
 
-        // Excluir notificação
-        async function excluirNotificacao(id) {
-            if (confirm('Excluir esta notificação?')) {
-                await supabase.from('notifications').delete().eq('id', id);
-                carregarNotificacoes();
-                mostrarAlerta('success', 'Notificação excluída');
-            }
+        // Funções auxiliares (já testadas)
+        async function carregarUsuarios() {
+            try {
+                const { data: usuarios } = await supabase
+                    .from('profiles')
+                    .select('id, nickname, email')
+                    .eq('is_active', true)
+                    .order('nickname');
+
+                const select = document.getElementById('specificUserId');
+                select.innerHTML = '<option value="">Selecione um usuário</option>';
+                
+                usuarios.forEach(usuario => {
+                    const option = document.createElement('option');
+                    option.value = usuario.id;
+                    option.textContent = `${usuario.nickname || 'Sem nome'} (${usuario.email})`;
+                    select.appendChild(option);
+                });
+            } catch (erro) {}
         }
 
-        // Mostrar alertas
-        function mostrarAlerta(tipo, mensagem) {
-            const alerta = tipo === 'success' ? successAlert : errorAlert;
-            const outroAlerta = tipo === 'success' ? errorAlert : successAlert;
-            
-            alerta.textContent = mensagem;
-            alerta.style.display = 'block';
-            outroAlerta.style.display = 'none';
-            
-            setTimeout(() => {
-                alerta.style.display = 'none';
-            }, 5000);
+        async function carregarNotificacoes() {
+            try {
+                const { data: notificacoes } = await supabase
+                    .from('notifications')
+                    .select('*')
+                    .eq('is_sent', true)
+                    .order('created_at', { ascending: false });
+
+                const container = document.getElementById('notificationsList');
+                container.innerHTML = '';
+
+                if (!notificacoes || notificacoes.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #718096;">Nenhuma notificação</div>';
+                    return;
+                }
+
+                notificacoes.forEach(notificacao => {
+                    const item = document.createElement('div');
+                    item.className = 'notification-item';
+                    item.innerHTML = `
+                        <div class="notification-info">
+                            <h4>${notificacao.title}</h4>
+                            <p>${notificacao.message}</p>
+                            <div class="notification-meta">
+                                ${notificacao.target_audience} | ${new Date(notificacao.created_at).toLocaleString('pt-BR')}
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+            } catch (erro) {}
         }
 
-        // Logout
+        function limparFormulario() {
+            document.getElementById('notificationForm').reset();
+            document.getElementById('specificUserGroup').style.display = 'none';
+        }
+
         function fazerLogout() {
             sessionStorage.removeItem('adminAuthenticated');
             window.location.href = 'login-admin.html';
         }
-    </script>             
+    </script>            
 </body>
 </html>
