@@ -500,7 +500,8 @@ function logoutAdmin() {
 
 // ==================== FUNÇÃO PARA NOTIFICAÇÕES ====================
 function irParaNotificacoes() {
-    window.location.href = 'admin-notifica.html';
+    // Abre a página de notificações em uma nova aba
+    window.open('admin-notifica.html', '_blank');
 }
 
 // ==================== FUNÇÕES PRINCIPAIS ====================
@@ -1023,20 +1024,20 @@ async function banirUsuarioDireto(userId, email) {
 
 // ==================== FUNÇÕES GERAIS ====================
 function showSection(sectionName) {
-    // CORREÇÃO: Esconder todas as seções
+    // Esconder todas as seções
     document.querySelectorAll('.content-section').forEach(section => {
         section.classList.remove('active');
     });
     
-    // CORREÇÃO: Remover active de todos os botões
+    // Remover active de todos os botões
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('active');
     });
 
-    // CORREÇÃO: Mostrar seção selecionada
+    // Mostrar seção selecionada
     document.getElementById(sectionName).classList.add('active');
     
-    // CORREÇÃO: Encontrar e ativar o botão correto
+    // Encontrar e ativar o botão correto
     const activeButton = document.querySelector(`.nav-btn[onclick*="${sectionName}"]`);
     if (activeButton) {
         activeButton.classList.add('active');
