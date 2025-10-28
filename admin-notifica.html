@@ -451,7 +451,7 @@
         </div>
     </div>
 
-       <script>
+           <script>
         // ==================== CONFIGURAÇÃO SUPABASE ====================
         const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
@@ -491,6 +491,12 @@
                     }
                 });
             });
+
+            // Adicionar evento de submit no formulário
+            notificationForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                enviarNotificacao();
+            });
         });
 
         // ==================== FUNÇÕES PRINCIPAIS ====================
@@ -502,18 +508,20 @@
                     .eq('is_active', true)
                     .order('nickname');
 
-                if (error) throw error;
+                if (error) return;
 
                 specificUserId.innerHTML = '<option value="">Selecione um usuário</option>';
                 
-                usuarios.forEach(usuario => {
-                    const option = document.createElement('option');
-                    option.value = usuario.id;
-                    option.textContent = `${usuario.nickname || 'Sem nome'} (${usuario.email})`;
-                    specificUserId.appendChild(option);
-                });
+                if (usuarios) {
+                    usuarios.forEach(usuario => {
+                        const option = document.createElement('option');
+                        option.value = usuario.id;
+                        option.textContent = `${usuario.nickname || 'Sem nome'} (${usuario.email})`;
+                        specificUserId.appendChild(option);
+                    });
+                }
             } catch (erro) {
-                console.error('Erro ao carregar usuários:', erro);
+                // Silencioso em caso de erro
             }
         }
 
@@ -529,7 +537,7 @@
                     .eq('is_sent', true)
                     .order('created_at', { ascending: false });
 
-                if (error) throw error;
+                if (error) return;
 
                 notificationsList.innerHTML = '';
 
@@ -602,7 +610,7 @@
                 });
 
             } catch (erro) {
-                console.error('Erro ao carregar notificações:', erro);
+                // Silencioso em caso de erro
             }
         }
 
@@ -633,16 +641,22 @@
                     .eq('name', tipo)
                     .single();
 
-                if (catError) throw new Error('Categoria não encontrada');
+                if (catError) {
+                    mostrarAlerta('error', 'Erro: Categoria não encontrada.');
+                    return;
+                }
 
-                // 2. Buscar um usuário admin (usar o primeiro disponível)
+                // 2. Buscar um usuário admin
                 const { data: adminUser, error: adminError } = await supabase
                     .from('profiles')
                     .select('id')
                     .limit(1)
                     .single();
 
-                if (adminError) throw new Error('Nenhum usuário encontrado');
+                if (adminError) {
+                    mostrarAlerta('error', 'Erro: Nenhum administrador encontrado.');
+                    return;
+                }
 
                 // 3. Inserir notificação
                 const { data: novaNotificacao, error: notifError } = await supabase
@@ -660,7 +674,10 @@
                     .select()
                     .single();
 
-                if (notifError) throw notifError;
+                if (notifError) {
+                    mostrarAlerta('error', 'Erro ao salvar notificação.');
+                    return;
+                }
 
                 // 4. Buscar usuários destinatários
                 let query = supabase.from('profiles').select('id');
@@ -682,7 +699,10 @@
 
                 const { data: usuarios, error: usersError } = await query;
                 
-                if (usersError) throw usersError;
+                if (usersError) {
+                    mostrarAlerta('error', 'Erro ao buscar destinatários.');
+                    return;
+                }
 
                 // 5. Inserir destinatários
                 if (usuarios && usuarios.length > 0) {
@@ -695,7 +715,10 @@
                         .from('notification_recipients')
                         .insert(destinatarios);
 
-                    if (destError) throw destError;
+                    if (destError) {
+                        mostrarAlerta('error', 'Erro ao salvar destinatários.');
+                        return;
+                    }
                 }
 
                 mostrarAlerta('success', 'Notificação enviada com sucesso!');
@@ -703,8 +726,7 @@
                 carregarNotificacoes();
 
             } catch (erro) {
-                console.error('Erro ao enviar notificação:', erro);
-                mostrarAlerta('error', 'Erro ao enviar notificação. Verifique o console.');
+                mostrarAlerta('error', 'Erro ao enviar notificação. Tente novamente.');
             }
         }
 
@@ -716,6 +738,10 @@
         async function reenviarNotificacao(id) {
             if (!verificarAutenticacao()) return;
 
+            if (!confirm('Tem certeza que deseja reenviar esta notificação?')) {
+                return;
+            }
+
             try {
                 const { data: notificacao, error } = await supabase
                     .from('notifications')
@@ -723,7 +749,10 @@
                     .eq('id', id)
                     .single();
 
-                if (error) throw error;
+                if (error) {
+                    mostrarAlerta('error', 'Erro ao buscar notificação.');
+                    return;
+                }
 
                 const { data: adminUser } = await supabase
                     .from('profiles')
@@ -746,7 +775,10 @@
                     .select()
                     .single();
 
-                if (novaError) throw novaError;
+                if (novaError) {
+                    mostrarAlerta('error', 'Erro ao reenviar notificação.');
+                    return;
+                }
 
                 // Buscar e inserir destinatários
                 let query = supabase.from('profiles').select('id');
@@ -783,7 +815,6 @@
                 carregarNotificacoes();
 
             } catch (erro) {
-                console.error('Erro ao reenviar notificação:', erro);
                 mostrarAlerta('error', 'Erro ao reenviar notificação.');
             }
         }
@@ -801,13 +832,15 @@
                     .delete()
                     .eq('id', id);
 
-                if (error) throw error;
+                if (error) {
+                    mostrarAlerta('error', 'Erro ao excluir notificação.');
+                    return;
+                }
 
                 mostrarAlerta('success', 'Notificação excluída com sucesso!');
                 carregarNotificacoes();
 
             } catch (erro) {
-                console.error('Erro ao excluir notificação:', erro);
                 mostrarAlerta('error', 'Erro ao excluir notificação.');
             }
         }
