@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minhas Notificações - Amor Conect</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --background: #f8fafc;
+            --text: #2d3748;
+            --success: #48bb78;
+            --warning: #ed8936;
+            --danger: #f56565;
+            --info: #4299e1;
+            --white: #ffffff;
+            --gray: #718096;
+            --light-gray: #edf2f7;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: var(--white);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 2.2rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--light-gray);
+            border-radius: 10px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .notifications-container {
+            background: var(--white);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .notification-item {
+            background: var(--light-gray);
+            border-left: 4px solid var(--primary);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 0 10px 10px 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .notification-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .notification-item.unread {
+            background: var(--white);
+            border-left-color: var(--info);
+            border: 2px solid var(--info);
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .notification-message {
+            color: var(--gray);
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+        }
+
+        .notification-meta {
+            font-size: 0.85rem;
+            color: var(--gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .badge-warning {
+            background: #fef5e7;
+            color: #d69e2e;
+        }
+
+        .badge-bonus {
+            background: #f0fff4;
+            color: #38a169;
+        }
+
+        .badge-info {
+            background: #ebf8ff;
+            color: #3182ce;
+        }
+
+        .badge-new {
+            background: var(--info);
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--light-gray);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray);
+        }
+
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: var(--white);
+            color: var(--primary);
+            border: none;
+            padding: 0.7rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .mark-read-btn {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mark-read-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 10px;
+            }
+            
+            .header {
+                padding: 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .notification-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            
+            .back-btn {
+                position: relative;
+                top: 0;
+                left: 0;
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="voltarParaApp()">
+        ← Voltar para o App
+    </button>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🔔 Minhas Notificações</h1>
+            <p>Fique por dentro de todas as novidades e alertas</p>
+            
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <div>
+                    <div id="userName">Carregando...</div>
+                    <small id="userEmail"></small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notificações -->
+        <div class="notifications-container">
+            <div class="section-title">
+                <h2>📨 Notificações Recebidas</h2>
+                <button class="btn btn-primary" onclick="carregarNotificacoes()">
+                    🔄 Atualizar
+                </button>
+            </div>
+            
+            <div id="notificationsList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Carregando suas notificações...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== CONFIGURAÇÃO SUPABASE ====================
+        const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ==================== VARIÁVEIS GLOBAIS ====================
+        let usuarioAtual = null;
+
+        // ==================== FUNÇÕES PRINCIPAIS ====================
+        async function inicializarPagina() {
+            // Em um cenário real, você teria o usuário logado
+            // Por enquanto, vamos simular um usuário para teste
+            await simularUsuarioLogado();
+            await carregarNotificacoes();
+        }
+
+        async function simularUsuarioLogado() {
+            try {
+                // Buscar um usuário qualquer do banco para teste
+                const { data: usuarios, error } = await supabase
+                    .from('profiles')
+                    .select('id, nickname, email, avatar_url')
+                    .eq('is_active', true)
+                    .limit(1)
+                    .single();
+
+                if (error) throw error;
+
+                usuarioAtual = usuarios;
+                
+                // Atualizar interface do usuário
+                document.getElementById('userName').textContent = usuarios.nickname || 'Usuário';
+                document.getElementById('userEmail').textContent = usuarios.email;
+                
+                const avatarElement = document.getElementById('userAvatar');
+                if (usuarios.avatar_url) {
+                    avatarElement.innerHTML = `<img src="${usuarios.avatar_url}" alt="${usuarios.nickname}" style="width: 100%; height: 100%; border-radius: 50%;">`;
+                } else {
+                    const iniciais = usuarios.nickname ? 
+                        usuarios.nickname.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : 'U';
+                    avatarElement.textContent = iniciais;
+                }
+
+            } catch (erro) {
+                console.error('Erro ao carregar usuário:', erro);
+                // Fallback para usuário de teste
+                usuarioAtual = { id: 'test-user', nickname: 'Usuário Teste', email: 'teste@email.com' };
+                document.getElementById('userName').textContent = 'Usuário Teste';
+                document.getElementById('userEmail').textContent = 'teste@email.com';
+            }
+        }
+
+        async function carregarNotificacoes() {
+            if (!usuarioAtual) return;
+
+            const container = document.getElementById('notificationsList');
+            
+            try {
+                // Buscar notificações do usuário atual
+                const { data: notificacoes, error } = await supabase
+                    .from('notification_recipients')
+                    .select(`
+                        *,
+                        notification:notifications(
+                            id,
+                            title,
+                            message,
+                            created_at,
+                            categories:category_id(name, color, icon)
+                        )
+                    `)
+                    .eq('user_id', usuarioAtual.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                container.innerHTML = '';
+
+                if (!notificacoes || notificacoes.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">📭</div>
+                            <h3>Nenhuma notificação</h3>
+                            <p>Você não tem nenhuma notificação no momento.</p>
+                            <p style="font-size: 0.9rem; margin-top: 1rem; color: var(--gray);">
+                                As notificações do admin aparecerão aqui.
+                            </p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Agrupar notificações por data
+                const hoje = new Date().toDateString();
+                const ontem = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
+
+                let html = '';
+
+                notificacoes.forEach(item => {
+                    const notificacao = item.notification;
+                    const dataNotificacao = new Date(notificacao.created_at);
+                    const dataFormatada = dataNotificacao.toLocaleDateString('pt-BR');
+                    const horaFormatada = dataNotificacao.toLocaleTimeString('pt-BR', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+
+                    let dataHeader = '';
+                    if (dataNotificacao.toDateString() === hoje) {
+                        dataHeader = 'Hoje';
+                    } else if (dataNotificacao.toDateString() === ontem) {
+                        dataHeader = 'Ontem';
+                    } else {
+                        dataHeader = dataFormatada;
+                    }
+
+                    let badgeClass = '';
+                    let badgeText = notificacao.categories?.name || 'aviso';
+                    
+                    switch(notificacao.categories?.name) {
+                        case 'advertencia':
+                            badgeClass = 'badge-warning';
+                            badgeText = 'Advertência';
+                            break;
+                        case 'bonus':
+                            badgeClass = 'badge-bonus';
+                            badgeText = 'Bônus';
+                            break;
+                        case 'aviso':
+                            badgeClass = 'badge-info';
+                            badgeText = 'Aviso';
+                            break;
+                        default:
+                            badgeClass = 'badge-info';
+                    }
+
+                    const isUnread = !item.is_read;
+                    const notificationClass = isUnread ? 'notification-item unread' : 'notification-item';
+
+                    html += `
+                        <div class="${notificationClass}" onclick="marcarComoLida('${item.id}')">
+                            <div class="notification-header">
+                                <div class="notification-title">
+                                    ${notificacao.title}
+                                    <span class="badge ${badgeClass}">${badgeText}</span>
+                                    ${isUnread ? '<span class="badge badge-new">NOVO</span>' : ''}
+                                </div>
+                                ${isUnread ? `
+                                    <button class="mark-read-btn" onclick="event.stopPropagation(); marcarComoLida('${item.id}')">
+                                        Marcar como lida
+                                    </button>
+                                ` : ''}
+                            </div>
+                            <div class="notification-message">
+                                ${notificacao.message}
+                            </div>
+                            <div class="notification-meta">
+                                <span>${dataHeader} às ${horaFormatada}</span>
+                                <span>${isUnread ? '📬 Não lida' : '📭 Lida'}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+
+            } catch (erro) {
+                console.error('Erro ao carregar notificações:', erro);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">❌</div>
+                        <h3>Erro ao carregar notificações</h3>
+                        <p>Tente novamente mais tarde.</p>
+                        <button class="btn btn-primary" onclick="carregarNotificacoes()" style="margin-top: 1rem;">
+                            🔄 Tentar Novamente
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        async function marcarComoLida(recipientId) {
+            try {
+                const { error } = await supabase
+                    .from('notification_recipients')
+                    .update({
+                        is_read: true,
+                        read_at: new Date().toISOString()
+                    })
+                    .eq('id', recipientId);
+
+                if (error) throw error;
+
+                // Recarregar a lista para atualizar o visual
+                await carregarNotificacoes();
+
+            } catch (erro) {
+                console.error('Erro ao marcar como lida:', erro);
+            }
+        }
+
+        function voltarParaApp() {
+            // Em um cenário real, isso voltaria para a página principal do app
+            // Por enquanto, vamos apenas mostrar um alerta
+            alert('Voltando para o aplicativo principal...');
+            // window.location.href = 'index.html'; // Descomente quando tiver a página principal
+        }
+
+        // ==================== INICIALIZAÇÃO ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            inicializarPagina();
+            
+            // Atualizar notificações a cada 30 segundos
+            setInterval(() => {
+                if (usuarioAtual) {
+                    carregarNotificacoes();
+                }
+            }, 30000);
+        });
+    </script>
+</body>
+</html>
