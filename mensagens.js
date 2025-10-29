@@ -27,7 +27,7 @@ class MessagesSystem {
             this.checkUrlParams();
             
             // ⭐ INICIALIZAR SISTEMA VIBE (sem afetar fluxo atual)
-            this.initializeSistemaVibe();
+            await this.initializeSistemaVibe();
             
         } catch (error) {
             this.showNotification('Erro ao carregar mensagens', 'error');
@@ -40,11 +40,9 @@ class MessagesSystem {
             if (window.SistemaVibe && this.currentUser) {
                 this.sistemaVibe = new SistemaVibe();
                 await this.sistemaVibe.initialize(this.currentUser);
-                console.log('✅ Sistema Vibe integrado com sucesso');
             }
         } catch (error) {
             // ⭐ SILENCIOSO - não afeta o chat se der erro
-            console.log('⚠️ Sistema Vibe não inicializado (não crítico)');
         }
     }
 
@@ -243,7 +241,7 @@ class MessagesSystem {
         }
     }
 
-        renderConversations() {
+    renderConversations() {
         const container = document.getElementById('conversationsList');
         if (!container) return;
         
@@ -320,7 +318,7 @@ class MessagesSystem {
             this.currentConversation = otherUserId;
             await this.loadConversationMessages(otherUserId);
             this.showChatArea();
-            await this.updateChatHeader(otherUserId); // ⭐ AGORA É ASYNC
+            await this.updateChatHeader(otherUserId);
             
         } catch (error) {
             this.showNotification('Erro ao carregar conversa', 'error');
@@ -537,6 +535,11 @@ class MessagesSystem {
                             <button class="chat-action-btn" id="fidelityProposeBtn" style="display: none;" title="Propor Vibe Exclusive">
                                 <i class="fas fa-gem"></i>
                             </button>
+                            <!-- ⭐ BOTÃO PROPOSTAS RECEBIDAS ADICIONADO -->
+                            <button class="chat-action-btn" id="viewProposalsBtn" style="display: none;" title="Propostas recebidas">
+                                <i class="fas fa-bell"></i>
+                                <span class="proposal-badge" id="proposalBadge" style="display: none;"></span>
+                            </button>
                             <button class="chat-action-btn" onclick="MessagesSystem.showUserInfo('${otherUserId}')" title="Informações do usuário">
                                 <i class="fas fa-info-circle"></i>
                             </button>
@@ -573,6 +576,11 @@ class MessagesSystem {
                     <button class="chat-action-btn" id="fidelityProposeBtn" style="display: none;" title="Propor Vibe Exclusive">
                         <i class="fas fa-gem"></i>
                     </button>
+                    <!-- ⭐ BOTÃO PROPOSTAS RECEBIDAS ADICIONADO -->
+                    <button class="chat-action-btn" id="viewProposalsBtn" style="display: none;" title="Propostas recebidas">
+                        <i class="fas fa-bell"></i>
+                        <span class="proposal-badge" id="proposalBadge" style="display: none;"></span>
+                    </button>
                     <button class="chat-action-btn" onclick="MessagesSystem.showUserInfo('${otherUserId}')" title="Informações do usuário">
                         <i class="fas fa-info-circle"></i>
                     </button>
@@ -580,18 +588,13 @@ class MessagesSystem {
             `;
         }
 
-        // ⭐ ATUALIZAR BOTÃO VIBE EXCLUSIVE
-        await this.updateFidelityButton(otherUserId);
-    }
-
-    // ⭐ NOVA FUNÇÃO - Atualizar botão Vibe Exclusive
-    async updateFidelityButton(otherUserId) {
+        // ⭐ ATUALIZAR BOTÕES VIBE EXCLUSIVE
         if (this.sistemaVibe && typeof this.sistemaVibe.onConversationSelected === 'function') {
             await this.sistemaVibe.onConversationSelected(otherUserId);
         }
     }
 
-        async sendMessage() {
+    async sendMessage() {
         const messageInput = document.getElementById('messageInput');
         const message = messageInput.value.trim();
         

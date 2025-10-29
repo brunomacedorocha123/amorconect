@@ -5,22 +5,21 @@ class SistemaVibe {
         this.currentUser = null;
         this.currentAgreement = null;
         this.pendingProposals = [];
-        this.messageThreshold = 30; // 30 mensagens para propor
-        this.coolingOffDays = 7; // 7 dias de quarentena
+        this.receivedProposals = [];
     }
 
     async initialize(user) {
         try {
             this.currentUser = user;
-            console.log('🔄 Inicializando Sistema Vibe...');
             
             await this.loadCurrentAgreement();
             await this.loadPendingProposals();
+            await this.loadReceivedProposals();
             this.setupRealtimeListeners();
+            this.createProposalsButton();
             
-            console.log('✅ Sistema Vibe inicializado');
         } catch (error) {
-            console.error('❌ Erro ao inicializar Sistema Vibe:', error);
+            console.error('Erro ao inicializar Sistema Vibe:', error);
         }
     }
 
@@ -28,8 +27,6 @@ class SistemaVibe {
     
     async canShowFidelityButton(otherUserId) {
         try {
-            console.log(`🔍 Verificando condições para Vibe com usuário: ${otherUserId}`);
-            
             const conditions = await Promise.all([
                 this.hasMinimumMessages(otherUserId),
                 this.isUserPremium(),
@@ -38,13 +35,9 @@ class SistemaVibe {
                 this.notAlreadyProposed(otherUserId)
             ]);
 
-            const canShow = conditions.every(Boolean);
-            console.log(`📊 Condições: ${conditions} → Pode mostrar: ${canShow}`);
-            
-            return canShow;
+            return conditions.every(Boolean);
 
         } catch (error) {
-            console.error('Erro ao verificar condições:', error);
             return false;
         }
     }
@@ -58,17 +51,12 @@ class SistemaVibe {
                 });
 
             if (error) {
-                // Fallback: contar mensagens manualmente
                 return await this.countMessagesFallback(otherUserId);
             }
 
-            const hasEnoughMessages = messages >= this.messageThreshold;
-            console.log(`💬 Mensagens com ${otherUserId}: ${messages}/${this.messageThreshold} → ${hasEnoughMessages}`);
-            
-            return hasEnoughMessages;
+            return messages >= 30;
 
         } catch (error) {
-            console.error('Erro ao contar mensagens:', error);
             return false;
         }
     }
@@ -80,20 +68,15 @@ class SistemaVibe {
             .or(`and(sender_id.eq.${this.currentUser.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${this.currentUser.id})`);
 
         if (error) return false;
-        
-        return messages.length >= this.messageThreshold;
+        return messages.length >= 30;
     }
 
     async isUserPremium() {
         try {
-            // ✅ USANDO SEU PREMIUM-MANAGER EXISTENTE
             if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
-                const isPremium = await PremiumManager.checkPremiumStatus();
-                console.log(`👑 Premium pelo PremiumManager: ${isPremium}`);
-                return isPremium;
+                return await PremiumManager.checkPremiumStatus();
             }
 
-            // ✅ FALLBACK: verificar na tabela de subscriptions
             const { data: subscription, error } = await this.supabase
                 .from('user_subscriptions')
                 .select('status, expires_at')
@@ -102,20 +85,15 @@ class SistemaVibe {
                 .gte('expires_at', new Date().toISOString())
                 .single();
 
-            const isPremium = !error && subscription !== null;
-            console.log(`👑 Premium direto do banco: ${isPremium}`);
-            return isPremium;
+            return !error && subscription !== null;
 
         } catch (error) {
-            console.error('Erro ao verificar premium:', error);
             return false;
         }
     }
 
     async noActiveAgreement() {
-        const noActive = !this.currentAgreement || this.currentAgreement.status !== 'active';
-        console.log(`🚫 Sem acordo ativo: ${noActive}`);
-        return noActive;
+        return !this.currentAgreement || this.currentAgreement.status !== 'active';
     }
 
     async noCoolingOffPeriod() {
@@ -129,42 +107,27 @@ class SistemaVibe {
                 .limit(1)
                 .single();
 
-            if (error || !lastAgreement) {
-                console.log('📅 Sem histórico de cancelamento');
-                return true;
-            }
+            if (error || !lastAgreement) return true;
 
             const cancelledDate = new Date(lastAgreement.cancelled_at);
             const quarantineEnd = new Date(cancelledDate);
-            quarantineEnd.setDate(quarantineEnd.getDate() + this.coolingOffDays);
+            quarantineEnd.setDate(quarantineEnd.getDate() + 7);
             
-            const isInQuarantine = new Date() < quarantineEnd;
-            console.log(`⏰ Em quarentena: ${isInQuarantine} (até ${quarantineEnd.toLocaleDateString()})`);
-            
-            return !isInQuarantine;
+            return new Date() >= quarantineEnd;
 
         } catch (error) {
-            console.error('Erro ao verificar quarentena:', error);
             return true;
         }
     }
 
     async notAlreadyProposed(otherUserId) {
-        const alreadyProposed = this.pendingProposals.some(
-            proposal => proposal.receiver_id === otherUserId
-        );
-        
-        console.log(`📨 Já proposto: ${alreadyProposed}`);
-        return !alreadyProposed;
+        return !this.pendingProposals.some(proposal => proposal.receiver_id === otherUserId);
     }
 
     // ==================== PROPOSTAS ====================
 
     async proposeFidelityAgreement(otherUserId) {
         try {
-            console.log(`🎯 Propondo Vibe Exclusive para: ${otherUserId}`);
-            
-            // Verificar condições novamente (segurança)
             const canPropose = await this.canShowFidelityButton(otherUserId);
             if (!canPropose) {
                 throw new Error('Não atende às condições para propor Vibe Exclusive');
@@ -179,8 +142,7 @@ class SistemaVibe {
             if (error) throw error;
 
             if (data === 'success') {
-                console.log('✅ Proposta enviada com sucesso');
-                await this.loadPendingProposals(); // Atualizar lista
+                await this.loadPendingProposals();
                 this.showNotification('Proposta de Vibe Exclusive enviada!', 'success');
                 return true;
             } else {
@@ -188,7 +150,6 @@ class SistemaVibe {
             }
 
         } catch (error) {
-            console.error('❌ Erro ao propor acordo:', error);
             this.showNotification(error.message || 'Erro ao enviar proposta', 'error');
             return false;
         }
@@ -196,8 +157,6 @@ class SistemaVibe {
 
     async acceptFidelityProposal(proposalId) {
         try {
-            console.log(`✅ Aceitando proposta: ${proposalId}`);
-            
             const { data, error } = await this.supabase
                 .rpc('accept_fidelity_agreement', {
                     p_agreement_id: proposalId,
@@ -207,9 +166,9 @@ class SistemaVibe {
             if (error) throw error;
 
             if (data === 'success') {
-                console.log('🎉 Acordo ativado com sucesso!');
                 await this.loadCurrentAgreement();
-                await this.applyFidelityRestrictions();
+                await this.loadReceivedProposals();
+                this.updateProposalsButton();
                 this.showNotification('Vibe Exclusive ativado!', 'success');
                 return true;
             } else {
@@ -217,7 +176,6 @@ class SistemaVibe {
             }
 
         } catch (error) {
-            console.error('❌ Erro ao aceitar proposta:', error);
             this.showNotification('Erro ao aceitar proposta', 'error');
             return false;
         }
@@ -232,40 +190,132 @@ class SistemaVibe {
 
             if (error) throw error;
 
-            console.log('❌ Proposta rejeitada');
-            await this.loadPendingProposals();
+            await this.loadReceivedProposals();
+            this.updateProposalsButton();
             this.showNotification('Proposta recusada', 'info');
 
         } catch (error) {
-            console.error('Erro ao rejeitar proposta:', error);
             this.showNotification('Erro ao recusar proposta', 'error');
+        }
+    }
+
+    // ==================== PROPOSTAS RECEBIDAS ====================
+
+    async loadReceivedProposals() {
+        try {
+            const { data: proposals, error } = await this.supabase
+                .from('fidelity_agreements')
+                .select(`
+                    id,
+                    proposed_by,
+                    user_a,
+                    user_b,
+                    proposed_at,
+                    profile_proposer:profiles!fidelity_agreements_proposed_by_fkey(nickname, avatar_url)
+                `)
+                .eq('user_b', this.currentUser.id)
+                .eq('status', 'pending');
+
+            if (error) throw error;
+
+            this.receivedProposals = proposals || [];
+            this.updateProposalsButton();
+
+        } catch (error) {
+            this.receivedProposals = [];
+        }
+    }
+
+    async showReceivedProposalsModal() {
+        if (this.receivedProposals.length === 0) {
+            this.showNotification('Nenhuma proposta pendente', 'info');
+            return;
+        }
+
+        const modalContent = `
+            <div class="proposals-modal">
+                <h4><i class="fas fa-gem"></i> Propostas de Vibe Exclusive</h4>
+                <div class="proposals-list">
+                    ${this.receivedProposals.map(proposal => `
+                        <div class="proposal-item">
+                            <div class="proposer-info">
+                                <div class="proposer-avatar">
+                                    ${proposal.profile_proposer?.avatar_url ? 
+                                        `<img src="${proposal.profile_proposer.avatar_url}" alt="${proposal.profile_proposer.nickname}">` :
+                                        `<div class="avatar-fallback">${proposal.profile_proposer?.nickname?.charAt(0) || 'U'}</div>`
+                                    }
+                                </div>
+                                <div class="proposer-details">
+                                    <strong>${proposal.profile_proposer?.nickname || 'Usuário'}</strong>
+                                    <small>Proposta: ${new Date(proposal.proposed_at).toLocaleDateString('pt-BR')}</small>
+                                </div>
+                            </div>
+                            <div class="proposal-actions">
+                                <button class="btn btn-success" onclick="sistemaVibe.acceptProposal('${proposal.id}')">
+                                    <i class="fas fa-check"></i> Aceitar
+                                </button>
+                                <button class="btn btn-outline" onclick="sistemaVibe.rejectProposal('${proposal.id}')">
+                                    <i class="fas fa-times"></i> Recusar
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        this.showCustomModal('Propostas Recebidas', modalContent);
+    }
+
+    // ==================== BOTÃO DE PROPOSTAS ====================
+
+    createProposalsButton() {
+        const chatHeader = document.querySelector('.chat-header-actions');
+        if (!chatHeader) return;
+        
+        const proposalsBtn = document.createElement('button');
+        proposalsBtn.id = 'viewProposalsBtn';
+        proposalsBtn.className = 'chat-action-btn proposals-btn';
+        proposalsBtn.title = 'Propostas recebidas';
+        proposalsBtn.innerHTML = `
+            <i class="fas fa-bell"></i>
+            <span class="proposal-badge" id="proposalBadge"></span>
+        `;
+        proposalsBtn.onclick = () => this.showReceivedProposalsModal();
+        proposalsBtn.style.display = 'none';
+        
+        chatHeader.appendChild(proposalsBtn);
+    }
+
+    updateProposalsButton() {
+        const proposalsBtn = document.getElementById('viewProposalsBtn');
+        const proposalBadge = document.getElementById('proposalBadge');
+        
+        if (!proposalsBtn || !proposalBadge) return;
+
+        if (this.receivedProposals.length > 0) {
+            proposalsBtn.style.display = 'flex';
+            proposalBadge.textContent = this.receivedProposals.length;
+            proposalBadge.style.display = 'flex';
+        } else {
+            proposalsBtn.style.display = 'none';
+            proposalBadge.style.display = 'none';
         }
     }
 
     // ==================== RESTRIÇÕES ====================
 
     async applyFidelityRestrictions() {
-        console.log('🔒 Aplicando restrições do Vibe Exclusive...');
-        
-        // As restrições serão aplicadas via:
-        // 1. RLS (Row Level Security) no Supabase
-        // 2. Filtros nas queries do frontend
-        // 3. Atualização da UI
-        
         this.updateUIForFidelity();
     }
 
     updateUIForFidelity() {
-        // Esconder botões de busca
         const searchButtons = document.querySelectorAll('[href*="busca"], [href*="home"]');
         searchButtons.forEach(btn => {
             btn.style.display = 'none';
         });
 
-        // Atualizar header do chat
         this.updateChatHeaderForFidelity();
-        
-        console.log('🎨 UI atualizada para modo Vibe Exclusive');
     }
 
     updateChatHeaderForFidelity() {
@@ -285,8 +335,6 @@ class SistemaVibe {
                 throw new Error('Nenhum acordo ativo para cancelar');
             }
 
-            console.log('🛑 Cancelando Vibe Exclusive...');
-
             const { data, error } = await this.supabase
                 .rpc('cancel_fidelity_agreement', {
                     p_agreement_id: this.currentAgreement.id,
@@ -296,7 +344,6 @@ class SistemaVibe {
             if (error) throw error;
 
             if (data === 'success') {
-                console.log('✅ Acordo cancelado, entrando em quarentena...');
                 await this.loadCurrentAgreement();
                 this.removeFidelityRestrictions();
                 this.showNotification('Vibe Exclusive cancelado. Quarentena de 7 dias.', 'info');
@@ -306,26 +353,21 @@ class SistemaVibe {
             }
 
         } catch (error) {
-            console.error('❌ Erro ao cancelar acordo:', error);
             this.showNotification('Erro ao cancelar acordo', 'error');
             return false;
         }
     }
 
     removeFidelityRestrictions() {
-        // Restaurar UI normal
         const searchButtons = document.querySelectorAll('[href*="busca"], [href*="home"]');
         searchButtons.forEach(btn => {
             btn.style.display = 'flex';
         });
 
-        // Atualizar botão
         const fidelityBtn = document.getElementById('fidelityProposeBtn');
         if (fidelityBtn) {
             fidelityBtn.style.display = 'none';
         }
-
-        console.log('🔓 Restrições removidas');
     }
 
     // ==================== CARREGAMENTO DE DADOS ====================
@@ -352,12 +394,9 @@ class SistemaVibe {
                 .limit(1);
 
             if (error) throw error;
-
             this.currentAgreement = agreements && agreements.length > 0 ? agreements[0] : null;
-            console.log(`📄 Acordo atual: ${this.currentAgreement ? this.currentAgreement.status : 'Nenhum'}`);
 
         } catch (error) {
-            console.error('Erro ao carregar acordo atual:', error);
             this.currentAgreement = null;
         }
     }
@@ -380,12 +419,9 @@ class SistemaVibe {
                 .or(`user_a.eq.${this.currentUser.id},user_b.eq.${this.currentUser.id}`);
 
             if (error) throw error;
-
             this.pendingProposals = proposals || [];
-            console.log(`📨 Propostas pendentes: ${this.pendingProposals.length}`);
 
         } catch (error) {
-            console.error('Erro ao carregar propostas:', error);
             this.pendingProposals = [];
         }
     }
@@ -393,7 +429,6 @@ class SistemaVibe {
     // ==================== TEMPO REAL ====================
 
     setupRealtimeListeners() {
-        // Escutar novas propostas
         this.supabase
             .channel('fidelity-proposals')
             .on(
@@ -402,10 +437,9 @@ class SistemaVibe {
                     event: 'INSERT',
                     schema: 'public',
                     table: 'fidelity_agreements',
-                    filter: `user_a=eq.${this.currentUser.id}`
+                    filter: `user_b=eq.${this.currentUser.id}`
                 },
                 (payload) => {
-                    console.log('📥 Nova proposta recebida:', payload);
                     this.handleNewProposal(payload.new);
                 }
             )
@@ -418,7 +452,6 @@ class SistemaVibe {
                     filter: `or(user_a=eq.${this.currentUser.id},user_b=eq.${this.currentUser.id})`
                 },
                 (payload) => {
-                    console.log('🔄 Atualização de acordo:', payload);
                     this.handleAgreementUpdate(payload.new);
                 }
             )
@@ -426,7 +459,8 @@ class SistemaVibe {
     }
 
     handleNewProposal(proposal) {
-        this.pendingProposals.unshift(proposal);
+        this.receivedProposals.unshift(proposal);
+        this.updateProposalsButton();
         this.showNotification('Nova proposta de Vibe Exclusive recebida!', 'info');
     }
 
@@ -440,94 +474,19 @@ class SistemaVibe {
         }
     }
 
-    // ==================== UTILITÁRIOS ====================
-
-    showNotification(message, type = 'info') {
-        if (typeof window.showNotification === 'function') {
-            window.showNotification(message, type);
-        } else {
-            console.log(`📢 ${type.toUpperCase()}: ${message}`);
-        }
-    }
-
-    // ==================== MODAIS ====================
-
-    showManageFidelityModal() {
-        if (!this.currentAgreement) return;
-
-        const partner = this.currentAgreement.user_a === this.currentUser.id ? 
-            this.currentAgreement.profile_b : this.currentAgreement.profile_a;
-
-        const modalContent = `
-            <div class="manage-fidelity">
-                <div class="fidelity-status">
-                    <i class="fas fa-gem"></i>
-                    <h4>Vibe Exclusive Ativo</h4>
-                    <p>Com: <strong>${partner.nickname}</strong></p>
-                    <p>Desde: <strong>${new Date(this.currentAgreement.accepted_at).toLocaleDateString('pt-BR')}</strong></p>
-                </div>
-
-                <div class="fidelity-stats">
-                    <h5>📊 Estatísticas da Conexão:</h5>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <span class="stat-value" id="daysTogether">${this.getDaysTogether()}</span>
-                            <span class="stat-label">dias juntos</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value" id="messagesExchanged">${this.getMessageCount()}</span>
-                            <span class="stat-label">mensagens</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="fidelity-actions">
-                    <div class="action-warning">
-                        <i class="fas fa-info-circle"></i>
-                        <p>Ao encerrar, entrará em quarentena de <strong>7 dias</strong> antes de poder propor novo Vibe Exclusive.</p>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Usar modal existente ou criar dinamicamente
-        const modal = document.getElementById('manageFidelityModal');
-        const content = document.getElementById('manageFidelityContent');
-        
-        if (modal && content) {
-            content.innerHTML = modalContent;
-            modal.style.display = 'flex';
-        }
-    }
-
-    getDaysTogether() {
-        if (!this.currentAgreement || !this.currentAgreement.accepted_at) return '0';
-        const startDate = new Date(this.currentAgreement.accepted_at);
-        const today = new Date();
-        const diffTime = Math.abs(today - startDate);
-        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    }
-
-    getMessageCount() {
-        // Implementar contagem de mensagens entre os usuários
-        return '∞'; // Placeholder
-    }
-
     // ==================== INTEGRAÇÃO COM MESSAGES.JS ====================
 
-    // Função para o MessagesSystem chamar quando selecionar conversa
     async onConversationSelected(otherUserId) {
         if (!otherUserId) return;
         
         const canShowButton = await this.canShowFidelityButton(otherUserId);
-        this.updateFidelityButton(canShowButton);
+        this.updateFidelityButton(canShowButton, otherUserId);
     }
 
-    updateFidelityButton(show) {
+    updateFidelityButton(show, otherUserId) {
         let fidelityBtn = document.getElementById('fidelityProposeBtn');
         
         if (!fidelityBtn) {
-            // Criar botão se não existir
             this.createFidelityButton();
             fidelityBtn = document.getElementById('fidelityProposeBtn');
         }
@@ -536,7 +495,7 @@ class SistemaVibe {
             if (show && !this.currentAgreement) {
                 fidelityBtn.style.display = 'flex';
                 fidelityBtn.innerHTML = '<i class="fas fa-gem"></i> Vibe Exclusive';
-                fidelityBtn.onclick = () => this.proposeFidelityAgreement(window.MessagesSystem.currentConversation);
+                fidelityBtn.onclick = () => this.proposeFidelityAgreement(otherUserId);
                 fidelityBtn.classList.remove('active');
             } else if (this.currentAgreement && this.currentAgreement.status === 'active') {
                 fidelityBtn.style.display = 'flex';
@@ -562,12 +521,93 @@ class SistemaVibe {
         chatHeader.appendChild(fidelityBtn);
     }
 
+    // ==================== MODAIS ====================
+
+    showManageFidelityModal() {
+        if (!this.currentAgreement) return;
+
+        const partner = this.currentAgreement.user_a === this.currentUser.id ? 
+            this.currentAgreement.profile_b : this.currentAgreement.profile_a;
+
+        const modalContent = `
+            <div class="manage-fidelity">
+                <div class="fidelity-status">
+                    <i class="fas fa-gem"></i>
+                    <h4>Vibe Exclusive Ativo</h4>
+                    <p>Com: <strong>${partner?.nickname || 'Usuário'}</strong></p>
+                    <p>Desde: <strong>${new Date(this.currentAgreement.accepted_at).toLocaleDateString('pt-BR')}</strong></p>
+                </div>
+
+                <div class="fidelity-stats">
+                    <h5>Estatísticas da Conexão:</h5>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-value">${this.getDaysTogether()}</span>
+                            <span class="stat-label">dias juntos</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fidelity-actions">
+                    <div class="action-warning">
+                        <i class="fas fa-info-circle"></i>
+                        <p>Ao encerrar, entrará em quarentena de <strong>7 dias</strong> antes de poder propor novo Vibe Exclusive.</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const modal = document.getElementById('manageFidelityModal');
+        const content = document.getElementById('manageFidelityContent');
+        
+        if (modal && content) {
+            content.innerHTML = modalContent;
+            modal.style.display = 'flex';
+        }
+    }
+
+    showCustomModal(title, content) {
+        const modal = document.getElementById('fidelityModal');
+        const modalContent = document.getElementById('fidelityModalContent');
+        
+        if (modal && modalContent) {
+            const fullContent = `
+                <div class="modal-header">
+                    <h3>${title}</h3>
+                    <button class="modal-close" onclick="closeFidelityModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    ${content}
+                </div>
+            `;
+            
+            modalContent.innerHTML = fullContent;
+            modal.style.display = 'flex';
+        }
+    }
+
+    getDaysTogether() {
+        if (!this.currentAgreement || !this.currentAgreement.accepted_at) return '0';
+        const startDate = new Date(this.currentAgreement.accepted_at);
+        const today = new Date();
+        const diffTime = Math.abs(today - startDate);
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
+
+    // ==================== UTILITÁRIOS ====================
+
+    showNotification(message, type = 'info') {
+        if (typeof window.showNotification === 'function') {
+            window.showNotification(message, type);
+        }
+    }
+
     // ==================== DESTRUIÇÃO ====================
 
     destroy() {
-        // Limpar listeners e recursos
         this.supabase.removeAllChannels();
-        console.log('🧹 Sistema Vibe destruído');
     }
 }
 
@@ -575,15 +615,12 @@ class SistemaVibe {
 window.SistemaVibe = SistemaVibe;
 
 // Inicializar automaticamente quando MessagesSystem estiver pronto
-let initializationAttempts = 0;
-const maxAttempts = 10;
-
 function initializeSistemaVibe() {
     if (window.MessagesSystem && window.MessagesSystem.currentUser) {
         window.sistemaVibe = new SistemaVibe();
         window.sistemaVibe.initialize(window.MessagesSystem.currentUser);
         
-        // 🔄 INTEGRAÇÃO: quando MessagesSystem selecionar conversa
+        // Integração com MessagesSystem
         const originalSelectConversation = window.MessagesSystem.selectConversation;
         window.MessagesSystem.selectConversation = async function(otherUserId) {
             const result = await originalSelectConversation.call(this, otherUserId);
@@ -592,9 +629,7 @@ function initializeSistemaVibe() {
             }
             return result;
         };
-        
-    } else if (initializationAttempts < maxAttempts) {
-        initializationAttempts++;
+    } else {
         setTimeout(initializeSistemaVibe, 1000);
     }
 }
