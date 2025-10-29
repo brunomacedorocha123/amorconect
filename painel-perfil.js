@@ -186,99 +186,44 @@ async function confirmAccountDeletion() {
     }
 }
 
+// ✅✅✅ FUNÇÃO CORRIGIDA - EXCLUSÃO REAL ✅✅✅
 async function deleteUserAccount() {
     if (!currentUser) {
         throw new Error('Usuário não autenticado');
     }
 
-    const userId = currentUser.id;
-
     try {
-        // 1. ✅ Invalidar conta no banco
-        await invalidateUserAccount(userId);
+        // ✅ 1. Chamar a Edge Function para EXCLUSÃO REAL
+        const { data: session } = await supabase.auth.getSession();
         
-        // 2. ✅ Deletar dados do usuário
-        await deleteUserData(userId);
-        
-        // 3. ✅ Fazer logout
-        await supabase.auth.signOut();
-        
-        // 4. ✅ Limpar dados do navegador
+        if (!session || !session.session) {
+            throw new Error('Sessão não encontrada');
+        }
+
+        const response = await fetch('/functions/v1/delete_user_account', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${session.session.access_token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Erro ao excluir conta');
+        }
+
+        // ✅ 2. Limpar dados localmente
         clearBrowserData();
         
-        // 5. ✅ Redirecionar
+        // ✅ 3. Redirecionar para confirmação
         setTimeout(() => {
             window.location.href = 'conta-excluida.html';
         }, 1000);
         
     } catch (error) {
         throw new Error(`Falha na exclusão: ${error.message}`);
-    }
-}
-
-async function invalidateUserAccount(userId) {
-    const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-            account_deleted: true,
-            deleted_at: new Date().toISOString(),
-            is_invisible: true,
-            email: 'deleted_' + userId + '@deleted.com',
-            nickname: 'usuário_excluído',
-            full_name: 'Conta Excluída',
-            phone: null,
-            cpf: null,
-            avatar_url: null,
-            street: null,
-            number: null,
-            neighborhood: null,
-            city: null,
-            state: null,
-            zip_code: null,
-            display_city: null,
-            updated_at: new Date().toISOString()
-        })
-        .eq('id', userId);
-        
-    if (updateError) {
-        throw new Error('Não foi possível invalidar a conta');
-    }
-    
-    return { success: true };
-}
-
-async function deleteUserData(userId) {
-    try {
-        // Deletar user_details
-        await supabase
-            .from('user_details')
-            .delete()
-            .eq('user_id', userId);
-
-        // Tentar deletar outras tabelas
-        const tables = [
-            'user_feels', 'user_vibes', 'messages', 'likes', 
-            'gallery_images', 'notifications', 'premium_subscriptions'
-        ];
-        
-        for (const table of tables) {
-            try {
-                if (table === 'user_feels' || table === 'user_vibes') {
-                    await supabase.from(table).delete().or(`giver_id.eq.${userId},receiver_id.eq.${userId},user1_id.eq.${userId},user2_id.eq.${userId}`);
-                } else if (table === 'messages') {
-                    await supabase.from(table).delete().or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
-                } else if (table === 'likes') {
-                    await supabase.from(table).delete().or(`user_id.eq.${userId},target_user_id.eq.${userId}`);
-                } else {
-                    await supabase.from(table).delete().eq('user_id', userId);
-                }
-            } catch (error) {
-                // Continuar mesmo se alguma tabela falhar
-            }
-        }
-
-    } catch (error) {
-        // A invalidação da conta já é suficiente
     }
 }
 
@@ -308,7 +253,6 @@ function resetConfirmButton() {
 }
 // ========== FIM DO SISTEMA DE EXCLUSÃO DEFINITIVO ==========
 
-// [RESTANTE DO CÓDIGO ORIGINAL PERMANECE EXATAMENTE IGUAL]
 // Carregar perfil do usuário
 async function loadUserProfile() {
     try {
