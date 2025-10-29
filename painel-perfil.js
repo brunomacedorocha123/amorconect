@@ -35,6 +35,21 @@ async function checkAuthentication() {
             window.location.href = 'login.html';
             return false;
         }
+        
+        // ✅ VERIFICAR SE A CONTA FOI EXCLUÍDA
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('account_deleted')
+            .eq('id', user.id)
+            .single();
+            
+        if (profile && profile.account_deleted) {
+            // Conta foi excluída - fazer logout e redirecionar
+            await supabase.auth.signOut();
+            window.location.href = 'login.html';
+            return false;
+        }
+        
         currentUser = user;
         return true;
     } catch (error) {
@@ -94,7 +109,7 @@ function setupEventListeners() {
     setupAccountDeletionListeners();
 }
 
-// ========== SISTEMA DE EXCLUSÃO DE CONTA DEFINITIVO ==========
+// ========== SISTEMA DE EXCLUSÃO DE CONTA DEFINITIVO - CORRIGIDO ==========
 function setupAccountDeletionListeners() {
     const deleteAccountBtn = document.getElementById('deleteAccountBtn');
     if (deleteAccountBtn) {
@@ -165,12 +180,14 @@ async function confirmAccountDeletion() {
         await deleteUserAccount();
         
     } catch (error) {
-        showNotification('Erro ao excluir conta. Tente novamente.', 'error');
+        console.error('Erro na exclusão:', error);
+        showNotification('Erro ao excluir conta: ' + error.message, 'error');
         closeConfirmationModal();
         resetConfirmButton();
     }
 }
 
+// ✅ FUNÇÃO PRINCIPAL CORRIGIDA - EXCLUSÃO DEFINITIVA
 async function deleteUserAccount() {
     if (!currentUser) {
         throw new Error('Usuário não autenticado');
@@ -181,11 +198,11 @@ async function deleteUserAccount() {
     try {
         console.log('🚨 INICIANDO EXCLUSÃO DEFINITIVA DA CONTA...');
 
-        // 1. ✅ PRIMEIRO: Deletar todos os dados do usuário
-        await deleteUserData(userId);
-        
-        // 2. ✅ SEGUNDO: Invalidar conta no banco (IMPORTANTE!)
+        // 1. ✅ PRIMEIRO: Invalidar completamente a conta no banco
         await invalidateUserAccount(userId);
+        
+        // 2. ✅ SEGUNDO: Deletar todos os dados do usuário
+        await deleteUserData(userId);
         
         // 3. ✅ TERCEIRO: Fazer logout para remover sessão
         await supabase.auth.signOut();
@@ -199,42 +216,55 @@ async function deleteUserAccount() {
         }, 1000);
         
     } catch (error) {
+        console.error('Erro na exclusão:', error);
         throw new Error(`Falha na exclusão: ${error.message}`);
     }
 }
 
+// ✅ FUNÇÃO CORRIGIDA - INVALIDAR CONTA NO BANCO
 async function invalidateUserAccount(userId) {
     try {
-        // ✅ MARCAR CONTA COMO EXCLUÍDA NO BANCO - IMPEDE REUSO
+        console.log('🔐 Invalidando conta no banco de dados...');
+        
+        // ✅ MARCAR CONTA COMO EXCLUÍDA - IMPEDE LOGIN FUTURO
         const { error: updateError } = await supabase
             .from('profiles')
             .update({
                 account_deleted: true,
                 deleted_at: new Date().toISOString(),
                 is_invisible: true,
-                email: 'deleted_' + userId + '@deleted.com', // Altera email
-                nickname: 'usuário_excluído', // Altera nickname
+                email: 'deleted_' + userId + '@deleted.com',
+                nickname: 'usuário_excluído',
                 full_name: 'Conta Excluída',
                 phone: null,
                 cpf: null,
                 avatar_url: null,
+                street: null,
+                number: null,
+                neighborhood: null,
+                city: null,
+                state: null,
+                zip_code: null,
+                display_city: null,
                 updated_at: new Date().toISOString()
             })
             .eq('id', userId);
             
         if (updateError) {
-            console.warn('Aviso ao invalidar conta:', updateError);
+            console.error('Erro ao invalidar conta:', updateError);
+            throw new Error('Não foi possível invalidar a conta');
         }
         
-        console.log('✅ Conta invalidada no banco de dados');
+        console.log('✅ Conta invalidada no banco de dados - usuário não poderá mais fazer login');
         return { success: true };
         
     } catch (error) {
-        console.warn('Erro ao invalidar conta:', error);
-        return { success: false };
+        console.error('❌ Erro ao invalidar conta:', error);
+        throw error;
     }
 }
 
+// ✅ FUNÇÃO PARA DELETAR DADOS DO USUÁRIO
 async function deleteUserData(userId) {
     try {
         console.log('🗑️ Deletando dados do usuário...');
@@ -246,26 +276,19 @@ async function deleteUserData(userId) {
             .eq('user_id', userId);
 
         if (detailsError) {
-            console.warn('Erro ao deletar user_details:', detailsError);
+            console.warn('Aviso ao deletar user_details:', detailsError);
         }
 
-        // Deletar profiles (isso vai acionar o CASCADE DELETE nas outras tabelas)
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .delete()
-            .eq('id', userId);
-
-        if (profileError) {
-            console.warn('Erro ao deletar perfil:', profileError);
-        }
-
-        // Deletar manualmente outras tabelas (backup caso CASCADE não funcione)
-        const tables = ['matches', 'messages', 'likes', 'gallery_images', 'notifications', 'premium_subscriptions'];
+        // Tentar deletar outras tabelas relacionadas
+        const tables = [
+            'user_feels', 'user_vibes', 'messages', 'likes', 
+            'gallery_images', 'notifications', 'premium_subscriptions'
+        ];
         
         for (const table of tables) {
             try {
-                if (table === 'matches') {
-                    await supabase.from(table).delete().or(`user1_id.eq.${userId},user2_id.eq.${userId}`);
+                if (table === 'user_feels' || table === 'user_vibes') {
+                    await supabase.from(table).delete().or(`giver_id.eq.${userId},receiver_id.eq.${userId},user1_id.eq.${userId},user2_id.eq.${userId}`);
                 } else if (table === 'messages') {
                     await supabase.from(table).delete().or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
                 } else if (table === 'likes') {
@@ -275,18 +298,20 @@ async function deleteUserData(userId) {
                 }
                 console.log(`✅ ${table} deletada`);
             } catch (error) {
-                console.warn(`❌ Erro ao deletar ${table}:`, error.message);
+                console.warn(`⚠️ Aviso ao deletar ${table}:`, error.message);
+                // Não lançar erro - continuar com exclusão mesmo se algumas tabelas falharem
             }
         }
 
-        console.log('✅ Todos os dados deletados com sucesso');
+        console.log('✅ Processo de exclusão de dados concluído');
 
     } catch (error) {
-        console.error('❌ Erro crítico ao deletar dados:', error);
-        throw error;
+        console.error('❌ Erro ao deletar dados:', error);
+        // Não lançar erro - a invalidação da conta já é suficiente
     }
 }
 
+// ✅ FUNÇÃO PARA LIMPAR DADOS DO NAVEGADOR
 function clearBrowserData() {
     try {
         // Limpar localStorage
@@ -307,10 +332,11 @@ function clearBrowserData() {
         
         console.log('✅ Dados do navegador limpos');
     } catch (error) {
-        console.warn('Aviso ao limpar dados do navegador:', error);
+        console.warn('⚠️ Aviso ao limpar dados do navegador:', error);
     }
 }
 
+// ✅ FUNÇÃO PARA RESETAR BOTÃO DE CONFIRMAÇÃO
 function resetConfirmButton() {
     const confirmBtn = document.getElementById('confirmDeleteBtn');
     if (confirmBtn) {
@@ -328,7 +354,7 @@ async function loadUserProfile() {
             throw new Error('Usuário não autenticado');
         }
 
-        // Carregar dados principais
+        // ✅ VERIFICAR SE CONTA FOI EXCLUÍDA
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -337,6 +363,13 @@ async function loadUserProfile() {
 
         if (profileError) {
             throw new Error('Erro ao carregar perfil');
+        }
+
+        // ✅ SE CONTA ESTIVER EXCLUÍDA, FAZER LOGOUT
+        if (profile.account_deleted) {
+            await supabase.auth.signOut();
+            window.location.href = 'login.html';
+            return;
         }
 
         // Carregar detalhes públicos
