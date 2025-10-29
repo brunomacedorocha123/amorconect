@@ -272,13 +272,15 @@ class SistemaVibe {
     createProposalsButton() {
         const checkChatHeader = () => {
             const chatHeader = document.querySelector('.chat-header-actions');
+            
             if (!chatHeader) {
                 setTimeout(checkChatHeader, 500);
                 return;
             }
             
-            if (document.getElementById('viewProposalsBtn')) {
-                return;
+            const existingBtn = document.getElementById('viewProposalsBtn');
+            if (existingBtn) {
+                existingBtn.remove();
             }
             
             const proposalsBtn = document.createElement('button');
@@ -306,7 +308,10 @@ class SistemaVibe {
         const proposalsBtn = document.getElementById('viewProposalsBtn');
         const proposalBadge = document.getElementById('proposalBadge');
         
-        if (!proposalsBtn || !proposalBadge) return;
+        if (!proposalsBtn || !proposalBadge) {
+            this.createProposalsButton();
+            return;
+        }
 
         if (this.receivedProposals.length > 0) {
             proposalsBtn.style.display = 'flex';
