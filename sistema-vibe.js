@@ -16,7 +16,12 @@ class SistemaVibe {
             await this.loadPendingProposals();
             await this.loadReceivedProposals();
             this.setupRealtimeListeners();
-            this.createProposalsButton();
+            
+            // Criar botão após garantir que o chat header existe
+            setTimeout(() => {
+                this.createProposalsButton();
+                this.updateProposalsButton();
+            }, 1000);
             
         } catch (error) {
             console.error('Erro ao inicializar Sistema Vibe:', error);
@@ -270,11 +275,14 @@ class SistemaVibe {
     // ==================== BOTÃO DE PROPOSTAS ====================
 
     createProposalsButton() {
-        // Aguardar o chat header estar disponível
-        const checkChatHeader = () => {
+        // Verificar múltiplas vezes até encontrar o chat header
+        const tryCreateButton = (attempts = 0) => {
             const chatHeader = document.querySelector('.chat-header-actions');
+            
             if (!chatHeader) {
-                setTimeout(checkChatHeader, 500);
+                if (attempts < 10) {
+                    setTimeout(() => tryCreateButton(attempts + 1), 500);
+                }
                 return;
             }
             
@@ -302,15 +310,15 @@ class SistemaVibe {
             chatHeader.appendChild(proposalsBtn);
         };
         
-        checkChatHeader();
+        tryCreateButton();
     }
 
     updateProposalsButton() {
         const proposalsBtn = document.getElementById('viewProposalsBtn');
         const proposalBadge = document.getElementById('proposalBadge');
         
-        if (!proposalsBtn || !proposalBadge) {
-            // Se o botão não existe, criar novamente
+        // Se o botão não existe, criar
+        if (!proposalsBtn) {
             this.createProposalsButton();
             return;
         }
