@@ -176,6 +176,9 @@ class SistemaVibe {
                 await this.loadReceivedProposals();
                 this.updateProposalsButton();
                 this.showNotification('Vibe Exclusive ativado!', 'success');
+                
+                // ✅ CORREÇÃO: Fechar modal automaticamente
+                this.closeAllModals();
                 return true;
             } else {
                 throw new Error(data);
@@ -199,6 +202,9 @@ class SistemaVibe {
             await this.loadReceivedProposals();
             this.updateProposalsButton();
             this.showNotification('Proposta recusada', 'info');
+            
+            // ✅ CORREÇÃO: Fechar modal automaticamente
+            this.closeAllModals();
 
         } catch (error) {
             this.showNotification('Erro ao recusar proposta', 'error');
@@ -298,6 +304,7 @@ class SistemaVibe {
                 <span class="proposal-badge" id="proposalBadge"></span>
             `;
             
+            // ✅ CORREÇÃO: Usar arrow function para manter o contexto
             proposalsBtn.onclick = () => {
                 this.showReceivedProposalsModal();
             };
@@ -526,6 +533,7 @@ class SistemaVibe {
                 fidelityBtn.style.display = 'flex';
                 fidelityBtn.innerHTML = '<i class="fas fa-gem"></i> Vibe Exclusive';
                 fidelityBtn.classList.remove('active');
+                // O clique é controlado pelo MessagesSystem via handleFidelityProposal
             } else if (this.currentAgreement && this.currentAgreement.status === 'active') {
                 fidelityBtn.style.display = 'flex';
                 fidelityBtn.innerHTML = '<i class="fas fa-gem"></i> Vibe Ativo';
@@ -629,12 +637,20 @@ class SistemaVibe {
     
     acceptProposal(proposalId) {
         this.acceptFidelityProposal(proposalId);
-        closeFidelityModal();
     }
 
     rejectProposal(proposalId) {
         this.rejectFidelityProposal(proposalId);
-        closeFidelityModal();
+    }
+
+    // ==================== NOVAS FUNÇÕES DE CORREÇÃO ====================
+
+    closeAllModals() {
+        const modals = ['fidelityModal', 'manageFidelityModal'];
+        modals.forEach(modalId => {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.style.display = 'none';
+        });
     }
 
     // ==================== UTILITÁRIOS ====================
