@@ -1,4 +1,4 @@
-// sistema-vibe.js - VERSÃO CORRIGIDA SEM LOGS
+// sistema-vibe.js - VERSÃO COMPLETA CORRIGIDA
 class SistemaVibe {
     constructor() {
         this.supabase = supabase;
@@ -630,6 +630,7 @@ function initializeSistemaVibe() {
             if (window.sistemaVibe) {
                 window.sistemaVibe.createProposalsButton();
                 window.sistemaVibe.createFidelityButton();
+                window.sistemaVibe.loadReceivedProposals();
             }
         }, 1000);
     } else {
