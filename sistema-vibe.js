@@ -18,7 +18,7 @@ class SistemaVibe {
         this.createFidelityButton();
     }
 
-    // ==================== VERIFICAÇÕES ====================
+    // ==================== VERIFICAÇÕES COMPLETAS ====================
     
     async canShowFidelityButton(otherUserId) {
         try {
@@ -31,7 +31,6 @@ class SistemaVibe {
             ]);
 
             return conditions.every(Boolean);
-
         } catch (error) {
             return false;
         }
@@ -45,12 +44,8 @@ class SistemaVibe {
                     p_user2_id: otherUserId
                 });
 
-            if (error) {
-                return await this.countMessagesFallback(otherUserId);
-            }
-
+            if (error) return await this.countMessagesFallback(otherUserId);
             return messages >= 30;
-
         } catch (error) {
             return false;
         }
@@ -81,7 +76,6 @@ class SistemaVibe {
                 .single();
 
             return !error && subscription !== null;
-
         } catch (error) {
             return false;
         }
@@ -109,7 +103,6 @@ class SistemaVibe {
             quarantineEnd.setDate(quarantineEnd.getDate() + 7);
             
             return new Date() >= quarantineEnd;
-
         } catch (error) {
             return true;
         }
@@ -119,7 +112,7 @@ class SistemaVibe {
         return !this.pendingProposals.some(proposal => proposal.receiver_id === otherUserId);
     }
 
-    // ==================== PROPOSTAS ====================
+    // ==================== PROPOSTAS COMPLETAS ====================
 
     async proposeFidelityAgreement(otherUserId) {
         try {
@@ -143,7 +136,6 @@ class SistemaVibe {
             } else {
                 throw new Error(data);
             }
-
         } catch (error) {
             this.showNotification(error.message || 'Erro ao enviar proposta', 'error');
             return false;
@@ -170,7 +162,6 @@ class SistemaVibe {
             } else {
                 throw new Error(data);
             }
-
         } catch (error) {
             this.showNotification(error.message || 'Erro ao aceitar proposta', 'error');
             return false;
@@ -190,13 +181,12 @@ class SistemaVibe {
             this.updateProposalsButton();
             this.showNotification('Proposta recusada', 'info');
             this.closeAllModals();
-
         } catch (error) {
             this.showNotification('Erro ao recusar proposta', 'error');
         }
     }
 
-    // ==================== PROPOSTAS RECEBIDAS ====================
+    // ==================== SINO FUNCIONAL ====================
 
     async loadReceivedProposals() {
         try {
@@ -214,11 +204,8 @@ class SistemaVibe {
                 .eq('user_b', this.currentUser.id)
                 .eq('status', 'pending');
 
-            if (error) throw error;
-
             this.receivedProposals = proposals || [];
             this.updateProposalsButton();
-
         } catch (error) {
             this.receivedProposals = [];
         }
@@ -271,16 +258,11 @@ class SistemaVibe {
         }
     }
 
-    // ==================== BOTÕES ====================
-
     createProposalsButton() {
-        if (document.getElementById('viewProposalsBtn')) {
-            return;
-        }
+        if (document.getElementById('viewProposalsBtn')) return;
 
         const checkChatHeader = () => {
             const chatHeader = document.querySelector('.chat-header-actions');
-            
             if (!chatHeader) {
                 setTimeout(checkChatHeader, 500);
                 return;
@@ -295,13 +277,9 @@ class SistemaVibe {
                 <span class="proposal-badge" id="proposalBadge"></span>
             `;
             
-            proposalsBtn.onclick = () => {
-                this.showReceivedProposalsModal();
-            };
-            
+            proposalsBtn.onclick = () => this.showReceivedProposalsModal();
             proposalsBtn.style.display = 'none';
             chatHeader.appendChild(proposalsBtn);
-            
             this.updateProposalsButton();
         };
         
@@ -312,9 +290,7 @@ class SistemaVibe {
         const proposalsBtn = document.getElementById('viewProposalsBtn');
         const proposalBadge = document.getElementById('proposalBadge');
         
-        if (!proposalsBtn || !proposalBadge) {
-            return;
-        }
+        if (!proposalsBtn || !proposalBadge) return;
 
         if (this.receivedProposals.length > 0) {
             proposalsBtn.style.display = 'flex';
@@ -326,14 +302,13 @@ class SistemaVibe {
         }
     }
 
+    // ==================== BOTÃO VIBE EXCLUSIVE ====================
+
     createFidelityButton() {
-        if (document.getElementById('fidelityProposeBtn')) {
-            return;
-        }
+        if (document.getElementById('fidelityProposeBtn')) return;
 
         const checkChatHeader = () => {
             const chatHeader = document.querySelector('.chat-header-actions');
-            
             if (!chatHeader) {
                 setTimeout(checkChatHeader, 500);
                 return;
@@ -364,14 +339,12 @@ class SistemaVibe {
 
     async onConversationSelected(otherUserId) {
         if (!otherUserId) return;
-        
         const canShowButton = await this.canShowFidelityButton(otherUserId);
         this.updateFidelityButton(canShowButton, otherUserId);
     }
 
     updateFidelityButton(show, otherUserId) {
         const fidelityBtn = document.getElementById('fidelityProposeBtn');
-        
         if (!fidelityBtn) {
             this.createFidelityButton();
             return;
@@ -399,10 +372,7 @@ class SistemaVibe {
 
     updateUIForFidelity() {
         const searchButtons = document.querySelectorAll('[href*="busca"], [href*="home"]');
-        searchButtons.forEach(btn => {
-            btn.style.display = 'none';
-        });
-
+        searchButtons.forEach(btn => btn.style.display = 'none');
         this.updateChatHeaderForFidelity();
     }
 
@@ -439,7 +409,6 @@ class SistemaVibe {
             } else {
                 throw new Error(data);
             }
-
         } catch (error) {
             this.showNotification('Erro ao cancelar acordo', 'error');
             return false;
@@ -448,14 +417,10 @@ class SistemaVibe {
 
     removeFidelityRestrictions() {
         const searchButtons = document.querySelectorAll('[href*="busca"], [href*="home"]');
-        searchButtons.forEach(btn => {
-            btn.style.display = 'flex';
-        });
-
+        searchButtons.forEach(btn => btn.style.display = 'flex');
+        
         const fidelityBtn = document.getElementById('fidelityProposeBtn');
-        if (fidelityBtn) {
-            fidelityBtn.style.display = 'none';
-        }
+        if (fidelityBtn) fidelityBtn.style.display = 'none';
     }
 
     // ==================== CARREGAMENTO DE DADOS ====================
@@ -481,13 +446,10 @@ class SistemaVibe {
                 .order('proposed_at', { ascending: false })
                 .limit(1);
 
-            if (error) throw error;
             this.currentAgreement = agreements && agreements.length > 0 ? agreements[0] : null;
-
             if (this.currentAgreement && this.currentAgreement.status === 'active') {
                 await this.applyFidelityRestrictions();
             }
-
         } catch (error) {
             this.currentAgreement = null;
         }
@@ -510,9 +472,7 @@ class SistemaVibe {
                 .eq('status', 'pending')
                 .or(`user_a.eq.${this.currentUser.id},user_b.eq.${this.currentUser.id}`);
 
-            if (error) throw error;
             this.pendingProposals = proposals || [];
-
         } catch (error) {
             this.pendingProposals = [];
         }
@@ -531,9 +491,7 @@ class SistemaVibe {
                     table: 'fidelity_agreements',
                     filter: `user_b=eq.${this.currentUser.id}`
                 },
-                (payload) => {
-                    this.handleNewProposal(payload.new);
-                }
+                (payload) => this.handleNewProposal(payload.new)
             )
             .on(
                 'postgres_changes',
@@ -543,9 +501,7 @@ class SistemaVibe {
                     table: 'fidelity_agreements',
                     filter: `or(user_a=eq.${this.currentUser.id},user_b=eq.${this.currentUser.id})`
                 },
-                (payload) => {
-                    this.handleAgreementUpdate(payload.new);
-                }
+                (payload) => this.handleAgreementUpdate(payload.new)
             )
             .subscribe();
     }
@@ -582,7 +538,6 @@ class SistemaVibe {
                     <p>Com: <strong>${partner?.nickname || 'Usuário'}</strong></p>
                     <p>Desde: <strong>${new Date(this.currentAgreement.accepted_at).toLocaleDateString('pt-BR')}</strong></p>
                 </div>
-
                 <div class="fidelity-stats">
                     <h5>Estatísticas da Conexão:</h5>
                     <div class="stats-grid">
@@ -592,7 +547,6 @@ class SistemaVibe {
                         </div>
                     </div>
                 </div>
-
                 <div class="fidelity-actions">
                     <div class="action-warning">
                         <i class="fas fa-info-circle"></i>
@@ -604,7 +558,6 @@ class SistemaVibe {
 
         const modal = document.getElementById('manageFidelityModal');
         const content = document.getElementById('manageFidelityContent');
-        
         if (modal && content) {
             content.innerHTML = modalContent;
             modal.style.display = 'flex';
@@ -649,19 +602,9 @@ class SistemaVibe {
                     <span>${message}</span>
                 </div>
             `;
-            
             document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 3000);
+            setTimeout(() => notification.remove(), 3000);
         }
-    }
-
-    destroy() {
-        this.supabase.removeAllChannels();
     }
 }
 
