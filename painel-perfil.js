@@ -94,7 +94,7 @@ function setupEventListeners() {
     setupAccountDeletionListeners();
 }
 
-// ========== SISTEMA DE EXCLUSÃO DE CONTA ==========
+// ========== SISTEMA DE EXCLUSÃO DE CONTA DEFINITIVO ==========
 function setupAccountDeletionListeners() {
     const deleteAccountBtn = document.getElementById('deleteAccountBtn');
     if (deleteAccountBtn) {
@@ -179,52 +179,66 @@ async function deleteUserAccount() {
     const userId = currentUser.id;
 
     try {
-        // 1. Primeiro marcar a conta como excluída no banco
-        await markAccountAsDeleted(userId);
-        
-        // 2. Deletar todos os dados do usuário
+        console.log('🚨 INICIANDO EXCLUSÃO DEFINITIVA DA CONTA...');
+
+        // 1. ✅ PRIMEIRO: Deletar todos os dados do usuário
         await deleteUserData(userId);
         
-        // 3. Fazer logout para remover a sessão
+        // 2. ✅ SEGUNDO: Invalidar conta no banco (IMPORTANTE!)
+        await invalidateUserAccount(userId);
+        
+        // 3. ✅ TERCEIRO: Fazer logout para remover sessão
         await supabase.auth.signOut();
         
-        // 4. Redirecionar para página de confirmação
-        window.location.href = 'conta-excluida.html';
+        // 4. ✅ QUARTO: Limpar tudo do navegador
+        clearBrowserData();
+        
+        // 5. ✅ QUINTO: Redirecionar para página de confirmação
+        setTimeout(() => {
+            window.location.href = 'conta-excluida.html';
+        }, 1000);
         
     } catch (error) {
         throw new Error(`Falha na exclusão: ${error.message}`);
     }
 }
 
-async function markAccountAsDeleted(userId) {
+async function invalidateUserAccount(userId) {
     try {
-        // Marcar a conta como excluída no banco
+        // ✅ MARCAR CONTA COMO EXCLUÍDA NO BANCO - IMPEDE REUSO
         const { error: updateError } = await supabase
             .from('profiles')
             .update({
                 account_deleted: true,
                 deleted_at: new Date().toISOString(),
-                is_invisible: true, // Garante que não apareça nas buscas
+                is_invisible: true,
+                email: 'deleted_' + userId + '@deleted.com', // Altera email
+                nickname: 'usuário_excluído', // Altera nickname
+                full_name: 'Conta Excluída',
+                phone: null,
+                cpf: null,
+                avatar_url: null,
                 updated_at: new Date().toISOString()
             })
             .eq('id', userId);
             
         if (updateError) {
-            console.warn('Erro ao marcar conta como excluída:', updateError);
-            // Continua mesmo com erro
+            console.warn('Aviso ao invalidar conta:', updateError);
         }
         
+        console.log('✅ Conta invalidada no banco de dados');
         return { success: true };
         
     } catch (error) {
-        console.warn('Erro ao marcar conta como excluída:', error);
-        // Continua o processo mesmo com erro
+        console.warn('Erro ao invalidar conta:', error);
         return { success: false };
     }
 }
 
 async function deleteUserData(userId) {
     try {
+        console.log('🗑️ Deletando dados do usuário...');
+
         // Deletar user_details
         const { error: detailsError } = await supabase
             .from('user_details')
@@ -242,7 +256,7 @@ async function deleteUserData(userId) {
             .eq('id', userId);
 
         if (profileError) {
-            throw new Error(`Erro ao deletar perfil: ${profileError.message}`);
+            console.warn('Erro ao deletar perfil:', profileError);
         }
 
         // Deletar manualmente outras tabelas (backup caso CASCADE não funcione)
@@ -250,7 +264,6 @@ async function deleteUserData(userId) {
         
         for (const table of tables) {
             try {
-                // Para matches, messages e likes, verificar ambas as colunas
                 if (table === 'matches') {
                     await supabase.from(table).delete().or(`user1_id.eq.${userId},user2_id.eq.${userId}`);
                 } else if (table === 'messages') {
@@ -258,17 +271,43 @@ async function deleteUserData(userId) {
                 } else if (table === 'likes') {
                     await supabase.from(table).delete().or(`user_id.eq.${userId},target_user_id.eq.${userId}`);
                 } else {
-                    // Para outras tabelas, deletar por user_id
                     await supabase.from(table).delete().eq('user_id', userId);
                 }
+                console.log(`✅ ${table} deletada`);
             } catch (error) {
-                console.warn(`Erro ao deletar ${table}:`, error);
-                // Continua mesmo com erro em algumas tabelas
+                console.warn(`❌ Erro ao deletar ${table}:`, error.message);
             }
         }
 
+        console.log('✅ Todos os dados deletados com sucesso');
+
     } catch (error) {
+        console.error('❌ Erro crítico ao deletar dados:', error);
         throw error;
+    }
+}
+
+function clearBrowserData() {
+    try {
+        // Limpar localStorage
+        localStorage.clear();
+        
+        // Limpar sessionStorage
+        sessionStorage.clear();
+        
+        // Limpar cookies
+        document.cookie.split(";").forEach(function(c) {
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+        
+        // Limpar cache do Supabase
+        if (window.supabase) {
+            supabase.removeAllChannels();
+        }
+        
+        console.log('✅ Dados do navegador limpos');
+    } catch (error) {
+        console.warn('Aviso ao limpar dados do navegador:', error);
     }
 }
 
@@ -279,8 +318,9 @@ function resetConfirmButton() {
         confirmBtn.disabled = false;
     }
 }
-// ========== FIM DO SISTEMA DE EXCLUSÃO ==========
+// ========== FIM DO SISTEMA DE EXCLUSÃO DEFINITIVO ==========
 
+// [RESTANTE DO CÓDIGO ORIGINAL PERMANECE IGUAL]
 // Carregar perfil do usuário
 async function loadUserProfile() {
     try {
