@@ -1,4 +1,4 @@
-// sistema-vibe.js - VERSÃO COMPLETA COM TODAS AS FUNCIONALIDADES
+// sistema-vibe.js - VERSÃO CORRIGIDA SEM LOGS
 class SistemaVibe {
     constructor() {
         this.supabase = supabase;
@@ -137,7 +137,7 @@ class SistemaVibe {
                 throw new Error(data);
             }
         } catch (error) {
-            this.showNotification(error.message || 'Erro ao enviar proposta', 'error');
+            this.showNotification(error.message, 'error');
             return false;
         }
     }
@@ -163,7 +163,7 @@ class SistemaVibe {
                 throw new Error(data);
             }
         } catch (error) {
-            this.showNotification(error.message || 'Erro ao aceitar proposta', 'error');
+            this.showNotification(error.message, 'error');
             return false;
         }
     }
@@ -186,7 +186,7 @@ class SistemaVibe {
         }
     }
 
-    // ==================== SINO FUNCIONAL ====================
+    // ==================== CARREGAR PROPOSTAS RECEBIDAS ====================
 
     async loadReceivedProposals() {
         try {
