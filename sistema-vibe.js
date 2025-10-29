@@ -1,4 +1,3 @@
-// sistema-vibe.js - VERSÃO COMPLETA COM BOTÕES CORRIGIDOS
 class SistemaVibe {
     constructor() {
         this.supabase = supabase;
@@ -143,7 +142,7 @@ class SistemaVibe {
     async acceptFidelityProposal(proposalId) {
         try {
             const { data, error } = await this.supabase
-                .rpc('accept_fidelity_agreement', {
+                .rpc('accept_fidelity_proposal_v2', {
                     p_agreement_id: proposalId,
                     p_acceptor_id: this.currentUser.id
                 });
@@ -156,6 +155,7 @@ class SistemaVibe {
                 this.updateProposalsButton();
                 this.showNotification('Vibe Exclusive ativado!', 'success');
                 this.closeAllModals();
+                setTimeout(() => location.reload(), 1000);
                 return true;
             } else {
                 throw new Error(data);
@@ -241,6 +241,9 @@ class SistemaVibe {
                             </div>
                         </div>
                     `).join('')}
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="window.closeFidelityModal()">Fechar</button>
                 </div>
             </div>
         `;
