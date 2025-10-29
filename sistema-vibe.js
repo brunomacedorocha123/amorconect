@@ -16,12 +16,7 @@ class SistemaVibe {
             await this.loadPendingProposals();
             await this.loadReceivedProposals();
             this.setupRealtimeListeners();
-            
-            // Criar botão após garantir que o chat header existe
-            setTimeout(() => {
-                this.createProposalsButton();
-                this.updateProposalsButton();
-            }, 1000);
+            this.createProposalsButton();
             
         } catch (error) {
             console.error('Erro ao inicializar Sistema Vibe:', error);
@@ -275,18 +270,13 @@ class SistemaVibe {
     // ==================== BOTÃO DE PROPOSTAS ====================
 
     createProposalsButton() {
-        // Verificar múltiplas vezes até encontrar o chat header
-        const tryCreateButton = (attempts = 0) => {
+        const checkChatHeader = () => {
             const chatHeader = document.querySelector('.chat-header-actions');
-            
             if (!chatHeader) {
-                if (attempts < 10) {
-                    setTimeout(() => tryCreateButton(attempts + 1), 500);
-                }
+                setTimeout(checkChatHeader, 500);
                 return;
             }
             
-            // Verificar se o botão já existe
             if (document.getElementById('viewProposalsBtn')) {
                 return;
             }
@@ -300,7 +290,6 @@ class SistemaVibe {
                 <span class="proposal-badge" id="proposalBadge"></span>
             `;
             
-            // Event listener direto
             proposalsBtn.onclick = () => {
                 this.showReceivedProposalsModal();
             };
@@ -310,18 +299,14 @@ class SistemaVibe {
             chatHeader.appendChild(proposalsBtn);
         };
         
-        tryCreateButton();
+        checkChatHeader();
     }
 
     updateProposalsButton() {
         const proposalsBtn = document.getElementById('viewProposalsBtn');
         const proposalBadge = document.getElementById('proposalBadge');
         
-        // Se o botão não existe, criar
-        if (!proposalsBtn) {
-            this.createProposalsButton();
-            return;
-        }
+        if (!proposalsBtn || !proposalBadge) return;
 
         if (this.receivedProposals.length > 0) {
             proposalsBtn.style.display = 'flex';
