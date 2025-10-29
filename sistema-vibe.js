@@ -1,4 +1,4 @@
-// sistema-vibe.js - Sistema completo do Vibe Exclusive
+// sistema-vibe.js - Sistema completo do Vibe Exclusive CORRIGIDO
 class SistemaVibe {
     constructor() {
         this.supabase = supabase;
@@ -157,6 +157,12 @@ class SistemaVibe {
 
     async acceptFidelityProposal(proposalId) {
         try {
+            // ✅ CORREÇÃO: Verificar se o usuário atual é premium antes de aceitar
+            const isPremium = await this.isUserPremium();
+            if (!isPremium) {
+                throw new Error('Apenas usuários Premium podem aceitar Vibe Exclusive');
+            }
+
             const { data, error } = await this.supabase
                 .rpc('accept_fidelity_agreement', {
                     p_agreement_id: proposalId,
@@ -176,7 +182,7 @@ class SistemaVibe {
             }
 
         } catch (error) {
-            this.showNotification('Erro ao aceitar proposta', 'error');
+            this.showNotification(error.message || 'Erro ao aceitar proposta', 'error');
             return false;
         }
     }
@@ -211,6 +217,7 @@ class SistemaVibe {
                     user_a,
                     user_b,
                     proposed_at,
+                    status,
                     profile_proposer:profiles!fidelity_agreements_proposed_by_fkey(nickname, avatar_url)
                 `)
                 .eq('user_b', this.currentUser.id)
@@ -251,10 +258,10 @@ class SistemaVibe {
                                 </div>
                             </div>
                             <div class="proposal-actions">
-                                <button class="btn btn-success" onclick="window.sistemaVibe.acceptProposal('${proposal.id}')">
+                                <button class="btn btn-success" onclick="sistemaVibe.acceptProposal('${proposal.id}')">
                                     <i class="fas fa-check"></i> Aceitar
                                 </button>
-                                <button class="btn btn-outline" onclick="window.sistemaVibe.rejectProposal('${proposal.id}')">
+                                <button class="btn btn-outline" onclick="sistemaVibe.rejectProposal('${proposal.id}')">
                                     <i class="fas fa-times"></i> Recusar
                                 </button>
                             </div>
@@ -635,6 +642,34 @@ class SistemaVibe {
     showNotification(message, type = 'info') {
         if (typeof window.showNotification === 'function') {
             window.showNotification(message, type);
+        } else {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 16px;
+                border-radius: 8px;
+                color: white;
+                z-index: 1000;
+                background: ${type === 'error' ? '#e74c3c' : type === 'success' ? '#27ae60' : '#3498db'};
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            `;
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
         }
     }
 
