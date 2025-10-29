@@ -1,4 +1,4 @@
-// sistema-vibe.js - Sistema completo do Vibe Exclusive CORRIGIDO
+// sistema-vibe.js - Sistema completo do Vibe Exclusive
 class SistemaVibe {
     constructor() {
         this.supabase = supabase;
@@ -29,8 +29,6 @@ class SistemaVibe {
         }
     }
 
-    // ==================== VERIFICAÇÕES ====================
-    
     async canShowFidelityButton(otherUserId) {
         try {
             const conditions = await Promise.all([
@@ -130,8 +128,6 @@ class SistemaVibe {
         return !this.pendingProposals.some(proposal => proposal.receiver_id === otherUserId);
     }
 
-    // ==================== PROPOSTAS ====================
-
     async proposeFidelityAgreement(otherUserId) {
         try {
             const canPropose = await this.canShowFidelityButton(otherUserId);
@@ -176,7 +172,6 @@ class SistemaVibe {
                 await this.loadReceivedProposals();
                 this.updateProposalsButton();
                 this.showNotification('Vibe Exclusive ativado!', 'success');
-                
                 this.closeAllModals();
                 return true;
             } else {
@@ -201,15 +196,12 @@ class SistemaVibe {
             await this.loadReceivedProposals();
             this.updateProposalsButton();
             this.showNotification('Proposta recusada', 'info');
-            
             this.closeAllModals();
 
         } catch (error) {
             this.showNotification('Erro ao recusar proposta', 'error');
         }
     }
-
-    // ==================== PROPOSTAS RECEBIDAS ====================
 
     async loadReceivedProposals() {
         try {
@@ -278,8 +270,6 @@ class SistemaVibe {
         this.showCustomModal('Propostas Recebidas', modalContent);
     }
 
-    // ==================== BOTÃO DE PROPOSTAS ====================
-
     createProposalsButton() {
         const checkChatHeader = () => {
             const chatHeader = document.querySelector('.chat-header-actions');
@@ -308,7 +298,6 @@ class SistemaVibe {
             
             proposalsBtn.style.display = 'none';
             chatHeader.appendChild(proposalsBtn);
-            
             this.updateProposalsButton();
         };
         
@@ -333,8 +322,6 @@ class SistemaVibe {
             proposalBadge.style.display = 'none';
         }
     }
-
-    // ==================== BOTÃO VIBE EXCLUSIVE ====================
 
     createFidelityButton() {
         const checkChatHeader = () => {
@@ -370,8 +357,6 @@ class SistemaVibe {
         checkChatHeader();
     }
 
-    // ==================== RESTRIÇÕES ====================
-
     async applyFidelityRestrictions() {
         this.updateUIForFidelity();
     }
@@ -393,8 +378,6 @@ class SistemaVibe {
             fidelityBtn.onclick = () => this.showManageFidelityModal();
         }
     }
-
-    // ==================== CANCELAMENTO ====================
 
     async cancelFidelityAgreement() {
         try {
@@ -436,8 +419,6 @@ class SistemaVibe {
             fidelityBtn.style.display = 'none';
         }
     }
-
-    // ==================== CARREGAMENTO DE DADOS ====================
 
     async loadCurrentAgreement() {
         try {
@@ -497,8 +478,6 @@ class SistemaVibe {
         }
     }
 
-    // ==================== TEMPO REAL ====================
-
     setupRealtimeListeners() {
         this.supabase
             .channel('fidelity-proposals')
@@ -545,8 +524,6 @@ class SistemaVibe {
         }
     }
 
-    // ==================== INTEGRAÇÃO COM MESSAGES.JS ====================
-
     async onConversationSelected(otherUserId) {
         if (!otherUserId) return;
         
@@ -575,8 +552,6 @@ class SistemaVibe {
             fidelityBtn.style.display = 'none';
         }
     }
-
-    // ==================== MODAIS ====================
 
     showManageFidelityModal() {
         if (!this.currentAgreement) return;
@@ -659,8 +634,6 @@ class SistemaVibe {
         });
     }
 
-    // ==================== UTILITÁRIOS ====================
-
     showNotification(message, type = 'info') {
         if (typeof window.showNotification === 'function') {
             window.showNotification(message, type);
@@ -701,8 +674,7 @@ class SistemaVibe {
     }
 }
 
-// ==================== INICIALIZAÇÃO GLOBAL CORRIGIDA ====================
-
+// Inicialização
 window.SistemaVibe = SistemaVibe;
 
 function initializeSistemaVibe() {
@@ -710,7 +682,6 @@ function initializeSistemaVibe() {
         window.sistemaVibe = new SistemaVibe();
         window.sistemaVibe.initialize(window.MessagesSystem.currentUser);
         
-        // Conectar com o MessagesSystem
         const originalSelectConversation = window.MessagesSystem.selectConversation;
         window.MessagesSystem.selectConversation = async function(otherUserId) {
             const result = await originalSelectConversation.call(this, otherUserId);
@@ -720,7 +691,6 @@ function initializeSistemaVibe() {
             return result;
         };
         
-        // Criar botões imediatamente
         setTimeout(() => {
             if (window.sistemaVibe) {
                 window.sistemaVibe.createProposalsButton();
@@ -732,32 +702,24 @@ function initializeSistemaVibe() {
     }
 }
 
-// Iniciar quando DOM estiver pronto
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeSistemaVibe);
 } else {
     initializeSistemaVibe();
 }
 
-// ==================== FUNÇÕES GLOBAIS PARA AS PROPOSTAS ====================
-
+// Funções globais
 window.acceptProposal = function(proposalId) {
     if (window.sistemaVibe) {
         window.sistemaVibe.acceptFidelityProposal(proposalId);
-    } else {
-        alert('Sistema Vibe não carregado! Recarregue a página.');
     }
 };
 
 window.rejectProposal = function(proposalId) {
     if (window.sistemaVibe) {
         window.sistemaVibe.rejectFidelityProposal(proposalId);
-    } else {
-        alert('Sistema Vibe não carregado! Recarregue a página.');
     }
 };
-
-// ==================== FUNÇÕES GLOBAIS PARA OS MODAIS ====================
 
 window.closeFidelityModal = function() {
     const modal = document.getElementById('fidelityModal');
