@@ -493,13 +493,30 @@ class MessagesSystem {
         if (chatHeader) chatHeader.style.display = 'flex';
     }
 
-    // ⭐ FUNÇÃO ATUALIZADA - Agora inclui o botão Vibe Exclusive
+    // ⭐ FUNÇÃO CORRIGIDA - Mantém o botão de sino
     async updateChatHeader(otherUserId) {
         const chatHeader = document.getElementById('chatHeader');
         if (!chatHeader) return;
         
         const conversation = this.conversations.find(c => c.other_user_id === otherUserId);
         
+        // Encontrar ou criar elementos sem substituir o HTML completo
+        let userInfo = chatHeader.querySelector('.chat-header-user');
+        let actions = chatHeader.querySelector('.chat-header-actions');
+        
+        if (!userInfo) {
+            userInfo = document.createElement('div');
+            userInfo.className = 'chat-header-user';
+            chatHeader.appendChild(userInfo);
+        }
+        
+        if (!actions) {
+            actions = document.createElement('div');
+            actions.className = 'chat-header-actions';
+            chatHeader.appendChild(actions);
+        }
+        
+        // Atualizar apenas as informações do usuário
         if (!conversation) {
             try {
                 const { data: userProfile, error } = await this.supabase
@@ -509,40 +526,24 @@ class MessagesSystem {
                     .single();
                     
                 if (userProfile) {
-                    chatHeader.innerHTML = `
-                        <div class="chat-header-user">
-                            <div class="chat-user-avatar">
-                                ${userProfile.avatar_url ? 
-                                    `<img src="${userProfile.avatar_url}" alt="${userProfile.nickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
-                                    ''
-                                }
-                                <div class="avatar-fallback" style="${userProfile.avatar_url ? 'display: none;' : ''}">
-                                    ${this.getUserInitials(userProfile.nickname)}
-                                </div>
-                            </div>
-                            <div class="chat-user-info">
-                                <h3>${this.escapeHtml(userProfile.nickname)}</h3>
-                                <div class="chat-user-status">
-                                    <span class="${this.isUserOnline(userProfile.last_online_at) ? 'status-online' : 'status-offline'}">
-                                        <span class="status-dot"></span>
-                                        ${this.isUserOnline(userProfile.last_online_at) ? 'Online' : 'Offline'}
-                                    </span>
-                                </div>
+                    userInfo.innerHTML = `
+                        <div class="chat-user-avatar">
+                            ${userProfile.avatar_url ? 
+                                `<img src="${userProfile.avatar_url}" alt="${userProfile.nickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
+                                ''
+                            }
+                            <div class="avatar-fallback" style="${userProfile.avatar_url ? 'display: none;' : ''}">
+                                ${this.getUserInitials(userProfile.nickname)}
                             </div>
                         </div>
-                        <div class="chat-header-actions">
-                            <!-- ⭐ BOTÃO VIBE EXCLUSIVE ADICIONADO -->
-                            <button class="chat-action-btn" id="fidelityProposeBtn" style="display: none;" title="Propor Vibe Exclusive">
-                                <i class="fas fa-gem"></i>
-                            </button>
-                            <!-- ⭐ BOTÃO PROPOSTAS RECEBIDAS ADICIONADO -->
-                            <button class="chat-action-btn" id="viewProposalsBtn" style="display: none;" title="Propostas recebidas">
-                                <i class="fas fa-bell"></i>
-                                <span class="proposal-badge" id="proposalBadge" style="display: none;"></span>
-                            </button>
-                            <button class="chat-action-btn" onclick="MessagesSystem.showUserInfo('${otherUserId}')" title="Informações do usuário">
-                                <i class="fas fa-info-circle"></i>
-                            </button>
+                        <div class="chat-user-info">
+                            <h3>${this.escapeHtml(userProfile.nickname)}</h3>
+                            <div class="chat-user-status">
+                                <span class="${this.isUserOnline(userProfile.last_online_at) ? 'status-online' : 'status-offline'}">
+                                    <span class="status-dot"></span>
+                                    ${this.isUserOnline(userProfile.last_online_at) ? 'Online' : 'Offline'}
+                                </span>
+                            </div>
                         </div>
                     `;
                 }
@@ -550,45 +551,29 @@ class MessagesSystem {
                 console.error('Erro ao carregar informações do usuário:', error);
             }
         } else {
-            chatHeader.innerHTML = `
-                <div class="chat-header-user">
-                    <div class="chat-user-avatar">
-                        ${conversation.other_user_avatar_url ? 
-                            `<img src="${conversation.other_user_avatar_url}" alt="${conversation.other_user_nickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
-                            ''
-                        }
-                        <div class="avatar-fallback" style="${conversation.other_user_avatar_url ? 'display: none;' : ''}">
-                            ${this.getUserInitials(conversation.other_user_nickname)}
-                        </div>
-                    </div>
-                    <div class="chat-user-info">
-                        <h3>${this.escapeHtml(conversation.other_user_nickname)}</h3>
-                        <div class="chat-user-status">
-                            <span class="${conversation.other_user_online ? 'status-online' : 'status-offline'}">
-                                <span class="status-dot"></span>
-                                ${conversation.other_user_online ? 'Online' : 'Offline'}
-                            </span>
-                        </div>
+            userInfo.innerHTML = `
+                <div class="chat-user-avatar">
+                    ${conversation.other_user_avatar_url ? 
+                        `<img src="${conversation.other_user_avatar_url}" alt="${conversation.other_user_nickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
+                        ''
+                    }
+                    <div class="avatar-fallback" style="${conversation.other_user_avatar_url ? 'display: none;' : ''}">
+                        ${this.getUserInitials(conversation.other_user_nickname)}
                     </div>
                 </div>
-                <div class="chat-header-actions">
-                    <!-- ⭐ BOTÃO VIBE EXCLUSIVE ADICIONADO -->
-                    <button class="chat-action-btn" id="fidelityProposeBtn" style="display: none;" title="Propor Vibe Exclusive">
-                        <i class="fas fa-gem"></i>
-                    </button>
-                    <!-- ⭐ BOTÃO PROPOSTAS RECEBIDAS ADICIONADO -->
-                    <button class="chat-action-btn" id="viewProposalsBtn" style="display: none;" title="Propostas recebidas">
-                        <i class="fas fa-bell"></i>
-                        <span class="proposal-badge" id="proposalBadge" style="display: none;"></span>
-                    </button>
-                    <button class="chat-action-btn" onclick="MessagesSystem.showUserInfo('${otherUserId}')" title="Informações do usuário">
-                        <i class="fas fa-info-circle"></i>
-                    </button>
+                <div class="chat-user-info">
+                    <h3>${this.escapeHtml(conversation.other_user_nickname)}</h3>
+                    <div class="chat-user-status">
+                        <span class="${conversation.other_user_online ? 'status-online' : 'status-offline'}">
+                            <span class="status-dot"></span>
+                            ${conversation.other_user_online ? 'Online' : 'Offline'}
+                        </span>
+                    </div>
                 </div>
             `;
         }
 
-        // ⭐ ATUALIZAR BOTÕES VIBE EXCLUSIVE
+        // ⭐ ATUALIZAR BOTÕES VIBE EXCLUSIVE SEM REMOVER O BOTÃO DE SINO
         if (this.sistemaVibe && typeof this.sistemaVibe.onConversationSelected === 'function') {
             await this.sistemaVibe.onConversationSelected(otherUserId);
         }
