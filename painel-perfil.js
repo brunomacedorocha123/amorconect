@@ -90,11 +90,11 @@ function setupEventListeners() {
         });
     }
 
-    // === ADIÇÃO: Sistema de exclusão de conta ===
+    // Sistema de exclusão de conta
     setupAccountDeletionListeners();
 }
 
-// === ADIÇÃO: Sistema de exclusão de conta ===
+// ========== SISTEMA DE EXCLUSÃO DE CONTA ==========
 function setupAccountDeletionListeners() {
     const deleteAccountBtn = document.getElementById('deleteAccountBtn');
     if (deleteAccountBtn) {
@@ -179,17 +179,47 @@ async function deleteUserAccount() {
     const userId = currentUser.id;
 
     try {
-        // 1. Primeiro deletar todos os dados do usuário
+        // 1. Primeiro marcar a conta como excluída no banco
+        await markAccountAsDeleted(userId);
+        
+        // 2. Deletar todos os dados do usuário
         await deleteUserData(userId);
         
-        // 2. Fazer logout
+        // 3. Fazer logout para remover a sessão
         await supabase.auth.signOut();
         
-        // 3. Redirecionar para página de confirmação
+        // 4. Redirecionar para página de confirmação
         window.location.href = 'conta-excluida.html';
         
     } catch (error) {
         throw new Error(`Falha na exclusão: ${error.message}`);
+    }
+}
+
+async function markAccountAsDeleted(userId) {
+    try {
+        // Marcar a conta como excluída no banco
+        const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+                account_deleted: true,
+                deleted_at: new Date().toISOString(),
+                is_invisible: true, // Garante que não apareça nas buscas
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', userId);
+            
+        if (updateError) {
+            console.warn('Erro ao marcar conta como excluída:', updateError);
+            // Continua mesmo com erro
+        }
+        
+        return { success: true };
+        
+    } catch (error) {
+        console.warn('Erro ao marcar conta como excluída:', error);
+        // Continua o processo mesmo com erro
+        return { success: false };
     }
 }
 
@@ -249,7 +279,7 @@ function resetConfirmButton() {
         confirmBtn.disabled = false;
     }
 }
-// === FIM DA ADIÇÃO ===
+// ========== FIM DO SISTEMA DE EXCLUSÃO ==========
 
 // Carregar perfil do usuário
 async function loadUserProfile() {
