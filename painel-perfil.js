@@ -27,7 +27,7 @@ async function initializeApp() {
     }
 }
 
-// Verificar autenticação
+// Verificar autenticação - CORRIGIDA
 async function checkAuthentication() {
     try {
         const { data: { user }, error } = await supabase.auth.getUser();
@@ -36,15 +36,15 @@ async function checkAuthentication() {
             return false;
         }
         
-        // ✅ VERIFICAR SE A CONTA FOI EXCLUÍDA
-        const { data: profile } = await supabase
+        // ✅ CORREÇÃO: Verificação segura da conta excluída
+        const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('account_deleted')
             .eq('id', user.id)
-            .single();
+            .maybeSingle();  // ✅ Use maybeSingle() em vez de single()
             
-        if (profile && profile.account_deleted) {
-            // Conta foi excluída - fazer logout e redirecionar
+        // Se não encontrar perfil ou conta foi excluída, bloquear
+        if (profileError || !profile || profile.account_deleted) {
             await supabase.auth.signOut();
             window.location.href = 'login.html';
             return false;
@@ -109,7 +109,7 @@ function setupEventListeners() {
     setupAccountDeletionListeners();
 }
 
-// ========== SISTEMA DE EXCLUSÃO DE CONTA DEFINITIVO - CORRIGIDO ==========
+// ========== SISTEMA DE EXCLUSÃO DE CONTA DEFINITIVO ==========
 function setupAccountDeletionListeners() {
     const deleteAccountBtn = document.getElementById('deleteAccountBtn');
     if (deleteAccountBtn) {
@@ -180,14 +180,12 @@ async function confirmAccountDeletion() {
         await deleteUserAccount();
         
     } catch (error) {
-        console.error('Erro na exclusão:', error);
         showNotification('Erro ao excluir conta: ' + error.message, 'error');
         closeConfirmationModal();
         resetConfirmButton();
     }
 }
 
-// ✅ FUNÇÃO PRINCIPAL CORRIGIDA - EXCLUSÃO DEFINITIVA
 async function deleteUserAccount() {
     if (!currentUser) {
         throw new Error('Usuário não autenticado');
@@ -196,90 +194,68 @@ async function deleteUserAccount() {
     const userId = currentUser.id;
 
     try {
-        console.log('🚨 INICIANDO EXCLUSÃO DEFINITIVA DA CONTA...');
-
-        // 1. ✅ PRIMEIRO: Invalidar completamente a conta no banco
+        // 1. ✅ Invalidar conta no banco
         await invalidateUserAccount(userId);
         
-        // 2. ✅ SEGUNDO: Deletar todos os dados do usuário
+        // 2. ✅ Deletar dados do usuário
         await deleteUserData(userId);
         
-        // 3. ✅ TERCEIRO: Fazer logout para remover sessão
+        // 3. ✅ Fazer logout
         await supabase.auth.signOut();
         
-        // 4. ✅ QUARTO: Limpar tudo do navegador
+        // 4. ✅ Limpar dados do navegador
         clearBrowserData();
         
-        // 5. ✅ QUINTO: Redirecionar para página de confirmação
+        // 5. ✅ Redirecionar
         setTimeout(() => {
             window.location.href = 'conta-excluida.html';
         }, 1000);
         
     } catch (error) {
-        console.error('Erro na exclusão:', error);
         throw new Error(`Falha na exclusão: ${error.message}`);
     }
 }
 
-// ✅ FUNÇÃO CORRIGIDA - INVALIDAR CONTA NO BANCO
 async function invalidateUserAccount(userId) {
-    try {
-        console.log('🔐 Invalidando conta no banco de dados...');
+    const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+            account_deleted: true,
+            deleted_at: new Date().toISOString(),
+            is_invisible: true,
+            email: 'deleted_' + userId + '@deleted.com',
+            nickname: 'usuário_excluído',
+            full_name: 'Conta Excluída',
+            phone: null,
+            cpf: null,
+            avatar_url: null,
+            street: null,
+            number: null,
+            neighborhood: null,
+            city: null,
+            state: null,
+            zip_code: null,
+            display_city: null,
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
         
-        // ✅ MARCAR CONTA COMO EXCLUÍDA - IMPEDE LOGIN FUTURO
-        const { error: updateError } = await supabase
-            .from('profiles')
-            .update({
-                account_deleted: true,
-                deleted_at: new Date().toISOString(),
-                is_invisible: true,
-                email: 'deleted_' + userId + '@deleted.com',
-                nickname: 'usuário_excluído',
-                full_name: 'Conta Excluída',
-                phone: null,
-                cpf: null,
-                avatar_url: null,
-                street: null,
-                number: null,
-                neighborhood: null,
-                city: null,
-                state: null,
-                zip_code: null,
-                display_city: null,
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', userId);
-            
-        if (updateError) {
-            console.error('Erro ao invalidar conta:', updateError);
-            throw new Error('Não foi possível invalidar a conta');
-        }
-        
-        console.log('✅ Conta invalidada no banco de dados - usuário não poderá mais fazer login');
-        return { success: true };
-        
-    } catch (error) {
-        console.error('❌ Erro ao invalidar conta:', error);
-        throw error;
+    if (updateError) {
+        throw new Error('Não foi possível invalidar a conta');
     }
+    
+    return { success: true };
 }
 
-// ✅ FUNÇÃO PARA DELETAR DADOS DO USUÁRIO
 async function deleteUserData(userId) {
     try {
-        console.log('🗑️ Deletando dados do usuário...');
-
         // Deletar user_details
-        const { error: detailsError } = await supabase
+        await supabase
             .from('user_details')
             .delete()
             .eq('user_id', userId);
 
-        if (detailsError) {
-            console.warn('Aviso ao deletar user_details:', detailsError);
-        }
-
-        // Tentar deletar outras tabelas relacionadas
+        // Tentar deletar outras tabelas
         const tables = [
             'user_feels', 'user_vibes', 'messages', 'likes', 
             'gallery_images', 'notifications', 'premium_subscriptions'
@@ -296,47 +272,33 @@ async function deleteUserData(userId) {
                 } else {
                     await supabase.from(table).delete().eq('user_id', userId);
                 }
-                console.log(`✅ ${table} deletada`);
             } catch (error) {
-                console.warn(`⚠️ Aviso ao deletar ${table}:`, error.message);
-                // Não lançar erro - continuar com exclusão mesmo se algumas tabelas falharem
+                // Continuar mesmo se alguma tabela falhar
             }
         }
 
-        console.log('✅ Processo de exclusão de dados concluído');
-
     } catch (error) {
-        console.error('❌ Erro ao deletar dados:', error);
-        // Não lançar erro - a invalidação da conta já é suficiente
+        // A invalidação da conta já é suficiente
     }
 }
 
-// ✅ FUNÇÃO PARA LIMPAR DADOS DO NAVEGADOR
 function clearBrowserData() {
     try {
-        // Limpar localStorage
         localStorage.clear();
-        
-        // Limpar sessionStorage
         sessionStorage.clear();
         
-        // Limpar cookies
         document.cookie.split(";").forEach(function(c) {
             document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
         });
         
-        // Limpar cache do Supabase
         if (window.supabase) {
             supabase.removeAllChannels();
         }
-        
-        console.log('✅ Dados do navegador limpos');
     } catch (error) {
-        console.warn('⚠️ Aviso ao limpar dados do navegador:', error);
+        // Ignorar erros na limpeza
     }
 }
 
-// ✅ FUNÇÃO PARA RESETAR BOTÃO DE CONFIRMAÇÃO
 function resetConfirmButton() {
     const confirmBtn = document.getElementById('confirmDeleteBtn');
     if (confirmBtn) {
@@ -346,7 +308,7 @@ function resetConfirmButton() {
 }
 // ========== FIM DO SISTEMA DE EXCLUSÃO DEFINITIVO ==========
 
-// [RESTANTE DO CÓDIGO ORIGINAL PERMANECE IGUAL]
+// [RESTANTE DO CÓDIGO ORIGINAL PERMANECE EXATAMENTE IGUAL]
 // Carregar perfil do usuário
 async function loadUserProfile() {
     try {
@@ -354,7 +316,7 @@ async function loadUserProfile() {
             throw new Error('Usuário não autenticado');
         }
 
-        // ✅ VERIFICAR SE CONTA FOI EXCLUÍDA
+        // Carregar dados principais
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -365,7 +327,7 @@ async function loadUserProfile() {
             throw new Error('Erro ao carregar perfil');
         }
 
-        // ✅ SE CONTA ESTIVER EXCLUÍDA, FAZER LOGOUT
+        // ✅ VERIFICAR SE CONTA FOI EXCLUÍDA
         if (profile.account_deleted) {
             await supabase.auth.signOut();
             window.location.href = 'login.html';
@@ -380,14 +342,13 @@ async function loadUserProfile() {
             .single();
 
         if (detailsError && detailsError.code !== 'PGRST116') {
-            console.warn('Erro ao carregar detalhes:', detailsError);
+            // Ignorar erro se não encontrar detalhes
         }
 
         // Preencher formulário E ATUALIZAR HEADER
         fillProfileForm(profile, userDetails || {});
         
     } catch (error) {
-        console.error('Erro ao carregar perfil:', error);
         showNotification('Erro ao carregar perfil', 'error');
     }
 }
@@ -512,7 +473,7 @@ async function updateInvisibleModeUI() {
             }
         }
     } catch (error) {
-        console.error('Erro ao atualizar UI do modo invisível:', error);
+        // Ignorar erro
     }
 }
 
@@ -544,7 +505,6 @@ async function handleInvisibleToggle(event) {
         );
 
     } catch (error) {
-        console.error('Erro ao atualizar modo invisível:', error);
         showNotification('Erro ao atualizar modo invisível', 'error');
         // Reverter o checkbox em caso de erro
         event.target.checked = !isInvisible;
@@ -587,7 +547,6 @@ async function handleProfileSave(event) {
         showNotification('Perfil salvo com sucesso!', 'success');
         
     } catch (error) {
-        console.error('Erro ao salvar perfil:', error);
         showNotification('Erro ao salvar perfil: ' + error.message, 'error');
     } finally {
         saveButton.innerHTML = originalText;
@@ -827,7 +786,7 @@ async function buscarCEP(cep) {
             setValue('displayCity', `${data.localidade}, ${data.uf}`);
         }
     } catch (error) {
-        console.log('Erro ao buscar CEP:', error);
+        // Ignorar erro
     }
 }
 
