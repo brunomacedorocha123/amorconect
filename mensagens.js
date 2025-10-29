@@ -15,7 +15,6 @@ class MessagesSystem {
     this.initialize();
   }
 
-
   async initialize() {
     try {
       await this.checkAuth();
@@ -35,19 +34,48 @@ class MessagesSystem {
     }
   }
 
-
   // ⭐ NOVA FUNÇÃO - Inicializar Sistema Vibe separadamente
   async initializeSistemaVibe() {
     try {
       if (window.SistemaVibe && this.currentUser) {
         this.sistemaVibe = new SistemaVibe();
         await this.sistemaVibe.initialize(this.currentUser);
+        
+        // ✅ CONECTAR COM O BOTÃO EXISTENTE NO HTML
+        this.setupFidelityButtonHandlers();
       }
     } catch (error) {
       // ⭐ SILENCIOSO - não afeta o chat se der erro
+      console.error('Erro ao inicializar Sistema Vibe:', error);
     }
   }
 
+  // ✅ NOVA FUNÇÃO para conectar os botões do Vibe Exclusive
+  setupFidelityButtonHandlers() {
+    // Usar event delegation para o botão Vibe Exclusive
+    document.addEventListener('click', (e) => {
+      const fidelityBtn = e.target.closest('#fidelityProposeBtn');
+      if (fidelityBtn && !fidelityBtn.classList.contains('active')) {
+        this.handleFidelityProposal();
+      }
+    });
+  }
+
+  // ✅ FUNÇÃO para lidar com a proposta de Vibe Exclusive
+  async handleFidelityProposal() {
+    if (!this.currentConversation) {
+      this.showNotification('Selecione uma conversa primeiro', 'error');
+      return;
+    }
+    
+    console.log('🎯 Iniciando proposta Vibe para:', this.currentConversation);
+    
+    if (this.sistemaVibe) {
+      await this.sistemaVibe.proposeFidelityAgreement(this.currentConversation);
+    } else {
+      this.showNotification('Sistema Vibe não disponível', 'error');
+    }
+  }
 
   async checkAuth() {
     try {
@@ -62,7 +90,6 @@ class MessagesSystem {
     }
   }
 
-
   async loadUserData() {
     try {
       const { data: profile, error } = await this.supabase
@@ -71,9 +98,7 @@ class MessagesSystem {
         .eq('id', this.currentUser.id)
         .single();
 
-
       if (error) throw error;
-
 
       if (profile) {
         this.currentUser.profile = profile;
@@ -83,7 +108,6 @@ class MessagesSystem {
       console.error('Erro ao carregar dados do usuário:', error);
     }
   }
-
 
   updateUserHeader(profile) {
     const avatarImg = document.getElementById('userAvatarImg');
@@ -99,19 +123,16 @@ class MessagesSystem {
       avatarFallback.textContent = this.getUserInitials(profile.nickname || this.currentUser.email);
     }
 
-
     const userName = document.getElementById('userName');
     if (userName) {
       userName.textContent = profile.nickname || this.currentUser.email.split('@')[0];
     }
   }
 
-
   getUserInitials(name) {
     if (!name) return 'U';
     return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().substring(0, 2);
   }
-
 
   checkUrlParams() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -123,7 +144,6 @@ class MessagesSystem {
       }, 1000);
     }
   }
-
 
   async selectConversationFromUrl(userId) {
     try {
@@ -141,7 +161,6 @@ class MessagesSystem {
     }
   }
 
-
   async createNewConversation(userId) {
     try {
       const { data: userProfile, error } = await this.supabase
@@ -151,7 +170,6 @@ class MessagesSystem {
         .single();
         
       if (error) throw error;
-
 
       if (userProfile) {
         const newConversation = {
@@ -173,13 +191,11 @@ class MessagesSystem {
     }
   }
 
-
   isUserOnline(lastOnlineAt) {
     if (!lastOnlineAt) return false;
     const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
     return new Date(lastOnlineAt) > fifteenMinutesAgo;
   }
-
 
   async loadConversations() {
     if (this.isLoading) return;
@@ -193,12 +209,10 @@ class MessagesSystem {
           p_user_id: this.currentUser.id
         });
 
-
       if (error) {
         await this.loadConversationsFallback();
         return;
       }
-
 
       this.conversations = conversations || [];
       this.renderConversations();
@@ -209,7 +223,6 @@ class MessagesSystem {
       this.isLoading = false;
     }
   }
-
 
   async loadConversationsFallback() {
     try {
@@ -228,9 +241,7 @@ class MessagesSystem {
         .or(`sender_id.eq.${this.currentUser.id},receiver_id.eq.${this.currentUser.id}`)
         .order('sent_at', { ascending: false });
 
-
       if (error) throw error;
-
 
       const conversationsMap = new Map();
       
@@ -261,7 +272,6 @@ class MessagesSystem {
     }
   }
 
-
   renderConversations() {
     const container = document.getElementById('conversationsList');
     if (!container) return;
@@ -276,7 +286,6 @@ class MessagesSystem {
       `;
       return;
     }
-
 
     container.innerHTML = this.conversations.map(conv => `
       <div class="conversation-item ${this.currentConversation === conv.other_user_id ? 'active' : ''}"
@@ -311,10 +320,8 @@ class MessagesSystem {
       </div>
     `).join('');
 
-
     this.addConversationClickListeners();
   }
-
 
   addConversationClickListeners() {
     const conversationItems = document.querySelectorAll('.conversation-item');
@@ -328,7 +335,6 @@ class MessagesSystem {
     });
   }
 
-
   async selectConversation(otherUserId) {
     try {
       document.querySelectorAll('.conversation-item').forEach(item => {
@@ -340,17 +346,20 @@ class MessagesSystem {
         conversationItem.classList.add('active');
       }
 
-
       this.currentConversation = otherUserId;
       await this.loadConversationMessages(otherUserId);
       this.showChatArea();
       await this.updateChatHeader(otherUserId);
       
+      // ⭐ ATUALIZAR BOTÕES VIBE EXCLUSIVE
+      if (this.sistemaVibe && typeof this.sistemaVibe.onConversationSelected === 'function') {
+        await this.sistemaVibe.onConversationSelected(otherUserId);
+      }
+      
     } catch (error) {
       this.showNotification('Erro ao carregar conversa', 'error');
     }
   }
-
 
   async loadConversationMessages(otherUserId) {
     if (this.isLoading) return;
@@ -364,7 +373,6 @@ class MessagesSystem {
           p_user1_id: this.currentUser.id,
           p_user2_id: otherUserId
         });
-
 
       if (error) {
         await this.loadConversationMessagesFallback(otherUserId);
@@ -380,7 +388,6 @@ class MessagesSystem {
       this.isLoading = false;
     }
   }
-
 
   async loadConversationMessagesFallback(otherUserId) {
     try {
@@ -398,12 +405,9 @@ class MessagesSystem {
         .or(`and(sender_id.eq.${this.currentUser.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${this.currentUser.id})`)
         .order('sent_at', { ascending: true });
 
-
       if (error) throw error;
 
-
       await this.markMessagesAsRead(otherUserId);
-
 
       this.messages = messages.map(msg => ({
         message_id: msg.id,
@@ -416,14 +420,12 @@ class MessagesSystem {
         sender_nickname: msg.sender?.nickname
       }));
 
-
       this.renderMessages();
       
     } catch (error) {
       this.showError('messagesHistory', 'Erro ao carregar mensagens');
     }
   }
-
 
   async markMessagesAsRead(otherUserId) {
     try {
@@ -434,12 +436,10 @@ class MessagesSystem {
         .eq('receiver_id', this.currentUser.id)
         .is('read_at', null);
 
-
     } catch (error) {
       console.error('Erro ao marcar mensagens como lidas:', error);
     }
   }
-
 
   formatMessages(messages) {
     if (!messages) return [];
@@ -456,7 +456,6 @@ class MessagesSystem {
     }));
   }
 
-
   renderMessages() {
     const container = document.getElementById('messagesHistory');
     if (!container) return;
@@ -471,7 +470,6 @@ class MessagesSystem {
       `;
       return;
     }
-
 
     const groupedMessages = this.groupMessagesByDate(this.messages);
     
@@ -495,10 +493,8 @@ class MessagesSystem {
       </div>
     `).join('');
 
-
     this.scrollToBottom();
   }
-
 
   groupMessagesByDate(messages) {
     return messages.reduce((groups, message) => {
@@ -511,18 +507,15 @@ class MessagesSystem {
     }, {});
   }
 
-
   getMessageStatusIcon(message) {
     if (message.read_at) return 'fa-check-double status-read';
     return 'fa-check status-sent';
   }
 
-
   getMessageStatusText(message) {
     if (message.read_at) return 'Lida';
     return 'Enviada';
   }
-
 
   showChatArea() {
     const inputArea = document.getElementById('messageInputArea');
@@ -535,7 +528,6 @@ class MessagesSystem {
     if (emptyChat) emptyChat.style.display = 'none';
     if (chatHeader) chatHeader.style.display = 'flex';
   }
-
 
   // ⭐ FUNÇÃO ATUALIZADA - Agora inclui o botão Vibe Exclusive
   async updateChatHeader(otherUserId) {
@@ -577,7 +569,7 @@ class MessagesSystem {
             <div class="chat-header-actions">
               <!-- ⭐ BOTÃO VIBE EXCLUSIVE ADICIONADO -->
               <button class="chat-action-btn" id="fidelityProposeBtn" style="display: none;" title="Propor Vibe Exclusive">
-                <i class="fas fa-gem"></i>
+                <i class="fas fa-gem"></i> Vibe Exclusive
               </button>
               <!-- ⭐ BOTÃO PROPOSTAS RECEBIDAS ADICIONADO -->
               <button class="chat-action-btn" id="viewProposalsBtn" style="display: none;" title="Propostas recebidas">
@@ -618,7 +610,7 @@ class MessagesSystem {
         <div class="chat-header-actions">
           <!-- ⭐ BOTÃO VIBE EXCLUSIVE ADICIONADO -->
           <button class="chat-action-btn" id="fidelityProposeBtn" style="display: none;" title="Propor Vibe Exclusive">
-            <i class="fas fa-gem"></i>
+            <i class="fas fa-gem"></i> Vibe Exclusive
           </button>
           <!-- ⭐ BOTÃO PROPOSTAS RECEBIDAS ADICIONADO -->
           <button class="chat-action-btn" id="viewProposalsBtn" style="display: none;" title="Propostas recebidas">
@@ -632,13 +624,11 @@ class MessagesSystem {
       `;
     }
 
-
     // ⭐ ATUALIZAR BOTÕES VIBE EXCLUSIVE
     if (this.sistemaVibe && typeof this.sistemaVibe.onConversationSelected === 'function') {
       await this.sistemaVibe.onConversationSelected(otherUserId);
     }
   }
-
 
   async sendMessage() {
     const messageInput = document.getElementById('messageInput');
@@ -654,24 +644,20 @@ class MessagesSystem {
       return;
     }
 
-
     if (message.length > 1000) {
       this.showNotification('Mensagem muito longa (máx. 1000 caracteres)', 'error');
       return;
     }
 
-
     try {
       this.setSendButtonState(true);
       this.showMessageStatus('Enviando...', 'info');
-
 
       const canSend = await this.checkCanSendMessage();
       if (!canSend.can_send) {
         this.handleSendError(canSend.reason);
         return;
       }
-
 
       const { data, error } = await this.supabase
         .rpc('send_message', {
@@ -680,9 +666,7 @@ class MessagesSystem {
           p_message: message
         });
 
-
       if (error) throw error;
-
 
       if (data === 'success') {
         messageInput.value = '';
@@ -697,7 +681,6 @@ class MessagesSystem {
         this.handleSendError(data);
       }
 
-
     } catch (error) {
       this.showMessageStatus('Erro ao enviar mensagem', 'error');
       await this.sendMessageFallback(message);
@@ -706,7 +689,6 @@ class MessagesSystem {
       setTimeout(() => this.clearMessageStatus(), 3000);
     }
   }
-
 
   async sendMessageFallback(message) {
     try {
@@ -720,9 +702,7 @@ class MessagesSystem {
         })
         .select();
 
-
       if (error) throw error;
-
 
       if (data) {
         this.showNotification('Mensagem enviada!', 'success');
@@ -734,7 +714,6 @@ class MessagesSystem {
       this.showNotification('Erro ao enviar mensagem', 'error');
     }
   }
-
 
   async checkCanSendMessage() {
     try {
@@ -750,18 +729,15 @@ class MessagesSystem {
         return { can_send: true, reason: null };
       }
 
-
       const { data: limits, error } = await this.supabase
         .from('user_message_limits')
         .select('messages_sent_today, last_reset_date')
         .eq('user_id', this.currentUser.id)
         .single();
 
-
       if (error) {
         return { can_send: true, reason: null };
       }
-
 
       const sentToday = limits.messages_sent_today || 0;
       
@@ -769,14 +745,12 @@ class MessagesSystem {
         return { can_send: false, reason: 'limit_reached' };
       }
 
-
       return { can_send: true, reason: null };
       
     } catch (error) {
       return { can_send: true, reason: null };
     }
   }
-
 
   handleSendError(reason) {
     switch (reason) {
@@ -790,7 +764,6 @@ class MessagesSystem {
         this.showNotification('Erro ao enviar mensagem.', 'error');
     }
   }
-
 
   async updateMessageCounter() {
     try {
@@ -806,7 +779,6 @@ class MessagesSystem {
       
       if (!counter) return;
 
-
       if (isPremium) {
         counter.innerHTML = `
           <span class="counter-text">Mensagens: </span>
@@ -816,13 +788,11 @@ class MessagesSystem {
         return;
       }
 
-
       const { data: limits, error } = await this.supabase
         .from('user_message_limits')
         .select('messages_sent_today, last_reset_date')
         .eq('user_id', this.currentUser.id)
         .single();
-
 
       let sentToday = 0;
       
@@ -830,19 +800,16 @@ class MessagesSystem {
         sentToday = limits.messages_sent_today || 0;
       }
 
-
       counter.innerHTML = `
         <span class="counter-text">Mensagens hoje: </span>
         <span class="counter-number">${sentToday}/${this.messageLimit}</span>
       `;
       counter.classList.remove('premium');
 
-
     } catch (error) {
       console.error('Erro ao atualizar contador:', error);
     }
   }
-
 
   setupEventListeners() {
     const messageInput = document.getElementById('messageInput');
@@ -850,13 +817,11 @@ class MessagesSystem {
     const refreshBtn = document.getElementById('refreshMessages');
     const searchInput = document.getElementById('searchConversations');
 
-
     if (messageInput) {
       messageInput.addEventListener('input', () => {
         this.updateCharCounter();
         this.autoResizeTextarea(messageInput);
       });
-
 
       messageInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -866,16 +831,13 @@ class MessagesSystem {
       });
     }
 
-
     if (sendButton) {
       sendButton.addEventListener('click', () => this.sendMessage());
     }
 
-
     if (refreshBtn) {
       refreshBtn.addEventListener('click', () => this.refreshMessages());
     }
-
 
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
@@ -883,7 +845,6 @@ class MessagesSystem {
       });
     }
   }
-
 
   updateCharCounter() {
     const messageInput = document.getElementById('messageInput');
@@ -902,12 +863,10 @@ class MessagesSystem {
     }
   }
 
-
   autoResizeTextarea(textarea) {
     textarea.style.height = 'auto';
     textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
   }
-
 
   setSendButtonState(disabled) {
     const sendButton = document.getElementById('sendMessage');
@@ -919,7 +878,6 @@ class MessagesSystem {
     }
   }
 
-
   showMessageStatus(message, type) {
     const statusElement = document.getElementById('messageStatus');
     if (statusElement) {
@@ -927,7 +885,6 @@ class MessagesSystem {
       statusElement.className = `message-status status-${type}`;
     }
   }
-
 
   clearMessageStatus() {
     const statusElement = document.getElementById('messageStatus');
@@ -937,11 +894,9 @@ class MessagesSystem {
     }
   }
 
-
   async showUserInfo(userId) {
     this.showNotification('Funcionalidade em desenvolvimento', 'info');
   }
-
 
   async refreshMessages() {
     if (this.isLoading) return;
@@ -971,7 +926,6 @@ class MessagesSystem {
     }
   }
 
-
   filterConversations(searchTerm) {
     const items = document.querySelectorAll('.conversation-item');
     const term = searchTerm.toLowerCase().trim();
@@ -993,7 +947,6 @@ class MessagesSystem {
     });
   }
 
-
   scrollToBottom() {
     const container = document.getElementById('messagesHistory');
     if (container) {
@@ -1002,7 +955,6 @@ class MessagesSystem {
       }, 100);
     }
   }
-
 
   startPeriodicChecks() {
     setInterval(async () => {
@@ -1014,14 +966,12 @@ class MessagesSystem {
     }, 30000);
   }
 
-
   escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
   }
-
 
   formatTime(dateString) {
     if (!dateString) return '';
@@ -1033,7 +983,6 @@ class MessagesSystem {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-
     if (diffMins < 1) return 'Agora';
     if (diffMins < 60) return `${diffMins}m`;
     if (diffHours < 24) return `${diffHours}h`;
@@ -1042,7 +991,6 @@ class MessagesSystem {
     return date.toLocaleDateString('pt-BR');
   }
 
-
   formatDate(dateString) {
     if (!dateString) return '';
     
@@ -1050,7 +998,6 @@ class MessagesSystem {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-
 
     if (date.toDateString() === today.toDateString()) {
       return 'Hoje';
@@ -1065,7 +1012,6 @@ class MessagesSystem {
     }
   }
 
-
   showLoading(containerId) {
     const container = document.getElementById(containerId);
     if (container) {
@@ -1077,7 +1023,6 @@ class MessagesSystem {
       `;
     }
   }
-
 
   showError(containerId, message) {
     const container = document.getElementById(containerId);
@@ -1093,7 +1038,6 @@ class MessagesSystem {
     }
   }
 
-
   async retryLoad() {
     try {
       await this.loadConversations();
@@ -1104,7 +1048,6 @@ class MessagesSystem {
       console.error('Erro no retry:', error);
     }
   }
-
 
   showNotification(message, type = 'info') {
     if (typeof window.showNotification === 'function') {
@@ -1138,12 +1081,10 @@ class MessagesSystem {
   }
 }
 
-
 // ⭐ INICIALIZAÇÃO GLOBAL - MANTIDA EXATAMENTE IGUAL
 document.addEventListener('DOMContentLoaded', function() {
   window.MessagesSystem = new MessagesSystem();
 });
-
 
 // ⭐ FUNÇÕES GLOBAIS - MANTIDAS EXATAMENTE IGUAIS
 window.refreshMessages = function() {
@@ -1152,20 +1093,17 @@ window.refreshMessages = function() {
   }
 };
 
-
 window.selectConversation = function(userId) {
   if (window.MessagesSystem) {
     window.MessagesSystem.selectConversation(userId);
   }
 };
 
-
 window.sendMessage = function() {
   if (window.MessagesSystem) {
     window.MessagesSystem.sendMessage();
   }
 };
-
 
 async function logout() {
   try {
@@ -1178,13 +1116,11 @@ async function logout() {
   }
 }
 
-
 // ⭐ MONITOR DE AUTENTICAÇÃO - MANTIDO EXATAMENTE IGUAL
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_OUT') {
     window.location.href = 'login.html';
   }
 });
-
 
 window.logout = logout;

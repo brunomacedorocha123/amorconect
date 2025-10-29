@@ -125,8 +125,14 @@
                                 <div class="chat-header-actions">
                                     <!-- ⭐ BOTÃO VIBE EXCLUSIVE ADICIONADO -->
                                     <button class="chat-action-btn fidelity-btn" id="fidelityProposeBtn" style="display: none;" 
-                                            title="Propor Vibe Exclusive" onclick="showFidelityProposal()">
+                                            title="Propor Vibe Exclusive">
                                         <i class="fas fa-gem"></i> Vibe Exclusive
+                                    </button>
+                                    <!-- ⭐ BOTÃO PROPOSTAS RECEBIDAS ADICIONADO -->
+                                    <button class="chat-action-btn proposals-btn" id="viewProposalsBtn" style="display: none;" 
+                                            title="Propostas recebidas">
+                                        <i class="fas fa-bell"></i>
+                                        <span class="proposal-badge" id="proposalBadge" style="display: none;"></span>
                                     </button>
                                     <button class="chat-action-btn" onclick="MessagesSystem.showUserInfo()" title="Informações do usuário">
                                         <i class="fas fa-info-circle"></i>
@@ -290,17 +296,57 @@
         </div>
     </div>
 
-
     <!-- Scripts -->
     <script src="premium-check.js"></script>
+    <script src="sistema-vibe.js"></script> <!-- ⭐ ORDEM CORRIGIDA: Vibe antes das Mensagens -->
     <script src="mensagens.js"></script>
     <script src="mensagens-temporeal.js"></script>
+    
     <script>
         // Configuração do Supabase
         const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        // ==================== FUNÇÕES GLOBAIS DO VIBE EXCLUSIVE ====================
+        window.acceptProposal = function(proposalId) {
+            if (window.sistemaVibe) {
+                window.sistemaVibe.acceptFidelityProposal(proposalId);
+            } else {
+                alert('Sistema Vibe não carregado! Recarregue a página.');
+            }
+        };
+
+        window.rejectProposal = function(proposalId) {
+            if (window.sistemaVibe) {
+                window.sistemaVibe.rejectFidelityProposal(proposalId);
+            } else {
+                alert('Sistema Vibe não carregado! Recarregue a página.');
+            }
+        };
+
+        // ==================== INICIALIZAÇÃO DO SISTEMA VIBE ====================
+        function initializeSistemaVibe() {
+            if (window.MessagesSystem && window.MessagesSystem.currentUser) {
+                if (!window.sistemaVibe) {
+                    window.sistemaVibe = new SistemaVibe();
+                    window.sistemaVibe.initialize(window.MessagesSystem.currentUser);
+                }
+                
+                // Garantir que os botões sejam criados
+                setTimeout(() => {
+                    if (window.sistemaVibe) {
+                        window.sistemaVibe.createProposalsButton();
+                        window.sistemaVibe.createFidelityButton();
+                    }
+                }, 1500);
+            } else {
+                setTimeout(initializeSistemaVibe, 1000);
+            }
+        }
+
+        // ==================== FUNÇÕES EXISTENTES ====================
+        
         // Função de logout
         async function logout() {
             try {
@@ -326,7 +372,6 @@
         }
 
         function blockCurrentUser() {
-            // Implementação da função de bloqueio
             console.log('Bloquear usuário - implementar');
         }
 
@@ -451,7 +496,6 @@
         }
 
         async function loadFidelityManagementData() {
-            // Implementar carregamento dos dados do acordo
             console.log('Carregando dados do acordo...');
         }
 
@@ -483,7 +527,6 @@
         }
 
         function updateFidelityButton() {
-            // Esta função será chamada pelo MessagesSystem para atualizar o botão
             if (window.MessagesSystem && window.MessagesSystem.updateFidelityButton) {
                 window.MessagesSystem.updateFidelityButton();
             }
@@ -500,36 +543,24 @@
 
         // Inicialização quando o DOM estiver pronto
         document.addEventListener('DOMContentLoaded', function() {
-            // Carregar scripts dinamicamente para garantir ordem correta
-            loadScript('premium-check.js', function() {
-                loadScript('mensagens.js', function() {
-                    loadScript('mensagens-temporeal.js', function() {
-                        // Inicializar sistema de mensagens
-                        if (typeof MessagesSystem !== 'undefined') {
-                            MessagesSystem.initialize();
-                        }
-                        
-                        // Verificar parâmetros da URL
-                        setTimeout(checkUrlParams, 1000);
-                        
-                        // Atualizar UI premium
-                        setTimeout(async () => {
-                            if (typeof PremiumManager !== 'undefined') {
-                                await PremiumManager.updateUIWithPremiumStatus();
-                            }
-                        }, 500);
-                    });
-                });
-            });
+            // Inicializar sistema de mensagens
+            if (typeof MessagesSystem !== 'undefined') {
+                MessagesSystem.initialize();
+            }
+            
+            // Inicializar sistema Vibe
+            initializeSistemaVibe();
+            
+            // Verificar parâmetros da URL
+            setTimeout(checkUrlParams, 1000);
+            
+            // Atualizar UI premium
+            setTimeout(async () => {
+                if (typeof PremiumManager !== 'undefined') {
+                    await PremiumManager.updateUIWithPremiumStatus();
+                }
+            }, 500);
         });
-
-        // Função para carregar scripts na ordem correta
-        function loadScript(src, callback) {
-            const script = document.createElement('script');
-            script.src = src;
-            script.onload = callback;
-            document.head.appendChild(script);
-        }
 
         // Função global para mostrar notificações
         function showNotification(message, type = 'info') {
@@ -567,6 +598,5 @@
         window.showManageFidelity = showManageFidelity;
         window.showNotification = showNotification;
     </script>
-    <script src="sistema-vibe.js"></script>
 </body>
 </html>

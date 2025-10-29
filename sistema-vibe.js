@@ -262,10 +262,10 @@ class SistemaVibe {
                                 </div>
                             </div>
                             <div class="proposal-actions">
-                                <button class="btn btn-success" onclick="sistemaVibe.acceptFidelityProposal('${proposal.id}')">
+                                <button class="btn btn-success" onclick="acceptProposal('${proposal.id}')">
                                     <i class="fas fa-check"></i> Aceitar
                                 </button>
-                                <button class="btn btn-outline" onclick="sistemaVibe.rejectFidelityProposal('${proposal.id}')">
+                                <button class="btn btn-outline" onclick="rejectProposal('${proposal.id}')">
                                     <i class="fas fa-times"></i> Recusar
                                 </button>
                             </div>
@@ -722,8 +722,10 @@ function initializeSistemaVibe() {
         
         // Criar botões imediatamente
         setTimeout(() => {
-            window.sistemaVibe.createProposalsButton();
-            window.sistemaVibe.createFidelityButton();
+            if (window.sistemaVibe) {
+                window.sistemaVibe.createProposalsButton();
+                window.sistemaVibe.createFidelityButton();
+            }
         }, 1000);
     } else {
         setTimeout(initializeSistemaVibe, 1000);
@@ -742,12 +744,16 @@ if (document.readyState === 'loading') {
 window.acceptProposal = function(proposalId) {
     if (window.sistemaVibe) {
         window.sistemaVibe.acceptFidelityProposal(proposalId);
+    } else {
+        alert('Sistema Vibe não carregado! Recarregue a página.');
     }
 };
 
 window.rejectProposal = function(proposalId) {
     if (window.sistemaVibe) {
         window.sistemaVibe.rejectFidelityProposal(proposalId);
+    } else {
+        alert('Sistema Vibe não carregado! Recarregue a página.');
     }
 };
 
