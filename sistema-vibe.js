@@ -1,4 +1,4 @@
-// sistema-vibe.js - VERSÃO COMPLETA CORRIGIDA
+// sistema-vibe.js - VERSÃO COMPLETA FUNCIONANDO
 class SistemaVibe {
     constructor() {
         this.supabase = supabase;
@@ -16,10 +16,10 @@ class SistemaVibe {
         this.setupRealtimeListeners();
         this.createProposalsButton();
         this.createFidelityButton();
+        
+        setTimeout(() => this.loadReceivedProposals(), 1500);
     }
 
-    // ==================== VERIFICAÇÕES COMPLETAS ====================
-    
     async canShowFidelityButton(otherUserId) {
         try {
             const conditions = await Promise.all([
@@ -112,8 +112,6 @@ class SistemaVibe {
         return !this.pendingProposals.some(proposal => proposal.receiver_id === otherUserId);
     }
 
-    // ==================== PROPOSTAS COMPLETAS ====================
-
     async proposeFidelityAgreement(otherUserId) {
         try {
             const canPropose = await this.canShowFidelityButton(otherUserId);
@@ -185,8 +183,6 @@ class SistemaVibe {
             this.showNotification('Erro ao recusar proposta', 'error');
         }
     }
-
-    // ==================== CARREGAR PROPOSTAS RECEBIDAS ====================
 
     async loadReceivedProposals() {
         try {
@@ -302,8 +298,6 @@ class SistemaVibe {
         }
     }
 
-    // ==================== BOTÃO VIBE EXCLUSIVE ====================
-
     createFidelityButton() {
         if (document.getElementById('fidelityProposeBtn')) return;
 
@@ -335,8 +329,6 @@ class SistemaVibe {
         checkChatHeader();
     }
 
-    // ==================== INTEGRAÇÃO COM MESSAGES.JS ====================
-
     async onConversationSelected(otherUserId) {
         if (!otherUserId) return;
         const canShowButton = await this.canShowFidelityButton(otherUserId);
@@ -364,8 +356,6 @@ class SistemaVibe {
         }
     }
 
-    // ==================== RESTRIÇÕES ====================
-
     async applyFidelityRestrictions() {
         this.updateUIForFidelity();
     }
@@ -384,8 +374,6 @@ class SistemaVibe {
             fidelityBtn.onclick = () => this.showManageFidelityModal();
         }
     }
-
-    // ==================== CANCELAMENTO ====================
 
     async cancelFidelityAgreement() {
         try {
@@ -422,8 +410,6 @@ class SistemaVibe {
         const fidelityBtn = document.getElementById('fidelityProposeBtn');
         if (fidelityBtn) fidelityBtn.style.display = 'none';
     }
-
-    // ==================== CARREGAMENTO DE DADOS ====================
 
     async loadCurrentAgreement() {
         try {
@@ -478,8 +464,6 @@ class SistemaVibe {
         }
     }
 
-    // ==================== TEMPO REAL ====================
-
     setupRealtimeListeners() {
         this.supabase
             .channel('fidelity-proposals')
@@ -521,8 +505,6 @@ class SistemaVibe {
             this.removeFidelityRestrictions();
         }
     }
-
-    // ==================== MODAIS ====================
 
     showManageFidelityModal() {
         if (!this.currentAgreement) return;
@@ -608,8 +590,6 @@ class SistemaVibe {
     }
 }
 
-// ==================== INICIALIZAÇÃO ====================
-
 window.SistemaVibe = SistemaVibe;
 
 function initializeSistemaVibe() {
@@ -643,8 +623,6 @@ if (document.readyState === 'loading') {
 } else {
     initializeSistemaVibe();
 }
-
-// ==================== FUNÇÕES GLOBAIS ====================
 
 window.acceptProposal = function(proposalId) {
     if (window.sistemaVibe) {
