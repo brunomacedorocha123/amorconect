@@ -237,7 +237,7 @@ class SistemaVibe {
                 <h4><i class="fas fa-gem"></i> Propostas de Vibe Exclusive</h4>
                 <div class="proposals-list">
                     ${this.receivedProposals.map(proposal => `
-                        <div class="proposal-item" id="proposal-${proposal.id}">
+                        <div class="proposal-item">
                             <div class="proposer-info">
                                 <div class="proposer-avatar">
                                     ${proposal.profile_proposer?.avatar_url ? 
@@ -251,10 +251,10 @@ class SistemaVibe {
                                 </div>
                             </div>
                             <div class="proposal-actions">
-                                <button class="btn btn-success" onclick="sistemaVibe.acceptProposal('${proposal.id}')">
+                                <button class="btn btn-success" onclick="window.sistemaVibe.acceptProposal('${proposal.id}')">
                                     <i class="fas fa-check"></i> Aceitar
                                 </button>
-                                <button class="btn btn-outline" onclick="sistemaVibe.rejectProposal('${proposal.id}')">
+                                <button class="btn btn-outline" onclick="window.sistemaVibe.rejectProposal('${proposal.id}')">
                                     <i class="fas fa-times"></i> Recusar
                                 </button>
                             </div>
@@ -270,32 +270,39 @@ class SistemaVibe {
     // ==================== BOTÃO DE PROPOSTAS ====================
 
     createProposalsButton() {
-        const chatHeader = document.querySelector('.chat-header-actions');
-        if (!chatHeader) {
-            setTimeout(() => this.createProposalsButton(), 1000);
-            return;
-        }
+        // Aguardar o chat header estar disponível
+        const checkChatHeader = () => {
+            const chatHeader = document.querySelector('.chat-header-actions');
+            if (!chatHeader) {
+                setTimeout(checkChatHeader, 500);
+                return;
+            }
+            
+            // Verificar se o botão já existe
+            if (document.getElementById('viewProposalsBtn')) {
+                return;
+            }
+            
+            const proposalsBtn = document.createElement('button');
+            proposalsBtn.id = 'viewProposalsBtn';
+            proposalsBtn.className = 'chat-action-btn proposals-btn';
+            proposalsBtn.title = 'Propostas recebidas';
+            proposalsBtn.innerHTML = `
+                <i class="fas fa-bell"></i>
+                <span class="proposal-badge" id="proposalBadge"></span>
+            `;
+            
+            // 🔥 CORREÇÃO: Event listener DIRETO
+            proposalsBtn.onclick = () => {
+                this.showReceivedProposalsModal();
+            };
+            
+            proposalsBtn.style.display = 'none';
+            
+            chatHeader.appendChild(proposalsBtn);
+        };
         
-        if (document.getElementById('viewProposalsBtn')) {
-            return;
-        }
-        
-        const proposalsBtn = document.createElement('button');
-        proposalsBtn.id = 'viewProposalsBtn';
-        proposalsBtn.className = 'chat-action-btn proposals-btn';
-        proposalsBtn.title = 'Propostas recebidas';
-        proposalsBtn.innerHTML = `
-            <i class="fas fa-bell"></i>
-            <span class="proposal-badge" id="proposalBadge"></span>
-        `;
-        
-        proposalsBtn.addEventListener('click', () => {
-            this.showReceivedProposalsModal();
-        });
-        
-        proposalsBtn.style.display = 'none';
-        
-        chatHeader.appendChild(proposalsBtn);
+        checkChatHeader();
     }
 
     updateProposalsButton() {
