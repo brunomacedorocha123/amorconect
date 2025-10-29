@@ -226,7 +226,7 @@ class SistemaVibe {
         }
     }
 
-    async showReceivedProposalsModal() {
+    showReceivedProposalsModal() {
         if (this.receivedProposals.length === 0) {
             this.showNotification('Nenhuma proposta pendente', 'info');
             return;
@@ -237,7 +237,7 @@ class SistemaVibe {
                 <h4><i class="fas fa-gem"></i> Propostas de Vibe Exclusive</h4>
                 <div class="proposals-list">
                     ${this.receivedProposals.map(proposal => `
-                        <div class="proposal-item">
+                        <div class="proposal-item" id="proposal-${proposal.id}">
                             <div class="proposer-info">
                                 <div class="proposer-avatar">
                                     ${proposal.profile_proposer?.avatar_url ? 
@@ -271,7 +271,14 @@ class SistemaVibe {
 
     createProposalsButton() {
         const chatHeader = document.querySelector('.chat-header-actions');
-        if (!chatHeader) return;
+        if (!chatHeader) {
+            setTimeout(() => this.createProposalsButton(), 1000);
+            return;
+        }
+        
+        if (document.getElementById('viewProposalsBtn')) {
+            return;
+        }
         
         const proposalsBtn = document.createElement('button');
         proposalsBtn.id = 'viewProposalsBtn';
@@ -281,7 +288,11 @@ class SistemaVibe {
             <i class="fas fa-bell"></i>
             <span class="proposal-badge" id="proposalBadge"></span>
         `;
-        proposalsBtn.onclick = () => this.showReceivedProposalsModal();
+        
+        proposalsBtn.addEventListener('click', () => {
+            this.showReceivedProposalsModal();
+        });
+        
         proposalsBtn.style.display = 'none';
         
         chatHeader.appendChild(proposalsBtn);
@@ -596,6 +607,18 @@ class SistemaVibe {
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     }
 
+    // ==================== FUNÇÕES GLOBAIS PARA HTML ====================
+    
+    acceptProposal(proposalId) {
+        this.acceptFidelityProposal(proposalId);
+        closeFidelityModal();
+    }
+
+    rejectProposal(proposalId) {
+        this.rejectFidelityProposal(proposalId);
+        closeFidelityModal();
+    }
+
     // ==================== UTILITÁRIOS ====================
 
     showNotification(message, type = 'info') {
@@ -614,13 +637,11 @@ class SistemaVibe {
 // Inicialização global
 window.SistemaVibe = SistemaVibe;
 
-// Inicializar automaticamente quando MessagesSystem estiver pronto
 function initializeSistemaVibe() {
     if (window.MessagesSystem && window.MessagesSystem.currentUser) {
         window.sistemaVibe = new SistemaVibe();
         window.sistemaVibe.initialize(window.MessagesSystem.currentUser);
         
-        // Integração com MessagesSystem
         const originalSelectConversation = window.MessagesSystem.selectConversation;
         window.MessagesSystem.selectConversation = async function(otherUserId) {
             const result = await originalSelectConversation.call(this, otherUserId);
@@ -638,3 +659,14 @@ function initializeSistemaVibe() {
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(initializeSistemaVibe, 2000);
 });
+
+// Funções globais para os modais
+window.closeFidelityModal = function() {
+    const modal = document.getElementById('fidelityModal');
+    if (modal) modal.style.display = 'none';
+};
+
+window.closeManageFidelityModal = function() {
+    const modal = document.getElementById('manageFidelityModal');
+    if (modal) modal.style.display = 'none';
+};
