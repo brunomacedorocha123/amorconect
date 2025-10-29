@@ -89,7 +89,168 @@ function setupEventListeners() {
             }
         });
     }
+
+    // === ADIÇÃO: Sistema de exclusão de conta ===
+    setupAccountDeletionListeners();
 }
+
+// === ADIÇÃO: Sistema de exclusão de conta ===
+function setupAccountDeletionListeners() {
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+    if (deleteAccountBtn) {
+        deleteAccountBtn.addEventListener('click', () => openConfirmationModal());
+    }
+
+    const cancelBtn = document.getElementById('cancelDeleteBtn');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    const confirmationInput = document.getElementById('confirmationInput');
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => closeConfirmationModal());
+    }
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', () => confirmAccountDeletion());
+    }
+
+    if (confirmationInput) {
+        confirmationInput.addEventListener('input', (e) => validateConfirmationInput(e));
+    }
+
+    const modal = document.getElementById('deleteConfirmationModal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeConfirmationModal();
+            }
+        });
+    }
+}
+
+function openConfirmationModal() {
+    const modal = document.getElementById('deleteConfirmationModal');
+    const input = document.getElementById('confirmationInput');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+
+    if (modal && input && confirmBtn) {
+        modal.classList.add('active');
+        input.value = '';
+        confirmBtn.disabled = true;
+        input.focus();
+    }
+}
+
+function closeConfirmationModal() {
+    const modal = document.getElementById('deleteConfirmationModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+function validateConfirmationInput(e) {
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmBtn) {
+        confirmBtn.disabled = e.target.value.toUpperCase() !== 'EXCLUIR CONTA';
+    }
+}
+
+async function confirmAccountDeletion() {
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    if (!confirmBtn || confirmBtn.disabled) return;
+
+    try {
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Excluindo...';
+        confirmBtn.disabled = true;
+
+        await deleteUserAccount();
+        
+    } catch (error) {
+        showNotification('Erro ao excluir conta. Tente novamente.', 'error');
+        closeConfirmationModal();
+        resetConfirmButton();
+    }
+}
+
+async function deleteUserAccount() {
+    if (!currentUser) {
+        throw new Error('Usuário não autenticado');
+    }
+
+    const userId = currentUser.id;
+
+    try {
+        // 1. Primeiro deletar todos os dados do usuário
+        await deleteUserData(userId);
+        
+        // 2. Fazer logout
+        await supabase.auth.signOut();
+        
+        // 3. Redirecionar para página de confirmação
+        window.location.href = 'conta-excluida.html';
+        
+    } catch (error) {
+        throw new Error(`Falha na exclusão: ${error.message}`);
+    }
+}
+
+async function deleteUserData(userId) {
+    try {
+        // Deletar user_details
+        const { error: detailsError } = await supabase
+            .from('user_details')
+            .delete()
+            .eq('user_id', userId);
+
+        if (detailsError) {
+            console.warn('Erro ao deletar user_details:', detailsError);
+        }
+
+        // Deletar profiles (isso vai acionar o CASCADE DELETE nas outras tabelas)
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', userId);
+
+        if (profileError) {
+            throw new Error(`Erro ao deletar perfil: ${profileError.message}`);
+        }
+
+        // Deletar manualmente outras tabelas (backup caso CASCADE não funcione)
+        const tables = ['matches', 'messages', 'likes', 'gallery_images', 'notifications', 'premium_subscriptions'];
+        
+        for (const table of tables) {
+            try {
+                // Para matches, messages e likes, verificar ambas as colunas
+                if (table === 'matches') {
+                    await supabase.from(table).delete().or(`user1_id.eq.${userId},user2_id.eq.${userId}`);
+                } else if (table === 'messages') {
+                    await supabase.from(table).delete().or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
+                } else if (table === 'likes') {
+                    await supabase.from(table).delete().or(`user_id.eq.${userId},target_user_id.eq.${userId}`);
+                } else {
+                    // Para outras tabelas, deletar por user_id
+                    await supabase.from(table).delete().eq('user_id', userId);
+                }
+            } catch (error) {
+                console.warn(`Erro ao deletar ${table}:`, error);
+                // Continua mesmo com erro em algumas tabelas
+            }
+        }
+
+    } catch (error) {
+        throw error;
+    }
+}
+
+function resetConfirmButton() {
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmBtn) {
+        confirmBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Excluir Conta Permanentemente';
+        confirmBtn.disabled = false;
+    }
+}
+// === FIM DA ADIÇÃO ===
+
 // Carregar perfil do usuário
 async function loadUserProfile() {
     try {
@@ -116,7 +277,6 @@ async function loadUserProfile() {
             .single();
 
         if (detailsError && detailsError.code !== 'PGRST116') {
-            // PGRST116 é "Não encontrado", o que é normal para novos usuários
             console.warn('Erro ao carregar detalhes:', detailsError);
         }
 
@@ -575,4 +735,4 @@ window.profileManager = {
     saveProfile: handleProfileSave,
     showNotification,
     updateInvisibleModeUI
-}; painel-perfil.js
+};
