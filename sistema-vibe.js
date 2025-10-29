@@ -1,4 +1,4 @@
-// sistema-vibe.js - VERSÃO COMPLETA FUNCIONANDO
+// sistema-vibe.js - VERSÃO COMPLETA COM BOTÕES CORRIGIDOS
 class SistemaVibe {
     constructor() {
         this.supabase = supabase;
@@ -232,10 +232,10 @@ class SistemaVibe {
                                 </div>
                             </div>
                             <div class="proposal-actions">
-                                <button class="btn btn-success" onclick="acceptProposal('${proposal.id}')">
+                                <button class="btn btn-success" onclick="window.acceptProposal('${proposal.id}')">
                                     <i class="fas fa-check"></i> Aceitar
                                 </button>
-                                <button class="btn btn-outline" onclick="rejectProposal('${proposal.id}')">
+                                <button class="btn btn-outline" onclick="window.rejectProposal('${proposal.id}')">
                                     <i class="fas fa-times"></i> Recusar
                                 </button>
                             </div>
