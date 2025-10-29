@@ -6,10 +6,13 @@ class SistemaVibe {
         this.currentAgreement = null;
         this.pendingProposals = [];
         this.receivedProposals = [];
+        this.initialized = false;
     }
 
     async initialize(user) {
         try {
+            if (this.initialized) return;
+            
             this.currentUser = user;
             
             await this.loadCurrentAgreement();
@@ -17,6 +20,9 @@ class SistemaVibe {
             await this.loadReceivedProposals();
             this.setupRealtimeListeners();
             this.createProposalsButton();
+            this.createFidelityButton();
+            
+            this.initialized = true;
             
         } catch (error) {
             console.error('Erro ao inicializar Sistema Vibe:', error);
@@ -157,12 +163,6 @@ class SistemaVibe {
 
     async acceptFidelityProposal(proposalId) {
         try {
-            // ✅ CORREÇÃO: Verificar se o usuário atual é premium antes de aceitar
-            const isPremium = await this.isUserPremium();
-            if (!isPremium) {
-                throw new Error('Apenas usuários Premium podem aceitar Vibe Exclusive');
-            }
-
             const { data, error } = await this.supabase
                 .rpc('accept_fidelity_agreement', {
                     p_agreement_id: proposalId,
@@ -177,7 +177,6 @@ class SistemaVibe {
                 this.updateProposalsButton();
                 this.showNotification('Vibe Exclusive ativado!', 'success');
                 
-                // ✅ CORREÇÃO: Fechar modal automaticamente
                 this.closeAllModals();
                 return true;
             } else {
@@ -203,7 +202,6 @@ class SistemaVibe {
             this.updateProposalsButton();
             this.showNotification('Proposta recusada', 'info');
             
-            // ✅ CORREÇÃO: Fechar modal automaticamente
             this.closeAllModals();
 
         } catch (error) {
@@ -264,10 +262,10 @@ class SistemaVibe {
                                 </div>
                             </div>
                             <div class="proposal-actions">
-                                <button class="btn btn-success" onclick="sistemaVibe.acceptProposal('${proposal.id}')">
+                                <button class="btn btn-success" onclick="sistemaVibe.acceptFidelityProposal('${proposal.id}')">
                                     <i class="fas fa-check"></i> Aceitar
                                 </button>
-                                <button class="btn btn-outline" onclick="sistemaVibe.rejectProposal('${proposal.id}')">
+                                <button class="btn btn-outline" onclick="sistemaVibe.rejectFidelityProposal('${proposal.id}')">
                                     <i class="fas fa-times"></i> Recusar
                                 </button>
                             </div>
@@ -304,14 +302,14 @@ class SistemaVibe {
                 <span class="proposal-badge" id="proposalBadge"></span>
             `;
             
-            // ✅ CORREÇÃO: Usar arrow function para manter o contexto
             proposalsBtn.onclick = () => {
                 this.showReceivedProposalsModal();
             };
             
             proposalsBtn.style.display = 'none';
-            
             chatHeader.appendChild(proposalsBtn);
+            
+            this.updateProposalsButton();
         };
         
         checkChatHeader();
@@ -322,7 +320,7 @@ class SistemaVibe {
         const proposalBadge = document.getElementById('proposalBadge');
         
         if (!proposalsBtn || !proposalBadge) {
-            this.createProposalsButton();
+            setTimeout(() => this.updateProposalsButton(), 500);
             return;
         }
 
@@ -334,6 +332,42 @@ class SistemaVibe {
             proposalsBtn.style.display = 'none';
             proposalBadge.style.display = 'none';
         }
+    }
+
+    // ==================== BOTÃO VIBE EXCLUSIVE ====================
+
+    createFidelityButton() {
+        const checkChatHeader = () => {
+            const chatHeader = document.querySelector('.chat-header-actions');
+            
+            if (!chatHeader) {
+                setTimeout(checkChatHeader, 500);
+                return;
+            }
+            
+            if (document.getElementById('fidelityProposeBtn')) {
+                return;
+            }
+            
+            const fidelityBtn = document.createElement('button');
+            fidelityBtn.id = 'fidelityProposeBtn';
+            fidelityBtn.className = 'chat-action-btn fidelity-btn';
+            fidelityBtn.title = 'Propor Vibe Exclusive';
+            fidelityBtn.innerHTML = '<i class="fas fa-gem"></i> Vibe Exclusive';
+            fidelityBtn.style.display = 'none';
+            
+            fidelityBtn.onclick = () => {
+                if (window.MessagesSystem && window.MessagesSystem.currentConversation) {
+                    this.proposeFidelityAgreement(window.MessagesSystem.currentConversation);
+                } else {
+                    this.showNotification('Selecione uma conversa primeiro', 'error');
+                }
+            };
+            
+            chatHeader.prepend(fidelityBtn);
+        };
+        
+        checkChatHeader();
     }
 
     // ==================== RESTRIÇÕES ====================
@@ -521,41 +555,25 @@ class SistemaVibe {
     }
 
     updateFidelityButton(show, otherUserId) {
-        let fidelityBtn = document.getElementById('fidelityProposeBtn');
+        const fidelityBtn = document.getElementById('fidelityProposeBtn');
         
         if (!fidelityBtn) {
             this.createFidelityButton();
-            fidelityBtn = document.getElementById('fidelityProposeBtn');
+            return;
         }
         
-        if (fidelityBtn) {
-            if (show && !this.currentAgreement) {
-                fidelityBtn.style.display = 'flex';
-                fidelityBtn.innerHTML = '<i class="fas fa-gem"></i> Vibe Exclusive';
-                fidelityBtn.classList.remove('active');
-                // O clique é controlado pelo MessagesSystem via handleFidelityProposal
-            } else if (this.currentAgreement && this.currentAgreement.status === 'active') {
-                fidelityBtn.style.display = 'flex';
-                fidelityBtn.innerHTML = '<i class="fas fa-gem"></i> Vibe Ativo';
-                fidelityBtn.onclick = () => this.showManageFidelityModal();
-                fidelityBtn.classList.add('active');
-            } else {
-                fidelityBtn.style.display = 'none';
-            }
+        if (show && !this.currentAgreement) {
+            fidelityBtn.style.display = 'flex';
+            fidelityBtn.innerHTML = '<i class="fas fa-gem"></i> Vibe Exclusive';
+            fidelityBtn.classList.remove('active');
+        } else if (this.currentAgreement && this.currentAgreement.status === 'active') {
+            fidelityBtn.style.display = 'flex';
+            fidelityBtn.innerHTML = '<i class="fas fa-gem"></i> Vibe Ativo';
+            fidelityBtn.onclick = () => this.showManageFidelityModal();
+            fidelityBtn.classList.add('active');
+        } else {
+            fidelityBtn.style.display = 'none';
         }
-    }
-
-    createFidelityButton() {
-        const chatHeader = document.querySelector('.chat-header-actions');
-        if (!chatHeader) return;
-        
-        const fidelityBtn = document.createElement('button');
-        fidelityBtn.id = 'fidelityProposeBtn';
-        fidelityBtn.className = 'chat-action-btn fidelity-btn';
-        fidelityBtn.title = 'Propor Vibe Exclusive';
-        fidelityBtn.style.display = 'none';
-        
-        chatHeader.appendChild(fidelityBtn);
     }
 
     // ==================== MODAIS ====================
@@ -633,18 +651,6 @@ class SistemaVibe {
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     }
 
-    // ==================== FUNÇÕES GLOBAIS PARA HTML ====================
-    
-    acceptProposal(proposalId) {
-        this.acceptFidelityProposal(proposalId);
-    }
-
-    rejectProposal(proposalId) {
-        this.rejectFidelityProposal(proposalId);
-    }
-
-    // ==================== NOVAS FUNÇÕES DE CORREÇÃO ====================
-
     closeAllModals() {
         const modals = ['fidelityModal', 'manageFidelityModal'];
         modals.forEach(modalId => {
@@ -689,21 +695,22 @@ class SistemaVibe {
         }
     }
 
-    // ==================== DESTRUIÇÃO ====================
-
     destroy() {
         this.supabase.removeAllChannels();
+        this.initialized = false;
     }
 }
 
-// Inicialização global
+// ==================== INICIALIZAÇÃO GLOBAL CORRIGIDA ====================
+
 window.SistemaVibe = SistemaVibe;
 
 function initializeSistemaVibe() {
-    if (window.MessagesSystem && window.MessagesSystem.currentUser) {
+    if (window.MessagesSystem && window.MessagesSystem.currentUser && !window.sistemaVibe) {
         window.sistemaVibe = new SistemaVibe();
         window.sistemaVibe.initialize(window.MessagesSystem.currentUser);
         
+        // Conectar com o MessagesSystem
         const originalSelectConversation = window.MessagesSystem.selectConversation;
         window.MessagesSystem.selectConversation = async function(otherUserId) {
             const result = await originalSelectConversation.call(this, otherUserId);
@@ -712,15 +719,23 @@ function initializeSistemaVibe() {
             }
             return result;
         };
+        
+        // Criar botões imediatamente
+        setTimeout(() => {
+            window.sistemaVibe.createProposalsButton();
+            window.sistemaVibe.createFidelityButton();
+        }, 1000);
     } else {
         setTimeout(initializeSistemaVibe, 1000);
     }
 }
 
 // Iniciar quando DOM estiver pronto
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(initializeSistemaVibe, 2000);
-});
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeSistemaVibe);
+} else {
+    initializeSistemaVibe();
+}
 
 // Funções globais para os modais
 window.closeFidelityModal = function() {
