@@ -278,9 +278,9 @@ class SistemaVibe {
                 return;
             }
             
-            const existingBtn = document.getElementById('viewProposalsBtn');
-            if (existingBtn) {
-                existingBtn.remove();
+            // ✅ CORREÇÃO: NÃO remover botão existente, apenas criar se não existir
+            if (document.getElementById('viewProposalsBtn')) {
+                return;
             }
             
             const proposalsBtn = document.createElement('button');
