@@ -292,7 +292,7 @@ class SistemaVibe {
                 <span class="proposal-badge" id="proposalBadge"></span>
             `;
             
-            // 🔥 CORREÇÃO: Event listener DIRETO
+            // Event listener direto
             proposalsBtn.onclick = () => {
                 this.showReceivedProposalsModal();
             };
@@ -309,7 +309,11 @@ class SistemaVibe {
         const proposalsBtn = document.getElementById('viewProposalsBtn');
         const proposalBadge = document.getElementById('proposalBadge');
         
-        if (!proposalsBtn || !proposalBadge) return;
+        if (!proposalsBtn || !proposalBadge) {
+            // Se o botão não existe, criar novamente
+            this.createProposalsButton();
+            return;
+        }
 
         if (this.receivedProposals.length > 0) {
             proposalsBtn.style.display = 'flex';
