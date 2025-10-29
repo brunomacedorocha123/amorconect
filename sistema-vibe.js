@@ -737,7 +737,22 @@ if (document.readyState === 'loading') {
     initializeSistemaVibe();
 }
 
-// Funções globais para os modais
+// ==================== FUNÇÕES GLOBAIS PARA AS PROPOSTAS ====================
+
+window.acceptProposal = function(proposalId) {
+    if (window.sistemaVibe) {
+        window.sistemaVibe.acceptFidelityProposal(proposalId);
+    }
+};
+
+window.rejectProposal = function(proposalId) {
+    if (window.sistemaVibe) {
+        window.sistemaVibe.rejectFidelityProposal(proposalId);
+    }
+};
+
+// ==================== FUNÇÕES GLOBAIS PARA OS MODAIS ====================
+
 window.closeFidelityModal = function() {
     const modal = document.getElementById('fidelityModal');
     if (modal) modal.style.display = 'none';
