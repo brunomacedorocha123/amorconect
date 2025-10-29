@@ -278,7 +278,6 @@ class SistemaVibe {
                 return;
             }
             
-            // ✅ CORREÇÃO: NÃO remover botão existente, apenas criar se não existir
             if (document.getElementById('viewProposalsBtn')) {
                 return;
             }
@@ -416,6 +415,10 @@ class SistemaVibe {
             if (error) throw error;
             this.currentAgreement = agreements && agreements.length > 0 ? agreements[0] : null;
 
+            if (this.currentAgreement && this.currentAgreement.status === 'active') {
+                await this.applyFidelityRestrictions();
+            }
+
         } catch (error) {
             this.currentAgreement = null;
         }
@@ -515,7 +518,6 @@ class SistemaVibe {
             if (show && !this.currentAgreement) {
                 fidelityBtn.style.display = 'flex';
                 fidelityBtn.innerHTML = '<i class="fas fa-gem"></i> Vibe Exclusive';
-                fidelityBtn.onclick = () => this.proposeFidelityAgreement(otherUserId);
                 fidelityBtn.classList.remove('active');
             } else if (this.currentAgreement && this.currentAgreement.status === 'active') {
                 fidelityBtn.style.display = 'flex';
