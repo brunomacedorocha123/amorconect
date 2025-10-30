@@ -27,25 +27,11 @@ async function initializeApp() {
     }
 }
 
-// Verificar autenticação - CORRIGIDA
+// Verificar autenticação
 async function checkAuthentication() {
     try {
         const { data: { user }, error } = await supabase.auth.getUser();
         if (error || !user) {
-            window.location.href = 'login.html';
-            return false;
-        }
-        
-        // ✅ CORREÇÃO: Verificação segura da conta excluída
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('account_deleted')
-            .eq('id', user.id)
-            .maybeSingle();  // ✅ Use maybeSingle() em vez de single()
-            
-        // Se não encontrar perfil ou conta foi excluída, bloquear
-        if (profileError || !profile || profile.account_deleted) {
-            await supabase.auth.signOut();
             window.location.href = 'login.html';
             return false;
         }
@@ -104,154 +90,7 @@ function setupEventListeners() {
             }
         });
     }
-
-    // Sistema de exclusão de conta
-    setupAccountDeletionListeners();
 }
-
-// ========== SISTEMA DE EXCLUSÃO DE CONTA DEFINITIVO ==========
-function setupAccountDeletionListeners() {
-    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
-    if (deleteAccountBtn) {
-        deleteAccountBtn.addEventListener('click', () => openConfirmationModal());
-    }
-
-    const cancelBtn = document.getElementById('cancelDeleteBtn');
-    const confirmBtn = document.getElementById('confirmDeleteBtn');
-    const confirmationInput = document.getElementById('confirmationInput');
-
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', () => closeConfirmationModal());
-    }
-
-    if (confirmBtn) {
-        confirmBtn.addEventListener('click', () => confirmAccountDeletion());
-    }
-
-    if (confirmationInput) {
-        confirmationInput.addEventListener('input', (e) => validateConfirmationInput(e));
-    }
-
-    const modal = document.getElementById('deleteConfirmationModal');
-    if (modal) {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeConfirmationModal();
-            }
-        });
-    }
-}
-
-function openConfirmationModal() {
-    const modal = document.getElementById('deleteConfirmationModal');
-    const input = document.getElementById('confirmationInput');
-    const confirmBtn = document.getElementById('confirmDeleteBtn');
-
-    if (modal && input && confirmBtn) {
-        modal.classList.add('active');
-        input.value = '';
-        confirmBtn.disabled = true;
-        input.focus();
-    }
-}
-
-function closeConfirmationModal() {
-    const modal = document.getElementById('deleteConfirmationModal');
-    if (modal) {
-        modal.classList.remove('active');
-    }
-}
-
-function validateConfirmationInput(e) {
-    const confirmBtn = document.getElementById('confirmDeleteBtn');
-    if (confirmBtn) {
-        confirmBtn.disabled = e.target.value.toUpperCase() !== 'EXCLUIR CONTA';
-    }
-}
-
-async function confirmAccountDeletion() {
-    const confirmBtn = document.getElementById('confirmDeleteBtn');
-    if (!confirmBtn || confirmBtn.disabled) return;
-
-    try {
-        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Excluindo...';
-        confirmBtn.disabled = true;
-
-        await deleteUserAccount();
-        
-    } catch (error) {
-        showNotification('Erro ao excluir conta: ' + error.message, 'error');
-        closeConfirmationModal();
-        resetConfirmButton();
-    }
-}
-
-// ✅✅✅ FUNÇÃO CORRIGIDA - EXCLUSÃO REAL ✅✅✅
-async function deleteUserAccount() {
-    if (!currentUser) {
-        throw new Error('Usuário não autenticado');
-    }
-
-    try {
-        // ✅ 1. Chamar a Edge Function para EXCLUSÃO REAL
-        const { data: session } = await supabase.auth.getSession();
-        
-        if (!session || !session.session) {
-            throw new Error('Sessão não encontrada');
-        }
-
-        const response = await fetch('/functions/v1/delete_user_account', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${session.session.access_token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.error || 'Erro ao excluir conta');
-        }
-
-        // ✅ 2. Limpar dados localmente
-        clearBrowserData();
-        
-        // ✅ 3. Redirecionar para confirmação
-        setTimeout(() => {
-            window.location.href = 'conta-excluida.html';
-        }, 1000);
-        
-    } catch (error) {
-        throw new Error(`Falha na exclusão: ${error.message}`);
-    }
-}
-
-function clearBrowserData() {
-    try {
-        localStorage.clear();
-        sessionStorage.clear();
-        
-        document.cookie.split(";").forEach(function(c) {
-            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-        });
-        
-        if (window.supabase) {
-            supabase.removeAllChannels();
-        }
-    } catch (error) {
-        // Ignorar erros na limpeza
-    }
-}
-
-function resetConfirmButton() {
-    const confirmBtn = document.getElementById('confirmDeleteBtn');
-    if (confirmBtn) {
-        confirmBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Excluir Conta Permanentemente';
-        confirmBtn.disabled = false;
-    }
-}
-// ========== FIM DO SISTEMA DE EXCLUSÃO DEFINITIVO ==========
 
 // Carregar perfil do usuário
 async function loadUserProfile() {
@@ -269,13 +108,6 @@ async function loadUserProfile() {
 
         if (profileError) {
             throw new Error('Erro ao carregar perfil');
-        }
-
-        // ✅ VERIFICAR SE CONTA FOI EXCLUÍDA
-        if (profile.account_deleted) {
-            await supabase.auth.signOut();
-            window.location.href = 'login.html';
-            return;
         }
 
         // Carregar detalhes públicos
@@ -309,7 +141,7 @@ function fillProfileForm(profile, userDetails) {
     setValue('cpf', profile.cpf);
     setValue('phone', profile.phone);
     
-    // ATUALIZAR NICKNAME NO HEADER - CORREÇÃO PRINCIPAL
+    // ATUALIZAR NICKNAME NO HEADER
     const userNicknameElement = document.getElementById('userNickname');
     if (userNicknameElement && profile.nickname) {
         userNicknameElement.textContent = profile.nickname;
@@ -386,7 +218,7 @@ async function updateInvisibleModeUI() {
             if (invisibleControl) invisibleControl.style.display = 'block';
             if (upgradeCTA) upgradeCTA.style.display = 'none';
             
-            // ✅ CORREÇÃO: Mostrar status baseado no checkbox
+            // Mostrar status baseado no checkbox
             const isCurrentlyInvisible = invisibleCheckbox ? invisibleCheckbox.checked : false;
             
             if (featureStatus) {
@@ -440,7 +272,7 @@ async function handleInvisibleToggle(event) {
 
         if (error) throw error;
 
-        // ✅ CORREÇÃO: Atualizar UI imediatamente após mudança
+        // Atualizar UI imediatamente após mudança
         await updateInvisibleModeUI();
 
         showNotification(
