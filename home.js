@@ -13,14 +13,39 @@ document.addEventListener('DOMContentLoaded', function() {
   initializeApp();
 });
 
+// ✅ FUNÇÃO SEGURA PARA ATUALIZAR STATUS (SISTEMA NOVO)
+async function updateOnlineStatusSafe(userId) {
+    try {
+        const { data: success, error } = await supabase.rpc('update_user_online_status', {
+            user_uuid: userId
+        });
+        
+        if (error) {
+            console.error('❌ Erro ao atualizar status:', error);
+            return false;
+        }
+        
+        if (success) {
+            console.log('✅ Status online atualizado com sucesso para:', userId);
+            return true;
+        } else {
+            console.error('❌ Falha ao atualizar status - múltiplos usuários afetados?');
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Erro geral ao atualizar status:', error);
+        return false;
+    }
+}
+
 async function initializeApp() {
   const authenticated = await checkAuthentication();
   if (authenticated) {
-    // ✅ CORREÇÃO DO STATUS: Inicializar e atualizar status imediatamente
+    // ✅ CORREÇÃO DO STATUS: Usar função segura
     statusSystem = window.StatusSystem;
     if (statusSystem && currentUser) {
       await statusSystem.initialize(currentUser);
-      await statusSystem.updateMyStatus(); // ✅ ATUALIZAÇÃO IMEDIATA
+      await updateOnlineStatusSafe(currentUser.id); // ✅ ATUALIZAÇÃO SEGURA
     }
     
     setupEventListeners();
@@ -33,16 +58,16 @@ async function initializeApp() {
 }
 
 function startStatusUpdates() {
-  // ✅ CORREÇÃO DO STATUS: Intervalo funcionando corretamente
+  // ✅ CORREÇÃO DO STATUS: Usar função segura
   if (statusUpdateInterval) {
     clearInterval(statusUpdateInterval);
   }
   
   statusUpdateInterval = setInterval(async () => {
-    if (statusSystem && currentUser) {
-      await statusSystem.updateMyStatus();
+    if (currentUser) {
+      await updateOnlineStatusSafe(currentUser.id); // ✅ ATUALIZAÇÃO SEGURA
     }
-  }, 30000);
+  }, 30000); // A cada 30 segundos
 }
 
 function stopStatusUpdates() {
@@ -82,8 +107,8 @@ function setupEventListeners() {
 
   // ✅ CORREÇÃO DO STATUS: Atualizar quando a página ganha foco
   document.addEventListener('visibilitychange', async () => {
-    if (!document.hidden && statusSystem && currentUser) {
-      await statusSystem.updateMyStatus();
+    if (!document.hidden && currentUser) {
+      await updateOnlineStatusSafe(currentUser.id); // ✅ ATUALIZAÇÃO SEGURA
       await loadUsers(); // Recarregar usuários com status atualizado
     }
   });
@@ -428,7 +453,7 @@ function viewUserProfile(userId) {
   window.location.href = `perfil.html?id=${userId}`;
 }
 
-// === SISTEMA DE MODAIS === (TUDO MANTIDO ORIGINAL)
+// === SISTEMA DE MODAIS ===
 function openUserActions(userId, userName) {
   currentBlockingUser = { id: userId, name: userName };
   
@@ -528,7 +553,7 @@ async function confirmBlockUser() {
   }
 }
 
-// === SISTEMA DE DENÚNCIA === (TUDO MANTIDO ORIGINAL)
+// === SISTEMA DE DENÚNCIA ===
 function reportUser() {
   if (!currentBlockingUser) {
     showNotification('Erro: usuário não selecionado');
@@ -708,7 +733,7 @@ function closeAllModals() {
   currentBlockingUser = null;
 }
 
-// === SISTEMA DE NOTIFICAÇÕES === (TUDO MANTIDO ORIGINAL)
+// === SISTEMA DE NOTIFICAÇÕES ===
 async function loadNotificationCount() {
   try {
     const { data: notifications, error } = await supabase
@@ -791,7 +816,7 @@ async function markNotificationsAsRead() {
   }
 }
 
-// === SISTEMA DE NOTIFICAÇÕES VISUAIS === (TUDO MANTIDO ORIGINAL)
+// === SISTEMA DE NOTIFICAÇÕES VISUAIS ===
 function showNotification(message, type = 'success') {
   const notification = document.createElement('div');
   const backgroundColor = type === 'error' ? 'var(--error)' :
@@ -836,7 +861,7 @@ function showNotification(message, type = 'success') {
   }, 3000);
 }
 
-// === NAVEGAÇÃO === (TUDO MANTIDO ORIGINAL)
+// === NAVEGAÇÃO ===
 function goToPerfil() { window.location.href = 'painel.html'; }
 function goToMensagens() { window.location.href = 'mensagens.html'; }
 function goToBusca() { window.location.href = 'busca.html'; }
@@ -857,7 +882,7 @@ async function logout() {
   if (!error) window.location.href = 'login.html';
 }
 
-// === EXPORTA FUNÇÕES PARA O HTML === (TUDO MANTIDO ORIGINAL)
+// === EXPORTA FUNÇÕES PARA O HTML ===
 window.openUserActions = openUserActions;
 window.closeUserActionsModal = closeUserActionsModal;
 window.blockUser = blockUser;
@@ -876,10 +901,7 @@ window.goToPricing = goToPricing;
 window.goToNotificacoes = goToNotificacoes;
 window.logout = logout;
 
-// Funções de teste (TUDO MANTIDO ORIGINAL)
-window.createTestNotification = createTestNotification;
-
-// Listener de autenticação (TUDO MANTIDO ORIGINAL)
+// Listener de autenticação
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_OUT') {
     stopNotificationPolling();
@@ -898,7 +920,7 @@ supabase.auth.onAuthStateChange((event, session) => {
   }
 });
 
-// Cleanup quando a página for fechada (TUDO MANTIDO ORIGINAL)
+// Cleanup quando a página for fechada
 window.addEventListener('beforeunload', () => {
   stopNotificationPolling();
   stopStatusUpdates();
@@ -907,7 +929,7 @@ window.addEventListener('beforeunload', () => {
   }
 });
 
-// Adiciona CSS dinâmico para notificações (TUDO MANTIDO ORIGINAL)
+// Adiciona CSS dinâmico para notificações
 const notificationCSS = `
 @keyframes pulse {
   0% { transform: scale(1); }
@@ -939,7 +961,7 @@ const style = document.createElement('style');
 style.textContent = notificationCSS;
 document.head.appendChild(style);
 
-// Função para criar notificação de teste (TUDO MANTIDO ORIGINAL)
+// Função para criar notificação de teste
 async function createTestNotification(type = 'info', title = 'Teste', message = 'Esta é uma notificação de teste') {
   try {
     const { error } = await supabase
@@ -962,644 +984,12 @@ async function createTestNotification(type = 'info', title = 'Teste', message = 
   }
 }
 
-// Função para verificar compatibilidade avançada (TUDO MANTIDO ORIGINAL)
-function checkAdvancedCompatibility(userProfile, targetProfile) {
-  const compatibility = {
-    score: 0,
-    matches: [],
-    warnings: []
-  };
-
-  // Compatibilidade de gênero e orientação
-  const userGender = userProfile.user_details?.gender?.toLowerCase();
-  const userOrientation = userProfile.user_details?.sexual_orientation?.toLowerCase();
-  const targetGender = targetProfile.user_details?.gender?.toLowerCase();
-  const targetOrientation = targetProfile.user_details?.sexual_orientation?.toLowerCase();
-
-  if (userOrientation && targetGender) {
-    switch (userOrientation) {
-      case 'heterossexual':
-        if ((userGender === 'masculino' || userGender === 'homem') && 
-            (targetGender === 'feminino' || targetGender === 'mulher')) {
-          compatibility.score += 30;
-          compatibility.matches.push('Compatibilidade heterossexual');
-        } else if ((userGender === 'feminino' || userGender === 'mulher') && 
-                   (targetGender === 'masculino' || targetGender === 'homem')) {
-          compatibility.score += 30;
-          compatibility.matches.push('Compatibilidade heterossexual');
-        }
-        break;
-      case 'homossexual':
-        if (userGender === targetGender) {
-          compatibility.score += 30;
-          compatibility.matches.push('Compatibilidade homossexual');
-        }
-        break;
-      case 'bissexual':
-        compatibility.score += 25;
-        compatibility.matches.push('Compatibilidade bissexual');
-        break;
-    }
-  }
-
-  // Compatibilidade de interesses
-  const userInterests = userProfile.user_details?.interests || [];
-  const targetInterests = targetProfile.user_details?.interests || [];
-  
-  const commonInterests = userInterests.filter(interest => 
-    targetInterests.includes(interest)
-  );
-  
-  if (commonInterests.length > 0) {
-    compatibility.score += commonInterests.length * 5;
-    compatibility.matches.push(`${commonInterests.length} interesses em comum`);
-  }
-
-  // Compatibilidade de características
-  const userCharacteristics = userProfile.user_details?.characteristics || [];
-  const targetCharacteristics = targetProfile.user_details?.characteristics || [];
-  
-  const commonCharacteristics = userCharacteristics.filter(char => 
-    targetCharacteristics.includes(char)
-  );
-  
-  if (commonCharacteristics.length > 0) {
-    compatibility.score += commonCharacteristics.length * 3;
-    compatibility.matches.push(`${commonCharacteristics.length} características compatíveis`);
-  }
-
-  // Bônus para premium
-  if (targetProfile.is_premium) {
-    compatibility.score += 10;
-    compatibility.matches.push('Usuário Premium');
-  }
-
-  // Limitar score máximo
-  compatibility.score = Math.min(compatibility.score, 100);
-
-  return compatibility;
-}
-
-// CONTINUA... (preciso enviar a segunda parte)
-// Função para carregar usuários com compatibilidade avançada (TUDO MANTIDO ORIGINAL)
-async function loadUsersWithCompatibility() {
-  try {
-    const { data: userProfile, error: userError } = await supabase
-      .from('profiles')
-      .select(`
-        *,
-        user_details (*)
-      `)
-      .eq('id', currentUser.id)
-      .single();
-
-    if (userError) return;
-
-    const { data: otherProfiles, error: profilesError } = await supabase
-      .from('profiles')
-      .select(`
-        *,
-        user_details (*)
-      `)
-      .neq('id', currentUser.id)
-      .eq('is_invisible', false);
-
-    if (profilesError) return;
-
-    // Calcular compatibilidade para cada perfil
-    const profilesWithCompatibility = otherProfiles.map(profile => {
-      const compatibility = checkAdvancedCompatibility(userProfile, profile);
-      return {
-        ...profile,
-        compatibility
-      };
-    });
-
-    // Ordenar por compatibilidade
-    profilesWithCompatibility.sort((a, b) => b.compatibility.score - a.compatibility.score);
-
-    return profilesWithCompatibility;
-  } catch (error) {
-    return [];
-  }
-}
-
-// Sistema de likes/feels (TUDO MANTIDO ORIGINAL)
-async function sendFeel(targetUserId, feelType = 'like') {
-  try {
-    const { error } = await supabase
-      .from('user_feels')
-      .insert({
-        sender_id: currentUser.id,
-        receiver_id: targetUserId,
-        feel_type: feelType,
-        created_at: new Date().toISOString()
-      });
-
-    if (error) {
-      if (error.code === '23505') {
-        showNotification('Você já enviou um feel para este usuário!', 'warning');
-      } else {
-        throw error;
-      }
-    } else {
-      showNotification('Feel enviado com sucesso! 💖', 'success');
-      
-      // Criar notificação para o usuário
-      await createFeelNotification(targetUserId, feelType);
-    }
-  } catch (error) {
-    showNotification('Erro ao enviar feel. Tente novamente.', 'error');
-  }
-}
-
-async function createFeelNotification(targetUserId, feelType) {
-  try {
-    const { data: senderProfile } = await supabase
-      .from('profiles')
-      .select('nickname')
-      .eq('id', currentUser.id)
-      .single();
-
-    await supabase
-      .from('notifications')
-      .insert({
-        user_id: targetUserId,
-        type: 'new_feel',
-        title: 'Novo Feel!',
-        message: `${senderProfile.nickname} enviou um ${feelType} para você!`,
-        is_read: false,
-        created_at: new Date().toISOString()
-      });
-  } catch (error) {
-    // Silencioso
-  }
-}
-
-// Sistema de matches (TUDO MANTIDO ORIGINAL)
-async function checkForMatch(targetUserId) {
-  try {
-    // Verificar se o target também deu feel no usuário atual
-    const { data: reciprocalFeel, error } = await supabase
-      .from('user_feels')
-      .select('*')
-      .eq('sender_id', targetUserId)
-      .eq('receiver_id', currentUser.id)
-      .single();
-
-    if (reciprocalFeel && !error) {
-      // MATCH encontrado!
-      await createMatch(currentUser.id, targetUserId);
-      return true;
-    }
-
-    return false;
-  } catch (error) {
-    return false;
-  }
-}
-
-async function createMatch(userId1, userId2) {
-  try {
-    // Criar o match
-    const { error } = await supabase
-      .from('user_matches')
-      .insert({
-        user_id_1: userId1,
-        user_id_2: userId2,
-        matched_at: new Date().toISOString(),
-        is_active: true
-      });
-
-    if (!error) {
-      // Notificar ambos os usuários
-      await createMatchNotification(userId1, userId2);
-      await createMatchNotification(userId2, userId1);
-      
-      showNotification('🎉 Match encontrado! Vocês se curtiram mutuamente!', 'success');
-    }
-  } catch (error) {
-    // Silencioso
-  }
-}
-
-async function createMatchNotification(userId, matchedUserId) {
-  try {
-    const { data: matchedProfile } = await supabase
-      .from('profiles')
-      .select('nickname')
-      .eq('id', matchedUserId)
-      .single();
-
-    await supabase
-      .from('notifications')
-      .insert({
-        user_id: userId,
-        type: 'new_match',
-        title: 'Novo Match! 🎉',
-        message: `Você deu match com ${matchedProfile.nickname}!`,
-        is_read: false,
-        created_at: new Date().toISOString()
-      });
-  } catch (error) {
-    // Silencioso
-  }
-}
-
-// Sistema de visualizações de perfil (TUDO MANTIDO ORIGINAL)
-async function recordProfileView(viewedUserId) {
-  try {
-    await supabase
-      .from('profile_views')
-      .insert({
-        viewer_id: currentUser.id,
-        viewed_user_id: viewedUserId,
-        viewed_at: new Date().toISOString()
-      });
-  } catch (error) {
-    // Silencioso
-  }
-}
-
-// Função para obter estatísticas do usuário (TUDO MANTIDO ORIGINAL)
-async function getUserStats() {
-  try {
-    const [viewsCount, feelsCount, matchesCount] = await Promise.all([
-      // Contar visualizações
-      supabase
-        .from('profile_views')
-        .select('id', { count: 'exact' })
-        .eq('viewed_user_id', currentUser.id),
-      
-      // Contar feels recebidos
-      supabase
-        .from('user_feels')
-        .select('id', { count: 'exact' })
-        .eq('receiver_id', currentUser.id),
-      
-      // Contar matches
-      supabase
-        .from('user_matches')
-        .select('id', { count: 'exact' })
-        .or(`user_id_1.eq.${currentUser.id},user_id_2.eq.${currentUser.id}`)
-    ]);
-
-    return {
-      views: viewsCount.count || 0,
-      feels: feelsCount.count || 0,
-      matches: matchesCount.count || 0
-    };
-  } catch (error) {
-    return {
-      views: 0,
-      feels: 0,
-      matches: 0
-    };
-  }
-}
-
-// Função para carregar usuários que visualizaram o perfil (TUDO MANTIDO ORIGINAL)
-async function loadProfileViewers() {
-  try {
-    const { data: views, error } = await supabase
-      .from('profile_views')
-      .select(`
-        viewed_at,
-        profiles:viewer_id (
-          id,
-          nickname,
-          avatar_url,
-          is_premium,
-          last_online_at
-        )
-      `)
-      .eq('viewed_user_id', currentUser.id)
-      .order('viewed_at', { ascending: false })
-      .limit(10);
-
-    if (error) return [];
-
-    return views.map(view => ({
-      ...view.profiles,
-      viewed_at: view.viewed_at
-    }));
-  } catch (error) {
-    return [];
-  }
-}
-
-// Função para carregar usuários que deram feels (TUDO MANTIDO ORIGINAL)
-async function loadFeelSenders() {
-  try {
-    const { data: feels, error } = await supabase
-      .from('user_feels')
-      .select(`
-        feel_type,
-        created_at,
-        profiles:sender_id (
-          id,
-          nickname,
-          avatar_url,
-          is_premium,
-          last_online_at
-        )
-      `)
-      .eq('receiver_id', currentUser.id)
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    if (error) return [];
-
-    return feels.map(feel => ({
-      ...feel.profiles,
-      feel_type: feel.feel_type,
-      created_at: feel.created_at
-    }));
-  } catch (error) {
-    return [];
-  }
-}
-
-// Função para carregar matches ativos (TUDO MANTIDO ORIGINAL)
-async function loadActiveMatches() {
-  try {
-    const { data: matches, error } = await supabase
-      .from('user_matches')
-      .select(`
-        matched_at,
-        profiles1:user_id_1 (*),
-        profiles2:user_id_2 (*)
-      `)
-      .or(`user_id_1.eq.${currentUser.id},user_id_2.eq.${currentUser.id}`)
-      .eq('is_active', true)
-      .order('matched_at', { ascending: false });
-
-    if (error) return [];
-
-    return matches.map(match => {
-      const otherUser = match.user_id_1 === currentUser.id ? match.profiles2 : match.profiles1;
-      return {
-        ...otherUser,
-        matched_at: match.matched_at
-      };
-    });
-  } catch (error) {
-    return [];
-  }
-}
-
-// Sistema de busca avançada (TUDO MANTIDO ORIGINAL)
-async function searchUsers(filters = {}) {
-  try {
-    let query = supabase
-      .from('profiles')
-      .select(`
-        *,
-        user_details (*)
-      `)
-      .neq('id', currentUser.id)
-      .eq('is_invisible', false);
-
-    // Aplicar filtros
-    if (filters.gender) {
-      query = query.eq('user_details.gender', filters.gender);
-    }
-
-    if (filters.sexual_orientation) {
-      query = query.eq('user_details.sexual_orientation', filters.sexual_orientation);
-    }
-
-    if (filters.city) {
-      query = query.ilike('display_city', `%${filters.city}%`);
-    }
-
-    if (filters.is_premium !== undefined) {
-      query = query.eq('is_premium', filters.is_premium);
-    }
-
-    if (filters.online_only) {
-      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-      query = query.gte('last_online_at', fifteenMinutesAgo);
-    }
-
-    const { data: profiles, error } = await query;
-
-    if (error) return [];
-
-    return profiles;
-  } catch (error) {
-    return [];
-  }
-}
-
-// Função para atualizar preferências de busca (TUDO MANTIDO ORIGINAL)
-async function updateSearchPreferences(preferences) {
-  try {
-    const { error } = await supabase
-      .from('user_search_preferences')
-      .upsert({
-        user_id: currentUser.id,
-        preferences: preferences,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'user_id'
-      });
-
-    if (!error) {
-      showNotification('Preferências de busca atualizadas!', 'success');
-    }
-  } catch (error) {
-    showNotification('Erro ao atualizar preferências.', 'error');
-  }
-}
-
-// Sistema de favoritos (TUDO MANTIDO ORIGINAL)
-async function toggleFavorite(userId) {
-  try {
-    // Verificar se já é favorito
-    const { data: existingFavorite, error: checkError } = await supabase
-      .from('user_favorites')
-      .select('id')
-      .eq('user_id', currentUser.id)
-      .eq('favorite_user_id', userId)
-      .single();
-
-    if (existingFavorite && !checkError) {
-      // Remover dos favoritos
-      const { error } = await supabase
-        .from('user_favorites')
-        .delete()
-        .eq('id', existingFavorite.id);
-
-      if (!error) {
-        showNotification('Removido dos favoritos', 'success');
-        return false;
-      }
-    } else {
-      // Adicionar aos favoritos
-      const { error } = await supabase
-        .from('user_favorites')
-        .insert({
-          user_id: currentUser.id,
-          favorite_user_id: userId,
-          created_at: new Date().toISOString()
-        });
-
-      if (!error) {
-        showNotification('Adicionado aos favoritos! 💝', 'success');
-        return true;
-      }
-    }
-  } catch (error) {
-    showNotification('Erro ao atualizar favoritos.', 'error');
-  }
-  return false;
-}
-
-// Função para carregar favoritos (TUDO MANTIDO ORIGINAL)
-async function loadFavorites() {
-  try {
-    const { data: favorites, error } = await supabase
-      .from('user_favorites')
-      .select(`
-        created_at,
-        profiles:favorite_user_id (
-          id,
-          nickname,
-          avatar_url,
-          is_premium,
-          last_online_at,
-          display_city,
-          user_details (
-            gender,
-            sexual_orientation
-          )
-        )
-      `)
-      .eq('user_id', currentUser.id)
-      .order('created_at', { ascending: false });
-
-    if (error) return [];
-
-    return favorites.map(fav => ({
-      ...fav.profiles,
-      favorited_at: fav.created_at
-    }));
-  } catch (error) {
-    return [];
-  }
-}
-
-// Sistema de denúncia aprimorado (TUDO MANTIDO ORIGINAL)
-async function submitEnhancedReport(reportedUserId, reason, evidence, severity = 'medium') {
-  try {
-    const { error } = await supabase
-      .from('user_reports')
-      .insert({
-        reporter_id: currentUser.id,
-        reported_user_id: reportedUserId,
-        reason: reason,
-        evidence: evidence,
-        severity: severity,
-        status: 'pending',
-        created_at: new Date().toISOString()
-      });
-
-    if (!error) {
-      // Notificar administradores
-      await notifyAdminsAboutReport(reportedUserId, reason, severity);
-      return true;
-    }
-  } catch (error) {
-    // Silencioso
-  }
-  return false;
-}
-
-async function notifyAdminsAboutReport(reportedUserId, reason, severity) {
-  try {
-    // Buscar administradores
-    const { data: admins, error } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('is_admin', true);
-
-    if (admins && !error) {
-      const { data: reportedUser } = await supabase
-        .from('profiles')
-        .select('nickname')
-        .eq('id', reportedUserId)
-        .single();
-
-      // Criar notificação para cada admin
-      const notifications = admins.map(admin => ({
-        user_id: admin.id,
-        type: 'new_report',
-        title: 'Nova Denúncia 📋',
-        message: `Nova denúncia ${severity} contra ${reportedUser.nickname}: ${reason}`,
-        is_read: false,
-        created_at: new Date().toISOString()
-      }));
-
-      await supabase
-        .from('notifications')
-        .insert(notifications);
-    }
-  } catch (error) {
-    // Silencioso
-  }
-}
-
-// Funções utilitárias adicionais (TUDO MANTIDO ORIGINAL)
-function formatDistanceToNow(dateString) {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffInMinutes = Math.floor((now - date) / (1000 * 60));
-  
-  if (diffInMinutes < 1) return 'Agora mesmo';
-  if (diffInMinutes < 60) return `Há ${diffInMinutes} min`;
-  if (diffInMinutes < 1440) return `Há ${Math.floor(diffInMinutes / 60)} h`;
-  
-  const diffInDays = Math.floor(diffInMinutes / 1440);
-  if (diffInDays === 1) return 'Ontem';
-  if (diffInDays < 7) return `Há ${diffInDays} dias`;
-  if (diffInDays < 30) return `Há ${Math.floor(diffInDays / 7)} sem`;
-  
-  const diffInMonths = Math.floor(diffInDays / 30);
-  if (diffInMonths === 1) return 'Há 1 mês';
-  return `Há ${diffInMonths} meses`;
-}
-
-function calculateAge(birthDate) {
-  if (!birthDate) return null;
-  const today = new Date();
-  const birth = new Date(birthDate);
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-  
-  return age;
-}
-
-// Exportar funções adicionais para uso global (TUDO MANTIDO ORIGINAL)
-window.sendFeel = sendFeel;
-window.toggleFavorite = toggleFavorite;
-window.recordProfileView = recordProfileView;
-window.getUserStats = getUserStats;
-window.searchUsers = searchUsers;
-window.updateSearchPreferences = updateSearchPreferences;
-window.formatDistanceToNow = formatDistanceToNow;
-window.calculateAge = calculateAge;
-
-// Inicialização final quando a página carrega completamente (TUDO MANTIDO ORIGINAL)
+// Inicialização final quando a página carrega completamente
 window.addEventListener('load', function() {
   // Garantir que o StatusSystem seja inicializado
   if (window.StatusSystem && currentUser && statusSystem) {
     setTimeout(() => {
-      statusSystem.updateMyStatus();
+      updateOnlineStatusSafe(currentUser.id);
     }, 2000);
   }
 });
