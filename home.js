@@ -121,6 +121,7 @@ async function loadUserProfile() {
   }
 }
 
+// ✅ FUNÇÃO CORRIGIDA - STATUS DO PRÓPRIO USUÁRIO
 function updateUserHeader(profile) {
   const avatarImg = document.getElementById('userAvatarImg');
   const avatarFallback = document.getElementById('avatarFallback');
@@ -147,17 +148,23 @@ function updateUserHeader(profile) {
   }
 
   const userStatus = document.getElementById('userStatus');
-  if (userStatus && profile.last_online_at) {
-    // ✅ AGORA USA REAL_STATUS + LAST_ONLINE_AT
-    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
-    const isOnline = profile.real_status === 'online' || new Date(profile.last_online_at) > twoMinutesAgo;
-    
-    if (isOnline) {
-      userStatus.textContent = profile.is_invisible ? 'Invisível' : 'Online';
-      userStatus.style.color = profile.is_invisible ? '#a0aec0' : '#48bb78';
+  if (userStatus) {
+    // ✅ CORREÇÃO: PARA O PRÓPRIO USUÁRIO, MOSTRA STATUS REAL SEM VERIFICAÇÃO DE INVISÍVEL
+    if (profile.real_status === 'online') {
+      userStatus.textContent = 'Online';
+      userStatus.style.color = '#48bb78';
     } else {
-      userStatus.textContent = 'Offline';
-      userStatus.style.color = '#a0aec0';
+      // ✅ VERIFICA GRACE PERIOD DE 2 MINUTOS APENAS SE OFFLINE
+      const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+      const isWithinGracePeriod = profile.last_online_at && new Date(profile.last_online_at) > twoMinutesAgo;
+      
+      if (isWithinGracePeriod) {
+        userStatus.textContent = 'Online';
+        userStatus.style.color = '#48bb78';
+      } else {
+        userStatus.textContent = 'Offline';
+        userStatus.style.color = '#a0aec0';
+      }
     }
   }
 }
