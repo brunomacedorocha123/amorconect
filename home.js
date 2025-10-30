@@ -19,6 +19,12 @@ async function initializeApp() {
         await loadUsers();
         await loadNotificationCount();
         startNotificationPolling();
+        
+        // ⭐ INICIALIZAR SISTEMA DE STATUS
+        if (window.StatusSystem) {
+            await window.StatusSystem.initialize(currentUser);
+            await window.StatusSystem.updateMyStatus();
+        }
     }
 }
 
@@ -170,7 +176,7 @@ async function loadUsers() {
         }
 
         const profilesToShow = filteredProfiles.slice(0, 8);
-        displayUsers(profilesToShow);
+        await displayUsers(profilesToShow); // ⭐ AGORA É ASYNC
 
     } catch (error) {
         usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar. Tente novamente.</p></div>';
@@ -242,14 +248,26 @@ async function filterBlockedUsers(users) {
     }
 }
 
-function displayUsers(profiles) {
+// ⭐ FUNÇÃO displayUsers ATUALIZADA COM STATUS.JS
+async function displayUsers(profiles) {
     const usersGrid = document.getElementById('usersGrid');
+    
+    // Buscar todos os status de uma vez (performance)
+    const userIds = profiles.map(p => p.id);
+    const statusMap = await window.StatusSystem.getMultipleUsersStatus(userIds);
     
     usersGrid.innerHTML = profiles.map(profile => {
         const userDetails = profile.user_details || {};
         const safeNickname = (profile.nickname || 'Usuário').replace(/'/g, "\\'");
         const safeCity = (profile.display_city || 'Localização não informada').replace(/'/g, "\\'");
         const profileGender = userDetails.gender || 'Não informado';
+        
+        // ⭐ USAR STATUS DO SISTEMA GLOBAL
+        const status = statusMap[profile.id] || { 
+            status: 'offline', 
+            text: 'Offline', 
+            class: 'status-offline' 
+        };
         
         return `
         <div class="user-card">
@@ -283,9 +301,9 @@ function displayUsers(profiles) {
                 </div>
             </div>
             <div class="user-details">
-                <div class="online-status ${isUserOnline(profile.last_online_at) ? 'status-online' : 'status-offline'}">
+                <div class="online-status ${status.class}">
                     <span class="status-dot"></span>
-                    <span>${isUserOnline(profile.last_online_at) ? 'Online agora' : 'Offline'}</span>
+                    <span>${status.text}</span>
                 </div>
             </div>
             <button class="view-profile-btn" onclick="viewUserProfile('${profile.id}')">
@@ -323,11 +341,8 @@ function getUserInitials(name) {
     return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().substring(0, 2);
 }
 
-function isUserOnline(lastOnlineAt) {
-    if (!lastOnlineAt) return false;
-    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
-    return new Date(lastOnlineAt) > fifteenMinutesAgo;
-}
+// ⭐ REMOVER FUNÇÃO ANTIGA isUserOnline - AGORA USA STATUS.JS
+// function isUserOnline(lastOnlineAt) { ... }
 
 function viewUserProfile(userId) {
     window.location.href = `perfil.html?id=${userId}`;
@@ -337,12 +352,10 @@ function viewUserProfile(userId) {
 function openUserActions(userId, userName) {
     currentBlockingUser = { id: userId, name: userName };
     
-    // Fecha todos os modais primeiro
     document.querySelectorAll('.modal').forEach(modal => {
         modal.style.display = 'none';
     });
     
-    // Abre o modal de ações
     const modal = document.getElementById('userActionsModal');
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
@@ -367,10 +380,8 @@ function blockUser() {
         return;
     }
     
-    // Fecha o modal de ações
     closeUserActionsModal();
     
-    // Configura o modal de confirmação
     const isPremium = window.PremiumManager ? window.PremiumManager.userPlanInfo?.is_premium : false;
     
     const freeWarning = document.getElementById('freeBlockWarning');
@@ -388,7 +399,6 @@ function blockUser() {
     const userName = currentBlockingUser.name || 'este usuário';
     message.textContent = `Tem certeza que deseja bloquear ${userName}?`;
 
-    // Abre o modal de confirmação
     const modal = document.getElementById('blockConfirmModal');
     modal.style.display = 'flex';
 }
@@ -445,15 +455,11 @@ function reportUser() {
         return;
     }
     
-    // Fecha o modal de ações
     closeUserActionsModal();
-    
-    // Abre o modal de denúncia
     openReportModal();
 }
 
 function openReportModal() {
-    // Criar modal de denúncia dinamicamente
     const modalHTML = `
         <div class="modal" id="reportModal">
             <div class="modal-content">
@@ -505,16 +511,13 @@ function openReportModal() {
         </div>
     `;
     
-    // Remove modal existente se houver
     const existingModal = document.getElementById('reportModal');
     if (existingModal) {
         existingModal.remove();
     }
     
-    // Adiciona o novo modal
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     
-    // Configura contador de caracteres
     const textarea = document.getElementById('reportDetails');
     const charCount = document.getElementById('charCount');
     
@@ -524,7 +527,6 @@ function openReportModal() {
         });
     }
     
-    // Mostra o modal
     const modal = document.getElementById('reportModal');
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
@@ -555,7 +557,6 @@ async function submitReport() {
     }
 
     try {
-        // Verificar se já existe uma denúncia pendente para este usuário
         const { data: existingReports, error: checkError } = await supabase
             .from('user_reports')
             .select('id')
@@ -572,7 +573,6 @@ async function submitReport() {
             return;
         }
 
-        // Enviar a denúncia
         const { error } = await supabase
             .from('user_reports')
             .insert({
@@ -621,7 +621,6 @@ function closeAllModals() {
     });
     document.body.style.overflow = '';
     
-    // Remove modal de denúncia se existir
     const reportModal = document.getElementById('reportModal');
     if (reportModal) {
         reportModal.remove();
@@ -659,14 +658,12 @@ function updateNotificationBadge(notifications) {
         badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
         badge.style.display = 'flex';
         
-        // Adiciona classe de urgência se houver muitas notificações
         if (unreadCount > 5) {
             badge.classList.add('urgent');
         } else {
             badge.classList.remove('urgent');
         }
 
-        // Adiciona animação de pulso para notificações importantes
         const hasImportantNotifications = notifications.some(n => 
             n.type === 'new_like' || n.type === 'new_message' || n.type === 'new_match'
         );
@@ -683,7 +680,6 @@ function updateNotificationBadge(notifications) {
 }
 
 function startNotificationPolling() {
-    // Atualiza notificações a cada 30 segundos
     notificationInterval = setInterval(async () => {
         if (currentUser) {
             await loadNotificationCount();
@@ -698,7 +694,6 @@ function stopNotificationPolling() {
     }
 }
 
-// Função para marcar notificações como lidas
 async function markNotificationsAsRead() {
     try {
         const { error } = await supabase
@@ -708,7 +703,6 @@ async function markNotificationsAsRead() {
             .eq('is_read', false);
 
         if (!error) {
-            // Atualiza o badge imediatamente
             const badge = document.getElementById('notificationBadge');
             if (badge) {
                 badge.style.display = 'none';
@@ -720,7 +714,6 @@ async function markNotificationsAsRead() {
     }
 }
 
-// Função para criar uma nova notificação (útil para testes)
 async function createTestNotification(type = 'info', title = 'Teste', message = 'Esta é uma notificação de teste') {
     try {
         const { error } = await supabase
@@ -768,7 +761,6 @@ function showNotification(message, type = 'success') {
         gap: 0.5rem;
     `;
     
-    // Ícone baseado no tipo
     const icon = type === 'error' ? '❌' : 
                 type === 'warning' ? '⚠️' : '✅';
     
@@ -796,7 +788,6 @@ function goToBusca() { window.location.href = 'busca.html'; }
 function goToBloqueados() { window.location.href = 'bloqueados.html'; }
 function goToPricing() { window.location.href = 'pricing.html'; }
 function goToNotificacoes() { 
-    // Marca notificações como lidas ao acessar a página
     markNotificationsAsRead();
     window.location.href = 'notifica.html'; 
 }
@@ -825,8 +816,6 @@ window.goToBloqueados = goToBloqueados;
 window.goToPricing = goToPricing;
 window.goToNotificacoes = goToNotificacoes;
 window.logout = logout;
-
-// Funções de teste (pode remover em produção)
 window.createTestNotification = createTestNotification;
 
 // Listener de autenticação
@@ -868,12 +857,10 @@ const notificationCSS = `
 }
 `;
 
-// Injeta o CSS na página
 const style = document.createElement('style');
 style.textContent = notificationCSS;
 document.head.appendChild(style);
 
-// Cleanup quando a página for fechada
 window.addEventListener('beforeunload', () => {
     stopNotificationPolling();
 });
