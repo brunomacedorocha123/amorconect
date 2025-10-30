@@ -2,29 +2,51 @@ const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-
 let currentUser = null;
 let currentFilter = 'all';
 let currentBlockingUser = null;
 let notificationInterval = null;
-
+let statusSystem = null;
+let statusUpdateInterval = null;
 
 document.addEventListener('DOMContentLoaded', function() {
   initializeApp();
 });
 
-
 async function initializeApp() {
   const authenticated = await checkAuthentication();
   if (authenticated) {
+    // Inicializar o StatusSystem
+    statusSystem = window.StatusSystem;
+    await statusSystem.initialize(currentUser);
+    
+    // Atualizar status do usuário atual imediatamente
+    await statusSystem.updateMyStatus();
+    
     setupEventListeners();
     await loadUserProfile();
     await loadUsers();
     await loadNotificationCount();
     startNotificationPolling();
+    startStatusUpdates();
   }
 }
 
+function startStatusUpdates() {
+  // Atualizar status a cada 30 segundos
+  statusUpdateInterval = setInterval(async () => {
+    if (statusSystem) {
+      await statusSystem.updateMyStatus();
+    }
+  }, 30000);
+}
+
+function stopStatusUpdates() {
+  if (statusUpdateInterval) {
+    clearInterval(statusUpdateInterval);
+    statusUpdateInterval = null;
+  }
+}
 
 async function checkAuthentication() {
   const { data: { user }, error } = await supabase.auth.getUser();
@@ -36,7 +58,6 @@ async function checkAuthentication() {
   return true;
 }
 
-
 function setupEventListeners() {
   const menuToggle = document.getElementById('menuToggle');
   const mainNav = document.getElementById('mainNav');
@@ -47,7 +68,6 @@ function setupEventListeners() {
     });
   }
 
-
   const filterButtons = document.querySelectorAll('.btn-filter');
   filterButtons.forEach(button => {
     button.addEventListener('click', function() {
@@ -55,8 +75,15 @@ function setupEventListeners() {
       setActiveFilter(filter);
     });
   });
-}
 
+  // Atualizar status quando a página ganha foco
+  document.addEventListener('visibilitychange', async () => {
+    if (!document.hidden && statusSystem) {
+      await statusSystem.updateMyStatus();
+      await loadUsers();
+    }
+  });
+}
 
 async function loadUserProfile() {
   const { data: profile, error } = await supabase
@@ -65,12 +92,10 @@ async function loadUserProfile() {
     .eq('id', currentUser.id)
     .single();
 
-
   if (!error) {
     updateUserHeader(profile);
   }
 }
-
 
 function updateUserHeader(profile) {
   const avatarImg = document.getElementById('userAvatarImg');
@@ -86,12 +111,10 @@ function updateUserHeader(profile) {
     avatarFallback.textContent = getUserInitials(profile.nickname || currentUser.email);
   }
 
-
   const userName = document.getElementById('userName');
   if (userName) {
     userName.textContent = profile.nickname || currentUser.email.split('@')[0];
   }
-
 
   const welcomeMessage = document.getElementById('welcomeMessage');
   if (welcomeMessage) {
@@ -100,11 +123,9 @@ function updateUserHeader(profile) {
   }
 }
 
-
 async function loadUsers() {
   const usersGrid = document.getElementById('usersGrid');
   usersGrid.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><p>Carregando pessoas compatíveis...</p></div>';
-
 
   try {
     const { data: currentUserDetails, error: detailsError } = await supabase
@@ -113,23 +134,19 @@ async function loadUsers() {
       .eq('user_id', currentUser.id)
       .single();
 
-
     let userGender = '';
     let userOrientation = '';
-
 
     if (!detailsError && currentUserDetails) {
       userGender = currentUserDetails.gender || '';
       userOrientation = currentUserDetails.sexual_orientation || '';
     }
 
-
     let query = supabase
       .from('profiles')
       .select('*')
       .neq('id', currentUser.id)
       .eq('is_invisible', false);
-
 
     if (currentFilter === 'online') {
       const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
@@ -138,28 +155,23 @@ async function loadUsers() {
       query = query.eq('is_premium', true);
     }
 
-
     const { data: profiles, error } = await query;
-
 
     if (error) {
       usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar usuários.</p></div>';
       return;
     }
 
-
     if (!profiles || profiles.length === 0) {
       usersGrid.innerHTML = '<div class="loading-state"><p>Nenhuma pessoa encontrada.</p></div>';
       return;
     }
-
 
     const profileIds = profiles.map(p => p.id);
     const { data: allUserDetails, error: detailsError2 } = await supabase
       .from('user_details')
       .select('user_id, gender, sexual_orientation')
       .in('user_id', profileIds);
-
 
     const profilesWithDetails = profiles.map(profile => {
       const details = allUserDetails?.find(d => d.user_id === profile.id) || {};
@@ -168,7 +180,6 @@ async function loadUsers() {
         user_details: details
       };
     });
-
 
     const compatibleProfiles = filterCompatibleUsers(profilesWithDetails, userGender, userOrientation);
     
@@ -185,7 +196,6 @@ async function loadUsers() {
       return;
     }
 
-
     const filteredProfiles = await filterBlockedUsers(compatibleProfiles);
     
     if (filteredProfiles.length === 0) {
@@ -193,35 +203,33 @@ async function loadUsers() {
       return;
     }
 
+    // USAR STATUS SYSTEM PARA OBTER STATUS EM LOTE
+    const userIds = filteredProfiles.map(p => p.id);
+    const statusMap = await statusSystem.getMultipleUsersStatus(userIds);
 
     const profilesToShow = filteredProfiles.slice(0, 8);
-    displayUsers(profilesToShow);
-
+    displayUsers(profilesToShow, statusMap);
 
   } catch (error) {
+    console.error('Erro ao carregar usuários:', error);
     usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar. Tente novamente.</p></div>';
   }
 }
-
 
 function filterCompatibleUsers(profiles, userGender, userOrientation) {
   if (!userOrientation) {
     return profiles;
   }
 
-
   return profiles.filter(profile => {
     const profileGender = profile.user_details?.gender;
-
 
     if (!profileGender) {
       return true;
     }
 
-
     const userGenderNormalized = userGender.toLowerCase();
     const profileGenderNormalized = profileGender.toLowerCase();
-
 
     switch (userOrientation.toLowerCase()) {
       case 'heterossexual':
@@ -232,7 +240,6 @@ function filterCompatibleUsers(profiles, userGender, userOrientation) {
         }
         return true;
 
-
       case 'homossexual':
         if (userGenderNormalized === 'masculino' || userGenderNormalized === 'homem') {
           return profileGenderNormalized === 'masculino' || profileGenderNormalized === 'homem';
@@ -241,17 +248,14 @@ function filterCompatibleUsers(profiles, userGender, userOrientation) {
         }
         return true;
 
-
       case 'bissexual':
         return true;
-
 
       default:
         return true;
     }
   });
 }
-
 
 async function filterBlockedUsers(users) {
   try {
@@ -260,30 +264,25 @@ async function filterBlockedUsers(users) {
       .select('blocked_id')
       .eq('blocker_id', currentUser.id);
 
-
     const { data: blockedMe } = await supabase
       .from('user_blocks')
       .select('blocker_id')
       .eq('blocked_id', currentUser.id);
 
-
     const blockedByMeIds = (blockedByMe || []).map(item => item.blocked_id);
     const blockedMeIds = (blockedMe || []).map(item => item.blocker_id);
 
-
     const allBlockedIds = [...new Set([...blockedByMeIds, ...blockedMeIds])];
-
 
     return users.filter(user => !allBlockedIds.includes(user.id));
 
-
   } catch (error) {
+    console.error('Erro ao filtrar usuários bloqueados:', error);
     return users;
   }
 }
 
-
-function displayUsers(profiles) {
+function displayUsers(profiles, statusMap = {}) {
   const usersGrid = document.getElementById('usersGrid');
   
   usersGrid.innerHTML = profiles.map(profile => {
@@ -291,6 +290,10 @@ function displayUsers(profiles) {
     const safeNickname = (profile.nickname || 'Usuário').replace(/'/g, "\\'");
     const safeCity = (profile.display_city || 'Localização não informada').replace(/'/g, "\\'");
     const profileGender = userDetails.gender || 'Não informado';
+    
+    // USAR STATUS SYSTEM PARA OBTER STATUS CORRETO
+    const statusInfo = statusMap[profile.id] || 
+                      statusSystem.calculateUserStatus(profile.last_online_at, profile.is_invisible, profile.id);
     
     return `
     <div class="user-card">
@@ -324,9 +327,9 @@ function displayUsers(profiles) {
         </div>
       </div>
       <div class="user-details">
-        <div class="online-status ${isUserOnline(profile.last_online_at) ? 'status-online' : 'status-offline'}">
+        <div class="online-status ${statusInfo.class}">
           <span class="status-dot"></span>
-          <span>${isUserOnline(profile.last_online_at) ? 'Online agora' : 'Offline'}</span>
+          <span>${statusInfo.text}</span>
         </div>
       </div>
       <button class="view-profile-btn" onclick="viewUserProfile('${profile.id}')">
@@ -336,7 +339,6 @@ function displayUsers(profiles) {
     `;
   }).join('');
 }
-
 
 function formatGenderForDisplay(gender) {
   if (!gender) return 'Não informado';
@@ -353,6 +355,10 @@ function formatGenderForDisplay(gender) {
   return genderMap[gender.toLowerCase()] || gender;
 }
 
+function getUserInitials(name) {
+  if (!name) return 'U';
+  return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().substring(0, 2);
+}
 
 function setActiveFilter(filter) {
   currentFilter = filter;
@@ -361,47 +367,28 @@ function setActiveFilter(filter) {
   loadUsers();
 }
 
-
-function getUserInitials(name) {
-  if (!name) return 'U';
-  return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().substring(0, 2);
-}
-
-
-function isUserOnline(lastOnlineAt) {
-  if (!lastOnlineAt) return false;
-  const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
-  return new Date(lastOnlineAt) > fifteenMinutesAgo;
-}
-
-
 function viewUserProfile(userId) {
   window.location.href = `perfil.html?id=${userId}`;
 }
 
-
-// === SISTEMA DE MODAIS SIMPLES ===
+// === SISTEMA DE MODAIS ===
 function openUserActions(userId, userName) {
   currentBlockingUser = { id: userId, name: userName };
   
-  // Fecha todos os modais primeiro
   document.querySelectorAll('.modal').forEach(modal => {
     modal.style.display = 'none';
   });
   
-  // Abre o modal de ações
   const modal = document.getElementById('userActionsModal');
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
-
 
 function closeUserActionsModal() {
   const modal = document.getElementById('userActionsModal');
   modal.style.display = 'none';
   document.body.style.overflow = '';
 }
-
 
 function closeBlockConfirmModal() {
   const modal = document.getElementById('blockConfirmModal');
@@ -410,17 +397,14 @@ function closeBlockConfirmModal() {
   currentBlockingUser = null;
 }
 
-
 function blockUser() {
   if (!currentBlockingUser) {
     showNotification('Erro: usuário não selecionado');
     return;
   }
   
-  // Fecha o modal de ações
   closeUserActionsModal();
   
-  // Configura o modal de confirmação
   const isPremium = window.PremiumManager ? window.PremiumManager.userPlanInfo?.is_premium : false;
   
   const freeWarning = document.getElementById('freeBlockWarning');
@@ -434,24 +418,19 @@ function blockUser() {
     premiumInfo.style.display = 'none';
   }
 
-
   const message = document.getElementById('blockConfirmMessage');
   const userName = currentBlockingUser.name || 'este usuário';
   message.textContent = `Tem certeza que deseja bloquear ${userName}?`;
 
-
-  // Abre o modal de confirmação
   const modal = document.getElementById('blockConfirmModal');
   modal.style.display = 'flex';
 }
-
 
 async function confirmBlockUser() {
   if (!currentBlockingUser) {
     showNotification('Erro: usuário não selecionado');
     return;
   }
-
 
   try {
     const { error } = await supabase
@@ -461,7 +440,6 @@ async function confirmBlockUser() {
         blocked_id: currentBlockingUser.id,
         created_at: new Date().toISOString()
       });
-
 
     if (error) {
       if (error.code === '23505') {
@@ -481,7 +459,6 @@ async function confirmBlockUser() {
       closeBlockConfirmModal();
       await loadUsers();
 
-
       if (!isPremium) {
         setTimeout(() => {
           window.location.reload();
@@ -489,30 +466,24 @@ async function confirmBlockUser() {
       }
     }
 
-
   } catch (error) {
+    console.error('Erro ao bloquear usuário:', error);
     showNotification('Erro ao bloquear usuário. Tente novamente.');
   }
 }
 
-
-// === SISTEMA DE DENÚNCIA COMPLETO ===
+// === SISTEMA DE DENÚNCIA ===
 function reportUser() {
   if (!currentBlockingUser) {
     showNotification('Erro: usuário não selecionado');
     return;
   }
   
-  // Fecha o modal de ações
   closeUserActionsModal();
-  
-  // Abre o modal de denúncia
   openReportModal();
 }
 
-
 function openReportModal() {
-  // Criar modal de denúncia dinamicamente
   const modalHTML = `
     <div class="modal" id="reportModal">
       <div class="modal-content">
@@ -564,16 +535,13 @@ function openReportModal() {
     </div>
   `;
   
-  // Remove modal existente se houver
   const existingModal = document.getElementById('reportModal');
   if (existingModal) {
     existingModal.remove();
   }
   
-  // Adiciona o novo modal
   document.body.insertAdjacentHTML('beforeend', modalHTML);
   
-  // Configura contador de caracteres
   const textarea = document.getElementById('reportDetails');
   const charCount = document.getElementById('charCount');
   
@@ -583,12 +551,10 @@ function openReportModal() {
     });
   }
   
-  // Mostra o modal
   const modal = document.getElementById('reportModal');
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
-
 
 function closeReportModal() {
   const modal = document.getElementById('reportModal');
@@ -600,26 +566,21 @@ function closeReportModal() {
   currentBlockingUser = null;
 }
 
-
 async function submitReport() {
   if (!currentBlockingUser) {
     showNotification('Erro: usuário não selecionado');
     return;
   }
 
-
   const reason = document.getElementById('reportReason').value;
   const details = document.getElementById('reportDetails').value.trim();
-
 
   if (!reason) {
     showNotification('Por favor, selecione um motivo para a denúncia.', 'error');
     return;
   }
 
-
   try {
-    // Verificar se já existe uma denúncia pendente para este usuário
     const { data: existingReports, error: checkError } = await supabase
       .from('user_reports')
       .select('id')
@@ -628,9 +589,7 @@ async function submitReport() {
       .eq('status', 'pending')
       .limit(1);
 
-
     if (checkError) throw checkError;
-
 
     if (existingReports && existingReports.length > 0) {
       showNotification('Você já tem uma denúncia pendente para este usuário.', 'error');
@@ -638,8 +597,6 @@ async function submitReport() {
       return;
     }
 
-
-    // Enviar a denúncia
     const { error } = await supabase
       .from('user_reports')
       .insert({
@@ -652,20 +609,16 @@ async function submitReport() {
         created_at: new Date().toISOString()
       });
 
-
     if (error) throw error;
-
 
     showNotification('✅ Denúncia enviada com sucesso! Nossa equipe irá analisar.', 'success');
     closeReportModal();
-
 
   } catch (error) {
     console.error('Erro ao enviar denúncia:', error);
     showNotification('❌ Erro ao enviar denúncia. Tente novamente.', 'error');
   }
 }
-
 
 function getSeverityByReason(reason) {
   const severityMap = {
@@ -679,7 +632,6 @@ function getSeverityByReason(reason) {
   return severityMap[reason] || 'medium';
 }
 
-
 function viewProfileFromModal() {
   if (currentBlockingUser) {
     closeAllModals();
@@ -687,14 +639,12 @@ function viewProfileFromModal() {
   }
 }
 
-
 function closeAllModals() {
   document.querySelectorAll('.modal').forEach(modal => {
     modal.style.display = 'none';
   });
   document.body.style.overflow = '';
   
-  // Remove modal de denúncia se existir
   const reportModal = document.getElementById('reportModal');
   if (reportModal) {
     reportModal.remove();
@@ -702,7 +652,6 @@ function closeAllModals() {
   
   currentBlockingUser = null;
 }
-
 
 // === SISTEMA DE NOTIFICAÇÕES ===
 async function loadNotificationCount() {
@@ -712,7 +661,6 @@ async function loadNotificationCount() {
       .select('id, type, is_read')
       .eq('user_id', currentUser.id)
       .eq('is_read', false);
-
 
     if (!error && notifications) {
       updateNotificationBadge(notifications);
@@ -724,11 +672,9 @@ async function loadNotificationCount() {
   }
 }
 
-
 function updateNotificationBadge(notifications) {
   const badge = document.getElementById('notificationBadge');
   if (!badge) return;
-
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
   
@@ -736,15 +682,12 @@ function updateNotificationBadge(notifications) {
     badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
     badge.style.display = 'flex';
     
-    // Adiciona classe de urgência se houver muitas notificações
     if (unreadCount > 5) {
       badge.classList.add('urgent');
     } else {
       badge.classList.remove('urgent');
     }
 
-
-    // Adiciona animação de pulso para notificações importantes
     const hasImportantNotifications = notifications.some(n =>
       n.type === 'new_like' || n.type === 'new_message' || n.type === 'new_match'
     );
@@ -760,16 +703,13 @@ function updateNotificationBadge(notifications) {
   }
 }
 
-
 function startNotificationPolling() {
-  // Atualiza notificações a cada 30 segundos
   notificationInterval = setInterval(async () => {
     if (currentUser) {
       await loadNotificationCount();
     }
   }, 30000);
 }
-
 
 function stopNotificationPolling() {
   if (notificationInterval) {
@@ -778,8 +718,6 @@ function stopNotificationPolling() {
   }
 }
 
-
-// Função para marcar notificações como lidas
 async function markNotificationsAsRead() {
   try {
     const { error } = await supabase
@@ -788,9 +726,7 @@ async function markNotificationsAsRead() {
       .eq('user_id', currentUser.id)
       .eq('is_read', false);
 
-
     if (!error) {
-      // Atualiza o badge imediatamente
       const badge = document.getElementById('notificationBadge');
       if (badge) {
         badge.style.display = 'none';
@@ -801,32 +737,6 @@ async function markNotificationsAsRead() {
     console.error('Erro ao marcar notificações como lidas:', error);
   }
 }
-
-
-// Função para criar uma nova notificação (útil para testes)
-async function createTestNotification(type = 'info', title = 'Teste', message = 'Esta é uma notificação de teste') {
-  try {
-    const { error } = await supabase
-      .from('notifications')
-      .insert({
-        user_id: currentUser.id,
-        type: type,
-        title: title,
-        message: message,
-        is_read: false,
-        created_at: new Date().toISOString()
-      });
-
-
-    if (!error) {
-      await loadNotificationCount();
-      showNotification('Notificação de teste criada!');
-    }
-  } catch (error) {
-    console.error('Erro ao criar notificação de teste:', error);
-  }
-}
-
 
 // === SISTEMA DE NOTIFICAÇÕES VISUAIS ===
 function showNotification(message, type = 'success') {
@@ -853,7 +763,6 @@ function showNotification(message, type = 'success') {
     gap: 0.5rem;
   `;
   
-  // Ícone baseado no tipo
   const icon = type === 'error' ? '❌' :
         type === 'warning' ? '⚠️' : '✅';
   
@@ -874,7 +783,6 @@ function showNotification(message, type = 'success') {
   }, 3000);
 }
 
-
 // === NAVEGAÇÃO ===
 function goToPerfil() { window.location.href = 'painel.html'; }
 function goToMensagens() { window.location.href = 'mensagens.html'; }
@@ -882,18 +790,19 @@ function goToBusca() { window.location.href = 'busca.html'; }
 function goToBloqueados() { window.location.href = 'bloqueados.html'; }
 function goToPricing() { window.location.href = 'pricing.html'; }
 function goToNotificacoes() {
-  // Marca notificações como lidas ao acessar a página
   markNotificationsAsRead();
   window.location.href = 'notifica.html';
 }
 
-
 async function logout() {
   stopNotificationPolling();
+  stopStatusUpdates();
+  if (statusSystem) {
+    statusSystem.destroy();
+  }
   const { error } = await supabase.auth.signOut();
   if (!error) window.location.href = 'login.html';
 }
-
 
 // === EXPORTA FUNÇÕES PARA O HTML ===
 window.openUserActions = openUserActions;
@@ -914,22 +823,28 @@ window.goToPricing = goToPricing;
 window.goToNotificacoes = goToNotificacoes;
 window.logout = logout;
 
-
 // Funções de teste (pode remover em produção)
 window.createTestNotification = createTestNotification;
-
 
 // Listener de autenticação
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_OUT') {
     stopNotificationPolling();
+    stopStatusUpdates();
+    if (statusSystem) {
+      statusSystem.destroy();
+    }
     window.location.href = 'login.html';
   } else if (event === 'SIGNED_IN' && session) {
     currentUser = session.user;
+    if (statusSystem) {
+      statusSystem.initialize(currentUser);
+      statusSystem.updateMyStatus();
+    }
     startNotificationPolling();
+    startStatusUpdates();
   }
 });
-
 
 // Adiciona CSS dinâmico para notificações
 const notificationCSS = `
@@ -939,38 +854,36 @@ const notificationCSS = `
   100% { transform: scale(1); }
 }
 
-
 @keyframes slideInRight {
   from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
-
 
 @keyframes slideOutRight {
   from { transform: translateX(0); opacity: 1; }
   to { transform: translateX(100%); opacity: 0; }
 }
 
-
 .notification-badge.urgent {
   background: var(--error) !important;
   animation: pulse 1s infinite !important;
 }
-
 
 .notification-badge.pulse {
   animation: pulse 2s infinite !important;
 }
 `;
 
-
 // Injeta o CSS na página
 const style = document.createElement('style');
 style.textContent = notificationCSS;
 document.head.appendChild(style);
 
-
 // Cleanup quando a página for fechada
 window.addEventListener('beforeunload', () => {
   stopNotificationPolling();
+  stopStatusUpdates();
+  if (statusSystem) {
+    statusSystem.destroy();
+  }
 });
