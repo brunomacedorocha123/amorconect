@@ -16,20 +16,20 @@ class MessagesSystem {
   }
 
   async initialize() {
-    try {
-      await this.checkAuth();
-      await this.loadUserData();
-      await this.initializeStatusSystem();
-      await this.loadConversations();
-      this.setupEventListeners();
-      this.updateMessageCounter();
-      this.startPeriodicChecks();
-      this.checkUrlParams();
-      await this.initializeSistemaVibe();
-    } catch (error) {
-      this.showNotification('Erro ao carregar mensagens', 'error');
-    }
+  try {
+    await this.checkAuth();
+    await this.loadUserData();
+    await this.initializeStatusSystem();
+    await this.loadConversations();
+    this.setupEventListeners();
+    this.updateMessageCounter();
+    this.startPeriodicChecks();
+    this.checkUrlParams();
+    await this.initializeSistemaVibe();
+  } catch (error) {
+    
   }
+}
 
   async initializeStatusSystem() {
     if (window.StatusSystem && this.currentUser) {
