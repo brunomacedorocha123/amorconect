@@ -137,8 +137,9 @@ function updateUserHeader(profile) {
 
   const userStatus = document.getElementById('userStatus');
   if (userStatus && profile.last_online_at) {
-    const twoHoursAgo = new Date(Date.now() - 120 * 60 * 1000);
-    const isOnline = new Date(profile.last_online_at) > twoHoursAgo;
+    // ✅ 2 MINUTOS
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+    const isOnline = new Date(profile.last_online_at) > twoMinutesAgo;
     
     if (isOnline) {
       userStatus.textContent = profile.is_invisible ? 'Invisível' : 'Online';
@@ -176,8 +177,9 @@ async function loadUsers() {
       .eq('is_invisible', false);
 
     if (currentFilter === 'online') {
-      const twoHoursAgo = new Date(Date.now() - 120 * 60 * 1000).toISOString();
-      query = query.gte('last_online_at', twoHoursAgo);
+      // ✅ 2 MINUTOS
+      const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+      query = query.gte('last_online_at', twoMinutesAgo);
     } else if (currentFilter === 'premium') {
       query = query.eq('is_premium', true);
     }
@@ -262,8 +264,9 @@ function calculateUserStatusManual(lastOnlineAt, isInvisible, userId) {
     return { status: 'invisible', text: 'Offline', class: 'status-offline' };
   }
 
-  const twoHoursAgo = new Date(Date.now() - 120 * 60 * 1000);
-  const isOnline = new Date(lastOnlineAt) > twoHoursAgo;
+  // ✅ 2 MINUTOS
+  const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+  const isOnline = new Date(lastOnlineAt) > twoMinutesAgo;
 
   if (isOnline) {
     return { status: 'online', text: 'Online', class: 'status-online' };
