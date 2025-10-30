@@ -302,6 +302,7 @@ class MessagesSystem {
     }
   }
 
+  // 🔄 FUNÇÃO ATUALIZADA - Agora busca dados completos para status
   async loadConversationsFallback() {
     try {
       const { data: messages, error } = await this.supabase
@@ -330,6 +331,7 @@ class MessagesSystem {
           msg.receiver : msg.sender;
         
         if (!conversationsMap.has(otherUserId)) {
+          // ⭐ USAR SISTEMA DE STATUS PARA CALCULAR STATUS CORRETO
           const statusInfo = this.calculateUserStatus(
             otherUser?.last_online_at,
             otherUser?.real_status,
@@ -341,7 +343,7 @@ class MessagesSystem {
             other_user_id: otherUserId,
             other_user_nickname: otherUser?.nickname || 'Usuário',
             other_user_avatar_url: otherUser?.avatar_url,
-            other_user_online: statusInfo.status === 'online',
+            other_user_online: statusInfo.status === 'online', // ⭐ AGORA USA STATUS CORRETO
             last_message: msg.message,
             last_message_at: msg.sent_at,
             unread_count: 0
@@ -676,55 +678,118 @@ class MessagesSystem {
       } catch (error) {
       }
     } else {
-      const statusInfo = this.calculateUserStatus(
-        null, // Não temos last_online_at na conversa, mas o status já foi calculado
-        null,
-        false,
-        otherUserId
-      );
-      
-      chatHeader.innerHTML = `
-        <div class="chat-header-user">
-          <div class="chat-user-avatar">
-            ${conversation.other_user_avatar_url ?
-              `<img src="${conversation.other_user_avatar_url}" alt="${conversation.other_user_nickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
-              ''
-            }
-            <div class="avatar-fallback" style="${conversation.other_user_avatar_url ? 'display: none;' : ''}">
-              ${this.getUserInitials(conversation.other_user_nickname)}
+      // ⭐ ATUALIZADO: Buscar status atualizado para o header também
+      try {
+        const statusInfo = await this.getUserStatus(otherUserId);
+        
+        chatHeader.innerHTML = `
+          <div class="chat-header-user">
+            <div class="chat-user-avatar">
+              ${conversation.other_user_avatar_url ?
+                `<img src="${conversation.other_user_avatar_url}" alt="${conversation.other_user_nickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
+                ''
+              }
+              <div class="avatar-fallback" style="${conversation.other_user_avatar_url ? 'display: none;' : ''}">
+                ${this.getUserInitials(conversation.other_user_nickname)}
+              </div>
+            </div>
+            <div class="chat-user-info">
+              <h3>${this.escapeHtml(conversation.other_user_nickname)}</h3>
+              <div class="chat-user-status">
+                <span class="${statusInfo.class}">
+                  <span class="status-dot"></span>
+                  ${statusInfo.text}
+                </span>
+              </div>
             </div>
           </div>
-          <div class="chat-user-info">
-            <h3>${this.escapeHtml(conversation.other_user_nickname)}</h3>
-            <div class="chat-user-status">
-              <span class="${conversation.other_user_online ? 'status-online' : 'status-offline'}">
-                <span class="status-dot"></span>
-                ${conversation.other_user_online ? 'Online' : 'Offline'}
-              </span>
+          <div class="chat-header-actions">
+            <!-- ⭐ BOTÃO VIBE EXCLUSIVE ADICIONADO -->
+            <button class="chat-action-btn" id="fidelityProposeBtn" style="display: none;" title="Propor Vibe Exclusive">
+              <i class="fas fa-gem"></i> Vibe Exclusive
+            </button>
+            <!-- ⭐ BOTÃO PROPOSTAS RECEBIDAS ADICIONADO -->
+            <button class="chat-action-btn" id="viewProposalsBtn" style="display: none;" title="Propostas recebidas">
+              <i class="fas fa-bell"></i>
+              <span class="proposal-badge" id="proposalBadge" style="display: none;"></span>
+            </button>
+            <button class="chat-action-btn" onclick="MessagesSystem.showUserInfo('${otherUserId}')" title="Informações do usuário">
+              <i class="fas fa-info-circle"></i>
+            </button>
+          </div>
+        `;
+      } catch (error) {
+        // Fallback para o status da conversa
+        chatHeader.innerHTML = `
+          <div class="chat-header-user">
+            <div class="chat-user-avatar">
+              ${conversation.other_user_avatar_url ?
+                `<img src="${conversation.other_user_avatar_url}" alt="${conversation.other_user_nickname}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
+                ''
+              }
+              <div class="avatar-fallback" style="${conversation.other_user_avatar_url ? 'display: none;' : ''}">
+                ${this.getUserInitials(conversation.other_user_nickname)}
+              </div>
+            </div>
+            <div class="chat-user-info">
+              <h3>${this.escapeHtml(conversation.other_user_nickname)}</h3>
+              <div class="chat-user-status">
+                <span class="${conversation.other_user_online ? 'status-online' : 'status-offline'}">
+                  <span class="status-dot"></span>
+                  ${conversation.other_user_online ? 'Online' : 'Offline'}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="chat-header-actions">
-          <!-- ⭐ BOTÃO VIBE EXCLUSIVE ADICIONADO -->
-          <button class="chat-action-btn" id="fidelityProposeBtn" style="display: none;" title="Propor Vibe Exclusive">
-            <i class="fas fa-gem"></i> Vibe Exclusive
-          </button>
-          <!-- ⭐ BOTÃO PROPOSTAS RECEBIDAS ADICIONADO -->
-          <button class="chat-action-btn" id="viewProposalsBtn" style="display: none;" title="Propostas recebidas">
-            <i class="fas fa-bell"></i>
-            <span class="proposal-badge" id="proposalBadge" style="display: none;"></span>
-          </button>
-          <button class="chat-action-btn" onclick="MessagesSystem.showUserInfo('${otherUserId}')" title="Informações do usuário">
-            <i class="fas fa-info-circle"></i>
-          </button>
-        </div>
-      `;
+          <div class="chat-header-actions">
+            <button class="chat-action-btn" id="fidelityProposeBtn" style="display: none;" title="Propor Vibe Exclusive">
+              <i class="fas fa-gem"></i> Vibe Exclusive
+            </button>
+            <button class="chat-action-btn" id="viewProposalsBtn" style="display: none;" title="Propostas recebidas">
+              <i class="fas fa-bell"></i>
+              <span class="proposal-badge" id="proposalBadge" style="display: none;"></span>
+            </button>
+            <button class="chat-action-btn" onclick="MessagesSystem.showUserInfo('${otherUserId}')" title="Informações do usuário">
+              <i class="fas fa-info-circle"></i>
+            </button>
+          </div>
+        `;
+      }
     }
 
     // ⭐ ATUALIZAR BOTÕES VIBE EXCLUSIVE
     if (this.sistemaVibe && typeof this.sistemaVibe.onConversationSelected === 'function') {
       await this.sistemaVibe.onConversationSelected(otherUserId);
     }
+  }
+
+  // ⭐ NOVA FUNÇÃO - Buscar status individual atualizado
+  async getUserStatus(userId) {
+    if (this.statusSystem) {
+      return await this.statusSystem.getUserStatus(userId);
+    }
+    
+    // Fallback
+    try {
+      const { data: profile, error } = await this.supabase
+        .from('profiles')
+        .select('last_online_at, real_status, is_invisible')
+        .eq('id', userId)
+        .single();
+
+      if (!error && profile) {
+        return this.calculateUserStatus(
+          profile.last_online_at,
+          profile.real_status,
+          profile.is_invisible,
+          userId
+        );
+      }
+    } catch (error) {
+      // Silencioso
+    }
+    
+    return { status: 'offline', text: 'Offline', class: 'status-offline' };
   }
 
   async sendMessage() {
