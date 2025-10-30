@@ -13,27 +13,14 @@ document.addEventListener('DOMContentLoaded', function() {
   initializeApp();
 });
 
-// ✅ FUNÇÃO SEGURA PARA ATUALIZAR STATUS (SISTEMA NOVO)
+// ✅ FUNÇÃO SEGURA PARA ATUALIZAR STATUS
 async function updateOnlineStatusSafe(userId) {
     try {
         const { data: success, error } = await supabase.rpc('update_user_online_status', {
             user_uuid: userId
         });
-        
-        if (error) {
-            console.error('❌ Erro ao atualizar status:', error);
-            return false;
-        }
-        
-        if (success) {
-            console.log('✅ Status online atualizado com sucesso para:', userId);
-            return true;
-        } else {
-            console.error('❌ Falha ao atualizar status - múltiplos usuários afetados?');
-            return false;
-        }
+        return success && !error;
     } catch (error) {
-        console.error('❌ Erro geral ao atualizar status:', error);
         return false;
     }
 }
@@ -41,11 +28,10 @@ async function updateOnlineStatusSafe(userId) {
 async function initializeApp() {
   const authenticated = await checkAuthentication();
   if (authenticated) {
-    // ✅ CORREÇÃO DO STATUS: Usar função segura
     statusSystem = window.StatusSystem;
     if (statusSystem && currentUser) {
       await statusSystem.initialize(currentUser);
-      await updateOnlineStatusSafe(currentUser.id); // ✅ ATUALIZAÇÃO SEGURA
+      await updateOnlineStatusSafe(currentUser.id);
     }
     
     setupEventListeners();
@@ -58,16 +44,15 @@ async function initializeApp() {
 }
 
 function startStatusUpdates() {
-  // ✅ CORREÇÃO DO STATUS: Usar função segura
   if (statusUpdateInterval) {
     clearInterval(statusUpdateInterval);
   }
   
   statusUpdateInterval = setInterval(async () => {
     if (currentUser) {
-      await updateOnlineStatusSafe(currentUser.id); // ✅ ATUALIZAÇÃO SEGURA
+      await updateOnlineStatusSafe(currentUser.id);
     }
-  }, 30000); // A cada 30 segundos
+  }, 30000);
 }
 
 function stopStatusUpdates() {
@@ -105,11 +90,10 @@ function setupEventListeners() {
     });
   });
 
-  // ✅ CORREÇÃO DO STATUS: Atualizar quando a página ganha foco
   document.addEventListener('visibilitychange', async () => {
     if (!document.hidden && currentUser) {
-      await updateOnlineStatusSafe(currentUser.id); // ✅ ATUALIZAÇÃO SEGURA
-      await loadUsers(); // Recarregar usuários com status atualizado
+      await updateOnlineStatusSafe(currentUser.id);
+      await loadUsers();
     }
   });
 }
@@ -151,11 +135,10 @@ function updateUserHeader(profile) {
     welcomeMessage.textContent = `Olá, ${firstName}!`;
   }
 
-  // ✅ CORREÇÃO DO STATUS: Atualizar status do usuário logado no header
   const userStatus = document.getElementById('userStatus');
   if (userStatus && profile.last_online_at) {
-    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
-    const isOnline = new Date(profile.last_online_at) > fifteenMinutesAgo;
+    const twoHoursAgo = new Date(Date.now() - 120 * 60 * 1000);
+    const isOnline = new Date(profile.last_online_at) > twoHoursAgo;
     
     if (isOnline) {
       userStatus.textContent = profile.is_invisible ? 'Invisível' : 'Online';
@@ -193,8 +176,8 @@ async function loadUsers() {
       .eq('is_invisible', false);
 
     if (currentFilter === 'online') {
-      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-      query = query.gte('last_online_at', fifteenMinutesAgo);
+      const twoHoursAgo = new Date(Date.now() - 120 * 60 * 1000).toISOString();
+      query = query.gte('last_online_at', twoHoursAgo);
     } else if (currentFilter === 'premium') {
       query = query.eq('is_premium', true);
     }
@@ -247,14 +230,12 @@ async function loadUsers() {
       return;
     }
 
-    // ✅ CORREÇÃO DO STATUS: Sistema funcionando corretamente
     const userIds = filteredProfiles.map(p => p.id);
     let statusMap = {};
     
     if (statusSystem) {
       statusMap = await statusSystem.getMultipleUsersStatus(userIds);
     } else {
-      // ✅ FALLBACK: Calcular status manualmente se o system não carregar
       filteredProfiles.forEach(profile => {
         statusMap[profile.id] = calculateUserStatusManual(
           profile.last_online_at, 
@@ -272,19 +253,17 @@ async function loadUsers() {
   }
 }
 
-// ✅ NOVA FUNÇÃO: Calcular status manualmente (fallback)
 function calculateUserStatusManual(lastOnlineAt, isInvisible, userId) {
   if (!lastOnlineAt) {
     return { status: 'offline', text: 'Offline', class: 'status-offline' };
   }
   
-  // Usuário invisível aparece como offline para outros
   if (isInvisible && userId !== currentUser?.id) {
     return { status: 'invisible', text: 'Offline', class: 'status-offline' };
   }
 
-  const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
-  const isOnline = new Date(lastOnlineAt) > fifteenMinutesAgo;
+  const twoHoursAgo = new Date(Date.now() - 120 * 60 * 1000);
+  const isOnline = new Date(lastOnlineAt) > twoHoursAgo;
 
   if (isOnline) {
     return { status: 'online', text: 'Online', class: 'status-online' };
@@ -367,12 +346,10 @@ function displayUsers(profiles, statusMap = {}) {
     const safeCity = (profile.display_city || 'Localização não informada').replace(/'/g, "\\'");
     const profileGender = userDetails.gender || 'Não informado';
     
-    // ✅ CORREÇÃO DO STATUS: Sistema robusto
     let statusInfo;
     if (statusMap[profile.id]) {
       statusInfo = statusMap[profile.id];
     } else {
-      // ✅ Calcular na hora se precisar
       statusInfo = calculateUserStatusManual(profile.last_online_at, profile.is_invisible, profile.id);
     }
     
@@ -453,7 +430,6 @@ function viewUserProfile(userId) {
   window.location.href = `perfil.html?id=${userId}`;
 }
 
-// === SISTEMA DE MODAIS ===
 function openUserActions(userId, userName) {
   currentBlockingUser = { id: userId, name: userName };
   
@@ -553,7 +529,6 @@ async function confirmBlockUser() {
   }
 }
 
-// === SISTEMA DE DENÚNCIA ===
 function reportUser() {
   if (!currentBlockingUser) {
     showNotification('Erro: usuário não selecionado');
@@ -733,7 +708,6 @@ function closeAllModals() {
   currentBlockingUser = null;
 }
 
-// === SISTEMA DE NOTIFICAÇÕES ===
 async function loadNotificationCount() {
   try {
     const { data: notifications, error } = await supabase
@@ -816,7 +790,6 @@ async function markNotificationsAsRead() {
   }
 }
 
-// === SISTEMA DE NOTIFICAÇÕES VISUAIS ===
 function showNotification(message, type = 'success') {
   const notification = document.createElement('div');
   const backgroundColor = type === 'error' ? 'var(--error)' :
@@ -861,7 +834,6 @@ function showNotification(message, type = 'success') {
   }, 3000);
 }
 
-// === NAVEGAÇÃO ===
 function goToPerfil() { window.location.href = 'painel.html'; }
 function goToMensagens() { window.location.href = 'mensagens.html'; }
 function goToBusca() { window.location.href = 'busca.html'; }
@@ -882,7 +854,6 @@ async function logout() {
   if (!error) window.location.href = 'login.html';
 }
 
-// === EXPORTA FUNÇÕES PARA O HTML ===
 window.openUserActions = openUserActions;
 window.closeUserActionsModal = closeUserActionsModal;
 window.blockUser = blockUser;
@@ -901,7 +872,6 @@ window.goToPricing = goToPricing;
 window.goToNotificacoes = goToNotificacoes;
 window.logout = logout;
 
-// Listener de autenticação
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_OUT') {
     stopNotificationPolling();
@@ -920,7 +890,6 @@ supabase.auth.onAuthStateChange((event, session) => {
   }
 });
 
-// Cleanup quando a página for fechada
 window.addEventListener('beforeunload', () => {
   stopNotificationPolling();
   stopStatusUpdates();
@@ -929,7 +898,6 @@ window.addEventListener('beforeunload', () => {
   }
 });
 
-// Adiciona CSS dinâmico para notificações
 const notificationCSS = `
 @keyframes pulse {
   0% { transform: scale(1); }
@@ -961,7 +929,6 @@ const style = document.createElement('style');
 style.textContent = notificationCSS;
 document.head.appendChild(style);
 
-// Função para criar notificação de teste
 async function createTestNotification(type = 'info', title = 'Teste', message = 'Esta é uma notificação de teste') {
   try {
     const { error } = await supabase
@@ -984,9 +951,7 @@ async function createTestNotification(type = 'info', title = 'Teste', message = 
   }
 }
 
-// Inicialização final quando a página carrega completamente
 window.addEventListener('load', function() {
-  // Garantir que o StatusSystem seja inicializado
   if (window.StatusSystem && currentUser && statusSystem) {
     setTimeout(() => {
       updateOnlineStatusSafe(currentUser.id);
