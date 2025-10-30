@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', function() {
   initializeApp();
 });
 
-// ✅ FUNÇÃO ATUALIZADA PARA STATUS DUPLO
 async function updateOnlineStatusSafe(userId, isOnline = true) {
     try {
         const { data: success, error } = await supabase.rpc('update_user_online_status', {
@@ -29,10 +28,11 @@ async function updateOnlineStatusSafe(userId, isOnline = true) {
 async function initializeApp() {
   const authenticated = await checkAuthentication();
   if (authenticated) {
+    await updateOnlineStatusSafe(currentUser.id, true);
+    
     statusSystem = window.StatusSystem;
     if (statusSystem && currentUser) {
       await statusSystem.initialize(currentUser);
-      await updateOnlineStatusSafe(currentUser.id, true);
     }
     
     setupEventListeners();
@@ -45,7 +45,6 @@ async function initializeApp() {
   }
 }
 
-// ✅ NOVA FUNÇÃO PARA LIDAR COM SAÍDA DO USUÁRIO
 function setupWindowUnload() {
   window.addEventListener('beforeunload', async () => {
     if (currentUser) {
@@ -121,7 +120,6 @@ async function loadUserProfile() {
   }
 }
 
-// ✅ FUNÇÃO CORRIGIDA - STATUS DO PRÓPRIO USUÁRIO
 function updateUserHeader(profile) {
   const avatarImg = document.getElementById('userAvatarImg');
   const avatarFallback = document.getElementById('avatarFallback');
@@ -149,14 +147,13 @@ function updateUserHeader(profile) {
 
   const userStatus = document.getElementById('userStatus');
   if (userStatus) {
-    // ✅ CORREÇÃO: PARA O PRÓPRIO USUÁRIO, MOSTRA STATUS REAL SEM VERIFICAÇÃO DE INVISÍVEL
     if (profile.real_status === 'online') {
       userStatus.textContent = 'Online';
       userStatus.style.color = '#48bb78';
     } else {
-      // ✅ VERIFICA GRACE PERIOD DE 2 MINUTOS APENAS SE OFFLINE
       const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
-      const isWithinGracePeriod = profile.last_online_at && new Date(profile.last_online_at) > twoMinutesAgo;
+      const lastOnline = profile.last_online_at ? new Date(profile.last_online_at) : null;
+      const isWithinGracePeriod = lastOnline && lastOnline > twoMinutesAgo;
       
       if (isWithinGracePeriod) {
         userStatus.textContent = 'Online';
@@ -195,7 +192,6 @@ async function loadUsers() {
       .eq('is_invisible', false);
 
     if (currentFilter === 'online') {
-      // ✅ FILTRO ONLINE USA REAL_STATUS + GRACE PERIOD
       const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
       query = query.or(`real_status.eq.online,last_online_at.gte.${twoMinutesAgo}`);
     } else if (currentFilter === 'premium') {
@@ -342,7 +338,6 @@ function displayUsers(profiles, statusMap = {}) {
     if (statusMap[profile.id]) {
       statusInfo = statusMap[profile.id];
     } else {
-      // ✅ FALLBACK SE STATUS SYSTEM NÃO ESTIVER DISPONÍVEL
       const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
       const isOnline = profile.real_status === 'online' || new Date(profile.last_online_at) > twoMinutesAgo;
       
@@ -849,7 +844,6 @@ function goToNotificacoes() {
 async function logout() {
   stopNotificationPolling();
   stopStatusUpdates();
-  // ✅ ATUALIZA STATUS PARA OFFLINE NO LOGOUT
   if (currentUser) {
     await updateOnlineStatusSafe(currentUser.id, false);
   }
@@ -899,7 +893,6 @@ supabase.auth.onAuthStateChange((event, session) => {
 window.addEventListener('beforeunload', async () => {
   stopNotificationPolling();
   stopStatusUpdates();
-  // ✅ ATUALIZA STATUS PARA OFFLINE AO FECHAR ABA/NAVEGADOR
   if (currentUser) {
     await updateOnlineStatusSafe(currentUser.id, false);
   }
