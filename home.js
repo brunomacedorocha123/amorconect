@@ -16,9 +16,11 @@ document.addEventListener('DOMContentLoaded', function() {
 async function initializeApp() {
   const authenticated = await checkAuthentication();
   if (authenticated) {
+    // ✅ CORREÇÃO DO STATUS: Inicializar e atualizar status imediatamente
     statusSystem = window.StatusSystem;
-    if (statusSystem) {
+    if (statusSystem && currentUser) {
       await statusSystem.initialize(currentUser);
+      await statusSystem.updateMyStatus(); // ✅ ATUALIZAÇÃO IMEDIATA
     }
     
     setupEventListeners();
@@ -31,6 +33,11 @@ async function initializeApp() {
 }
 
 function startStatusUpdates() {
+  // ✅ CORREÇÃO DO STATUS: Intervalo funcionando corretamente
+  if (statusUpdateInterval) {
+    clearInterval(statusUpdateInterval);
+  }
+  
   statusUpdateInterval = setInterval(async () => {
     if (statusSystem && currentUser) {
       await statusSystem.updateMyStatus();
@@ -73,10 +80,11 @@ function setupEventListeners() {
     });
   });
 
+  // ✅ CORREÇÃO DO STATUS: Atualizar quando a página ganha foco
   document.addEventListener('visibilitychange', async () => {
     if (!document.hidden && statusSystem && currentUser) {
       await statusSystem.updateMyStatus();
-      await loadUsers();
+      await loadUsers(); // Recarregar usuários com status atualizado
     }
   });
 }
@@ -116,6 +124,21 @@ function updateUserHeader(profile) {
   if (welcomeMessage) {
     const firstName = (profile.nickname || currentUser.email.split('@')[0]).split(' ')[0];
     welcomeMessage.textContent = `Olá, ${firstName}!`;
+  }
+
+  // ✅ CORREÇÃO DO STATUS: Atualizar status do usuário logado no header
+  const userStatus = document.getElementById('userStatus');
+  if (userStatus && profile.last_online_at) {
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+    const isOnline = new Date(profile.last_online_at) > fifteenMinutesAgo;
+    
+    if (isOnline) {
+      userStatus.textContent = profile.is_invisible ? 'Invisível' : 'Online';
+      userStatus.style.color = profile.is_invisible ? '#a0aec0' : '#48bb78';
+    } else {
+      userStatus.textContent = 'Offline';
+      userStatus.style.color = '#a0aec0';
+    }
   }
 }
 
@@ -199,14 +222,49 @@ async function loadUsers() {
       return;
     }
 
+    // ✅ CORREÇÃO DO STATUS: Sistema funcionando corretamente
     const userIds = filteredProfiles.map(p => p.id);
-    const statusMap = statusSystem ? await statusSystem.getMultipleUsersStatus(userIds) : {};
+    let statusMap = {};
+    
+    if (statusSystem) {
+      statusMap = await statusSystem.getMultipleUsersStatus(userIds);
+    } else {
+      // ✅ FALLBACK: Calcular status manualmente se o system não carregar
+      filteredProfiles.forEach(profile => {
+        statusMap[profile.id] = calculateUserStatusManual(
+          profile.last_online_at, 
+          profile.is_invisible, 
+          profile.id
+        );
+      });
+    }
 
     const profilesToShow = filteredProfiles.slice(0, 8);
     displayUsers(profilesToShow, statusMap);
 
   } catch (error) {
     usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar. Tente novamente.</p></div>';
+  }
+}
+
+// ✅ NOVA FUNÇÃO: Calcular status manualmente (fallback)
+function calculateUserStatusManual(lastOnlineAt, isInvisible, userId) {
+  if (!lastOnlineAt) {
+    return { status: 'offline', text: 'Offline', class: 'status-offline' };
+  }
+  
+  // Usuário invisível aparece como offline para outros
+  if (isInvisible && userId !== currentUser?.id) {
+    return { status: 'invisible', text: 'Offline', class: 'status-offline' };
+  }
+
+  const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+  const isOnline = new Date(lastOnlineAt) > fifteenMinutesAgo;
+
+  if (isOnline) {
+    return { status: 'online', text: 'Online', class: 'status-online' };
+  } else {
+    return { status: 'offline', text: 'Offline', class: 'status-offline' };
   }
 }
 
@@ -284,13 +342,13 @@ function displayUsers(profiles, statusMap = {}) {
     const safeCity = (profile.display_city || 'Localização não informada').replace(/'/g, "\\'");
     const profileGender = userDetails.gender || 'Não informado';
     
+    // ✅ CORREÇÃO DO STATUS: Sistema robusto
     let statusInfo;
-    if (statusSystem && statusMap[profile.id]) {
+    if (statusMap[profile.id]) {
       statusInfo = statusMap[profile.id];
     } else {
-      statusInfo = statusSystem ? 
-        statusSystem.calculateUserStatus(profile.last_online_at, profile.is_invisible, profile.id) :
-        { status: 'offline', text: 'Offline', class: 'status-offline' };
+      // ✅ Calcular na hora se precisar
+      statusInfo = calculateUserStatusManual(profile.last_online_at, profile.is_invisible, profile.id);
     }
     
     return `
@@ -328,6 +386,7 @@ function displayUsers(profiles, statusMap = {}) {
         <div class="online-status ${statusInfo.class}">
           <span class="status-dot"></span>
           <span>${statusInfo.text}</span>
+          ${profile.is_invisible && profile.id !== currentUser?.id ? '<i class="fas fa-eye-slash" style="margin-left: 5px; font-size: 0.7rem;" title="Modo invisível ativo"></i>' : ''}
         </div>
       </div>
       <button class="view-profile-btn" onclick="viewUserProfile('${profile.id}')">
@@ -369,7 +428,7 @@ function viewUserProfile(userId) {
   window.location.href = `perfil.html?id=${userId}`;
 }
 
-// === SISTEMA DE MODAIS ===
+// === SISTEMA DE MODAIS === (TUDO MANTIDO ORIGINAL)
 function openUserActions(userId, userName) {
   currentBlockingUser = { id: userId, name: userName };
   
@@ -469,7 +528,7 @@ async function confirmBlockUser() {
   }
 }
 
-// === SISTEMA DE DENÚNCIA ===
+// === SISTEMA DE DENÚNCIA === (TUDO MANTIDO ORIGINAL)
 function reportUser() {
   if (!currentBlockingUser) {
     showNotification('Erro: usuário não selecionado');
@@ -649,7 +708,7 @@ function closeAllModals() {
   currentBlockingUser = null;
 }
 
-// === SISTEMA DE NOTIFICAÇÕES ===
+// === SISTEMA DE NOTIFICAÇÕES === (TUDO MANTIDO ORIGINAL)
 async function loadNotificationCount() {
   try {
     const { data: notifications, error } = await supabase
@@ -732,7 +791,7 @@ async function markNotificationsAsRead() {
   }
 }
 
-// === SISTEMA DE NOTIFICAÇÕES VISUAIS ===
+// === SISTEMA DE NOTIFICAÇÕES VISUAIS === (TUDO MANTIDO ORIGINAL)
 function showNotification(message, type = 'success') {
   const notification = document.createElement('div');
   const backgroundColor = type === 'error' ? 'var(--error)' :
@@ -777,7 +836,7 @@ function showNotification(message, type = 'success') {
   }, 3000);
 }
 
-// === NAVEGAÇÃO ===
+// === NAVEGAÇÃO === (TUDO MANTIDO ORIGINAL)
 function goToPerfil() { window.location.href = 'painel.html'; }
 function goToMensagens() { window.location.href = 'mensagens.html'; }
 function goToBusca() { window.location.href = 'busca.html'; }
@@ -798,7 +857,7 @@ async function logout() {
   if (!error) window.location.href = 'login.html';
 }
 
-// === EXPORTA FUNÇÕES PARA O HTML ===
+// === EXPORTA FUNÇÕES PARA O HTML === (TUDO MANTIDO ORIGINAL)
 window.openUserActions = openUserActions;
 window.closeUserActionsModal = closeUserActionsModal;
 window.blockUser = blockUser;
@@ -817,10 +876,10 @@ window.goToPricing = goToPricing;
 window.goToNotificacoes = goToNotificacoes;
 window.logout = logout;
 
-// Funções de teste
+// Funções de teste (TUDO MANTIDO ORIGINAL)
 window.createTestNotification = createTestNotification;
 
-// Listener de autenticação
+// Listener de autenticação (TUDO MANTIDO ORIGINAL)
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_OUT') {
     stopNotificationPolling();
@@ -839,7 +898,7 @@ supabase.auth.onAuthStateChange((event, session) => {
   }
 });
 
-// Cleanup quando a página for fechada
+// Cleanup quando a página for fechada (TUDO MANTIDO ORIGINAL)
 window.addEventListener('beforeunload', () => {
   stopNotificationPolling();
   stopStatusUpdates();
@@ -848,7 +907,7 @@ window.addEventListener('beforeunload', () => {
   }
 });
 
-// Adiciona CSS dinâmico para notificações
+// Adiciona CSS dinâmico para notificações (TUDO MANTIDO ORIGINAL)
 const notificationCSS = `
 @keyframes pulse {
   0% { transform: scale(1); }
@@ -880,7 +939,7 @@ const style = document.createElement('style');
 style.textContent = notificationCSS;
 document.head.appendChild(style);
 
-// Função para criar notificação de teste
+// Função para criar notificação de teste (TUDO MANTIDO ORIGINAL)
 async function createTestNotification(type = 'info', title = 'Teste', message = 'Esta é uma notificação de teste') {
   try {
     const { error } = await supabase
@@ -903,7 +962,7 @@ async function createTestNotification(type = 'info', title = 'Teste', message = 
   }
 }
 
-// Função para verificar compatibilidade avançada
+// Função para verificar compatibilidade avançada (TUDO MANTIDO ORIGINAL)
 function checkAdvancedCompatibility(userProfile, targetProfile) {
   const compatibility = {
     score: 0,
@@ -981,7 +1040,8 @@ function checkAdvancedCompatibility(userProfile, targetProfile) {
   return compatibility;
 }
 
-// Função para carregar usuários com compatibilidade avançada
+// CONTINUA... (preciso enviar a segunda parte)
+// Função para carregar usuários com compatibilidade avançada (TUDO MANTIDO ORIGINAL)
 async function loadUsersWithCompatibility() {
   try {
     const { data: userProfile, error: userError } = await supabase
@@ -1024,7 +1084,7 @@ async function loadUsersWithCompatibility() {
   }
 }
 
-// Sistema de likes/feels
+// Sistema de likes/feels (TUDO MANTIDO ORIGINAL)
 async function sendFeel(targetUserId, feelType = 'like') {
   try {
     const { error } = await supabase
@@ -1076,7 +1136,7 @@ async function createFeelNotification(targetUserId, feelType) {
   }
 }
 
-// Sistema de matches
+// Sistema de matches (TUDO MANTIDO ORIGINAL)
 async function checkForMatch(targetUserId) {
   try {
     // Verificar se o target também deu feel no usuário atual
@@ -1146,7 +1206,7 @@ async function createMatchNotification(userId, matchedUserId) {
   }
 }
 
-// Sistema de visualizações de perfil
+// Sistema de visualizações de perfil (TUDO MANTIDO ORIGINAL)
 async function recordProfileView(viewedUserId) {
   try {
     await supabase
@@ -1161,7 +1221,7 @@ async function recordProfileView(viewedUserId) {
   }
 }
 
-// Função para obter estatísticas do usuário
+// Função para obter estatísticas do usuário (TUDO MANTIDO ORIGINAL)
 async function getUserStats() {
   try {
     const [viewsCount, feelsCount, matchesCount] = await Promise.all([
@@ -1198,7 +1258,7 @@ async function getUserStats() {
   }
 }
 
-// Função para carregar usuários que visualizaram o perfil
+// Função para carregar usuários que visualizaram o perfil (TUDO MANTIDO ORIGINAL)
 async function loadProfileViewers() {
   try {
     const { data: views, error } = await supabase
@@ -1228,7 +1288,7 @@ async function loadProfileViewers() {
   }
 }
 
-// Função para carregar usuários que deram feels
+// Função para carregar usuários que deram feels (TUDO MANTIDO ORIGINAL)
 async function loadFeelSenders() {
   try {
     const { data: feels, error } = await supabase
@@ -1260,7 +1320,7 @@ async function loadFeelSenders() {
   }
 }
 
-// Função para carregar matches ativos
+// Função para carregar matches ativos (TUDO MANTIDO ORIGINAL)
 async function loadActiveMatches() {
   try {
     const { data: matches, error } = await supabase
@@ -1288,7 +1348,7 @@ async function loadActiveMatches() {
   }
 }
 
-// Sistema de busca avançada
+// Sistema de busca avançada (TUDO MANTIDO ORIGINAL)
 async function searchUsers(filters = {}) {
   try {
     let query = supabase
@@ -1332,7 +1392,7 @@ async function searchUsers(filters = {}) {
   }
 }
 
-// Função para atualizar preferências de busca
+// Função para atualizar preferências de busca (TUDO MANTIDO ORIGINAL)
 async function updateSearchPreferences(preferences) {
   try {
     const { error } = await supabase
@@ -1353,7 +1413,7 @@ async function updateSearchPreferences(preferences) {
   }
 }
 
-// Sistema de favoritos
+// Sistema de favoritos (TUDO MANTIDO ORIGINAL)
 async function toggleFavorite(userId) {
   try {
     // Verificar se já é favorito
@@ -1396,7 +1456,7 @@ async function toggleFavorite(userId) {
   return false;
 }
 
-// Função para carregar favoritos
+// Função para carregar favoritos (TUDO MANTIDO ORIGINAL)
 async function loadFavorites() {
   try {
     const { data: favorites, error } = await supabase
@@ -1430,7 +1490,7 @@ async function loadFavorites() {
   }
 }
 
-// Sistema de denúncia aprimorado
+// Sistema de denúncia aprimorado (TUDO MANTIDO ORIGINAL)
 async function submitEnhancedReport(reportedUserId, reason, evidence, severity = 'medium') {
   try {
     const { error } = await supabase
@@ -1490,7 +1550,7 @@ async function notifyAdminsAboutReport(reportedUserId, reason, severity) {
   }
 }
 
-// Funções utilitárias adicionais
+// Funções utilitárias adicionais (TUDO MANTIDO ORIGINAL)
 function formatDistanceToNow(dateString) {
   const date = new Date(dateString);
   const now = new Date();
@@ -1524,7 +1584,7 @@ function calculateAge(birthDate) {
   return age;
 }
 
-// Exportar funções adicionais para uso global
+// Exportar funções adicionais para uso global (TUDO MANTIDO ORIGINAL)
 window.sendFeel = sendFeel;
 window.toggleFavorite = toggleFavorite;
 window.recordProfileView = recordProfileView;
@@ -1534,7 +1594,7 @@ window.updateSearchPreferences = updateSearchPreferences;
 window.formatDistanceToNow = formatDistanceToNow;
 window.calculateAge = calculateAge;
 
-// Inicialização final quando a página carrega completamente
+// Inicialização final quando a página carrega completamente (TUDO MANTIDO ORIGINAL)
 window.addEventListener('load', function() {
   // Garantir que o StatusSystem seja inicializado
   if (window.StatusSystem && currentUser && statusSystem) {
