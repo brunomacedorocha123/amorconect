@@ -1,3 +1,74 @@
+// status.js - Sistema global de status online/offline/invisível
+class StatusSystem {
+    constructor() {
+        this.supabase = window.supabase;
+        this.currentUser = null;
+    }
+
+    async initialize(currentUser) {
+        this.currentUser = currentUser;
+    }
+
+    calculateUserStatus(lastOnlineAt, isInvisible = false, userId = null) {
+        if (!lastOnlineAt) {
+            return { status: 'offline', text: 'Offline', class: 'status-offline' };
+        }
+        
+        if (isInvisible && userId !== this.currentUser?.id) {
+            return { status: 'invisible', text: 'Offline', class: 'status-offline' };
+        }
+
+        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+        const isOnline = new Date(lastOnlineAt) > fifteenMinutesAgo;
+
+        if (isOnline) {
+            return { status: 'online', text: 'Online', class: 'status-online' };
+        } else {
+            return { status: 'offline', text: 'Offline', class: 'status-offline' };
+        }
+    }
+
+    async getMultipleUsersStatus(userIds) {
+        try {
+            const { data: profiles, error } = await this.supabase
+                .from('profiles')
+                .select('id, last_online_at, is_invisible')
+                .in('id', userIds);
+
+            if (error) return {};
+
+            const statusMap = {};
+            profiles.forEach(profile => {
+                statusMap[profile.id] = this.calculateUserStatus(
+                    profile.last_online_at, 
+                    profile.is_invisible, 
+                    profile.id
+                );
+            });
+
+            return statusMap;
+        } catch (error) {
+            return {};
+        }
+    }
+
+    async updateMyStatus() {
+        if (!this.currentUser) return;
+        
+        try {
+            await this.supabase
+                .from('profiles')
+                .update({ last_online_at: new Date().toISOString() })
+                .eq('id', this.currentUser.id);
+        } catch (error) {
+            // Silencioso
+        }
+    }
+}
+
+// Instância global
+window.StatusSystem = new StatusSystem();
+
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -7,7 +78,6 @@ let currentFilter = 'all';
 let currentBlockingUser = null;
 let notificationInterval = null;
 let statusSystem = null;
-let statusUpdateInterval = null;
 
 document.addEventListener('DOMContentLoaded', function() {
   initializeApp();
@@ -16,11 +86,9 @@ document.addEventListener('DOMContentLoaded', function() {
 async function initializeApp() {
   const authenticated = await checkAuthentication();
   if (authenticated) {
-    // Inicializar o StatusSystem
+    // INICIALIZAR STATUS SYSTEM - ADIÇÃO ÚNICA
     statusSystem = window.StatusSystem;
     await statusSystem.initialize(currentUser);
-    
-    // Atualizar status do usuário atual imediatamente
     await statusSystem.updateMyStatus();
     
     setupEventListeners();
@@ -28,23 +96,6 @@ async function initializeApp() {
     await loadUsers();
     await loadNotificationCount();
     startNotificationPolling();
-    startStatusUpdates();
-  }
-}
-
-function startStatusUpdates() {
-  // Atualizar status a cada 30 segundos
-  statusUpdateInterval = setInterval(async () => {
-    if (statusSystem) {
-      await statusSystem.updateMyStatus();
-    }
-  }, 30000);
-}
-
-function stopStatusUpdates() {
-  if (statusUpdateInterval) {
-    clearInterval(statusUpdateInterval);
-    statusUpdateInterval = null;
   }
 }
 
@@ -74,14 +125,6 @@ function setupEventListeners() {
       const filter = this.getAttribute('data-filter');
       setActiveFilter(filter);
     });
-  });
-
-  // Atualizar status quando a página ganha foco
-  document.addEventListener('visibilitychange', async () => {
-    if (!document.hidden && statusSystem) {
-      await statusSystem.updateMyStatus();
-      await loadUsers();
-    }
   });
 }
 
@@ -203,7 +246,7 @@ async function loadUsers() {
       return;
     }
 
-    // USAR STATUS SYSTEM PARA OBTER STATUS EM LOTE
+    // INTEGRAÇÃO DO STATUS SYSTEM - BUSCA STATUS EM LOTE
     const userIds = filteredProfiles.map(p => p.id);
     const statusMap = await statusSystem.getMultipleUsersStatus(userIds);
 
@@ -211,7 +254,6 @@ async function loadUsers() {
     displayUsers(profilesToShow, statusMap);
 
   } catch (error) {
-    console.error('Erro ao carregar usuários:', error);
     usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar. Tente novamente.</p></div>';
   }
 }
@@ -277,7 +319,6 @@ async function filterBlockedUsers(users) {
     return users.filter(user => !allBlockedIds.includes(user.id));
 
   } catch (error) {
-    console.error('Erro ao filtrar usuários bloqueados:', error);
     return users;
   }
 }
@@ -291,7 +332,7 @@ function displayUsers(profiles, statusMap = {}) {
     const safeCity = (profile.display_city || 'Localização não informada').replace(/'/g, "\\'");
     const profileGender = userDetails.gender || 'Não informado';
     
-    // USAR STATUS SYSTEM PARA OBTER STATUS CORRETO
+    // USAR STATUS SYSTEM PARA STATUS - INTEGRAÇÃO
     const statusInfo = statusMap[profile.id] || 
                       statusSystem.calculateUserStatus(profile.last_online_at, profile.is_invisible, profile.id);
     
@@ -355,11 +396,6 @@ function formatGenderForDisplay(gender) {
   return genderMap[gender.toLowerCase()] || gender;
 }
 
-function getUserInitials(name) {
-  if (!name) return 'U';
-  return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().substring(0, 2);
-}
-
 function setActiveFilter(filter) {
   currentFilter = filter;
   document.querySelectorAll('.btn-filter').forEach(btn => btn.classList.remove('active'));
@@ -367,18 +403,31 @@ function setActiveFilter(filter) {
   loadUsers();
 }
 
+function getUserInitials(name) {
+  if (!name) return 'U';
+  return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().substring(0, 2);
+}
+
+function isUserOnline(lastOnlineAt) {
+  if (!lastOnlineAt) return false;
+  const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+  return new Date(lastOnlineAt) > fifteenMinutesAgo;
+}
+
 function viewUserProfile(userId) {
   window.location.href = `perfil.html?id=${userId}`;
 }
 
-// === SISTEMA DE MODAIS ===
+// === SISTEMA DE MODAIS SIMPLES ===
 function openUserActions(userId, userName) {
   currentBlockingUser = { id: userId, name: userName };
   
+  // Fecha todos os modais primeiro
   document.querySelectorAll('.modal').forEach(modal => {
     modal.style.display = 'none';
   });
   
+  // Abre o modal de ações
   const modal = document.getElementById('userActionsModal');
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -403,8 +452,10 @@ function blockUser() {
     return;
   }
   
+  // Fecha o modal de ações
   closeUserActionsModal();
   
+  // Configura o modal de confirmação
   const isPremium = window.PremiumManager ? window.PremiumManager.userPlanInfo?.is_premium : false;
   
   const freeWarning = document.getElementById('freeBlockWarning');
@@ -422,6 +473,7 @@ function blockUser() {
   const userName = currentBlockingUser.name || 'este usuário';
   message.textContent = `Tem certeza que deseja bloquear ${userName}?`;
 
+  // Abre o modal de confirmação
   const modal = document.getElementById('blockConfirmModal');
   modal.style.display = 'flex';
 }
@@ -467,23 +519,26 @@ async function confirmBlockUser() {
     }
 
   } catch (error) {
-    console.error('Erro ao bloquear usuário:', error);
     showNotification('Erro ao bloquear usuário. Tente novamente.');
   }
 }
 
-// === SISTEMA DE DENÚNCIA ===
+// === SISTEMA DE DENÚNCIA COMPLETO ===
 function reportUser() {
   if (!currentBlockingUser) {
     showNotification('Erro: usuário não selecionado');
     return;
   }
   
+  // Fecha o modal de ações
   closeUserActionsModal();
+  
+  // Abre o modal de denúncia
   openReportModal();
 }
 
 function openReportModal() {
+  // Criar modal de denúncia dinamicamente
   const modalHTML = `
     <div class="modal" id="reportModal">
       <div class="modal-content">
@@ -535,13 +590,16 @@ function openReportModal() {
     </div>
   `;
   
+  // Remove modal existente se houver
   const existingModal = document.getElementById('reportModal');
   if (existingModal) {
     existingModal.remove();
   }
   
+  // Adiciona o novo modal
   document.body.insertAdjacentHTML('beforeend', modalHTML);
   
+  // Configura contador de caracteres
   const textarea = document.getElementById('reportDetails');
   const charCount = document.getElementById('charCount');
   
@@ -551,6 +609,7 @@ function openReportModal() {
     });
   }
   
+  // Mostra o modal
   const modal = document.getElementById('reportModal');
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
@@ -581,6 +640,7 @@ async function submitReport() {
   }
 
   try {
+    // Verificar se já existe uma denúncia pendente para este usuário
     const { data: existingReports, error: checkError } = await supabase
       .from('user_reports')
       .select('id')
@@ -597,6 +657,7 @@ async function submitReport() {
       return;
     }
 
+    // Enviar a denúncia
     const { error } = await supabase
       .from('user_reports')
       .insert({
@@ -645,6 +706,7 @@ function closeAllModals() {
   });
   document.body.style.overflow = '';
   
+  // Remove modal de denúncia se existir
   const reportModal = document.getElementById('reportModal');
   if (reportModal) {
     reportModal.remove();
@@ -682,12 +744,14 @@ function updateNotificationBadge(notifications) {
     badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
     badge.style.display = 'flex';
     
+    // Adiciona classe de urgência se houver muitas notificações
     if (unreadCount > 5) {
       badge.classList.add('urgent');
     } else {
       badge.classList.remove('urgent');
     }
 
+    // Adiciona animação de pulso para notificações importantes
     const hasImportantNotifications = notifications.some(n =>
       n.type === 'new_like' || n.type === 'new_message' || n.type === 'new_match'
     );
@@ -704,6 +768,7 @@ function updateNotificationBadge(notifications) {
 }
 
 function startNotificationPolling() {
+  // Atualiza notificações a cada 30 segundos
   notificationInterval = setInterval(async () => {
     if (currentUser) {
       await loadNotificationCount();
@@ -718,6 +783,7 @@ function stopNotificationPolling() {
   }
 }
 
+// Função para marcar notificações como lidas
 async function markNotificationsAsRead() {
   try {
     const { error } = await supabase
@@ -727,6 +793,7 @@ async function markNotificationsAsRead() {
       .eq('is_read', false);
 
     if (!error) {
+      // Atualiza o badge imediatamente
       const badge = document.getElementById('notificationBadge');
       if (badge) {
         badge.style.display = 'none';
@@ -735,6 +802,29 @@ async function markNotificationsAsRead() {
     }
   } catch (error) {
     console.error('Erro ao marcar notificações como lidas:', error);
+  }
+}
+
+// Função para criar uma nova notificação (útil para testes)
+async function createTestNotification(type = 'info', title = 'Teste', message = 'Esta é uma notificação de teste') {
+  try {
+    const { error } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: currentUser.id,
+        type: type,
+        title: title,
+        message: message,
+        is_read: false,
+        created_at: new Date().toISOString()
+      });
+
+    if (!error) {
+      await loadNotificationCount();
+      showNotification('Notificação de teste criada!');
+    }
+  } catch (error) {
+    console.error('Erro ao criar notificação de teste:', error);
   }
 }
 
@@ -763,6 +853,7 @@ function showNotification(message, type = 'success') {
     gap: 0.5rem;
   `;
   
+  // Ícone baseado no tipo
   const icon = type === 'error' ? '❌' :
         type === 'warning' ? '⚠️' : '✅';
   
@@ -790,16 +881,13 @@ function goToBusca() { window.location.href = 'busca.html'; }
 function goToBloqueados() { window.location.href = 'bloqueados.html'; }
 function goToPricing() { window.location.href = 'pricing.html'; }
 function goToNotificacoes() {
+  // Marca notificações como lidas ao acessar a página
   markNotificationsAsRead();
   window.location.href = 'notifica.html';
 }
 
 async function logout() {
   stopNotificationPolling();
-  stopStatusUpdates();
-  if (statusSystem) {
-    statusSystem.destroy();
-  }
   const { error } = await supabase.auth.signOut();
   if (!error) window.location.href = 'login.html';
 }
@@ -830,19 +918,10 @@ window.createTestNotification = createTestNotification;
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_OUT') {
     stopNotificationPolling();
-    stopStatusUpdates();
-    if (statusSystem) {
-      statusSystem.destroy();
-    }
     window.location.href = 'login.html';
   } else if (event === 'SIGNED_IN' && session) {
     currentUser = session.user;
-    if (statusSystem) {
-      statusSystem.initialize(currentUser);
-      statusSystem.updateMyStatus();
-    }
     startNotificationPolling();
-    startStatusUpdates();
   }
 });
 
@@ -882,8 +961,63 @@ document.head.appendChild(style);
 // Cleanup quando a página for fechada
 window.addEventListener('beforeunload', () => {
   stopNotificationPolling();
-  stopStatusUpdates();
-  if (statusSystem) {
-    statusSystem.destroy();
+});
+
+// Adiciona evento para atualizar status quando a página ganha foco
+document.addEventListener('visibilitychange', async () => {
+  if (!document.hidden && statusSystem && currentUser) {
+    await statusSystem.updateMyStatus();
+    // Recarregar usuários para atualizar status em tempo real
+    await loadUsers();
+  }
+});
+
+// Adiciona atualização periódica do status
+let statusUpdateInterval = setInterval(async () => {
+  if (statusSystem && currentUser) {
+    await statusSystem.updateMyStatus();
+  }
+}, 30000); // Atualiza a cada 30 segundos
+
+// Atualiza o cleanup para incluir o intervalo do status
+window.addEventListener('beforeunload', () => {
+  stopNotificationPolling();
+  if (statusUpdateInterval) {
+    clearInterval(statusUpdateInterval);
+  }
+});
+
+// Atualiza o logout para incluir o cleanup do status
+async function logout() {
+  stopNotificationPolling();
+  if (statusUpdateInterval) {
+    clearInterval(statusUpdateInterval);
+  }
+  const { error } = await supabase.auth.signOut();
+  if (!error) window.location.href = 'login.html';
+}
+
+// Atualiza o listener de autenticação para inicializar o StatusSystem
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT') {
+    stopNotificationPolling();
+    if (statusUpdateInterval) {
+      clearInterval(statusUpdateInterval);
+    }
+    window.location.href = 'login.html';
+  } else if (event === 'SIGNED_IN' && session) {
+    currentUser = session.user;
+    // Inicializar StatusSystem quando usuário faz login
+    if (statusSystem) {
+      statusSystem.initialize(currentUser);
+      statusSystem.updateMyStatus();
+    }
+    startNotificationPolling();
+    // Reiniciar intervalo de atualização de status
+    statusUpdateInterval = setInterval(async () => {
+      if (statusSystem && currentUser) {
+        await statusSystem.updateMyStatus();
+      }
+    }, 30000);
   }
 });
