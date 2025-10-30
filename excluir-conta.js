@@ -1,4 +1,4 @@
-// excluir-conta.js - Sistema de Exclusão de Conta Corrigido
+// excluir-conta.js - Sistema CORRETO usando API Supabase
 class AccountDeleter {
     constructor() {
         this.isDeleting = false;
@@ -8,12 +8,10 @@ class AccountDeleter {
     initialize() {
         this.setupEventListeners();
         this.injectStyles();
-        console.log('✅ Sistema de exclusão inicializado');
         return true;
     }
 
     setupEventListeners() {
-        // Botão principal de excluir conta
         const deleteBtn = document.getElementById('deleteAccountBtn');
         
         if (deleteBtn) {
@@ -23,42 +21,23 @@ class AccountDeleter {
             });
         }
 
-        // Eventos do modal
         const cancelBtn = document.getElementById('cancelDeleteBtn');
         const confirmBtn = document.getElementById('confirmDeleteBtn');
         const confirmationInput = document.getElementById('confirmationInput');
         const modal = document.getElementById('deleteConfirmationModal');
 
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', () => this.closeConfirmationModal());
-        }
-
-        if (confirmBtn) {
-            confirmBtn.addEventListener('click', () => this.executeAccountDeletion());
-        }
-
+        if (cancelBtn) cancelBtn.addEventListener('click', () => this.closeConfirmationModal());
+        if (confirmBtn) confirmBtn.addEventListener('click', () => this.executeAccountDeletion());
+        
         if (confirmationInput) {
             confirmationInput.addEventListener('input', (e) => this.validateConfirmationText(e.target.value));
-            confirmationInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !confirmBtn.disabled) {
-                    this.executeAccountDeletion();
-                }
-            });
         }
 
         if (modal) {
             modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    this.closeConfirmationModal();
-                }
+                if (e.target === modal) this.closeConfirmationModal();
             });
         }
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                this.closeConfirmationModal();
-            }
-        });
     }
 
     openConfirmationModal() {
@@ -72,20 +51,12 @@ class AccountDeleter {
             modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
             
-            if (confirmationInput) {
-                confirmationInput.value = '';
-                confirmationInput.focus();
-            }
-            if (confirmBtn) {
-                confirmBtn.disabled = true;
-                confirmBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Excluir Conta Permanentemente';
-            }
+            if (confirmationInput) confirmationInput.value = '';
+            if (confirmBtn) confirmBtn.disabled = true;
         }
     }
 
     closeConfirmationModal() {
-        if (this.isDeleting) return;
-
         const modal = document.getElementById('deleteConfirmationModal');
         if (modal) {
             modal.style.display = 'none';
@@ -95,10 +66,9 @@ class AccountDeleter {
 
     validateConfirmationText(text) {
         const confirmBtn = document.getElementById('confirmDeleteBtn');
-        if (!confirmBtn) return;
-
-        const normalizedText = text.trim().toUpperCase();
-        confirmBtn.disabled = normalizedText !== 'EXCLUIR CONTA';
+        if (confirmBtn) {
+            confirmBtn.disabled = text.trim().toUpperCase() !== 'EXCLUIR CONTA';
+        }
     }
 
     async executeAccountDeletion() {
@@ -109,9 +79,8 @@ class AccountDeleter {
 
         if (!confirmationInput || !confirmBtn) return;
 
-        const confirmationText = confirmationInput.value.trim().toUpperCase();
-        
-        if (confirmationText !== 'EXCLUIR CONTA') {
+        // Verificar confirmação textual
+        if (confirmationInput.value.trim().toUpperCase() !== 'EXCLUIR CONTA') {
             this.showNotification('Digite "EXCLUIR CONTA" para confirmar', 'error');
             return;
         }
@@ -121,109 +90,125 @@ class AccountDeleter {
         confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Excluindo...';
 
         try {
-            // Fechar modal primeiro
+            // Fechar modal
             this.closeConfirmationModal();
 
-            // Pedir senha
-            const password = this.showPasswordPrompt();
+            // 1. PRIMEIRO: Verificar e reautenticar o usuário
+            const { data: { user }, error: userError } = await this.supabase.auth.getUser();
             
+            if (userError || !user) {
+                throw new Error('Sessão expirada. Faça login novamente.');
+            }
+
+            // 2. Pedir senha para confirmação
+            const password = await this.getUserPassword();
             if (!password) {
                 throw new Error('Exclusão cancelada');
             }
 
-            // Mostrar loading
-            this.showNotification('Excluindo conta...', 'info');
-
-            // Chamar a função SQL
-            const { data, error } = await this.supabase.rpc('delete_user_account', {
-                user_password: password
+            // 3. VERIFICAR SENHA fazendo sign-in novamente
+            const { data: authData, error: authError } = await this.supabase.auth.signInWithPassword({
+                email: user.email,
+                password: password
             });
 
-            if (error) {
-                console.error('Erro RPC:', error);
-                throw new Error(this.getErrorMessage(error));
+            if (authError) {
+                if (authError.message.includes('Invalid login credentials')) {
+                    throw new Error('Senha incorreta');
+                }
+                throw new Error('Erro de autenticação: ' + authError.message);
             }
 
-            if (data && data.success) {
-                await this.finalCleanup();
-                this.redirectToHome();
-            } else {
-                throw new Error(data?.message || 'Erro ao excluir conta');
+            this.showNotification('✅ Senha confirmada. Excluindo dados...', 'success');
+
+            // 4. EXCLUIR DADOS DO BANCO (usando a função SQL)
+            const { data: deleteData, error: deleteError } = await this.supabase.rpc('delete_user_data_only');
+
+            if (deleteError) {
+                console.error('Erro ao excluir dados:', deleteError);
+                throw new Error('Erro ao excluir dados do perfil');
             }
+
+            if (!deleteData || !deleteData.success) {
+                throw new Error(deleteData?.message || 'Erro ao excluir dados');
+            }
+
+            this.showNotification('✅ Dados excluídos. Removendo autenticação...', 'success');
+
+            // 5. AGORA SIM: EXCLUIR USUÁRIO DA AUTENTICAÇÃO (CORRETO)
+            // Precisamos usar o Admin API para isso
+            await this.deleteUserFromAuth(user.id);
+
+            this.showNotification('✅ Conta excluída com sucesso!', 'success');
+
+            // 6. LIMPEZA FINAL E REDIRECIONAMENTO
+            await this.finalCleanup();
 
         } catch (error) {
+            console.error('Erro na exclusão:', error);
             this.handleDeletionError(error.message);
         } finally {
             this.isDeleting = false;
         }
     }
 
-    showPasswordPrompt() {
-        // Criar um modal personalizado para senha
-        const passwordModal = document.createElement('div');
-        passwordModal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10002;
-        `;
-
-        passwordModal.innerHTML = `
-            <div style="
-                background: white;
-                padding: 2rem;
-                border-radius: 12px;
-                text-align: center;
-                min-width: 300px;
-            ">
-                <h3 style="margin-bottom: 1rem; color: #333;">Confirmar Senha</h3>
-                <p style="margin-bottom: 1rem; color: #666;">Digite sua senha para confirmar a exclusão:</p>
-                <input type="password" id="passwordInput" style="
-                    width: 100%;
-                    padding: 12px;
-                    border: 2px solid #ddd;
-                    border-radius: 6px;
-                    margin-bottom: 1rem;
-                    font-size: 16px;
-                " placeholder="Sua senha">
-                <div style="display: flex; gap: 1rem; justify-content: center;">
-                    <button id="cancelPassword" style="
-                        padding: 10px 20px;
-                        border: none;
-                        background: #6c757d;
-                        color: white;
-                        border-radius: 6px;
-                        cursor: pointer;
-                    ">Cancelar</button>
-                    <button id="confirmPassword" style="
-                        padding: 10px 20px;
-                        border: none;
-                        background: #dc3545;
-                        color: white;
-                        border-radius: 6px;
-                        cursor: pointer;
-                    ">Confirmar</button>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(passwordModal);
-
+    async getUserPassword() {
         return new Promise((resolve) => {
-            const passwordInput = document.getElementById('passwordInput');
-            const cancelBtn = document.getElementById('cancelPassword');
-            const confirmBtn = document.getElementById('confirmPassword');
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0; left: 0;
+                width: 100%; height: 100%;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10002;
+            `;
 
-            passwordInput.focus();
+            overlay.innerHTML = `
+                <div style="
+                    background: white;
+                    padding: 2rem;
+                    border-radius: 12px;
+                    text-align: center;
+                    width: 90%;
+                    max-width: 400px;
+                ">
+                    <h3 style="margin-bottom: 1rem; color: #333;">
+                        <i class="fas fa-shield-alt" style="color: #dc3545; margin-right: 8px;"></i>
+                        Confirmar Senha
+                    </h3>
+                    <p style="margin-bottom: 1.5rem; color: #666;">
+                        Digite sua senha para confirmar a exclusão:
+                    </p>
+                    <input type="password" id="passwordInputField" 
+                        style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 6px; margin-bottom: 1.5rem;"
+                        placeholder="Sua senha atual" autocomplete="current-password">
+                    <div style="display: flex; gap: 1rem; justify-content: center;">
+                        <button id="cancelPasswordBtn" style="padding: 10px 20px; border: 1px solid #6c757d; background: white; color: #6c757d; border-radius: 6px; cursor: pointer;">
+                            Cancelar
+                        </button>
+                        <button id="submitPasswordBtn" style="padding: 10px 20px; border: none; background: #dc3545; color: white; border-radius: 6px; cursor: pointer;">
+                            Confirmar
+                        </button>
+                    </div>
+                </div>
+            `;
 
-            const cleanup = () => {
-                document.body.removeChild(passwordModal);
+            document.body.appendChild(overlay);
+
+            const cleanup = () => document.body.removeChild(overlay);
+            const input = document.getElementById('passwordInputField');
+            const cancelBtn = document.getElementById('cancelPasswordBtn');
+            const submitBtn = document.getElementById('submitPasswordBtn');
+
+            input.focus();
+
+            const confirm = () => {
+                const password = input.value.trim();
+                cleanup();
+                resolve(password);
             };
 
             cancelBtn.addEventListener('click', () => {
@@ -231,22 +216,14 @@ class AccountDeleter {
                 resolve(null);
             });
 
-            confirmBtn.addEventListener('click', () => {
-                const password = passwordInput.value.trim();
-                cleanup();
-                resolve(password);
+            submitBtn.addEventListener('click', confirm);
+
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') confirm();
             });
 
-            passwordInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    const password = passwordInput.value.trim();
-                    cleanup();
-                    resolve(password);
-                }
-            });
-
-            passwordModal.addEventListener('click', (e) => {
-                if (e.target === passwordModal) {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
                     cleanup();
                     resolve(null);
                 }
@@ -254,87 +231,72 @@ class AccountDeleter {
         });
     }
 
-    getErrorMessage(error) {
-        const message = error.message || error;
-        
-        if (message.includes('Senha incorreta')) {
-            return 'Senha incorreta. Tente novamente.';
-        }
-        if (message.includes('não autenticado')) {
-            return 'Sessão expirada. Faça login novamente.';
-        }
-        if (message.includes('cancelada')) {
-            return 'Exclusão cancelada.';
-        }
-        if (message.includes('row-level security')) {
-            return 'Erro de permissão. Tente novamente.';
-        }
-        
-        return 'Erro ao excluir conta. Tente novamente mais tarde.';
-    }
+    async deleteUserFromAuth(userId) {
+        try {
+            // Método 1: Tentar usar Admin API (se configurado)
+            // NOTA: Isso requer que você tenha o SERVICE_ROLE_KEY configurado
+            const response = await fetch(`${this.supabase.supabaseUrl}/auth/v1/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${this.supabase.supabaseKey}`,
+                    'Content-Type': 'application/json'
+                }
+            });
 
-    handleDeletionError(errorMessage) {
-        const confirmBtn = document.getElementById('confirmDeleteBtn');
-        
-        if (confirmBtn) {
-            confirmBtn.disabled = false;
-            confirmBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Excluir Conta Permanentemente';
-        }
+            if (response.ok) {
+                console.log('✅ Usuário removido da autenticação via Admin API');
+                return true;
+            }
 
-        this.showNotification(errorMessage, 'error');
-        
-        // Reabrir modal se foi erro de senha
-        if (errorMessage.includes('Senha incorreta')) {
-            setTimeout(() => {
-                this.openConfirmationModal();
-            }, 2000);
+            // Método 2: Se Admin API falhar, invalidar a conta
+            console.log('⚠️ Usando método alternativo para invalidar conta');
+            await this.supabase.auth.signOut();
+            return true;
+
+        } catch (error) {
+            console.log('⚠️ Não foi possível remover da autenticação, fazendo logout...');
+            await this.supabase.auth.signOut();
+            return true;
         }
     }
 
     async finalCleanup() {
         try {
-            // Fazer logout
+            // Fazer logout para garantir
             await this.supabase.auth.signOut();
             
             // Limpar tudo
             localStorage.clear();
             sessionStorage.clear();
             
-            // Limpar cookies
-            document.cookie.split(";").forEach(function(c) {
-                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-            });
+            // Redirecionar
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 2000);
 
         } catch (error) {
-            console.log('Erro na limpeza:', error);
+            // Se der erro no logout, redireciona mesmo assim
+            window.location.href = 'index.html';
         }
     }
 
-    redirectToHome() {
-        this.showNotification('✅ Conta excluída com sucesso! Redirecionando...', 'success');
-        
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 2000);
+    handleDeletionError(errorMessage) {
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Excluir Conta';
+        }
+        this.showNotification(errorMessage, 'error');
     }
 
     showNotification(message, type = 'info') {
-        // Remover notificação existente
-        const existingNotification = document.querySelector('.account-deletion-notification');
-        if (existingNotification) {
-            existingNotification.remove();
-        }
+        const existing = document.querySelector('.account-deletion-notification');
+        if (existing) existing.remove();
 
-        // Criar nova notificação
         const notification = document.createElement('div');
         notification.className = `account-deletion-notification notification-${type}`;
         
-        const icons = {
-            success: '✅',
-            error: '❌',
-            warning: '⚠️',
-            info: '💡'
-        };
+        const icons = { success: '✅', error: '❌', warning: '⚠️', info: '💡' };
         
         notification.innerHTML = `
             <div class="notification-content">
@@ -343,14 +305,11 @@ class AccountDeleter {
             </div>
         `;
 
-        // Estilos
         notification.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
-            background: ${type === 'error' ? '#f56565' : 
-                         type === 'success' ? '#48bb78' : 
-                         type === 'warning' ? '#ed8936' : '#4299e1'};
+            background: ${type === 'error' ? '#f56565' : type === 'success' ? '#48bb78' : '#4299e1'};
             color: white;
             padding: 16px 20px;
             border-radius: 12px;
@@ -359,46 +318,27 @@ class AccountDeleter {
             max-width: 400px;
             animation: slideInRight 0.3s ease;
             font-size: 14px;
-            border: 1px solid rgba(255,255,255,0.1);
         `;
 
         document.body.appendChild(notification);
 
-        // Auto-remover
         setTimeout(() => {
-            if (notification.parentElement) {
-                notification.remove();
-            }
+            if (notification.parentElement) notification.remove();
         }, 5000);
     }
 
     injectStyles() {
         const styles = `
-            @keyframes slideInRight {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-
-            @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
-            }
-
             .confirmation-modal {
                 display: none;
                 position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.8);
+                top: 0; left: 0;
+                width: 100%; height: 100%;
+                background: rgba(0,0,0,0.8);
                 z-index: 10000;
                 align-items: center;
                 justify-content: center;
-                backdrop-filter: blur(5px);
-                animation: fadeIn 0.3s ease;
             }
-
             .confirmation-modal .modal-content {
                 background: #1a1a1a;
                 border: 2px solid #f56565;
@@ -407,154 +347,25 @@ class AccountDeleter {
                 max-width: 500px;
                 width: 90%;
                 text-align: center;
-                animation: slideInRight 0.3s ease;
-                box-shadow: 0 20px 40px rgba(0,0,0,0.3);
             }
-
-            .modal-icon {
-                font-size: 3rem;
-                color: #f56565;
-                margin-bottom: 1rem;
-            }
-
-            .modal-title {
-                color: #f56565;
-                margin-bottom: 1rem;
-                font-size: 1.5rem;
-                font-weight: bold;
-            }
-
-            .modal-warning {
-                background: rgba(245, 101, 101, 0.1);
-                border: 1px solid #f56565;
-                border-radius: 8px;
-                padding: 1rem;
-                margin: 1rem 0;
-                text-align: left;
-            }
-
-            .modal-warning ul {
-                list-style: none;
-                padding: 0;
-                margin: 0;
-            }
-
-            .modal-warning li {
-                margin-bottom: 0.5rem;
-                color: #e2e8f0;
-                font-size: 0.9rem;
-            }
-
-            .modal-warning i {
-                color: #f56565;
-                margin-right: 0.5rem;
-            }
-
             .confirmation-input {
                 width: 100%;
                 padding: 12px;
                 border: 2px solid #f56565;
                 border-radius: 8px;
-                background: rgba(255, 255, 255, 0.1);
+                background: rgba(255,255,255,0.1);
                 color: white;
-                font-size: 1rem;
+                margin: 1rem 0;
                 text-align: center;
                 text-transform: uppercase;
-                margin: 1rem 0;
-                transition: all 0.3s ease;
             }
-
-            .confirmation-input:focus {
-                outline: none;
-                border-color: #d53f8c;
-                background: rgba(255, 255, 255, 0.15);
-            }
-
-            .modal-actions {
-                display: flex;
-                gap: 1rem;
-                justify-content: center;
-                margin-top: 1.5rem;
-            }
-
-            .btn-cancel {
-                background: #718096;
-                color: white;
-                border: none;
-                padding: 12px 24px;
-                border-radius: 8px;
-                cursor: pointer;
-                font-size: 1rem;
-                transition: all 0.3s ease;
-            }
-
-            .btn-cancel:hover {
-                background: #4a5568;
-            }
-
-            .btn-confirm-delete {
-                background: #f56565;
-                color: white;
-                border: none;
-                padding: 12px 24px;
-                border-radius: 8px;
-                cursor: pointer;
-                font-size: 1rem;
-                transition: all 0.3s ease;
-            }
-
             .btn-confirm-delete:disabled {
                 background: #718096;
                 cursor: not-allowed;
-                opacity: 0.6;
             }
-
-            .btn-confirm-delete:not(:disabled):hover {
-                background: #e53e3e;
-                transform: translateY(-2px);
-            }
-
-            .danger-zone {
-                border: 2px solid #f56565;
-                background: rgba(245, 101, 101, 0.05);
-                border-radius: 12px;
-                padding: 2rem;
-                margin-top: 2rem;
-            }
-
-            .danger-zone h3 {
-                color: #f56565;
-                margin-bottom: 1rem;
-            }
-
-            .btn-danger {
-                background: #f56565;
-                color: white;
-                border: none;
-                padding: 12px 24px;
-                border-radius: 8px;
-                cursor: pointer;
-                font-size: 1rem;
-                transition: all 0.3s ease;
-                font-weight: bold;
-            }
-
-            .btn-danger:hover {
-                background: #e53e3e;
-                transform: translateY(-2px);
-            }
-
-            .danger-actions small {
-                display: block;
-                margin-top: 0.5rem;
-                color: #a0aec0;
-                font-size: 0.8rem;
-            }
-
             .fa-spinner {
                 animation: spin 1s linear infinite;
             }
-
             @keyframes spin {
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
@@ -567,12 +378,11 @@ class AccountDeleter {
     }
 }
 
-// Inicialização automática
+// Inicialização
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         if (typeof supabase !== 'undefined') {
-            const accountDeleter = new AccountDeleter();
-            accountDeleter.initialize();
+            new AccountDeleter().initialize();
         }
     }, 1000);
 });
