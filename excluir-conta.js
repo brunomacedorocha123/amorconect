@@ -1,4 +1,4 @@
-// excluir-conta.js - Sistema de Exclusão de Conta
+// excluir-conta.js - Sistema de Exclusão de Conta Corrigido
 class AccountDeleter {
     constructor() {
         this.isDeleting = false;
@@ -8,6 +8,7 @@ class AccountDeleter {
     initialize() {
         this.setupEventListeners();
         this.injectStyles();
+        console.log('✅ Sistema de exclusão inicializado');
         return true;
     }
 
@@ -54,7 +55,7 @@ class AccountDeleter {
         }
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal && modal.style.display === 'flex') {
+            if (e.key === 'Escape') {
                 this.closeConfirmationModal();
             }
         });
@@ -120,17 +121,26 @@ class AccountDeleter {
         confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Excluindo...';
 
         try {
-            const password = prompt('Digite sua senha para confirmar a exclusão:');
+            // Fechar modal primeiro
+            this.closeConfirmationModal();
+
+            // Pedir senha
+            const password = this.showPasswordPrompt();
             
             if (!password) {
                 throw new Error('Exclusão cancelada');
             }
 
+            // Mostrar loading
+            this.showNotification('Excluindo conta...', 'info');
+
+            // Chamar a função SQL
             const { data, error } = await this.supabase.rpc('delete_user_account', {
                 user_password: password
             });
 
             if (error) {
+                console.error('Erro RPC:', error);
                 throw new Error(this.getErrorMessage(error));
             }
 
@@ -148,6 +158,102 @@ class AccountDeleter {
         }
     }
 
+    showPasswordPrompt() {
+        // Criar um modal personalizado para senha
+        const passwordModal = document.createElement('div');
+        passwordModal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10002;
+        `;
+
+        passwordModal.innerHTML = `
+            <div style="
+                background: white;
+                padding: 2rem;
+                border-radius: 12px;
+                text-align: center;
+                min-width: 300px;
+            ">
+                <h3 style="margin-bottom: 1rem; color: #333;">Confirmar Senha</h3>
+                <p style="margin-bottom: 1rem; color: #666;">Digite sua senha para confirmar a exclusão:</p>
+                <input type="password" id="passwordInput" style="
+                    width: 100%;
+                    padding: 12px;
+                    border: 2px solid #ddd;
+                    border-radius: 6px;
+                    margin-bottom: 1rem;
+                    font-size: 16px;
+                " placeholder="Sua senha">
+                <div style="display: flex; gap: 1rem; justify-content: center;">
+                    <button id="cancelPassword" style="
+                        padding: 10px 20px;
+                        border: none;
+                        background: #6c757d;
+                        color: white;
+                        border-radius: 6px;
+                        cursor: pointer;
+                    ">Cancelar</button>
+                    <button id="confirmPassword" style="
+                        padding: 10px 20px;
+                        border: none;
+                        background: #dc3545;
+                        color: white;
+                        border-radius: 6px;
+                        cursor: pointer;
+                    ">Confirmar</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(passwordModal);
+
+        return new Promise((resolve) => {
+            const passwordInput = document.getElementById('passwordInput');
+            const cancelBtn = document.getElementById('cancelPassword');
+            const confirmBtn = document.getElementById('confirmPassword');
+
+            passwordInput.focus();
+
+            const cleanup = () => {
+                document.body.removeChild(passwordModal);
+            };
+
+            cancelBtn.addEventListener('click', () => {
+                cleanup();
+                resolve(null);
+            });
+
+            confirmBtn.addEventListener('click', () => {
+                const password = passwordInput.value.trim();
+                cleanup();
+                resolve(password);
+            });
+
+            passwordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const password = passwordInput.value.trim();
+                    cleanup();
+                    resolve(password);
+                }
+            });
+
+            passwordModal.addEventListener('click', (e) => {
+                if (e.target === passwordModal) {
+                    cleanup();
+                    resolve(null);
+                }
+            });
+        });
+    }
+
     getErrorMessage(error) {
         const message = error.message || error;
         
@@ -159,6 +265,9 @@ class AccountDeleter {
         }
         if (message.includes('cancelada')) {
             return 'Exclusão cancelada.';
+        }
+        if (message.includes('row-level security')) {
+            return 'Erro de permissão. Tente novamente.';
         }
         
         return 'Erro ao excluir conta. Tente novamente mais tarde.';
@@ -174,29 +283,35 @@ class AccountDeleter {
 
         this.showNotification(errorMessage, 'error');
         
+        // Reabrir modal se foi erro de senha
         if (errorMessage.includes('Senha incorreta')) {
             setTimeout(() => {
                 this.openConfirmationModal();
-            }, 1000);
+            }, 2000);
         }
     }
 
     async finalCleanup() {
         try {
+            // Fazer logout
             await this.supabase.auth.signOut();
+            
+            // Limpar tudo
             localStorage.clear();
             sessionStorage.clear();
             
+            // Limpar cookies
             document.cookie.split(";").forEach(function(c) {
                 document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
             });
+
         } catch (error) {
-            // Ignorar erros de limpeza
+            console.log('Erro na limpeza:', error);
         }
     }
 
     redirectToHome() {
-        this.showNotification('Conta excluída com sucesso! Redirecionando...', 'success');
+        this.showNotification('✅ Conta excluída com sucesso! Redirecionando...', 'success');
         
         setTimeout(() => {
             window.location.href = 'index.html';
@@ -204,11 +319,13 @@ class AccountDeleter {
     }
 
     showNotification(message, type = 'info') {
+        // Remover notificação existente
         const existingNotification = document.querySelector('.account-deletion-notification');
         if (existingNotification) {
             existingNotification.remove();
         }
 
+        // Criar nova notificação
         const notification = document.createElement('div');
         notification.className = `account-deletion-notification notification-${type}`;
         
@@ -226,6 +343,7 @@ class AccountDeleter {
             </div>
         `;
 
+        // Estilos
         notification.style.cssText = `
             position: fixed;
             top: 20px;
@@ -246,6 +364,7 @@ class AccountDeleter {
 
         document.body.appendChild(notification);
 
+        // Auto-remover
         setTimeout(() => {
             if (notification.parentElement) {
                 notification.remove();
@@ -448,9 +567,8 @@ class AccountDeleter {
     }
 }
 
-// Inicialização automática quando o DOM estiver pronto
+// Inicialização automática
 document.addEventListener('DOMContentLoaded', function() {
-    // Aguardar um pouco para garantir que o Supabase esteja carregado
     setTimeout(() => {
         if (typeof supabase !== 'undefined') {
             const accountDeleter = new AccountDeleter();
