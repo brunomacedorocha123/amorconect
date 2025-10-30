@@ -1,4 +1,4 @@
-// mensagens.js - Sistema completo CORRIGIDO com Status System CONFIÁVEL
+// mensagens.js - Sistema completo CORRIGIDO mantendo Premium/Free
 class MessagesSystem {
   constructor() {
     this.supabase = supabase;
@@ -16,20 +16,20 @@ class MessagesSystem {
   }
 
   async initialize() {
-  try {
-    await this.checkAuth();
-    await this.loadUserData();
-    await this.initializeStatusSystem();
-    await this.loadConversations();
-    this.setupEventListeners();
-    this.updateMessageCounter();
-    this.startPeriodicChecks();
-    this.checkUrlParams();
-    await this.initializeSistemaVibe();
-  } catch (error) {
-    
+    try {
+      await this.checkAuth();
+      await this.loadUserData();
+      await this.initializeStatusSystem();
+      await this.loadConversations();
+      this.setupEventListeners();
+      this.updateMessageCounter();
+      this.startPeriodicChecks();
+      this.checkUrlParams();
+      await this.initializeSistemaVibe();
+    } catch (error) {
+      // Silencioso - sem notificação de erro
+    }
   }
-}
 
   async initializeStatusSystem() {
     if (window.StatusSystem && this.currentUser) {
@@ -724,8 +724,6 @@ class MessagesSystem {
     return { status: 'offline', text: 'Offline', class: 'status-offline' };
   }
 
-  // ... (restante do código permanece igual - sendMessage, setupEventListeners, etc.)
-
   async sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const message = messageInput.value.trim();
@@ -749,6 +747,7 @@ class MessagesSystem {
       this.setSendButtonState(true);
       this.showMessageStatus('Enviando...', 'info');
 
+      // ⭐ MANTIDO: Sistema Premium/Free intacto
       const canSend = await this.checkCanSendMessage();
       if (!canSend.can_send) {
         this.handleSendError(canSend.reason);
@@ -786,7 +785,126 @@ class MessagesSystem {
     }
   }
 
-  // ... (restante das funções auxiliares permanecem iguais)
+  async sendMessageFallback(message) {
+    try {
+      const { data, error } = await this.supabase
+        .from('messages')
+        .insert({
+          sender_id: this.currentUser.id,
+          receiver_id: this.currentConversation,
+          message: message,
+          sent_at: new Date().toISOString()
+        })
+        .select();
+
+      if (error) throw error;
+
+      if (data) {
+        this.showNotification('Mensagem enviada!', 'success');
+        await this.loadConversationMessages(this.currentConversation);
+        await this.loadConversations();
+        this.updateMessageCounter();
+      }
+    } catch (fallbackError) {
+      this.showNotification('Erro ao enviar mensagem', 'error');
+    }
+  }
+
+  // ⭐ MANTIDO INTACTO: Sistema Premium/Free
+  async checkCanSendMessage() {
+    try {
+      // ⭐ USANDO PREMIUM MANAGER EXISTENTE
+      let isPremium = false;
+      if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
+        isPremium = await PremiumManager.checkPremiumStatus();
+      } else if (this.currentUser.profile?.is_premium) {
+        isPremium = this.currentUser.profile.is_premium;
+      }
+      
+      if (isPremium) {
+        return { can_send: true, reason: null };
+      }
+
+      const { data: limits, error } = await this.supabase
+        .from('user_message_limits')
+        .select('messages_sent_today, last_reset_date')
+        .eq('user_id', this.currentUser.id)
+        .single();
+
+      if (error) {
+        return { can_send: true, reason: null };
+      }
+
+      const sentToday = limits.messages_sent_today || 0;
+      
+      if (sentToday >= this.messageLimit) {
+        return { can_send: false, reason: 'limit_reached' };
+      }
+
+      return { can_send: true, reason: null };
+      
+    } catch (error) {
+      return { can_send: true, reason: null };
+    }
+  }
+
+  handleSendError(reason) {
+    switch (reason) {
+      case 'limit_reached':
+        this.showNotification('Limite diário de 4 mensagens atingido! Volte amanhã.', 'error');
+        break;
+      case 'blocked':
+        this.showNotification('Não é possível enviar mensagem para este usuário.', 'error');
+        break;
+      default:
+        this.showNotification('Erro ao enviar mensagem.', 'error');
+    }
+  }
+
+  // ⭐ MANTIDO INTACTO: Contador de mensagens Free/Premium
+  async updateMessageCounter() {
+    try {
+      // ⭐ USANDO PREMIUM MANAGER EXISTENTE
+      let isPremium = false;
+      if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
+        isPremium = await PremiumManager.checkPremiumStatus();
+      } else if (this.currentUser.profile?.is_premium) {
+        isPremium = this.currentUser.profile.is_premium;
+      }
+      
+      const counter = document.getElementById('messageCounter');
+      
+      if (!counter) return;
+
+      if (isPremium) {
+        counter.innerHTML = `
+          <span class="counter-text">Mensagens: </span>
+          <span class="counter-number">Ilimitado</span>
+        `;
+        counter.classList.add('premium');
+        return;
+      }
+
+      const { data: limits, error } = await this.supabase
+        .from('user_message_limits')
+        .select('messages_sent_today, last_reset_date')
+        .eq('user_id', this.currentUser.id)
+        .single();
+
+      let sentToday = 0;
+      
+      if (!error && limits) {
+        sentToday = limits.messages_sent_today || 0;
+      }
+
+      counter.innerHTML = `
+        <span class="counter-text">Mensagens hoje: </span>
+        <span class="counter-number">${sentToday}/${this.messageLimit}</span>
+      `;
+      counter.classList.remove('premium');
+
+    } catch (error) {}
+  }
 
   setupEventListeners() {
     const messageInput = document.getElementById('messageInput');
