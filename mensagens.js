@@ -1,4 +1,4 @@
-// mensagens.js - Sistema completo ATUALIZADO com Vibe Exclusive
+// mensagens.js - Sistema completo ATUALIZADO com Status System
 class MessagesSystem {
   constructor() {
     this.supabase = supabase;
@@ -8,6 +8,9 @@ class MessagesSystem {
     this.messages = [];
     this.messageLimit = 4;
     this.isLoading = false;
+    
+    // ⭐ REFERÊNCIA AO SISTEMA DE STATUS
+    this.statusSystem = null;
     
     // ⭐ NOVA LINHA - Referência ao Sistema Vibe
     this.sistemaVibe = null;
@@ -19,6 +22,10 @@ class MessagesSystem {
     try {
       await this.checkAuth();
       await this.loadUserData();
+      
+      // ⭐ INICIALIZAR SISTEMA DE STATUS
+      await this.initializeStatusSystem();
+      
       await this.loadConversations();
       this.setupEventListeners();
       this.updateMessageCounter();
@@ -34,6 +41,56 @@ class MessagesSystem {
     }
   }
 
+  // ⭐ NOVA FUNÇÃO - Inicializar Sistema de Status
+  async initializeStatusSystem() {
+    if (window.StatusSystem && this.currentUser) {
+      this.statusSystem = window.StatusSystem;
+      
+      // Se o StatusSystem ainda não foi inicializado com este usuário
+      if (!this.statusSystem.currentUser) {
+        await this.statusSystem.initialize(this.currentUser);
+      }
+    }
+  }
+
+  // ⭐ NOVA FUNÇÃO - Buscar status de múltiplos usuários
+  async getMultipleUsersStatus(userIds) {
+    if (!this.statusSystem || !userIds || userIds.length === 0) return {};
+    
+    try {
+      return await this.statusSystem.getMultipleUsersStatus(userIds);
+    } catch (error) {
+      return {};
+    }
+  }
+
+  // ⭐ FUNÇÃO ATUALIZADA - Usar sistema de status
+  isUserOnline(lastOnlineAt, realStatus, isInvisible = false, userId = null) {
+    if (!this.statusSystem) {
+      // Fallback básico se o sistema de status não estiver disponível
+      if (!lastOnlineAt) return false;
+      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+      return new Date(lastOnlineAt) > fifteenMinutesAgo;
+    }
+    
+    return this.statusSystem.isUserOnline(lastOnlineAt, realStatus, isInvisible, userId);
+  }
+
+  // ⭐ NOVA FUNÇÃO - Calcular status do usuário
+  calculateUserStatus(lastOnlineAt, realStatus, isInvisible = false, userId = null) {
+    if (!this.statusSystem) {
+      // Fallback básico
+      const isOnline = this.isUserOnline(lastOnlineAt, realStatus, isInvisible, userId);
+      return {
+        status: isOnline ? 'online' : 'offline',
+        text: isOnline ? 'Online' : 'Offline',
+        class: isOnline ? 'status-online' : 'status-offline'
+      };
+    }
+    
+    return this.statusSystem.calculateUserStatus(lastOnlineAt, realStatus, isInvisible, userId);
+  }
+
   // ⭐ NOVA FUNÇÃO - Inicializar Sistema Vibe separadamente
   async initializeSistemaVibe() {
     try {
@@ -46,7 +103,6 @@ class MessagesSystem {
       }
     } catch (error) {
       // ⭐ SILENCIOSO - não afeta o chat se der erro
-      console.error('Erro ao inicializar Sistema Vibe:', error);
     }
   }
 
@@ -67,8 +123,6 @@ class MessagesSystem {
       this.showNotification('Selecione uma conversa primeiro', 'error');
       return;
     }
-    
-    console.log('🎯 Iniciando proposta Vibe para:', this.currentConversation);
     
     if (this.sistemaVibe) {
       await this.sistemaVibe.proposeFidelityAgreement(this.currentConversation);
@@ -105,7 +159,6 @@ class MessagesSystem {
         this.updateUserHeader(profile);
       }
     } catch (error) {
-      console.error('Erro ao carregar dados do usuário:', error);
     }
   }
 
@@ -165,18 +218,25 @@ class MessagesSystem {
     try {
       const { data: userProfile, error } = await this.supabase
         .from('profiles')
-        .select('nickname, avatar_url, last_online_at')
+        .select('nickname, avatar_url, last_online_at, real_status, is_invisible')
         .eq('id', userId)
         .single();
         
       if (error) throw error;
 
       if (userProfile) {
+        const statusInfo = this.calculateUserStatus(
+          userProfile.last_online_at,
+          userProfile.real_status,
+          userProfile.is_invisible,
+          userId
+        );
+
         const newConversation = {
           other_user_id: userId,
           other_user_nickname: userProfile.nickname,
           other_user_avatar_url: userProfile.avatar_url,
-          other_user_online: this.isUserOnline(userProfile.last_online_at),
+          other_user_online: statusInfo.status === 'online',
           last_message: 'Nenhuma mensagem',
           last_message_at: new Date().toISOString(),
           unread_count: 0
@@ -189,12 +249,6 @@ class MessagesSystem {
     } catch (error) {
       this.showNotification('Usuário não encontrado', 'error');
     }
-  }
-
-  isUserOnline(lastOnlineAt) {
-    if (!lastOnlineAt) return false;
-    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
-    return new Date(lastOnlineAt) > fifteenMinutesAgo;
   }
 
   async loadConversations() {
@@ -215,12 +269,36 @@ class MessagesSystem {
       }
 
       this.conversations = conversations || [];
+      
+      // ⭐ ATUALIZAR STATUS DOS USUÁRIOS COM SISTEMA DE STATUS
+      await this.updateConversationsStatus();
+      
       this.renderConversations();
       
     } catch (error) {
       await this.loadConversationsFallback();
     } finally {
       this.isLoading = false;
+    }
+  }
+
+  // ⭐ NOVA FUNÇÃO - Atualizar status das conversas
+  async updateConversationsStatus() {
+    if (!this.conversations.length || !this.statusSystem) return;
+    
+    try {
+      const userIds = this.conversations.map(conv => conv.other_user_id);
+      const statusMap = await this.getMultipleUsersStatus(userIds);
+      
+      // Atualizar status nas conversas
+      this.conversations.forEach(conv => {
+        if (statusMap[conv.other_user_id]) {
+          const statusInfo = statusMap[conv.other_user_id];
+          conv.other_user_online = statusInfo.status === 'online';
+        }
+      });
+    } catch (error) {
+      // Fallback silencioso
     }
   }
 
@@ -235,8 +313,8 @@ class MessagesSystem {
           message,
           sent_at,
           read_at,
-          sender:profiles!messages_sender_id_fkey(nickname, avatar_url),
-          receiver:profiles!messages_receiver_id_fkey(nickname, avatar_url)
+          sender:profiles!messages_sender_id_fkey(nickname, avatar_url, last_online_at, real_status, is_invisible),
+          receiver:profiles!messages_receiver_id_fkey(nickname, avatar_url, last_online_at, real_status, is_invisible)
         `)
         .or(`sender_id.eq.${this.currentUser.id},receiver_id.eq.${this.currentUser.id}`)
         .order('sent_at', { ascending: false });
@@ -252,11 +330,18 @@ class MessagesSystem {
           msg.receiver : msg.sender;
         
         if (!conversationsMap.has(otherUserId)) {
+          const statusInfo = this.calculateUserStatus(
+            otherUser?.last_online_at,
+            otherUser?.real_status,
+            otherUser?.is_invisible,
+            otherUserId
+          );
+
           conversationsMap.set(otherUserId, {
             other_user_id: otherUserId,
             other_user_nickname: otherUser?.nickname || 'Usuário',
             other_user_avatar_url: otherUser?.avatar_url,
-            other_user_online: false,
+            other_user_online: statusInfo.status === 'online',
             last_message: msg.message,
             last_message_at: msg.sent_at,
             unread_count: 0
@@ -437,7 +522,6 @@ class MessagesSystem {
         .is('read_at', null);
 
     } catch (error) {
-      console.error('Erro ao marcar mensagens como lidas:', error);
     }
   }
 
@@ -529,7 +613,7 @@ class MessagesSystem {
     if (chatHeader) chatHeader.style.display = 'flex';
   }
 
-  // ⭐ FUNÇÃO ATUALIZADA - Agora inclui o botão Vibe Exclusive
+  // ⭐ FUNÇÃO ATUALIZADA - Agora usa sistema de status
   async updateChatHeader(otherUserId) {
     const chatHeader = document.getElementById('chatHeader');
     if (!chatHeader) return;
@@ -540,11 +624,18 @@ class MessagesSystem {
       try {
         const { data: userProfile, error } = await this.supabase
           .from('profiles')
-          .select('nickname, avatar_url, last_online_at')
+          .select('nickname, avatar_url, last_online_at, real_status, is_invisible')
           .eq('id', otherUserId)
           .single();
           
         if (userProfile) {
+          const statusInfo = this.calculateUserStatus(
+            userProfile.last_online_at,
+            userProfile.real_status,
+            userProfile.is_invisible,
+            otherUserId
+          );
+          
           chatHeader.innerHTML = `
             <div class="chat-header-user">
               <div class="chat-user-avatar">
@@ -559,9 +650,9 @@ class MessagesSystem {
               <div class="chat-user-info">
                 <h3>${this.escapeHtml(userProfile.nickname)}</h3>
                 <div class="chat-user-status">
-                  <span class="${this.isUserOnline(userProfile.last_online_at) ? 'status-online' : 'status-offline'}">
+                  <span class="${statusInfo.class}">
                     <span class="status-dot"></span>
-                    ${this.isUserOnline(userProfile.last_online_at) ? 'Online' : 'Offline'}
+                    ${statusInfo.text}
                   </span>
                 </div>
               </div>
@@ -583,9 +674,15 @@ class MessagesSystem {
           `;
         }
       } catch (error) {
-        console.error('Erro ao carregar informações do usuário:', error);
       }
     } else {
+      const statusInfo = this.calculateUserStatus(
+        null, // Não temos last_online_at na conversa, mas o status já foi calculado
+        null,
+        false,
+        otherUserId
+      );
+      
       chatHeader.innerHTML = `
         <div class="chat-header-user">
           <div class="chat-user-avatar">
@@ -807,7 +904,6 @@ class MessagesSystem {
       counter.classList.remove('premium');
 
     } catch (error) {
-      console.error('Erro ao atualizar contador:', error);
     }
   }
 
@@ -916,7 +1012,6 @@ class MessagesSystem {
       this.updateMessageCounter();
       this.showNotification('Conversas atualizadas', 'success');
     } catch (error) {
-      console.error('Erro ao atualizar:', error);
     } finally {
       if (refreshBtn) {
         setTimeout(() => {
@@ -1045,7 +1140,6 @@ class MessagesSystem {
         await this.loadConversationMessages(this.currentConversation);
       }
     } catch (error) {
-      console.error('Erro no retry:', error);
     }
   }
 
@@ -1112,7 +1206,6 @@ async function logout() {
       window.location.href = 'login.html';
     }
   } catch (error) {
-    console.error('Erro no logout:', error);
   }
 }
 
