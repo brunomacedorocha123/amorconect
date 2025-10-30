@@ -13,11 +13,12 @@ document.addEventListener('DOMContentLoaded', function() {
   initializeApp();
 });
 
-// ✅ FUNÇÃO SEGURA PARA ATUALIZAR STATUS
-async function updateOnlineStatusSafe(userId) {
+// ✅ FUNÇÃO ATUALIZADA PARA STATUS DUPLO
+async function updateOnlineStatusSafe(userId, isOnline = true) {
     try {
         const { data: success, error } = await supabase.rpc('update_user_online_status', {
-            user_uuid: userId
+            user_uuid: userId,
+            is_online: isOnline
         });
         return success && !error;
     } catch (error) {
@@ -31,16 +32,26 @@ async function initializeApp() {
     statusSystem = window.StatusSystem;
     if (statusSystem && currentUser) {
       await statusSystem.initialize(currentUser);
-      await updateOnlineStatusSafe(currentUser.id);
+      await updateOnlineStatusSafe(currentUser.id, true);
     }
     
     setupEventListeners();
+    setupWindowUnload();
     await loadUserProfile();
     await loadUsers();
     await loadNotificationCount();
     startNotificationPolling();
     startStatusUpdates();
   }
+}
+
+// ✅ NOVA FUNÇÃO PARA LIDAR COM SAÍDA DO USUÁRIO
+function setupWindowUnload() {
+  window.addEventListener('beforeunload', async () => {
+    if (currentUser) {
+      await updateOnlineStatusSafe(currentUser.id, false);
+    }
+  });
 }
 
 function startStatusUpdates() {
@@ -50,7 +61,7 @@ function startStatusUpdates() {
   
   statusUpdateInterval = setInterval(async () => {
     if (currentUser) {
-      await updateOnlineStatusSafe(currentUser.id);
+      await updateOnlineStatusSafe(currentUser.id, true);
     }
   }, 30000);
 }
@@ -92,7 +103,7 @@ function setupEventListeners() {
 
   document.addEventListener('visibilitychange', async () => {
     if (!document.hidden && currentUser) {
-      await updateOnlineStatusSafe(currentUser.id);
+      await updateOnlineStatusSafe(currentUser.id, true);
       await loadUsers();
     }
   });
@@ -137,9 +148,9 @@ function updateUserHeader(profile) {
 
   const userStatus = document.getElementById('userStatus');
   if (userStatus && profile.last_online_at) {
-    // ✅ 2 MINUTOS
+    // ✅ AGORA USA REAL_STATUS + LAST_ONLINE_AT
     const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
-    const isOnline = new Date(profile.last_online_at) > twoMinutesAgo;
+    const isOnline = profile.real_status === 'online' || new Date(profile.last_online_at) > twoMinutesAgo;
     
     if (isOnline) {
       userStatus.textContent = profile.is_invisible ? 'Invisível' : 'Online';
@@ -177,9 +188,9 @@ async function loadUsers() {
       .eq('is_invisible', false);
 
     if (currentFilter === 'online') {
-      // ✅ 2 MINUTOS
+      // ✅ FILTRO ONLINE USA REAL_STATUS + GRACE PERIOD
       const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
-      query = query.gte('last_online_at', twoMinutesAgo);
+      query = query.or(`real_status.eq.online,last_online_at.gte.${twoMinutesAgo}`);
     } else if (currentFilter === 'premium') {
       query = query.eq('is_premium', true);
     }
@@ -232,19 +243,10 @@ async function loadUsers() {
       return;
     }
 
-    const userIds = filteredProfiles.map(p => p.id);
     let statusMap = {};
     
     if (statusSystem) {
-      statusMap = await statusSystem.getMultipleUsersStatus(userIds);
-    } else {
-      filteredProfiles.forEach(profile => {
-        statusMap[profile.id] = calculateUserStatusManual(
-          profile.last_online_at, 
-          profile.is_invisible, 
-          profile.id
-        );
-      });
+      statusMap = await statusSystem.getMultipleUsersStatus(filteredProfiles.map(p => p.id));
     }
 
     const profilesToShow = filteredProfiles.slice(0, 8);
@@ -252,26 +254,6 @@ async function loadUsers() {
 
   } catch (error) {
     usersGrid.innerHTML = '<div class="loading-state"><p>Erro ao carregar. Tente novamente.</p></div>';
-  }
-}
-
-function calculateUserStatusManual(lastOnlineAt, isInvisible, userId) {
-  if (!lastOnlineAt) {
-    return { status: 'offline', text: 'Offline', class: 'status-offline' };
-  }
-  
-  if (isInvisible && userId !== currentUser?.id) {
-    return { status: 'invisible', text: 'Offline', class: 'status-offline' };
-  }
-
-  // ✅ 2 MINUTOS
-  const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
-  const isOnline = new Date(lastOnlineAt) > twoMinutesAgo;
-
-  if (isOnline) {
-    return { status: 'online', text: 'Online', class: 'status-online' };
-  } else {
-    return { status: 'offline', text: 'Offline', class: 'status-offline' };
   }
 }
 
@@ -353,7 +335,17 @@ function displayUsers(profiles, statusMap = {}) {
     if (statusMap[profile.id]) {
       statusInfo = statusMap[profile.id];
     } else {
-      statusInfo = calculateUserStatusManual(profile.last_online_at, profile.is_invisible, profile.id);
+      // ✅ FALLBACK SE STATUS SYSTEM NÃO ESTIVER DISPONÍVEL
+      const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+      const isOnline = profile.real_status === 'online' || new Date(profile.last_online_at) > twoMinutesAgo;
+      
+      if (profile.is_invisible && profile.id !== currentUser?.id) {
+        statusInfo = { status: 'invisible', text: 'Offline', class: 'status-offline' };
+      } else if (isOnline) {
+        statusInfo = { status: 'online', text: 'Online', class: 'status-online' };
+      } else {
+        statusInfo = { status: 'offline', text: 'Offline', class: 'status-offline' };
+      }
     }
     
     return `
@@ -850,6 +842,10 @@ function goToNotificacoes() {
 async function logout() {
   stopNotificationPolling();
   stopStatusUpdates();
+  // ✅ ATUALIZA STATUS PARA OFFLINE NO LOGOUT
+  if (currentUser) {
+    await updateOnlineStatusSafe(currentUser.id, false);
+  }
   if (statusSystem) {
     statusSystem.destroy();
   }
@@ -893,9 +889,13 @@ supabase.auth.onAuthStateChange((event, session) => {
   }
 });
 
-window.addEventListener('beforeunload', () => {
+window.addEventListener('beforeunload', async () => {
   stopNotificationPolling();
   stopStatusUpdates();
+  // ✅ ATUALIZA STATUS PARA OFFLINE AO FECHAR ABA/NAVEGADOR
+  if (currentUser) {
+    await updateOnlineStatusSafe(currentUser.id, false);
+  }
   if (statusSystem) {
     statusSystem.destroy();
   }
@@ -932,32 +932,10 @@ const style = document.createElement('style');
 style.textContent = notificationCSS;
 document.head.appendChild(style);
 
-async function createTestNotification(type = 'info', title = 'Teste', message = 'Esta é uma notificação de teste') {
-  try {
-    const { error } = await supabase
-      .from('notifications')
-      .insert({
-        user_id: currentUser.id,
-        type: type,
-        title: title,
-        message: message,
-        is_read: false,
-        created_at: new Date().toISOString()
-      });
-
-    if (!error) {
-      await loadNotificationCount();
-      showNotification('Notificação de teste criada!');
-    }
-  } catch (error) {
-    // Silencioso
-  }
-}
-
 window.addEventListener('load', function() {
   if (window.StatusSystem && currentUser && statusSystem) {
     setTimeout(() => {
-      updateOnlineStatusSafe(currentUser.id);
+      updateOnlineStatusSafe(currentUser.id, true);
     }, 2000);
   }
 });
