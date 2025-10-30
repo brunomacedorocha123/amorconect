@@ -1,4 +1,4 @@
-// excluir-conta.js - Versão Corrigida
+// excluir-conta.js - Versão Final
 class AccountDeleter {
     constructor() {
         this.isDeleting = false;
