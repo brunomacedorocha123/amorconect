@@ -700,7 +700,11 @@
 
     <!-- Inputs hidden para upload -->
     <input type="file" id="avatarUpload" accept="image/jpeg,image/jpg,image/png,image/webp" style="display: none;">
-
+<script>
+// ⚠️ ATENÇÃO: NUNCA expose a service_role key publicamente em produção!
+// Use isso APENAS para testes. Em produção, crie um endpoint seguro.
+window.SUPABASE_SERVICE_KEY = 'sua_service_role_key_aqui';
+</script>
     <!-- Scripts na ordem correta -->
 <script src="painel-perfil.js"></script>
 <script src="premium-check.js"></script>

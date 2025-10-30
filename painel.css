@@ -1471,3 +1471,159 @@ footer {
         font-size: 0.9rem;
     }
 }
+
+/* ===== ESTILOS PARA EXCLUSÃO DE CONTA ===== */
+
+.danger-zone {
+    border: 2px solid #dc3545;
+    border-radius: 12px;
+    padding: 2rem;
+    background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+    margin-top: 2rem;
+}
+
+.danger-zone h3 {
+    color: #dc3545;
+    margin-bottom: 1rem;
+}
+
+.danger-zone .section-description {
+    color: #e53e3e;
+    margin-bottom: 1.5rem;
+}
+
+.danger-actions {
+    text-align: center;
+    padding: 1rem;
+}
+
+.danger-actions .btn-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c53030 100%);
+    border: none;
+    padding: 12px 24px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    color: white;
+    font-size: 1rem;
+}
+
+.danger-actions .btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+    background: linear-gradient(135deg, #c53030 0%, #9b2c2c 100%);
+}
+
+.danger-actions small {
+    display: block;
+    margin-top: 0.5rem;
+    color: #718096;
+    font-size: 0.875rem;
+}
+
+/* Animações para notificações */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+.account-deletion-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    z-index: 10001;
+    max-width: 400px;
+    animation: slideInRight 0.3s ease;
+    font-size: 14px;
+    font-weight: 500;
+    color: white;
+}
+
+.account-deletion-notification.notification-success {
+    background: #48bb78;
+}
+
+.account-deletion-notification.notification-error {
+    background: #f56565;
+}
+
+.account-deletion-notification.notification-info {
+    background: #4299e1;
+}
+
+.account-deletion-notification .notification-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.account-deletion-notification .notification-icon {
+    font-size: 16px;
+}
+
+.account-deletion-notification .notification-message {
+    flex: 1;
+}
+
+/* Modal de confirmação (se ainda existir no HTML) */
+.confirmation-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+.confirmation-modal .modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .danger-zone {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+    
+    .danger-actions .btn-danger {
+        width: 100%;
+        padding: 15px;
+    }
+    
+    .account-deletion-notification {
+        left: 20px;
+        right: 20px;
+        max-width: none;
+    }
+}
