@@ -300,11 +300,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 throw authError;
             }
 
-            if (authData.user) {
-                window.location.href = 'cadastro-sucesso.html';
-            } else {
-                throw new Error('Falha ao criar usuário');
-            }
+           if (authData.user) {
+    window.location.href = 'verificacao.html'; // ← ✅ CORRETO
+} else {
+    throw new Error('Falha ao criar usuário');
+}
 
         } catch (error) {
             let errorMessage = 'Erro ao realizar cadastro. Tente novamente.';
