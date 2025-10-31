@@ -1,4 +1,4 @@
-// mensagens.js - Sistema completo CORRIGIDO mantendo Premium/Free
+// mensagens.js - Sistema completo CORRIGIDO com reset automático do contador
 class MessagesSystem {
   constructor() {
     this.supabase = supabase;
@@ -242,7 +242,7 @@ class MessagesSystem {
     }
   }
 
-  async loadConversations() {
+    async loadConversations() {
     if (this.isLoading) return;
     
     try {
@@ -724,7 +724,7 @@ class MessagesSystem {
     return { status: 'offline', text: 'Offline', class: 'status-offline' };
   }
 
-  async sendMessage() {
+    async sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const message = messageInput.value.trim();
     
@@ -747,7 +747,7 @@ class MessagesSystem {
       this.setSendButtonState(true);
       this.showMessageStatus('Enviando...', 'info');
 
-      // ⭐ MANTIDO: Sistema Premium/Free intacto
+      // ⭐ MANTIDO: Sistema Premium/Free com RESET AUTOMÁTICO
       const canSend = await this.checkCanSendMessage();
       if (!canSend.can_send) {
         this.handleSendError(canSend.reason);
@@ -810,9 +810,54 @@ class MessagesSystem {
     }
   }
 
-  // ⭐ MANTIDO INTACTO: Sistema Premium/Free
+  // ⭐⭐ FUNÇÃO NOVA: Reset automático do contador diário
+  async resetDailyCounterIfNeeded() {
+    try {
+      const { data: limits, error } = await this.supabase
+        .from('user_message_limits')
+        .select('messages_sent_today, last_reset_date')
+        .eq('user_id', this.currentUser.id)
+        .single();
+
+      if (error || !limits) {
+        // Se não existe registro, criar um
+        await this.supabase
+          .from('user_message_limits')
+          .upsert({
+            user_id: this.currentUser.id,
+            messages_sent_today: 0,
+            last_reset_date: new Date().toISOString().split('T')[0]
+          });
+        return;
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      const lastReset = new Date(limits.last_reset_date).toISOString().split('T')[0];
+
+      // ⭐ VERIFICAÇÃO CRÍTICA: Se é um novo dia, resetar contador
+      if (lastReset !== today) {
+        console.log('🔄 Resetando contador diário - Novo dia!');
+        
+        await this.supabase
+          .from('user_message_limits')
+          .update({
+            messages_sent_today: 0,
+            last_reset_date: today
+          })
+          .eq('user_id', this.currentUser.id);
+      }
+
+    } catch (error) {
+      console.error('Erro ao resetar contador:', error);
+    }
+  }
+
+  // ⭐ ATUALIZADA: Sistema Premium/Free com RESET AUTOMÁTICO
   async checkCanSendMessage() {
     try {
+      // ⭐⭐ CHAMADA CRÍTICA: Sempre verificar/resetar antes de contar
+      await this.resetDailyCounterIfNeeded();
+
       // ⭐ USANDO PREMIUM MANAGER EXISTENTE
       let isPremium = false;
       if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
@@ -864,6 +909,9 @@ class MessagesSystem {
   // ⭐ MANTIDO INTACTO: Contador de mensagens Free/Premium
   async updateMessageCounter() {
     try {
+      // ⭐⭐ SEMPRE VERIFICAR RESET ANTES DE ATUALIZAR
+      await this.resetDailyCounterIfNeeded();
+
       // ⭐ USANDO PREMIUM MANAGER EXISTENTE
       let isPremium = false;
       if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
