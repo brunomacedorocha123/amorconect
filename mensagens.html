@@ -308,33 +308,11 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // TESTE VISUAL - vai mostrar uma mensagem na tela
-    async function testeVisualVibe() {
-        // Criar mensagem na tela
-        const mensagem = document.createElement('div');
-        mensagem.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #C6A664;
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            z-index: 9999;
-            font-size: 18px;
-            text-align: center;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        `;
-        
+    // Verificação silenciosa do Vibe Exclusive
+    async function checkAndRedirectVibe() {
         try {
             const { data: { user } } = await supabase.auth.getUser();
-            
-            if (!user) {
-                mensagem.innerHTML = '❌ USUÁRIO NÃO LOGADO';
-                document.body.appendChild(mensagem);
-                return;
-            }
+            if (!user) return false;
             
             const { data: agreement } = await supabase
                 .rpc('check_active_fidelity_agreement', {
@@ -342,69 +320,23 @@
                 });
 
             if (agreement?.has_active_agreement) {
-                mensagem.innerHTML = '🎯 VIBE EXCLUSIVE ATIVO!<br>Redirecionando em 3 segundos...';
-                document.body.appendChild(mensagem);
-                
-                // Redirecionar após mostrar a mensagem
-                setTimeout(() => {
-                    window.location.href = 'vibe-exclusivo.html';
-                }, 3000);
-                
-            } else {
-                mensagem.innerHTML = '❌ NENHUM VIBE EXCLUSIVE ATIVO<br>Continuando para mensagens normais...';
-                document.body.appendChild(mensagem);
-                
-                // Remover mensagem após 3 segundos
-                setTimeout(() => {
-                    mensagem.remove();
-                }, 3000);
+                window.location.href = 'vibe-exclusivo.html';
+                return true;
             }
             
+            return false;
         } catch (error) {
-            mensagem.innerHTML = '💥 ERRO NA VERIFICAÇÃO';
-            document.body.appendChild(mensagem);
+            return false;
         }
     }
 
-    // Executar teste visual IMEDIATAMENTE
-    testeVisualVibe();
-
-    // ==================== CONTINUAÇÃO DO CÓDIGO ORIGINAL ====================
-    window.acceptProposal = function(proposalId) {
-        if (window.sistemaVibe) {
-            window.sistemaVibe.acceptFidelityProposal(proposalId);
-        } else {
-            alert('Sistema Vibe não carregado! Recarregue a página.');
-        }
-    };
-
-    window.rejectProposal = function(proposalId) {
-        if (window.sistemaVibe) {
-            window.sistemaVibe.rejectFidelityProposal(proposalId);
-        } else {
-            alert('Sistema Vibe não carregado! Recarregue a página.');
-        }
-    };
-
-    // ==================== INICIALIZAÇÃO DO SISTEMA VIBE ====================
-    function initializeSistemaVibe() {
-        if (window.MessagesSystem && window.MessagesSystem.currentUser) {
-            if (!window.sistemaVibe) {
-                window.sistemaVibe = new SistemaVibe();
-                window.sistemaVibe.initialize(window.MessagesSystem.currentUser);
-            }
-            
-            // Garantir que os botões sejam criados
-            setTimeout(() => {
-                if (window.sistemaVibe) {
-                    window.sistemaVibe.createProposalsButton();
-                    window.sistemaVibe.createFidelityButton();
-                }
-            }, 1500);
-        } else {
-            setTimeout(initializeSistemaVibe, 1000);
-        }
-    }
+    // Executar verificação antes de tudo
+    (async function() {
+        const hasVibe = await checkAndRedirectVibe();
+        if (hasVibe) return;
+        
+        // ... resto do seu código original
+    })();
 </script>
         // ==================== FUNÇÕES EXISTENTES ====================
         
