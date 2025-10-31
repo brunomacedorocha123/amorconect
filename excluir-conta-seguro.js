@@ -1,4 +1,3 @@
-// 📋 CLASSE COMPLETA - EXCLUSÃO SEGURA DA CONTA
 class AccountDeleter {
     constructor() {
         this.isDeleting = false;
@@ -25,86 +24,114 @@ class AccountDeleter {
 
         const userConfirmed = confirm(
             '🚨 EXCLUSÃO DEFINITIVA DA CONTA 🚨\n\n' +
-            'ESTA AÇÃO É IRREVERSÍVEL!\n\n' +
-            '✅ O que será excluído:\n' +
-            '• Sua conta de login (NUNCA mais vai conseguir acessar)\n' +  
-            '• Todos os seus dados pessoais\n' +
-            '• Mensagens, fotos, histórico\n' +
-            '• Assinaturas e pagamentos\n\n' +
-            '⚠️  VOCÊ SERÁ DESCONECTADO IMEDIATAMENTE!\n\n' +
-            'CONFIRMA A EXCLUSÃO TOTAL?'
+            'ESTA AÇÃO NÃO PODE SER DESFEITA!\n\n' +
+            'Todos os seus dados serão apagados:\n' +
+            '• Perfil e fotos\n' +
+            '• Mensagens e matches\n' +
+            '• Histórico de atividades\n' +
+            '• Acesso à plataforma\n\n' +
+            'VOCÊ NUNCA MAIS VAI CONSEGUIR LOGAR!\n\n' +
+            'TEM CERTEZA ABSOLUTA?'
         );
 
         if (userConfirmed) {
-            this.executeDeletion();
+            this.requestPasswordConfirmation();
         }
     }
 
-    async executeDeletion() {
+    requestPasswordConfirmation() {
+        const password = prompt('Por segurança, digite sua senha atual:');
+        if (password && password.trim() !== '') {
+            this.executeDeletion(password.trim());
+        } else {
+            alert('Senha é obrigatória para excluir a conta.');
+        }
+    }
+
+    async executeDeletion(password) {
         if (this.isDeleting) return;
         
         this.isDeleting = true;
         
-        // Mostrar loading
-        const originalText = document.getElementById('deleteAccountBtn').textContent;
-        document.getElementById('deleteAccountBtn').textContent = 'EXCLUINDO...';
-        document.getElementById('deleteAccountBtn').disabled = true;
+        const deleteBtn = document.getElementById('deleteAccountBtn');
+        const originalText = deleteBtn.textContent;
+        deleteBtn.textContent = 'EXCLUINDO CONTA...';
+        deleteBtn.disabled = true;
 
         try {
-            // 1. Pegar usuário atual
+            // OBTER USUÁRIO ATUAL
             const { data: { user }, error: userError } = await this.supabase.auth.getUser();
             
             if (userError || !user) {
                 throw new Error('Sessão expirada. Faça login novamente.');
             }
 
-            // 2. ESTRATÉGIA SEGURA: Excluir auth via API segura
-            await this.deleteUserAuthSecure(user.id);
+            // CONFIRMAR SENHA
+            const { error: signInError } = await this.supabase.auth.signInWithPassword({
+                email: user.email,
+                password: password
+            });
 
-            // 3. Limpeza final local
+            if (signInError) {
+                throw new Error('Senha incorreta. Não foi possível confirmar sua identidade.');
+            }
+
+            // EXCLUIR TODOS OS DADOS DO BANCO
+            const { data: deleteData, error: deleteError } = await this.supabase.rpc('delete_user_account');
+
+            if (deleteError) {
+                throw new Error('Erro ao excluir dados do perfil: ' + deleteError.message);
+            }
+
+            if (!deleteData || !deleteData.success) {
+                throw new Error('Falha ao excluir dados: ' + (deleteData?.message || 'Erro desconhecido'));
+            }
+
+            // ESTRATÉGIA PARA IMPEDIR LOGIN FUTURO - DEFINITIVO
+            const randomString = Math.random().toString(36).slice(2) + Date.now().toString(36);
+            
+            // 1. ALTERAR EMAIL - IMPOSSIBILITA LOGIN COM EMAIL ORIGINAL
+            await this.supabase.auth.updateUser({
+                email: `deleted_account_${randomString}@deleted.permanent`
+            });
+
+            // 2. ALTERAR SENHA - IMPOSSIBILITA ACESSO
+            await this.supabase.auth.updateUser({
+                password: `deleted_${randomString}_permanent_lock`
+            });
+
+            // 3. LIMPEZA TOTAL
             await this.supabase.auth.signOut();
             localStorage.clear();
             sessionStorage.clear();
             
-            // 4. Feedback e redirecionamento
-            alert('✅ CONTA EXCLUÍDA PERMANENTEMENTE!\n\nVocê será redirecionado...');
-            setTimeout(() => {
-                window.location.href = '/index.html';
-            }, 2000);
+            // 4. CONFIRMAÇÃO E REDIRECIONAMENTO
+            alert('✅ CONTA EXCLUÍDA COM SUCESSO!\n\nTodos os seus dados foram removidos permanentemente.');
+            window.location.href = '/index.html';
 
         } catch (error) {
             console.error('Erro na exclusão:', error);
             alert('❌ ERRO: ' + error.message);
             
-            // Restaurar botão
-            document.getElementById('deleteAccountBtn').textContent = originalText;
-            document.getElementById('deleteAccountBtn').disabled = false;
-            
+            // FAZER LOGOUT MESMO COM ERRO
+            try {
+                await this.supabase.auth.signOut();
+            } catch (e) {
+                console.log('Logout automático');
+            }
         } finally {
             this.isDeleting = false;
-        }
-    }
-
-    // 🔐 MÉTODO SEGURO PARA EXCLUIR AUTH (SEM EXPOR CHAVES)
-    async deleteUserAuthSecure(userId) {
-        try {
-            // Estratégia 1: Chamar RPC que exclui TUDO (incluindo auth)
-            const { data, error } = await this.supabase.rpc('delete_user_complete', {
-                user_id: userId
-            });
-
-            if (error) throw error;
-
-            return { success: true };
-
-        } catch (error) {
-            console.error('Erro método seguro:', error);
-            throw new Error('Não foi possível excluir a conta. Tente novamente.');
+            // RESTAURAR BOTÃO
+            if (deleteBtn) {
+                deleteBtn.textContent = originalText;
+                deleteBtn.disabled = false;
+            }
         }
     }
 }
 
-// Inicializar automaticamente
+// INICIALIZAÇÃO AUTOMÁTICA
 document.addEventListener('DOMContentLoaded', () => {
     new AccountDeleter();
+    console.log('Sistema de exclusão de conta carregado');
 });
