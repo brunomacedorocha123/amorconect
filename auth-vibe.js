@@ -1,4 +1,4 @@
-// auth-vibe.js - Sistema de Autenticação e Redirecionamento Vibe Exclusive
+// auth-vibe.js - Sistema de Autenticação e Redirecionamento Vibe Exclusive CORRIGIDO
 class AuthVibeSystem {
     constructor() {
         this.supabase = null;
@@ -6,6 +6,9 @@ class AuthVibeSystem {
         this.activeAgreement = null;
         this.isChecking = false;
         this.redirectEnabled = true;
+        this.lastRedirectTime = 0;
+        this.redirectCooldown = 2000; // 2 segundos entre redirecionamentos
+        this.initialCheckDone = false;
         
         this.initialize();
     }
@@ -21,12 +24,17 @@ class AuthVibeSystem {
                 this.supabase = window.supabase;
             }
 
-            await this.checkAuthAndVibe();
+            // Aguardar um pouco antes da primeira verificação
+            setTimeout(async () => {
+                await this.checkAuthAndVibe();
+                this.initialCheckDone = true;
+            }, 1000);
+            
             this.startPeriodicCheck();
             this.startRealTimeListener();
             
         } catch (error) {
-            // Inicialização silenciosa
+            console.log('AuthVibeSystem: Inicialização silenciosa');
         }
     }
 
@@ -45,19 +53,23 @@ class AuthVibeSystem {
             
             this.currentUser = user;
             
-            const isVibePage = window.location.pathname.includes('vibe-exclusivo');
+            const isVibePage = window.location.pathname.includes('vibe-exclusive') || 
+                              window.location.pathname.includes('vibe-exclusivo');
             
-            const { data: agreement, error: agreementError } = await this.supabase
-                .rpc('check_active_fidelity_agreement', {
-                    p_user_id: user.id
-                });
+            // Verificar acordo ativo apenas se necessário
+            if (!this.activeAgreement || this.initialCheckDone) {
+                const { data: agreement, error: agreementError } = await this.supabase
+                    .rpc('check_active_fidelity_agreement', {
+                        p_user_id: user.id
+                    });
 
-            this.activeAgreement = agreementError ? null : (agreement.has_active_agreement ? agreement : null);
+                this.activeAgreement = agreementError ? null : (agreement && agreement.has_active_agreement ? agreement : null);
+            }
 
             await this.applyRedirectLogic(isVibePage);
             
         } catch (error) {
-            // Verificação silenciosa
+            console.log('AuthVibeSystem: Verificação silenciosa');
         } finally {
             this.isChecking = false;
         }
@@ -66,20 +78,30 @@ class AuthVibeSystem {
     async applyRedirectLogic(isVibePage) {
         if (!this.redirectEnabled) return;
 
-        // Se está na página do Vibe mas não tem acordo → vai para mensagens
-        if (isVibePage && !this.activeAgreement) {
-            this.redirectToMessages();
-            return;
+        const now = Date.now();
+        if (now - this.lastRedirectTime < this.redirectCooldown) {
+            return; // Evitar redirecionamentos rápidos consecutivos
         }
 
-        // Se tem acordo ativo e NÃO está na página do Vibe
-        if (this.activeAgreement && !isVibePage) {
-            const isAllowedPage = this.isAllowedPage();
-            
-            // ⭐⭐ CORREÇÃO CRÍTICA: Se NÃO é página permitida → redireciona para Vibe
-            if (!isAllowedPage) {
-                this.redirectToVibeExclusive();
+        // ⭐⭐ LÓGICA CORRIGIDA - Sem loop
+        if (isVibePage) {
+            // Se está na página do Vibe mas não tem acordo → vai para mensagens
+            if (!this.activeAgreement) {
+                console.log('🔀 Redirecionando para mensagens (sem acordo ativo)');
+                this.redirectToMessages();
                 return;
+            }
+        } else {
+            // Se tem acordo ativo e NÃO está na página do Vibe
+            if (this.activeAgreement) {
+                const isAllowedPage = this.isAllowedPage();
+                
+                // Se NÃO é página permitida → redireciona para Vibe
+                if (!isAllowedPage) {
+                    console.log('🔀 Redirecionando para Vibe Exclusive (acordo ativo)');
+                    this.redirectToVibeExclusive();
+                    return;
+                }
             }
         }
 
@@ -87,7 +109,7 @@ class AuthVibeSystem {
     }
 
     isAllowedPage() {
-        // ⭐⭐ CORREÇÃO: REMOVIDO 'mensagens.html' - durante Vibe Exclusive não pode acessar mensagens normais
+        // Páginas permitidas durante Vibe Exclusive
         const allowedPages = [
             'painel.html',
             'configuracoes.html',
@@ -102,19 +124,24 @@ class AuthVibeSystem {
     }
 
     redirectToVibeExclusive() {
-        if (window.location.href.includes('vibe-exclusivo')) return;
+        if (window.location.href.includes('vibe-exclusive') || 
+            window.location.href.includes('vibe-exclusivo')) return;
         
-        console.log('🔄 Redirecionando para Vibe Exclusive...');
+        this.lastRedirectTime = Date.now();
+        
+        // Usar replace para evitar histórico de navegação
         setTimeout(() => {
-            window.location.href = 'vibe-exclusivo.html';
+            window.location.replace('vibe-exclusive.html');
         }, 100);
     }
 
     redirectToMessages() {
         if (window.location.href.includes('mensagens')) return;
         
+        this.lastRedirectTime = Date.now();
+        
         setTimeout(() => {
-            window.location.href = 'mensagens.html';
+            window.location.replace('mensagens.html');
         }, 100);
     }
 
@@ -166,9 +193,12 @@ class AuthVibeSystem {
     }
 
     startPeriodicCheck() {
+        // Verificação periódica menos frequente
         setInterval(async () => {
-            await this.checkAuthAndVibe();
-        }, 30000);
+            if (this.initialCheckDone) {
+                await this.checkAuthAndVibe();
+            }
+        }, 60000); // A cada 1 minuto
     }
 
     startRealTimeListener() {
@@ -184,9 +214,12 @@ class AuthVibeSystem {
                     table: 'fidelity_agreements'
                 },
                 (payload) => {
-                    if (payload.new.user_a === this.currentUser.id || 
-                        payload.new.user_b === this.currentUser.id) {
-                        this.checkAuthAndVibe();
+                    if (payload.new && 
+                        (payload.new.user_a === this.currentUser.id || 
+                         payload.new.user_b === this.currentUser.id)) {
+                        // Forçar nova verificação quando houver mudança no acordo
+                        this.activeAgreement = null;
+                        setTimeout(() => this.checkAuthAndVibe(), 1000);
                     }
                 }
             )
@@ -211,6 +244,7 @@ class AuthVibeSystem {
     }
 
     async forceCheck() {
+        this.activeAgreement = null; // Forçar recarregamento
         await this.checkAuthAndVibe();
     }
 }
@@ -218,8 +252,10 @@ class AuthVibeSystem {
 // Inicialização automática
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
-        window.AuthVibeSystem = new AuthVibeSystem();
-    }, 500);
+        if (!window.AuthVibeSystem) {
+            window.AuthVibeSystem = new AuthVibeSystem();
+        }
+    }, 1500);
 });
 
 // Funções globais para controle manual
@@ -244,44 +280,9 @@ window.enableVibeRedirect = function() {
 };
 
 window.goToVibeExclusive = function() {
-    window.location.href = 'vibe-exclusivo.html';
+    window.location.href = 'vibe-exclusive.html';
 };
 
 window.goToNormalMessages = function() {
     window.location.href = 'mensagens.html';
 };
-
-// Proteção contra saída acidental do Vibe Exclusive
-window.addEventListener('beforeunload', function(e) {
-    if (window.AuthVibeSystem && 
-        window.AuthVibeSystem.activeAgreement && 
-        window.location.href.includes('vibe-exclusivo')) {
-        
-        if (e.target.activeElement && 
-            (e.target.activeElement.href || e.target.activeElement.onclick)) {
-            return;
-        }
-        
-        e.preventDefault();
-        e.returnValue = 'Você está em uma conexão Vibe Exclusive. Tem certeza que deseja sair?';
-        return e.returnValue;
-    }
-});
-
-// Integração com MessagesSystem - Bloqueia seleção de outras conversas
-if (window.MessagesSystem) {
-    const originalSelectConversation = window.MessagesSystem.selectConversation;
-    
-    window.MessagesSystem.selectConversation = async function(otherUserId) {
-        if (window.AuthVibeSystem && window.AuthVibeSystem.activeAgreement) {
-            const partnerId = window.AuthVibeSystem.activeAgreement.partner_id;
-            
-            if (otherUserId !== partnerId) {
-                window.AuthVibeSystem.redirectToVibeExclusive();
-                return;
-            }
-        }
-        
-        return originalSelectConversation.call(this, otherUserId);
-    };
-}
