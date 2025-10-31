@@ -66,16 +66,18 @@ class AuthVibeSystem {
     async applyRedirectLogic(isVibePage) {
         if (!this.redirectEnabled) return;
 
+        // Se está na página do Vibe mas não tem acordo → vai para mensagens
         if (isVibePage && !this.activeAgreement) {
             this.redirectToMessages();
             return;
         }
 
+        // Se tem acordo ativo e NÃO está na página do Vibe
         if (this.activeAgreement && !isVibePage) {
-            const isMessagesPage = window.location.pathname.includes('mensagens');
             const isAllowedPage = this.isAllowedPage();
             
-            if (!isMessagesPage && !isAllowedPage) {
+            // ⭐⭐ CORREÇÃO CRÍTICA: Se NÃO é página permitida → redireciona para Vibe
+            if (!isAllowedPage) {
                 this.redirectToVibeExclusive();
                 return;
             }
@@ -85,8 +87,8 @@ class AuthVibeSystem {
     }
 
     isAllowedPage() {
+        // ⭐⭐ CORREÇÃO: REMOVIDO 'mensagens.html' - durante Vibe Exclusive não pode acessar mensagens normais
         const allowedPages = [
-            'mensagens.html',
             'painel.html',
             'configuracoes.html',
             'pricing.html',
@@ -102,6 +104,7 @@ class AuthVibeSystem {
     redirectToVibeExclusive() {
         if (window.location.href.includes('vibe-exclusivo')) return;
         
+        console.log('🔄 Redirecionando para Vibe Exclusive...');
         setTimeout(() => {
             window.location.href = 'vibe-exclusivo.html';
         }, 100);
@@ -212,12 +215,14 @@ class AuthVibeSystem {
     }
 }
 
+// Inicialização automática
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         window.AuthVibeSystem = new AuthVibeSystem();
     }, 500);
 });
 
+// Funções globais para controle manual
 window.checkVibeStatus = async function() {
     if (window.AuthVibeSystem) {
         await window.AuthVibeSystem.forceCheck();
@@ -246,6 +251,7 @@ window.goToNormalMessages = function() {
     window.location.href = 'mensagens.html';
 };
 
+// Proteção contra saída acidental do Vibe Exclusive
 window.addEventListener('beforeunload', function(e) {
     if (window.AuthVibeSystem && 
         window.AuthVibeSystem.activeAgreement && 
@@ -262,6 +268,7 @@ window.addEventListener('beforeunload', function(e) {
     }
 });
 
+// Integração com MessagesSystem - Bloqueia seleção de outras conversas
 if (window.MessagesSystem) {
     const originalSelectConversation = window.MessagesSystem.selectConversation;
     
