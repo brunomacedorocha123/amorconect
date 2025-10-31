@@ -47,7 +47,7 @@ class MessagesSystem {
         });
 
       if (agreement && agreement[0]?.has_active_agreement) {
-        window.location.href = 'vibe-exclusivo.html';
+        window.location.href = 'vibe-exclusive.html';
         throw new Error('Vibe Exclusive ativo - Redirecionado');
       }
     } catch (error) {
