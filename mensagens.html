@@ -302,41 +302,67 @@
     <script src="mensagens-temporeal.js"></script>
 
    
-    <script>
+   <script>
     // Configuração do Supabase
     const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Verificação silenciosa do Vibe Exclusive
-    async function checkAndRedirectVibe() {
+    // TESTE DIRETO - Mostra NA TELA o resultado da função
+    async function testeDiretoFuncao() {
+        const mensagem = document.createElement('div');
+        mensagem.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #C6A664;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 9999;
+            font-size: 16px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            max-width: 400px;
+        `;
+        
         try {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return false;
             
-            const { data: agreement } = await supabase
+            if (!user) {
+                mensagem.innerHTML = '❌ USUÁRIO NÃO LOGADO';
+                document.body.appendChild(mensagem);
+                return;
+            }
+            
+            // Chamar a função DIRETAMENTE
+            const { data: resultado, error } = await supabase
                 .rpc('check_active_fidelity_agreement', {
                     p_user_id: user.id
                 });
 
-            if (agreement?.has_active_agreement) {
-                window.location.href = 'vibe-exclusivo.html';
-                return true;
-            }
+            mensagem.innerHTML = `
+                <strong>🔍 RESULTADO DA FUNÇÃO:</strong><br><br>
+                Resultado: ${JSON.stringify(resultado)}<br>
+                Erro: ${error ? error.message : 'Nenhum'}<br><br>
+                <small>Esta mensagem some em 5 segundos</small>
+            `;
             
-            return false;
+            document.body.appendChild(mensagem);
+            
+            setTimeout(() => {
+                mensagem.remove();
+            }, 5000);
+            
         } catch (error) {
-            return false;
+            mensagem.innerHTML = `💥 ERRO: ${error.message}`;
+            document.body.appendChild(mensagem);
         }
     }
 
-    // Executar verificação antes de tudo
-    (async function() {
-        const hasVibe = await checkAndRedirectVibe();
-        if (hasVibe) return;
-        
-        // ... resto do seu código original
-    })();
+    // Executar teste direto
+    testeDiretoFuncao();
 </script>
         // ==================== FUNÇÕES EXISTENTES ====================
         
