@@ -369,7 +369,6 @@
                 setTimeout(initializeSistemaVibe, 1000);
             }
         }
-        // ==================== FUNÇÕES EXISTENTES ====================
         
         // Função de logout
         async function logout() {
@@ -378,7 +377,7 @@
                 if (error) throw error;
                 window.location.href = 'login.html';
             } catch (error) {
-                console.error('Erro ao fazer logout:', error);
+                // Logout silencioso
             }
         }
 
@@ -396,7 +395,7 @@
         }
 
         function blockCurrentUser() {
-            console.log('Bloquear usuário - implementar');
+            // Implementar bloqueio de usuário
         }
 
         // Funções Vibe Exclusive
@@ -474,7 +473,6 @@
                 }
 
             } catch (error) {
-                console.error('Erro ao propor acordo:', error);
                 showNotification('Erro ao enviar proposta', 'error');
             }
         }
@@ -520,7 +518,7 @@
         }
 
         async function loadFidelityManagementData() {
-            console.log('Carregando dados do acordo...');
+            // Carregar dados do acordo
         }
 
         async function cancelFidelityAgreement() {
@@ -545,7 +543,6 @@
                 }
 
             } catch (error) {
-                console.error('Erro ao cancelar acordo:', error);
                 showNotification('Erro ao encerrar acordo', 'error');
             }
         }
@@ -617,7 +614,7 @@
             }, 3000);
         }
 
-            // Funções globais para uso no HTML
+        // Funções globais para uso no HTML
         window.showFidelityProposal = showFidelityProposal;
         window.showManageFidelity = showManageFidelity;
         window.showNotification = showNotification;

@@ -1,650 +1,754 @@
-class SistemaVibe {
-    constructor() {
-        this.supabase = supabase;
-        this.currentUser = null;
-        this.currentAgreement = null;
-        this.pendingProposals = [];
-        this.receivedProposals = [];
-    }
+// Configuração do Supabase
+const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    async initialize(user) {
-        this.currentUser = user;
-        await this.loadCurrentAgreement();
-        await this.loadPendingProposals();
-        await this.loadReceivedProposals();
-        this.setupRealtimeListeners();
-        this.createProposalsButton();
-        this.createFidelityButton();
+let currentUser = null;
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', function() {
+    initializeApp();
+});
+
+// Sistema principal
+async function initializeApp() {
+    const authenticated = await checkAuthentication();
+    if (authenticated) {
+        setupEventListeners();
+        await loadUserProfile();
         
-        setTimeout(() => this.loadReceivedProposals(), 1500);
+        setTimeout(async () => {
+            if (window.PremiumManager && typeof window.PremiumManager.updateUIWithPremiumStatus === 'function') {
+                await window.PremiumManager.updateUIWithPremiumStatus();
+            }
+            await updateInvisibleModeUI();
+        }, 500);
     }
+}
 
-    async canShowFidelityButton(otherUserId) {
-        try {
-            const conditions = await Promise.all([
-                this.hasMinimumMessages(otherUserId),
-                this.isUserPremium(),
-                this.noActiveAgreement(),
-                this.noCoolingOffPeriod(),
-                this.notAlreadyProposed(otherUserId)
-            ]);
-
-            return conditions.every(Boolean);
-        } catch (error) {
+// Verificar autenticação
+async function checkAuthentication() {
+    try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error || !user) {
+            window.location.href = 'login.html';
             return false;
         }
-    }
-
-    async hasMinimumMessages(otherUserId) {
-        try {
-            const { data: messages, error } = await this.supabase
-                .rpc('get_conversation_message_count', {
-                    p_user1_id: this.currentUser.id,
-                    p_user2_id: otherUserId
-                });
-
-            if (error) return await this.countMessagesFallback(otherUserId);
-            return messages >= 30;
-        } catch (error) {
+        
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('account_deleted')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+        if (profileError || !profile || profile.account_deleted) {
+            await supabase.auth.signOut();
+            window.location.href = 'login.html';
             return false;
         }
-    }
-
-    async countMessagesFallback(otherUserId) {
-        const { data: messages, error } = await this.supabase
-            .from('messages')
-            .select('id')
-            .or(`and(sender_id.eq.${this.currentUser.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${this.currentUser.id})`);
-
-        if (error) return false;
-        return messages.length >= 30;
-    }
-
-    async isUserPremium() {
-        try {
-            if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
-                return await PremiumManager.checkPremiumStatus();
-            }
-
-            const { data: subscription, error } = await this.supabase
-                .from('user_subscriptions')
-                .select('status, expires_at')
-                .eq('user_id', this.currentUser.id)
-                .eq('status', 'active')
-                .gte('expires_at', new Date().toISOString())
-                .single();
-
-            return !error && subscription !== null;
-        } catch (error) {
-            return false;
-        }
-    }
-
-    async noActiveAgreement() {
-        return !this.currentAgreement || this.currentAgreement.status !== 'active';
-    }
-
-    async noCoolingOffPeriod() {
-        try {
-            const { data: lastAgreement, error } = await this.supabase
-                .from('fidelity_agreements')
-                .select('cancelled_at')
-                .or(`user_a.eq.${this.currentUser.id},user_b.eq.${this.currentUser.id}`)
-                .eq('status', 'cancelled')
-                .order('cancelled_at', { ascending: false })
-                .limit(1)
-                .single();
-
-            if (error || !lastAgreement) return true;
-
-            const cancelledDate = new Date(lastAgreement.cancelled_at);
-            const quarantineEnd = new Date(cancelledDate);
-            quarantineEnd.setDate(quarantineEnd.getDate() + 7);
-            
-            return new Date() >= quarantineEnd;
-        } catch (error) {
-            return true;
-        }
-    }
-
-    async notAlreadyProposed(otherUserId) {
-        return !this.pendingProposals.some(proposal => proposal.receiver_id === otherUserId);
-    }
-
-    async proposeFidelityAgreement(otherUserId) {
-        try {
-            const canPropose = await this.canShowFidelityButton(otherUserId);
-            if (!canPropose) {
-                throw new Error('Não atende às condições para propor Vibe Exclusive');
-            }
-
-            const { data, error } = await this.supabase
-                .rpc('propose_fidelity_agreement', {
-                    p_proposer_id: this.currentUser.id,
-                    p_receiver_id: otherUserId
-                });
-
-            if (error) throw error;
-
-            if (data === 'success') {
-                await this.loadPendingProposals();
-                this.showNotification('Proposta de Vibe Exclusive enviada!', 'success');
-                return true;
-            } else {
-                throw new Error(data);
-            }
-        } catch (error) {
-            this.showNotification(error.message, 'error');
-            return false;
-        }
-    }
-
-    async acceptFidelityProposal(proposalId) {
-        try {
-            const { data, error } = await this.supabase
-                .rpc('accept_fidelity_proposal_v2', {
-                    p_agreement_id: proposalId,
-                    p_acceptor_id: this.currentUser.id
-                });
-
-            if (error) throw error;
-
-            if (data === 'success') {
-                await this.loadCurrentAgreement();
-                await this.loadReceivedProposals();
-                this.updateProposalsButton();
-                this.showNotification('Vibe Exclusive ativado!', 'success');
-                this.closeAllModals();
-                setTimeout(() => location.reload(), 1000);
-                return true;
-            } else {
-                throw new Error(data);
-            }
-        } catch (error) {
-            this.showNotification(error.message, 'error');
-            return false;
-        }
-    }
-
-    async rejectFidelityProposal(proposalId) {
-        try {
-            const { error } = await this.supabase
-                .from('fidelity_agreements')
-                .update({ status: 'rejected' })
-                .eq('id', proposalId);
-
-            if (error) throw error;
-
-            await this.loadReceivedProposals();
-            this.updateProposalsButton();
-            this.showNotification('Proposta recusada', 'info');
-            this.closeAllModals();
-        } catch (error) {
-            this.showNotification('Erro ao recusar proposta', 'error');
-        }
-    }
-
-    async loadReceivedProposals() {
-        try {
-            const { data: proposals, error } = await this.supabase
-                .from('fidelity_agreements')
-                .select(`
-                    id,
-                    proposed_by,
-                    user_a,
-                    user_b,
-                    proposed_at,
-                    status,
-                    profile_proposer:profiles!fidelity_agreements_proposed_by_fkey(nickname, avatar_url)
-                `)
-                .eq('user_b', this.currentUser.id)
-                .eq('status', 'pending');
-
-            this.receivedProposals = proposals || [];
-            this.updateProposalsButton();
-        } catch (error) {
-            this.receivedProposals = [];
-        }
-    }
-
-    showReceivedProposalsModal() {
-        if (this.receivedProposals.length === 0) {
-            this.showNotification('Nenhuma proposta pendente', 'info');
-            return;
-        }
-
-        const modalContent = `
-            <div class="proposals-modal">
-                <h4><i class="fas fa-gem"></i> Propostas de Vibe Exclusive</h4>
-                <div class="proposals-list">
-                    ${this.receivedProposals.map(proposal => `
-                        <div class="proposal-item">
-                            <div class="proposer-info">
-                                <div class="proposer-avatar">
-                                    ${proposal.profile_proposer?.avatar_url ? 
-                                        `<img src="${proposal.profile_proposer.avatar_url}" alt="${proposal.profile_proposer.nickname}">` :
-                                        `<div class="avatar-fallback">${proposal.profile_proposer?.nickname?.charAt(0) || 'U'}</div>`
-                                    }
-                                </div>
-                                <div class="proposer-details">
-                                    <strong>${proposal.profile_proposer?.nickname || 'Usuário'}</strong>
-                                    <small>Proposta: ${new Date(proposal.proposed_at).toLocaleDateString('pt-BR')}</small>
-                                </div>
-                            </div>
-                            <div class="proposal-actions">
-                                <button class="btn btn-success" onclick="window.acceptProposal('${proposal.id}')">
-                                    <i class="fas fa-check"></i> Aceitar
-                                </button>
-                                <button class="btn btn-outline" onclick="window.rejectProposal('${proposal.id}')">
-                                    <i class="fas fa-times"></i> Recusar
-                                </button>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" onclick="window.closeFidelityModal()">Fechar</button>
-                </div>
-            </div>
-        `;
-
-        const modal = document.getElementById('fidelityModal');
-        const modalContentElement = document.getElementById('fidelityModalContent');
         
-        if (modal && modalContentElement) {
-            modalContentElement.innerHTML = modalContent;
-            modal.style.display = 'flex';
-        }
+        currentUser = user;
+        return true;
+    } catch (error) {
+        window.location.href = 'login.html';
+        return false;
+    }
+}
+
+// Configurar eventos
+function setupEventListeners() {
+    const profileForm = document.getElementById('profileForm');
+    if (profileForm) {
+        profileForm.addEventListener('submit', handleProfileSave);
     }
 
-    createProposalsButton() {
-        if (document.getElementById('viewProposalsBtn')) return;
+    const cpfInput = document.getElementById('cpf');
+    const phoneInput = document.getElementById('phone');
+    const zipCodeInput = document.getElementById('zipCode');
+    
+    if (cpfInput) cpfInput.addEventListener('input', maskCPF);
+    if (phoneInput) phoneInput.addEventListener('input', maskPhone);
+    if (zipCodeInput) zipCodeInput.addEventListener('input', maskCEP);
 
-        const checkChatHeader = () => {
-            const chatHeader = document.querySelector('.chat-header-actions');
-            if (!chatHeader) {
-                setTimeout(checkChatHeader, 500);
-                return;
-            }
-            
-            const proposalsBtn = document.createElement('button');
-            proposalsBtn.id = 'viewProposalsBtn';
-            proposalsBtn.className = 'chat-action-btn proposals-btn';
-            proposalsBtn.title = 'Propostas recebidas';
-            proposalsBtn.innerHTML = `
-                <i class="fas fa-bell"></i>
-                <span class="proposal-badge" id="proposalBadge"></span>
-            `;
-            
-            proposalsBtn.onclick = () => this.showReceivedProposalsModal();
-            proposalsBtn.style.display = 'none';
-            chatHeader.appendChild(proposalsBtn);
-            this.updateProposalsButton();
-        };
-        
-        checkChatHeader();
+    const description = document.getElementById('description');
+    if (description) {
+        description.addEventListener('input', updateCharCount);
     }
 
-    updateProposalsButton() {
-        const proposalsBtn = document.getElementById('viewProposalsBtn');
-        const proposalBadge = document.getElementById('proposalBadge');
-        
-        if (!proposalsBtn || !proposalBadge) return;
-
-        if (this.receivedProposals.length > 0) {
-            proposalsBtn.style.display = 'flex';
-            proposalBadge.textContent = this.receivedProposals.length;
-            proposalBadge.style.display = 'flex';
-        } else {
-            proposalsBtn.style.display = 'none';
-            proposalBadge.style.display = 'none';
-        }
-    }
-
-    createFidelityButton() {
-        if (document.getElementById('fidelityProposeBtn')) return;
-
-        const checkChatHeader = () => {
-            const chatHeader = document.querySelector('.chat-header-actions');
-            if (!chatHeader) {
-                setTimeout(checkChatHeader, 500);
-                return;
-            }
-            
-            const fidelityBtn = document.createElement('button');
-            fidelityBtn.id = 'fidelityProposeBtn';
-            fidelityBtn.className = 'chat-action-btn fidelity-btn';
-            fidelityBtn.title = 'Propor Vibe Exclusive';
-            fidelityBtn.innerHTML = '<i class="fas fa-gem"></i> Vibe Exclusive';
-            fidelityBtn.style.display = 'none';
-            
-            fidelityBtn.onclick = () => {
-                if (window.MessagesSystem && window.MessagesSystem.currentConversation) {
-                    this.proposeFidelityAgreement(window.MessagesSystem.currentConversation);
-                } else {
-                    this.showNotification('Selecione uma conversa primeiro', 'error');
-                }
-            };
-            
-            chatHeader.prepend(fidelityBtn);
-        };
-        
-        checkChatHeader();
-    }
-
-    async onConversationSelected(otherUserId) {
-        if (!otherUserId) return;
-        const canShowButton = await this.canShowFidelityButton(otherUserId);
-        this.updateFidelityButton(canShowButton, otherUserId);
-    }
-
-    updateFidelityButton(show, otherUserId) {
-        const fidelityBtn = document.getElementById('fidelityProposeBtn');
-        if (!fidelityBtn) {
-            this.createFidelityButton();
-            return;
-        }
-        
-        if (show && !this.currentAgreement) {
-            fidelityBtn.style.display = 'flex';
-            fidelityBtn.innerHTML = '<i class="fas fa-gem"></i> Vibe Exclusive';
-            fidelityBtn.classList.remove('active');
-        } else if (this.currentAgreement && this.currentAgreement.status === 'active') {
-            fidelityBtn.style.display = 'flex';
-            fidelityBtn.innerHTML = '<i class="fas fa-gem"></i> Vibe Ativo';
-            fidelityBtn.onclick = () => this.showManageFidelityModal();
-            fidelityBtn.classList.add('active');
-        } else {
-            fidelityBtn.style.display = 'none';
-        }
-    }
-
-    async applyFidelityRestrictions() {
-        this.updateUIForFidelity();
-    }
-
-    updateUIForFidelity() {
-        const searchButtons = document.querySelectorAll('[href*="busca"], [href*="home"]');
-        searchButtons.forEach(btn => btn.style.display = 'none');
-        this.updateChatHeaderForFidelity();
-    }
-
-    updateChatHeaderForFidelity() {
-        const fidelityBtn = document.getElementById('fidelityProposeBtn');
-        if (fidelityBtn) {
-            fidelityBtn.innerHTML = '<i class="fas fa-gem"></i> Vibe Ativo';
-            fidelityBtn.classList.add('active');
-            fidelityBtn.onclick = () => this.showManageFidelityModal();
-        }
-    }
-
-    async cancelFidelityAgreement() {
-        try {
-            if (!this.currentAgreement) {
-                throw new Error('Nenhum acordo ativo para cancelar');
-            }
-
-            const { data, error } = await this.supabase
-                .rpc('cancel_fidelity_agreement', {
-                    p_agreement_id: this.currentAgreement.id,
-                    p_user_id: this.currentUser.id
-                });
-
-            if (error) throw error;
-
-            if (data === 'success') {
-                await this.loadCurrentAgreement();
-                this.removeFidelityRestrictions();
-                this.showNotification('Vibe Exclusive cancelado. Quarentena de 7 dias.', 'info');
-                return true;
-            } else {
-                throw new Error(data);
-            }
-        } catch (error) {
-            this.showNotification('Erro ao cancelar acordo', 'error');
-            return false;
-        }
-    }
-
-    removeFidelityRestrictions() {
-        const searchButtons = document.querySelectorAll('[href*="busca"], [href*="home"]');
-        searchButtons.forEach(btn => btn.style.display = 'flex');
-        
-        const fidelityBtn = document.getElementById('fidelityProposeBtn');
-        if (fidelityBtn) fidelityBtn.style.display = 'none';
-    }
-
-    async loadCurrentAgreement() {
-        try {
-            const { data: agreements, error } = await this.supabase
-                .from('fidelity_agreements')
-                .select(`
-                    id,
-                    user_a,
-                    user_b,
-                    proposed_by,
-                    status,
-                    proposed_at,
-                    accepted_at,
-                    cancelled_at,
-                    profile_a:profiles!fidelity_agreements_user_a_fkey(nickname, avatar_url),
-                    profile_b:profiles!fidelity_agreements_user_b_fkey(nickname, avatar_url)
-                `)
-                .or(`user_a.eq.${this.currentUser.id},user_b.eq.${this.currentUser.id}`)
-                .in('status', ['active', 'pending'])
-                .order('proposed_at', { ascending: false })
-                .limit(1);
-
-            this.currentAgreement = agreements && agreements.length > 0 ? agreements[0] : null;
-            if (this.currentAgreement && this.currentAgreement.status === 'active') {
-                await this.applyFidelityRestrictions();
-            }
-        } catch (error) {
-            this.currentAgreement = null;
-        }
-    }
-
-    async loadPendingProposals() {
-        try {
-            const { data: proposals, error } = await this.supabase
-                .from('fidelity_agreements')
-                .select(`
-                    id,
-                    proposed_by,
-                    user_a,
-                    user_b,
-                    proposed_at,
-                    profile_proposer:profiles!fidelity_agreements_proposed_by_fkey(nickname, avatar_url),
-                    profile_a:profiles!fidelity_agreements_user_a_fkey(nickname),
-                    profile_b:profiles!fidelity_agreements_user_b_fkey(nickname)
-                `)
-                .eq('status', 'pending')
-                .or(`user_a.eq.${this.currentUser.id},user_b.eq.${this.currentUser.id}`);
-
-            this.pendingProposals = proposals || [];
-        } catch (error) {
-            this.pendingProposals = [];
-        }
-    }
-
-    setupRealtimeListeners() {
-        this.supabase
-            .channel('fidelity-proposals')
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'fidelity_agreements',
-                    filter: `user_b=eq.${this.currentUser.id}`
-                },
-                (payload) => this.handleNewProposal(payload.new)
-            )
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'fidelity_agreements',
-                    filter: `or(user_a=eq.${this.currentUser.id},user_b=eq.${this.currentUser.id})`
-                },
-                (payload) => this.handleAgreementUpdate(payload.new)
-            )
-            .subscribe();
-    }
-
-    handleNewProposal(proposal) {
-        this.receivedProposals.unshift(proposal);
-        this.updateProposalsButton();
-        this.showNotification('Nova proposta de Vibe Exclusive recebida!', 'info');
-    }
-
-    async handleAgreementUpdate(agreement) {
-        if (agreement.status === 'active') {
-            await this.loadCurrentAgreement();
-            await this.applyFidelityRestrictions();
-        } else if (agreement.status === 'cancelled') {
-            await this.loadCurrentAgreement();
-            this.removeFidelityRestrictions();
-        }
-    }
-
-    showManageFidelityModal() {
-        if (!this.currentAgreement) return;
-
-        const partner = this.currentAgreement.user_a === this.currentUser.id ? 
-            this.currentAgreement.profile_b : this.currentAgreement.profile_a;
-
-        const modalContent = `
-            <div class="manage-fidelity">
-                <div class="fidelity-status">
-                    <i class="fas fa-gem"></i>
-                    <h4>Vibe Exclusive Ativo</h4>
-                    <p>Com: <strong>${partner?.nickname || 'Usuário'}</strong></p>
-                    <p>Desde: <strong>${new Date(this.currentAgreement.accepted_at).toLocaleDateString('pt-BR')}</strong></p>
-                </div>
-                <div class="fidelity-stats">
-                    <h5>Estatísticas da Conexão:</h5>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <span class="stat-value">${this.getDaysTogether()}</span>
-                            <span class="stat-label">dias juntos</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="fidelity-actions">
-                    <div class="action-warning">
-                        <i class="fas fa-info-circle"></i>
-                        <p>Ao encerrar, entrará em quarentena de <strong>7 dias</strong> antes de poder propor novo Vibe Exclusive.</p>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        const modal = document.getElementById('manageFidelityModal');
-        const content = document.getElementById('manageFidelityContent');
-        if (modal && content) {
-            content.innerHTML = modalContent;
-            modal.style.display = 'flex';
-        }
-    }
-
-    getDaysTogether() {
-        if (!this.currentAgreement || !this.currentAgreement.accepted_at) return '0';
-        const startDate = new Date(this.currentAgreement.accepted_at);
-        const today = new Date();
-        const diffTime = Math.abs(today - startDate);
-        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    }
-
-    closeAllModals() {
-        const modals = ['fidelityModal', 'manageFidelityModal'];
-        modals.forEach(modalId => {
-            const modal = document.getElementById(modalId);
-            if (modal) modal.style.display = 'none';
+    const upgradeBtn = document.getElementById('upgradePlanBtn');
+    if (upgradeBtn) {
+        upgradeBtn.addEventListener('click', () => {
+            window.location.href = 'pricing.html';
         });
     }
 
-    showNotification(message, type = 'info') {
-        if (typeof window.showNotification === 'function') {
-            window.showNotification(message, type);
+    const invisibleCheckbox = document.getElementById('isInvisible');
+    if (invisibleCheckbox) {
+        invisibleCheckbox.addEventListener('change', handleInvisibleToggle);
+    }
+
+    const zipCodeInputCEP = document.getElementById('zipCode');
+    if (zipCodeInputCEP) {
+        zipCodeInputCEP.addEventListener('blur', function(e) {
+            const cep = e.target.value.replace(/\D/g, '');
+            if (cep.length === 8) {
+                buscarCEP(cep);
+            }
+        });
+    }
+
+    setupAccountDeletionListeners();
+}
+
+// Sistema de exclusão de conta
+function setupAccountDeletionListeners() {
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+    if (deleteAccountBtn) {
+        deleteAccountBtn.addEventListener('click', () => openConfirmationModal());
+    }
+
+    const cancelBtn = document.getElementById('cancelDeleteBtn');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    const confirmationInput = document.getElementById('confirmationInput');
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => closeConfirmationModal());
+    }
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', () => confirmAccountDeletion());
+    }
+
+    if (confirmationInput) {
+        confirmationInput.addEventListener('input', (e) => validateConfirmationInput(e));
+    }
+
+    const modal = document.getElementById('deleteConfirmationModal');
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeConfirmationModal();
+            }
+        });
+    }
+}
+
+function openConfirmationModal() {
+    const modal = document.getElementById('deleteConfirmationModal');
+    const input = document.getElementById('confirmationInput');
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+
+    if (modal && input && confirmBtn) {
+        modal.classList.add('active');
+        input.value = '';
+        confirmBtn.disabled = true;
+        input.focus();
+    }
+}
+
+function closeConfirmationModal() {
+    const modal = document.getElementById('deleteConfirmationModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+function validateConfirmationInput(e) {
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmBtn) {
+        confirmBtn.disabled = e.target.value.toUpperCase() !== 'EXCLUIR CONTA';
+    }
+}
+
+async function confirmAccountDeletion() {
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    if (!confirmBtn || confirmBtn.disabled) return;
+
+    try {
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Excluindo...';
+        confirmBtn.disabled = true;
+
+        await deleteUserAccount();
+        
+    } catch (error) {
+        showNotification('Erro ao excluir conta: ' + error.message, 'error');
+        closeConfirmationModal();
+        resetConfirmButton();
+    }
+}
+
+async function deleteUserAccount() {
+    if (!currentUser) {
+        throw new Error('Usuário não autenticado');
+    }
+
+    const userId = currentUser.id;
+
+    try {
+        await invalidateUserAccount(userId);
+        await deleteUserData(userId);
+        await supabase.auth.signOut();
+        clearBrowserData();
+        
+        setTimeout(() => {
+            window.location.href = 'conta-excluida.html';
+        }, 1000);
+        
+    } catch (error) {
+        throw new Error(`Falha na exclusão: ${error.message}`);
+    }
+}
+
+async function invalidateUserAccount(userId) {
+    const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+            account_deleted: true,
+            deleted_at: new Date().toISOString(),
+            is_invisible: true,
+            email: 'deleted_' + userId + '@deleted.com',
+            nickname: 'usuário_excluído',
+            full_name: 'Conta Excluída',
+            phone: null,
+            cpf: null,
+            avatar_url: null,
+            street: null,
+            number: null,
+            neighborhood: null,
+            city: null,
+            state: null,
+            zip_code: null,
+            display_city: null,
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+        
+    if (updateError) {
+        throw new Error('Não foi possível invalidar a conta');
+    }
+    
+    return { success: true };
+}
+
+async function deleteUserData(userId) {
+    try {
+        await supabase
+            .from('user_details')
+            .delete()
+            .eq('user_id', userId);
+
+        const tables = [
+            'user_feels', 'user_vibes', 'messages', 'likes', 
+            'gallery_images', 'notifications', 'premium_subscriptions'
+        ];
+        
+        for (const table of tables) {
+            try {
+                if (table === 'user_feels' || table === 'user_vibes') {
+                    await supabase.from(table).delete().or(`giver_id.eq.${userId},receiver_id.eq.${userId},user1_id.eq.${userId},user2_id.eq.${userId}`);
+                } else if (table === 'messages') {
+                    await supabase.from(table).delete().or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
+                } else if (table === 'likes') {
+                    await supabase.from(table).delete().or(`user_id.eq.${userId},target_user_id.eq.${userId}`);
+                } else {
+                    await supabase.from(table).delete().eq('user_id', userId);
+                }
+            } catch (error) {
+                // Continuar com exclusão mesmo se algumas tabelas falharem
+            }
+        }
+
+    } catch (error) {
+        // A invalidação da conta já é suficiente
+    }
+}
+
+function clearBrowserData() {
+    try {
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        document.cookie.split(";").forEach(function(c) {
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+        
+        if (window.supabase) {
+            supabase.removeAllChannels();
+        }
+    } catch (error) {
+        // Ignorar erros na limpeza
+    }
+}
+
+function resetConfirmButton() {
+    const confirmBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmBtn) {
+        confirmBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Excluir Conta Permanentemente';
+        confirmBtn.disabled = false;
+    }
+}
+
+// Carregar perfil do usuário
+async function loadUserProfile() {
+    try {
+        if (!currentUser) {
+            throw new Error('Usuário não autenticado');
+        }
+
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single();
+
+        if (profileError) {
+            throw new Error('Erro ao carregar perfil');
+        }
+
+        if (profile.account_deleted) {
+            await supabase.auth.signOut();
+            window.location.href = 'login.html';
+            return;
+        }
+
+        const { data: userDetails, error: detailsError } = await supabase
+            .from('user_details')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .single();
+
+        if (detailsError && detailsError.code !== 'PGRST116') {
+            // Ignorar erro se não encontrar detalhes
+        }
+
+        fillProfileForm(profile, userDetails || {});
+        
+    } catch (error) {
+        showNotification('Erro ao carregar perfil', 'error');
+    }
+}
+
+// Preencher formulário com dados reais
+function fillProfileForm(profile, userDetails) {
+    if (!profile) return;
+
+    setValue('email', currentUser.email);
+    setValue('fullName', profile.full_name);
+    setValue('nickname', profile.nickname);
+    setValue('birthDate', profile.birth_date);
+    setValue('cpf', profile.cpf);
+    setValue('phone', profile.phone);
+    
+    const userNicknameElement = document.getElementById('userNickname');
+    if (userNicknameElement && profile.nickname) {
+        userNicknameElement.textContent = profile.nickname;
+    }
+    
+    setValue('street', profile.street);
+    setValue('number', profile.number);
+    setValue('neighborhood', profile.neighborhood);
+    setValue('city', profile.city);
+    setValue('state', profile.state);
+    setValue('zipCode', profile.zip_code);
+    setValue('displayCity', profile.display_city);
+
+    const invisibleCheckbox = document.getElementById('isInvisible');
+    if (invisibleCheckbox) {
+        invisibleCheckbox.checked = profile.is_invisible || false;
+    }
+
+    setValue('relationshipStatus', userDetails.relationship_status);
+    setValue('gender', userDetails.gender);
+    setValue('sexualOrientation', userDetails.sexual_orientation);
+    setValue('profession', userDetails.profession);
+    setValue('education', userDetails.education);
+    setValue('zodiac', userDetails.zodiac);
+    setValue('lookingFor', userDetails.looking_for);
+    setValue('description', userDetails.description);
+    setValue('religion', userDetails.religion);
+    setValue('drinking', userDetails.drinking);
+    setValue('smoking', userDetails.smoking);
+    setValue('exercise', userDetails.exercise);
+    setValue('exerciseDetails', userDetails.exercise_details);
+    setValue('hasPets', userDetails.has_pets);
+    setValue('petsDetails', userDetails.pets_details);
+
+    if (userDetails.interests) {
+        userDetails.interests.forEach(interest => {
+            const checkbox = document.querySelector(`input[name="interests"][value="${interest}"]`);
+            if (checkbox) checkbox.checked = true;
+        });
+    }
+
+    if (userDetails.characteristics) {
+        userDetails.characteristics.forEach(characteristic => {
+            const checkbox = document.querySelector(`input[name="characteristics"][value="${characteristic}"]`);
+            if (checkbox) checkbox.checked = true;
+        });
+    }
+
+    updateCharCount();
+}
+
+// Atualizar UI do modo invisível
+async function updateInvisibleModeUI() {
+    try {
+        let isPremium = false;
+        
+        if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
+            isPremium = await window.PremiumManager.checkPremiumStatus();
+        }
+        
+        const invisibleControl = document.getElementById('invisibleModeControl');
+        const upgradeCTA = document.getElementById('invisibleUpgradeCTA');
+        const featureStatus = document.getElementById('invisibleFeatureStatus');
+        const invisibleCheckbox = document.getElementById('isInvisible');
+
+        if (isPremium) {
+            if (invisibleControl) invisibleControl.style.display = 'block';
+            if (upgradeCTA) upgradeCTA.style.display = 'none';
+            
+            const isCurrentlyInvisible = invisibleCheckbox ? invisibleCheckbox.checked : false;
+            
+            if (featureStatus) {
+                if (isCurrentlyInvisible) {
+                    featureStatus.innerHTML = `
+                        <span class="premium-feature-active">
+                            <i class="fas fa-eye-slash"></i> Modo Ativo
+                        </span>
+                    `;
+                } else {
+                    featureStatus.innerHTML = `
+                        <span class="premium-feature-inactive">
+                            <i class="fas fa-eye"></i> Modo Inativo
+                        </span>
+                    `;
+                }
+            }
         } else {
-            const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 12px 16px;
-                border-radius: 8px;
-                color: white;
-                z-index: 1000;
-                background: ${type === 'error' ? '#e74c3c' : type === 'success' ? '#27ae60' : '#3498db'};
-            `;
-            notification.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
-                    <span>${message}</span>
-                </div>
-            `;
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 3000);
+            if (invisibleControl) invisibleControl.style.display = 'none';
+            if (upgradeCTA) upgradeCTA.style.display = 'block';
+            if (featureStatus) {
+                featureStatus.innerHTML = `
+                    <span class="premium-feature-locked">
+                        <i class="fas fa-lock"></i> Bloqueado
+                    </span>
+                `;
+            }
+        }
+    } catch (error) {
+        // Ignorar erro
+    }
+}
+
+// Manipular toggle do modo invisível
+async function handleInvisibleToggle(event) {
+    const isInvisible = event.target.checked;
+    
+    try {
+        if (!currentUser) {
+            throw new Error('Usuário não autenticado');
+        }
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({
+                is_invisible: isInvisible,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', currentUser.id);
+
+        if (error) throw error;
+
+        await updateInvisibleModeUI();
+
+        showNotification(
+            `Modo invisível ${isInvisible ? 'ativado' : 'desativado'} com sucesso!`,
+            'success'
+        );
+
+    } catch (error) {
+        showNotification('Erro ao atualizar modo invisível', 'error');
+        event.target.checked = !isInvisible;
+    }
+}
+
+// Salvar perfil
+async function handleProfileSave(event) {
+    event.preventDefault();
+    
+    const saveButton = document.getElementById('saveButton');
+    if (!saveButton) return;
+
+    const originalText = saveButton.innerHTML;
+    
+    try {
+        saveButton.innerHTML = 'Salvando...';
+        saveButton.disabled = true;
+
+        const profileData = collectProfileData();
+        const userDetailsData = collectUserDetailsData();
+
+        if (!validateProfileData(profileData, userDetailsData)) {
+            saveButton.innerHTML = originalText;
+            saveButton.disabled = false;
+            return;
+        }
+
+        await saveProfileToDatabase(profileData, userDetailsData);
+        
+        const userNicknameElement = document.getElementById('userNickname');
+        if (userNicknameElement && profileData.nickname) {
+            userNicknameElement.textContent = profileData.nickname;
+        }
+        
+        showNotification('Perfil salvo com sucesso!', 'success');
+        
+    } catch (error) {
+        showNotification('Erro ao salvar perfil: ' + error.message, 'error');
+    } finally {
+        saveButton.innerHTML = originalText;
+        saveButton.disabled = false;
+    }
+}
+
+// Coletar dados do perfil
+function collectProfileData() {
+    const invisibleCheckbox = document.getElementById('isInvisible');
+    const isInvisible = invisibleCheckbox ? invisibleCheckbox.checked : false;
+
+    return {
+        full_name: getValue('fullName'),
+        nickname: getValue('nickname'),
+        birth_date: getValue('birthDate'),
+        cpf: getValue('cpf').replace(/\D/g, ''),
+        phone: getValue('phone').replace(/\D/g, ''),
+        street: getValue('street'),
+        number: getValue('number'),
+        neighborhood: getValue('neighborhood'),
+        city: getValue('city'),
+        state: getValue('state'),
+        zip_code: getValue('zipCode').replace(/\D/g, ''),
+        display_city: getValue('displayCity'),
+        is_invisible: isInvisible
+    };
+}
+
+// Coletar dados públicos
+function collectUserDetailsData() {
+    const interests = Array.from(document.querySelectorAll('input[name="interests"]:checked'))
+        .map(checkbox => checkbox.value);
+
+    const characteristics = Array.from(document.querySelectorAll('input[name="characteristics"]:checked'))
+        .map(checkbox => checkbox.value);
+
+    return {
+        relationship_status: getValue('relationshipStatus'),
+        gender: getValue('gender'),
+        sexual_orientation: getValue('sexualOrientation'),
+        profession: getValue('profession'),
+        education: getValue('education'),
+        zodiac: getValue('zodiac'),
+        looking_for: getValue('lookingFor'),
+        description: getValue('description'),
+        religion: getValue('religion'),
+        drinking: getValue('drinking'),
+        smoking: getValue('smoking'),
+        exercise: getValue('exercise'),
+        exercise_details: getValue('exerciseDetails'),
+        has_pets: getValue('hasPets'),
+        pets_details: getValue('petsDetails'),
+        interests: interests,
+        characteristics: characteristics
+    };
+}
+
+// Validar dados antes de salvar
+function validateProfileData(profileData, userDetailsData) {
+    if (!profileData.nickname) {
+        showNotification('Informe um nickname!', 'error');
+        return false;
+    }
+    
+    if (!profileData.birth_date) {
+        showNotification('Informe a data de nascimento!', 'error');
+        return false;
+    }
+
+    const birthDate = new Date(profileData.birth_date);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    
+    if (age < 18) {
+        showNotification('Você deve ter pelo menos 18 anos!', 'error');
+        return false;
+    }
+    
+    if (!userDetailsData.relationship_status) {
+        showNotification('Informe seu status de relacionamento!', 'error');
+        return false;
+    }
+    
+    if (!userDetailsData.gender) {
+        showNotification('Informe o gênero!', 'error');
+        return false;
+    }
+    
+    if (!userDetailsData.looking_for) {
+        showNotification('Informe o que você procura!', 'error');
+        return false;
+    }
+
+    return true;
+}
+
+// Salvar no banco
+async function saveProfileToDatabase(profileData, userDetailsData) {
+    if (!currentUser) {
+        throw new Error('Usuário não autenticado');
+    }
+
+    const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+            id: currentUser.id,
+            ...profileData,
+            updated_at: new Date().toISOString()
+        });
+
+    if (profileError) throw new Error(`Perfil: ${profileError.message}`);
+
+    const { error: detailsError } = await supabase
+        .from('user_details')
+        .upsert({
+            user_id: currentUser.id,
+            ...userDetailsData,
+            updated_at: new Date().toISOString()
+        });
+
+    if (detailsError) throw new Error(`Detalhes: ${detailsError.message}`);
+}
+
+// Funções auxiliares
+function getValue(id) {
+    const element = document.getElementById(id);
+    return element ? element.value.trim() : '';
+}
+
+function setValue(id, value) {
+    const element = document.getElementById(id);
+    if (element && value) element.value = value;
+}
+
+// Máscaras
+function maskCPF(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    }
+    e.target.value = value;
+}
+
+function maskPhone(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+        value = value.replace(/(\d{2})(\d)/, '($1) $2');
+        value = value.replace(/(\d{5})(\d)/, '$1-$2');
+    }
+    e.target.value = value;
+}
+
+function maskCEP(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 8) {
+        value = value.replace(/(\d{5})(\d)/, '$1-$2');
+    }
+    e.target.value = value;
+}
+
+// Contador de caracteres
+function updateCharCount() {
+    const textarea = document.getElementById('description');
+    const charCount = document.getElementById('charCount');
+    
+    if (textarea && charCount) {
+        const count = textarea.value.length;
+        charCount.textContent = `${count}/100`;
+        
+        if (count > 100) {
+            textarea.value = textarea.value.substring(0, 100);
+            updateCharCount();
         }
     }
 }
 
-window.SistemaVibe = SistemaVibe;
+// Sistema de notificações
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span class="notification-message">${message}</span>
+            <button class="notification-close">×</button>
+        </div>
+    `;
 
-function initializeSistemaVibe() {
-    if (window.MessagesSystem && window.MessagesSystem.currentUser && !window.sistemaVibe) {
-        window.sistemaVibe = new SistemaVibe();
-        window.sistemaVibe.initialize(window.MessagesSystem.currentUser);
+    notification.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: ${type === 'error' ? '#f56565' : type === 'success' ? '#48bb78' : '#4299e1'};
+        color: white;
+        padding: 16px 20px;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        z-index: 10000;
+        max-width: 350px;
+        animation: slideInRight 0.3s ease;
+    `;
+
+    document.body.appendChild(notification);
+
+    notification.querySelector('.notification-close').onclick = () => notification.remove();
+
+    setTimeout(() => {
+        if (notification.parentElement) notification.remove();
+    }, 5000);
+}
+
+// Função para buscar CEP
+async function buscarCEP(cep) {
+    try {
+        const cepLimpo = cep.replace(/\D/g, '');
+        if (cepLimpo.length !== 8) return;
         
-        const originalSelectConversation = window.MessagesSystem.selectConversation;
-        window.MessagesSystem.selectConversation = async function(otherUserId) {
-            const result = await originalSelectConversation.call(this, otherUserId);
-            if (window.sistemaVibe) {
-                await window.sistemaVibe.onConversationSelected(otherUserId);
-            }
-            return result;
-        };
+        const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+        const data = await response.json();
         
-        setTimeout(() => {
-            if (window.sistemaVibe) {
-                window.sistemaVibe.createProposalsButton();
-                window.sistemaVibe.createFidelityButton();
-                window.sistemaVibe.loadReceivedProposals();
-            }
-        }, 1000);
-    } else {
-        setTimeout(initializeSistemaVibe, 1000);
+        if (!data.erro) {
+            setValue('street', data.logradouro);
+            setValue('neighborhood', data.bairro);
+            setValue('city', data.localidade);
+            setValue('state', data.uf);
+            setValue('displayCity', `${data.localidade}, ${data.uf}`);
+        }
+    } catch (error) {
+        // Ignorar erro
     }
 }
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeSistemaVibe);
-} else {
-    initializeSistemaVibe();
-}
-
-window.acceptProposal = function(proposalId) {
-    if (window.sistemaVibe) {
-        window.sistemaVibe.acceptFidelityProposal(proposalId);
-    }
-};
-
-window.rejectProposal = function(proposalId) {
-    if (window.sistemaVibe) {
-        window.sistemaVibe.rejectFidelityProposal(proposalId);
-    }
-};
-
-window.closeFidelityModal = function() {
-    const modal = document.getElementById('fidelityModal');
-    if (modal) modal.style.display = 'none';
-};
-
-window.closeManageFidelityModal = function() {
-    const modal = document.getElementById('manageFidelityModal');
-    if (modal) modal.style.display = 'none';
+// Exportar para uso global
+window.supabase = supabase;
+window.profileManager = {
+    loadUserProfile,
+    saveProfile: handleProfileSave,
+    showNotification,
+    updateInvisibleModeUI
 };
