@@ -295,21 +295,47 @@
             </div>
         </div>
     </div>
-
-    <!-- Scripts -->
-     <script src="auth-vibe.js"></script>
+<script src="auth-vibe.js"></script>
     <script src="premium-check.js"></script>
     <script src="sistema-vibe.js"></script> 
     <script src="mensagens.js"></script>
     <script src="mensagens-temporeal.js"></script>
-    
-    <script>
-        // Configuração do Supabase
-        const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // ==================== FUNÇÕES GLOBAIS DO VIBE EXCLUSIVE ====================
+   
+    <script>
+    // Configuração do Supabase
+    const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Verificação silenciosa do Vibe Exclusive
+    async function checkAndRedirectVibe() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return false;
+            
+            const { data: agreement } = await supabase
+                .rpc('check_active_fidelity_agreement', {
+                    p_user_id: user.id
+                });
+
+            if (agreement?.has_active_agreement) {
+                window.location.href = 'vibe-exclusivo.html';
+                return true;
+            }
+            
+            return false;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    // Executar verificação antes de tudo
+    (async function() {
+        const hasVibe = await checkAndRedirectVibe();
+        if (hasVibe) return; // Para aqui se redirecionou
+        
+        // ==================== CONTINUAÇÃO DO CÓDIGO ORIGINAL ====================
         window.acceptProposal = function(proposalId) {
             if (window.sistemaVibe) {
                 window.sistemaVibe.acceptFidelityProposal(proposalId);
@@ -326,6 +352,10 @@
             }
         };
 
+        // ... TODO O RESTO DO SEU CÓDIGO ORIGINAL CONTINUA AQUI ...
+        
+    })();
+</script>
         // ==================== INICIALIZAÇÃO DO SISTEMA VIBE ====================
         function initializeSistemaVibe() {
             if (window.MessagesSystem && window.MessagesSystem.currentUser) {
