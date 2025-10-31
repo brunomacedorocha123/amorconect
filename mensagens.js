@@ -1,4 +1,4 @@
-// mensagens.js - Sistema completo CORRIGIDO com redirecionamento automático Vibe
+// mensagens.js - Sistema completo com redirecionamento Vibe Exclusive
 class MessagesSystem {
   constructor() {
     this.supabase = supabase;
@@ -17,6 +17,9 @@ class MessagesSystem {
 
   async initialize() {
     try {
+      // ⭐⭐ VERIFICAÇÃO VIBE EXCLUSIVE - PRIMEIRO
+      await this.checkAndRedirectToVibeExclusive();
+      
       await this.checkAuth();
       await this.loadUserData();
       await this.initializeStatusSystem();
@@ -27,36 +30,30 @@ class MessagesSystem {
       this.checkUrlParams();
       await this.initializeSistemaVibe();
       
-      // ⭐⭐ NOVO: Verificação automática do Vibe Exclusive
-      await this.checkAndRedirectToVibeExclusive();
-      
     } catch (error) {
       // Silencioso
     }
   }
 
-  // ⭐⭐ NOVA FUNÇÃO: Verificar e redirecionar automaticamente
+  // ⭐⭐ FUNÇÃO CRÍTICA: Verificar e redirecionar para Vibe Exclusive
   async checkAndRedirectToVibeExclusive() {
     try {
-      if (!this.currentUser) return;
+      const { data: { user } } = await this.supabase.auth.getUser();
+      if (!user) return;
       
-      // Verificar se tem acordo Vibe ativo
-      const { data: agreement, error } = await this.supabase
+      const { data: agreement } = await this.supabase
         .rpc('check_active_fidelity_agreement', {
-          p_user_id: this.currentUser.id
+          p_user_id: user.id
         });
 
-      if (error || !agreement) return;
-      
-      if (agreement.has_active_agreement) {
-        console.log('🎯 Vibe Exclusive ativo - Redirecionando...');
-        // Pequeno delay para carregar a página primeiro
-        setTimeout(() => {
-          window.location.href = 'vibe-exclusivo.html';
-        }, 1000);
+      if (agreement && agreement[0]?.has_active_agreement) {
+        window.location.href = 'vibe-exclusivo.html';
+        throw new Error('Vibe Exclusive ativo - Redirecionado');
       }
     } catch (error) {
-      // Silencioso
+      if (error.message.includes('Redirecionado')) {
+        throw error;
+      }
     }
   }
 
@@ -76,9 +73,7 @@ class MessagesSystem {
         await this.sistemaVibe.initialize(this.currentUser);
         this.setupFidelityButtonHandlers();
       }
-    } catch (error) {
-      console.error('Erro ao inicializar Sistema Vibe:', error);
-    }
+    } catch (error) {}
   }
 
   setupFidelityButtonHandlers() {
@@ -129,9 +124,7 @@ class MessagesSystem {
         this.currentUser.profile = profile;
         this.updateUserHeader(profile);
       }
-    } catch (error) {
-      console.error('Erro ao carregar dados do usuário:', error);
-    }
+    } catch (error) {}
   }
 
   updateUserHeader(profile) {
@@ -223,19 +216,62 @@ class MessagesSystem {
     }
   }
 
-    // ⭐ FUNÇÃO CRÍTICA: Lógica EXATA para status
+  async loadConversations() {
+    if (this.isLoading) return;
+    
+    try {
+      this.isLoading = true;
+      this.showLoading('conversationsList');
+      
+      const { data: conversations, error } = await this.supabase
+        .rpc('get_user_conversations', {
+          p_user_id: this.currentUser.id
+        });
+
+      if (error) {
+        await this.loadConversationsFallback();
+        return;
+      }
+
+      this.conversations = conversations || [];
+      
+      await this.updateConversationsWithRealStatus();
+      
+      this.renderConversations();
+      
+    } catch (error) {
+      await this.loadConversationsFallback();
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  async updateConversationsWithRealStatus() {
+    if (!this.conversations.length) return;
+    
+    try {
+      const userIds = this.conversations.map(conv => conv.other_user_id);
+      const statusMap = await this.getMultipleUsersStatus(userIds);
+      
+      this.conversations.forEach(conv => {
+        if (statusMap[conv.other_user_id]) {
+          const statusInfo = statusMap[conv.other_user_id];
+          conv.other_user_online = statusInfo.status === 'online';
+          conv.status_info = statusInfo;
+        }
+      });
+    } catch (error) {}
+  }
+
   calculateUserStatus(lastOnlineAt, realStatus, isInvisible = false, userId = null) {
-    // 1. Se usuário é invisível E não é o usuário atual → SEMPRE "Offline"
     if (isInvisible && userId !== this.currentUser?.id) {
       return { status: 'invisible', text: 'Offline', class: 'status-offline' };
     }
 
-    // 2. Se status real é "online" → "Online"
     if (realStatus === 'online') {
       return { status: 'online', text: 'Online', class: 'status-online' };
     }
 
-    // 3. Verificar grace period de 2 minutos
     const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
     const lastOnline = lastOnlineAt ? new Date(lastOnlineAt) : null;
     const isWithinGracePeriod = lastOnline && lastOnline > twoMinutesAgo;
@@ -247,7 +283,6 @@ class MessagesSystem {
     }
   }
 
-  // ⭐ FUNÇÃO para buscar status de múltiplos usuários
   async getMultipleUsersStatus(userIds) {
     if (!userIds || userIds.length === 0) return {};
     
@@ -272,58 +307,6 @@ class MessagesSystem {
       return statusMap;
     } catch (error) {
       return {};
-    }
-  }
-
-  async loadConversations() {
-    if (this.isLoading) return;
-    
-    try {
-      this.isLoading = true;
-      this.showLoading('conversationsList');
-      
-      const { data: conversations, error } = await this.supabase
-        .rpc('get_user_conversations', {
-          p_user_id: this.currentUser.id
-        });
-
-      if (error) {
-        await this.loadConversationsFallback();
-        return;
-      }
-
-      this.conversations = conversations || [];
-      
-      // ⭐ CORREÇÃO: Buscar status REAL para todas as conversas
-      await this.updateConversationsWithRealStatus();
-      
-      this.renderConversations();
-      
-    } catch (error) {
-      await this.loadConversationsFallback();
-    } finally {
-      this.isLoading = false;
-    }
-  }
-
-  // ⭐ FUNÇÃO CRÍTICA: Atualizar status das conversas com dados REAIS
-  async updateConversationsWithRealStatus() {
-    if (!this.conversations.length) return;
-    
-    try {
-      const userIds = this.conversations.map(conv => conv.other_user_id);
-      const statusMap = await this.getMultipleUsersStatus(userIds);
-      
-      // Atualizar cada conversa com status REAL
-      this.conversations.forEach(conv => {
-        if (statusMap[conv.other_user_id]) {
-          const statusInfo = statusMap[conv.other_user_id];
-          conv.other_user_online = statusInfo.status === 'online';
-          conv.status_info = statusInfo; // Guardar info completa
-        }
-      });
-    } catch (error) {
-      // Fallback silencioso
     }
   }
 
@@ -607,7 +590,7 @@ class MessagesSystem {
     this.scrollToBottom();
   }
 
-    groupMessagesByDate(messages) {
+  groupMessagesByDate(messages) {
     return messages.reduce((groups, message) => {
       const date = message.sent_at.split('T')[0];
       if (!groups[date]) {
@@ -640,13 +623,11 @@ class MessagesSystem {
     if (chatHeader) chatHeader.style.display = 'flex';
   }
 
-  // ⭐ FUNÇÃO CRÍTICA: Header do chat com status REAL
   async updateChatHeader(otherUserId) {
     const chatHeader = document.getElementById('chatHeader');
     if (!chatHeader) return;
     
     try {
-      // Buscar status ATUALIZADO do usuário
       const statusInfo = await this.getUserStatus(otherUserId);
       const conversation = this.conversations.find(c => c.other_user_id === otherUserId);
       
@@ -691,7 +672,6 @@ class MessagesSystem {
         await this.sistemaVibe.onConversationSelected(otherUserId);
       }
     } catch (error) {
-      // Fallback em caso de erro
       const conversation = this.conversations.find(c => c.other_user_id === otherUserId);
       if (conversation) {
         const statusInfo = conversation.status_info || this.calculateUserStatus(null, null, false, otherUserId);
@@ -735,7 +715,6 @@ class MessagesSystem {
     }
   }
 
-  // ⭐ FUNÇÃO CRÍTICA: Buscar status individual ATUALIZADO
   async getUserStatus(userId) {
     try {
       const { data: profile, error } = await this.supabase
@@ -780,7 +759,6 @@ class MessagesSystem {
       this.setSendButtonState(true);
       this.showMessageStatus('Enviando...', 'info');
 
-      // ⭐ MANTIDO: Sistema Premium/Free com RESET AUTOMÁTICO
       const canSend = await this.checkCanSendMessage();
       if (!canSend.can_send) {
         this.handleSendError(canSend.reason);
@@ -843,7 +821,6 @@ class MessagesSystem {
     }
   }
 
-  // ⭐⭐ FUNÇÃO NOVA: Reset automático do contador diário
   async resetDailyCounterIfNeeded() {
     try {
       const { data: limits, error } = await this.supabase
@@ -853,7 +830,6 @@ class MessagesSystem {
         .single();
 
       if (error || !limits) {
-        // Se não existe registro, criar um
         await this.supabase
           .from('user_message_limits')
           .upsert({
@@ -867,10 +843,7 @@ class MessagesSystem {
       const today = new Date().toISOString().split('T')[0];
       const lastReset = new Date(limits.last_reset_date).toISOString().split('T')[0];
 
-      // ⭐ VERIFICAÇÃO CRÍTICA: Se é um novo dia, resetar contador
       if (lastReset !== today) {
-        console.log('🔄 Resetando contador diário - Novo dia!');
-        
         await this.supabase
           .from('user_message_limits')
           .update({
@@ -880,18 +853,13 @@ class MessagesSystem {
           .eq('user_id', this.currentUser.id);
       }
 
-    } catch (error) {
-      console.error('Erro ao resetar contador:', error);
-    }
+    } catch (error) {}
   }
 
-  // ⭐ ATUALIZADA: Sistema Premium/Free com RESET AUTOMÁTICO
   async checkCanSendMessage() {
     try {
-      // ⭐⭐ CHAMADA CRÍTICA: Sempre verificar/resetar antes de contar
       await this.resetDailyCounterIfNeeded();
 
-      // ⭐ USANDO PREMIUM MANAGER EXISTENTE
       let isPremium = false;
       if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
         isPremium = await PremiumManager.checkPremiumStatus();
@@ -939,13 +907,10 @@ class MessagesSystem {
     }
   }
 
-  // ⭐ MANTIDO INTACTO: Contador de mensagens Free/Premium
   async updateMessageCounter() {
     try {
-      // ⭐⭐ SEMPRE VERIFICAR RESET ANTES DE ATUALIZAR
       await this.resetDailyCounterIfNeeded();
 
-      // ⭐ USANDO PREMIUM MANAGER EXISTENTE
       let isPremium = false;
       if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
         isPremium = await PremiumManager.checkPremiumStatus();
