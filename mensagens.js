@@ -8,7 +8,6 @@ class MessagesSystem {
     this.messages = [];
     this.messageLimit = 4;
     this.isLoading = false;
-    this.initialized = false;
     
     this.statusSystem = null;
     this.sistemaVibe = null;
@@ -18,9 +17,9 @@ class MessagesSystem {
 
   async initialize() {
     try {
-      const hasVibeActive = await this.checkAndRedirectToVibeExclusive();
-      if (hasVibeActive) return;
-
+      // ⭐⭐ VERIFICAÇÃO VIBE EXCLUSIVE - PRIMEIRO
+      await this.checkAndRedirectToVibeExclusive();
+      
       await this.checkAuth();
       await this.loadUserData();
       await this.initializeStatusSystem();
@@ -31,41 +30,30 @@ class MessagesSystem {
       this.checkUrlParams();
       await this.initializeSistemaVibe();
       
-      this.initialized = true;
-      
     } catch (error) {
-      // Inicialização silenciosa
+      // Silencioso
     }
   }
 
+  // ⭐⭐ FUNÇÃO CRÍTICA: Verificar e redirecionar para Vibe Exclusive
   async checkAndRedirectToVibeExclusive() {
     try {
-      if (window.location.pathname.includes('vibe-exclusive') || 
-          window.location.pathname.includes('vibe-exclusivo')) {
-        return false;
-      }
-
       const { data: { user } } = await this.supabase.auth.getUser();
-      if (!user) return false;
+      if (!user) return;
       
-      const { data: agreement, error } = await this.supabase
+      const { data: agreement } = await this.supabase
         .rpc('check_active_fidelity_agreement', {
           p_user_id: user.id
         });
 
-      if (error) return false;
-
-      if (agreement && agreement.has_active_agreement) {
-        setTimeout(() => {
-          window.location.replace('vibe-exclusive.html');
-        }, 500);
-        return true;
+      if (agreement && agreement[0]?.has_active_agreement) {
+        window.location.href = 'vibe-exclusive.html';
+        throw new Error('Vibe Exclusive ativo - Redirecionado');
       }
-      
-      return false;
-      
     } catch (error) {
-      return false;
+      if (error.message.includes('Redirecionado')) {
+        throw error;
+      }
     }
   }
 
@@ -85,9 +73,7 @@ class MessagesSystem {
         await this.sistemaVibe.initialize(this.currentUser);
         this.setupFidelityButtonHandlers();
       }
-    } catch (error) {
-      // Sistema Vibe não disponível
-    }
+    } catch (error) {}
   }
 
   setupFidelityButtonHandlers() {
@@ -104,7 +90,6 @@ class MessagesSystem {
       this.showNotification('Selecione uma conversa primeiro', 'error');
       return;
     }
-    
     if (this.sistemaVibe) {
       await this.sistemaVibe.proposeFidelityAgreement(this.currentConversation);
     } else {
@@ -139,9 +124,7 @@ class MessagesSystem {
         this.currentUser.profile = profile;
         this.updateUserHeader(profile);
       }
-    } catch (error) {
-      // Erro silencioso
-    }
+    } catch (error) {}
   }
 
   updateUserHeader(profile) {
@@ -221,8 +204,7 @@ class MessagesSystem {
           other_user_online: statusInfo.status === 'online',
           last_message: 'Nenhuma mensagem',
           last_message_at: new Date().toISOString(),
-          unread_count: 0,
-          status_info: statusInfo
+          unread_count: 0
         };
         
         this.conversations.unshift(newConversation);
@@ -254,6 +236,7 @@ class MessagesSystem {
       this.conversations = conversations || [];
       
       await this.updateConversationsWithRealStatus();
+      
       this.renderConversations();
       
     } catch (error) {
@@ -277,9 +260,7 @@ class MessagesSystem {
           conv.status_info = statusInfo;
         }
       });
-    } catch (error) {
-      // Erro silencioso
-    }
+    } catch (error) {}
   }
 
   calculateUserStatus(lastOnlineAt, realStatus, isInvisible = false, userId = null) {
@@ -552,9 +533,7 @@ class MessagesSystem {
         .eq('sender_id', otherUserId)
         .eq('receiver_id', this.currentUser.id)
         .is('read_at', null);
-    } catch (error) {
-      // Erro silencioso
-    }
+    } catch (error) {}
   }
 
   formatMessages(messages) {
@@ -874,9 +853,7 @@ class MessagesSystem {
           .eq('user_id', this.currentUser.id);
       }
 
-    } catch (error) {
-      // Erro silencioso
-    }
+    } catch (error) {}
   }
 
   async checkCanSendMessage() {
@@ -972,9 +949,7 @@ class MessagesSystem {
       `;
       counter.classList.remove('premium');
 
-    } catch (error) {
-      // Erro silencioso
-    }
+    } catch (error) {}
   }
 
   setupEventListeners() {
@@ -1277,9 +1252,7 @@ async function logout() {
     if (!error) {
       window.location.href = 'login.html';
     }
-  } catch (error) {
-    // Logout silencioso
-  }
+  } catch (error) {}
 }
 
 // Monitor de autenticação
