@@ -308,62 +308,67 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // TESTE DIRETO - Mostra NA TELA o resultado da função
-    async function testeDiretoFuncao() {
-        const mensagem = document.createElement('div');
-        mensagem.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #C6A664;
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            z-index: 9999;
-            font-size: 16px;
-            text-align: center;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            max-width: 400px;
-        `;
-        
+    // Redirecionamento para Vibe Exclusive
+    async function redirecionarParaVibe() {
         try {
             const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return false;
             
-            if (!user) {
-                mensagem.innerHTML = '❌ USUÁRIO NÃO LOGADO';
-                document.body.appendChild(mensagem);
-                return;
-            }
-            
-            // Chamar a função DIRETAMENTE
-            const { data: resultado, error } = await supabase
+            const { data: agreement } = await supabase
                 .rpc('check_active_fidelity_agreement', {
                     p_user_id: user.id
                 });
 
-            mensagem.innerHTML = `
-                <strong>🔍 RESULTADO DA FUNÇÃO:</strong><br><br>
-                Resultado: ${JSON.stringify(resultado)}<br>
-                Erro: ${error ? error.message : 'Nenhum'}<br><br>
-                <small>Esta mensagem some em 5 segundos</small>
-            `;
-            
-            document.body.appendChild(mensagem);
-            
-            setTimeout(() => {
-                mensagem.remove();
-            }, 5000);
+            if (agreement && agreement[0]?.has_active_agreement) {
+                window.location.replace('vibe-exclusivo.html');
+                return true;
+            }
             
         } catch (error) {
-            mensagem.innerHTML = `💥 ERRO: ${error.message}`;
-            document.body.appendChild(mensagem);
+            return false;
         }
+        return false;
     }
 
-    // Executar teste direto
-    testeDiretoFuncao();
-</script>
+    // Executar verificação
+    (async function() {
+        const temVibe = await redirecionarParaVibe();
+        if (temVibe) return;
+        
+        // ==================== CÓDIGO ORIGINAL ====================
+        window.acceptProposal = function(proposalId) {
+            if (window.sistemaVibe) {
+                window.sistemaVibe.acceptFidelityProposal(proposalId);
+            } else {
+                alert('Sistema Vibe não carregado! Recarregue a página.');
+            }
+        };
+
+        window.rejectProposal = function(proposalId) {
+            if (window.sistemaVibe) {
+                window.sistemaVibe.rejectFidelityProposal(proposalId);
+            } else {
+                alert('Sistema Vibe não carregado! Recarregue a página.');
+            }
+        };
+
+        function initializeSistemaVibe() {
+            if (window.MessagesSystem && window.MessagesSystem.currentUser) {
+                if (!window.sistemaVibe) {
+                    window.sistemaVibe = new SistemaVibe();
+                    window.sistemaVibe.initialize(window.MessagesSystem.currentUser);
+                }
+                
+                setTimeout(() => {
+                    if (window.sistemaVibe) {
+                        window.sistemaVibe.createProposalsButton();
+                        window.sistemaVibe.createFidelityButton();
+                    }
+                }, 1500);
+            } else {
+                setTimeout(initializeSistemaVibe, 1000);
+            }
+        }
         // ==================== FUNÇÕES EXISTENTES ====================
         
         // Função de logout
@@ -612,10 +617,11 @@
             }, 3000);
         }
 
-        // Funções globais para uso no HTML
+            // Funções globais para uso no HTML
         window.showFidelityProposal = showFidelityProposal;
         window.showManageFidelity = showManageFidelity;
         window.showNotification = showNotification;
-    </script>
+    });
+</script>
 </body>
 </html>
