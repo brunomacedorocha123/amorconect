@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Exclusive - PulseLove</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --gold: #C6A664;
+            --light-gold: #D4B978;
+            --burgundy: #A65B5B;
+            --dark-burgundy: #8A4A4A;
+            --exclusive-bg: #0F0F1A;
+            --exclusive-card: #1A1A2E;
+            --exclusive-border: #2D2D44;
+            --exclusive-text: #E8E8F0;
+            --exclusive-accent: #C6A664;
+            --success: #48bb78;
+            --error: #f56565;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--exclusive-bg) 0%, #1A1A2E 50%, #16213E 100%);
+            color: var(--exclusive-text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .vibe-header {
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 3px solid var(--gold);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .vibe-logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .vibe-logo i {
+            font-size: 2rem;
+            color: var(--gold);
+        }
+
+        .vibe-logo h1 {
+            background: linear-gradient(135deg, var(--gold), var(--light-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .vibe-status {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(198, 166, 100, 0.1);
+            padding: 0.8rem 1.5rem;
+            border-radius: 30px;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--success);
+            border-radius: 50%;
+        }
+
+        .vibe-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+            min-height: calc(100vh - 120px);
+        }
+
+        .vibe-chat-area {
+            background: var(--exclusive-card);
+            border-radius: 20px;
+            border: 1px solid var(--exclusive-border);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .vibe-chat-header {
+            padding: 1.5rem 2rem;
+            background: linear-gradient(135deg, rgba(198, 166, 100, 0.1), transparent);
+            border-bottom: 1px solid var(--exclusive-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .partner-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .partner-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--burgundy));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            border: 3px solid var(--gold);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .partner-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .partner-details h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.3rem;
+            color: var(--exclusive-text);
+        }
+
+        .partner-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--success);
+        }
+
+        .vibe-badge {
+            background: linear-gradient(135deg, var(--gold), var(--light-gold));
+            color: var(--exclusive-bg);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .vibe-messages {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            background: radial-gradient(circle at center, rgba(198, 166, 100, 0.05) 0%, transparent 70%);
+        }
+
+        .vibe-message {
+            max-width: 70%;
+            margin-bottom: 1.5rem;
+            padding: 1rem 1.5rem;
+            border-radius: 20px;
+            position: relative;
+        }
+
+        .vibe-message.own {
+            align-self: flex-end;
+            margin-left: auto;
+            background: linear-gradient(135deg, var(--gold), var(--burgundy));
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .vibe-message.other {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--exclusive-border);
+            color: var(--exclusive-text);
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-content {
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .message-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .message-status {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .vibe-input-area {
+            padding: 1.5rem 2rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-top: 1px solid var(--exclusive-border);
+        }
+
+        .vibe-input-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--exclusive-border);
+            border-radius: 25px;
+            padding: 1rem 1.5rem;
+            transition: var(--transition);
+        }
+
+        .vibe-input-container:focus-within {
+            border-color: var(--gold);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .vibe-input-container textarea {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--exclusive-text);
+            font-size: 1rem;
+            resize: none;
+            outline: none;
+            max-height: 120px;
+            font-family: inherit;
+        }
+
+        .vibe-input-container textarea::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .vibe-send-btn {
+            background: linear-gradient(135deg, var(--gold), var(--burgundy));
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            color: white;
+        }
+
+        .vibe-send-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .vibe-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .stats-card, .connection-card, .actions-card {
+            background: var(--exclusive-card);
+            border: 1px solid var(--exclusive-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, rgba(198, 166, 100, 0.1), rgba(166, 91, 91, 0.1));
+            border-color: var(--gold);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--gold);
+        }
+
+        .card-header i {
+            font-size: 1.3rem;
+        }
+
+        .card-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid var(--exclusive-border);
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--exclusive-text);
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .connection-info {
+            text-align: center;
+            padding: 1rem 0;
+        }
+
+        .connection-days {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+
+        .connection-label {
+            color: var(--exclusive-text);
+            opacity: 0.8;
+            margin-bottom: 1rem;
+        }
+
+        .connection-date {
+            font-size: 0.9rem;
+            color: var(--gold);
+            background: rgba(198, 166, 100, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 15px;
+            display: inline-block;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .vibe-btn {
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            font-size: 0.95rem;
+        }
+
+        .vibe-btn.primary {
+            background: linear-gradient(135deg, var(--gold), var(--burgundy));
+            color: white;
+        }
+
+        .vibe-btn.secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--exclusive-text);
+            border: 1px solid var(--exclusive-border);
+        }
+
+        .vibe-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .welcome-message {
+            margin-bottom: 2rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 968px) {
+            .vibe-container {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .vibe-sidebar {
+                order: -1;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .vibe-message {
+                max-width: 85%;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+
+        .vibe-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .vibe-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .vibe-messages::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <header class="vibe-header">
+        <div class="header-content">
+            <div class="vibe-logo">
+                <i class="fas fa-gem"></i>
+                <h1>Vibe Exclusive</h1>
+            </div>
+            <div class="vibe-status">
+                <div class="status-dot"></div>
+                <span>Conexão Exclusiva Ativa</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="vibe-container">
+        <section class="vibe-chat-area">
+            <div class="vibe-chat-header">
+                <div class="partner-info">
+                    <div class="partner-avatar" id="partnerAvatar">
+                        <div class="avatar-fallback" id="avatarFallback">P</div>
+                    </div>
+                    <div class="partner-details">
+                        <h3 id="partnerName">Carregando...</h3>
+                        <div class="partner-status">
+                            <div class="status-dot"></div>
+                            <span>Online</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="vibe-badge">
+                    <i class="fas fa-lock"></i> Conexão Exclusiva
+                </div>
+            </div>
+
+            <div class="vibe-messages" id="vibeMessages">
+                <div class="welcome-message">
+                    <div class="vibe-message other">
+                        <div class="message-content">
+                            💫 Bem-vindo ao seu espaço exclusivo! Esta conexão é especial e única. 
+                            Aproveitem cada momento juntos!
+                        </div>
+                        <div class="message-meta">
+                            <span class="message-time">Agora</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="vibe-input-area">
+                <div class="vibe-input-container">
+                    <textarea 
+                        id="vibeMessageInput" 
+                        placeholder="Digite sua mensagem especial..." 
+                        rows="1"
+                        maxlength="1000"
+                    ></textarea>
+                    <button class="vibe-send-btn" id="vibeSendBtn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <aside class="vibe-sidebar">
+            <div class="stats-card">
+                <div class="card-header">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Estatísticas</h3>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value" id="daysTogether">0</span>
+                        <span class="stat-label">Dias Juntos</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="messagesCount">0</span>
+                        <span class="stat-label">Mensagens</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="avgDaily">0</span>
+                        <span class="stat-label">Média/Dia</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="connectionStrength">100%</span>
+                        <span class="stat-label">Conexão</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connection-card">
+                <div class="card-header">
+                    <i class="fas fa-heart"></i>
+                    <h3>Conexão</h3>
+                </div>
+                <div class="connection-info">
+                    <div class="connection-days" id="exclusiveDays">1</div>
+                    <div class="connection-label">dias de conexão exclusiva</div>
+                    <div class="connection-date" id="startDate">Iniciado em ...</div>
+                </div>
+            </div>
+
+            <div class="actions-card">
+                <div class="card-header">
+                    <i class="fas fa-cog"></i>
+                    <h3>Ações</h3>
+                </div>
+                <div class="action-buttons">
+                    <button class="vibe-btn primary" onclick="showMemories()">
+                        <i class="fas fa-images"></i> Memórias
+                    </button>
+                    <button class="vibe-btn secondary" onclick="showConnectionDetails()">
+                        <i class="fas fa-info-circle"></i> Detalhes
+                    </button>
+                    <button class="vibe-btn secondary" onclick="manageVibeExclusive()">
+                        <i class="fas fa-gem"></i> Gerenciar
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <script>
+        const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUser = null;
+        let partnerUser = null;
+        let activeAgreement = null;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await checkAuthentication();
+            await loadVibeExclusiveData();
+            setupEventListeners();
+            startRealTimeUpdates();
+        });
+
+        async function checkAuthentication() {
+            try {
+                const { data: { user }, error } = await supabase.auth.getUser();
+                if (error || !user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                currentUser = user;
+
+                const { data: agreement, error: agreementError } = await supabase
+                    .rpc('check_active_fidelity_agreement', {
+                        p_user_id: user.id
+                    });
+
+                if (agreementError || !agreement.has_active_agreement) {
+                    window.location.href = 'mensagens.html';
+                    return;
+                }
+
+                activeAgreement = agreement;
+                await loadPartnerInfo(agreement.partner_id);
+
+            } catch (error) {
+                window.location.href = 'mensagens.html';
+            }
+        }
+
+        async function loadPartnerInfo(partnerId) {
+            try {
+                const { data: profile, error } = await supabase
+                    .from('profiles')
+                    .select('nickname, avatar_url')
+                    .eq('id', partnerId)
+                    .single();
+
+                if (error) throw error;
+
+                partnerUser = profile;
+                updatePartnerUI(profile);
+                
+            } catch (error) {
+                document.getElementById('partnerName').textContent = 'Parceiro';
+            }
+        }
+
+        function updatePartnerUI(profile) {
+            document.getElementById('partnerName').textContent = profile.nickname;
+            
+            const avatar = document.getElementById('partnerAvatar');
+            if (profile.avatar_url) {
+                avatar.innerHTML = `<img src="${profile.avatar_url}" alt="${profile.nickname}">`;
+            } else {
+                document.getElementById('avatarFallback').textContent = 
+                    profile.nickname.charAt(0).toUpperCase();
+            }
+        }
+
+        async function loadVibeExclusiveData() {
+            await loadConnectionStats();
+            await loadVibeMessages();
+        }
+
+        async function loadConnectionStats() {
+            if (!activeAgreement) return;
+
+            try {
+                const startDate = new Date(activeAgreement.accepted_at || new Date());
+                const today = new Date();
+                const daysTogether = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
+                
+                document.getElementById('daysTogether').textContent = daysTogether;
+                document.getElementById('exclusiveDays').textContent = daysTogether;
+                document.getElementById('startDate').textContent = 
+                    `Iniciado em ${startDate.toLocaleDateString('pt-BR')}`;
+
+                const { data: messages, error } = await supabase
+                    .from('messages')
+                    .select('id')
+                    .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${activeAgreement.partner_id}),and(sender_id.eq.${activeAgreement.partner_id},receiver_id.eq.${currentUser.id})`);
+
+                if (!error) {
+                    const totalMessages = messages.length;
+                    const avgDaily = Math.round(totalMessages / daysTogether);
+                    
+                    document.getElementById('messagesCount').textContent = totalMessages;
+                    document.getElementById('avgDaily').textContent = avgDaily;
+                }
+
+            } catch (error) {
+                // Silencioso
+            }
+        }
+
+        async function loadVibeMessages() {
+            if (!activeAgreement) return;
+
+            try {
+                const { data: messages, error } = await supabase
+                    .from('messages')
+                    .select(`
+                        id,
+                        sender_id,
+                        receiver_id,
+                        message,
+                        sent_at,
+                        read_at,
+                        sender:profiles!messages_sender_id_fkey(nickname)
+                    `)
+                    .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${activeAgreement.partner_id}),and(sender_id.eq.${activeAgreement.partner_id},receiver_id.eq.${currentUser.id})`)
+                    .order('sent_at', { ascending: true });
+
+                if (error) throw error;
+
+                renderVibeMessages(messages);
+                
+            } catch (error) {
+                // Silencioso
+            }
+        }
+
+        function renderVibeMessages(messages) {
+            const container = document.getElementById('vibeMessages');
+            if (!messages || messages.length === 0) return;
+
+            const welcomeMsg = container.querySelector('.welcome-message');
+            container.innerHTML = '';
+            if (welcomeMsg) container.appendChild(welcomeMsg);
+
+            messages.forEach(msg => {
+                const messageElement = createMessageElement(msg);
+                container.appendChild(messageElement);
+            });
+
+            scrollToBottom();
+        }
+
+        function createMessageElement(msg) {
+            const isOwn = msg.sender_id === currentUser.id;
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `vibe-message ${isOwn ? 'own' : 'other'}`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${escapeHtml(msg.message)}</div>
+                <div class="message-meta">
+                    <span class="message-time">${formatTime(msg.sent_at)}</span>
+                    ${isOwn ? `
+                        <div class="message-status">
+                            <i class="fas ${msg.read_at ? 'fa-check-double' : 'fa-check'}"></i>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            return messageDiv;
+        }
+
+        function setupEventListeners() {
+            const messageInput = document.getElementById('vibeMessageInput');
+            const sendBtn = document.getElementById('vibeSendBtn');
+
+            if (messageInput) {
+                messageInput.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+                });
+
+                messageInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendVibeMessage();
+                    }
+                });
+            }
+
+            if (sendBtn) {
+                sendBtn.addEventListener('click', sendVibeMessage);
+            }
+        }
+
+        async function sendVibeMessage() {
+            const messageInput = document.getElementById('vibeMessageInput');
+            const message = messageInput.value.trim();
+            
+            if (!message || !activeAgreement) return;
+
+            try {
+                const { data, error } = await supabase
+                    .rpc('send_message', {
+                        p_sender_id: currentUser.id,
+                        p_receiver_id: activeAgreement.partner_id,
+                        p_message: message
+                    });
+
+                if (error) throw error;
+
+                if (data === 'success') {
+                    messageInput.value = '';
+                    messageInput.style.height = 'auto';
+                    await loadVibeMessages();
+                    await loadConnectionStats();
+                }
+
+            } catch (error) {
+                showNotification('Erro ao enviar mensagem');
+            }
+        }
+
+        function startRealTimeUpdates() {
+            if (!activeAgreement) return;
+
+            supabase
+                .channel('vibe_messages')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'messages',
+                        filter: `receiver_id=eq.${currentUser.id}`
+                    },
+                    async (payload) => {
+                        if (payload.new.sender_id === activeAgreement.partner_id) {
+                            await loadVibeMessages();
+                            await loadConnectionStats();
+                        }
+                    }
+                )
+                .subscribe();
+        }
+
+        function showMemories() {
+            showNotification('Funcionalidade em breve');
+        }
+
+        function showConnectionDetails() {
+            showNotification('Detalhes em desenvolvimento');
+        }
+
+        function manageVibeExclusive() {
+            window.location.href = 'mensagens.html';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatTime(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleTimeString('pt-BR', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('vibeMessages');
+            if (container) {
+                setTimeout(() => {
+                    container.scrollTop = container.scrollHeight;
+                }, 100);
+            }
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: var(--gold);
+                color: white;
+                padding: 12px 16px;
+                border-radius: 8px;
+                z-index: 1000;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    </script>
+    <script src="auth-vibe.js"></script>
+</body>
+</html>
