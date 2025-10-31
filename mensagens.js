@@ -35,25 +35,41 @@ class MessagesSystem {
     }
   }
 
-  // ⭐⭐ FUNÇÃO CRÍTICA: Verificar e redirecionar para Vibe Exclusive
+  // ⭐⭐ FUNÇÃO CRÍTICA CORRIGIDA: Verificar e redirecionar para Vibe Exclusive
   async checkAndRedirectToVibeExclusive() {
     try {
+      // ⭐⭐ CORREÇÃO: Não verificar se já está no Vibe Exclusive
+      if (window.location.pathname.includes('vibe-exclusive') || 
+          window.location.pathname.includes('vibe-exclusivo')) {
+        return; // Já está na página correta
+      }
+
       const { data: { user } } = await this.supabase.auth.getUser();
       if (!user) return;
       
-      const { data: agreement } = await this.supabase
+      const { data: agreement, error } = await this.supabase
         .rpc('check_active_fidelity_agreement', {
           p_user_id: user.id
         });
 
-      if (agreement && agreement[0]?.has_active_agreement) {
-        window.location.href = 'vibe-exclusive.html';
-        throw new Error('Vibe Exclusive ativo - Redirecionado');
+      if (error) return;
+
+      // ⭐⭐ CORREÇÃO: Verificar corretamente a estrutura da resposta
+      if (agreement && agreement.has_active_agreement) {
+        // ⭐⭐ CORREÇÃO: Redirecionamento seguro sem loop
+        setTimeout(() => {
+          window.location.replace('vibe-exclusive.html');
+        }, 100);
+        
+        // ⭐⭐ CORREÇÃO: Lançar erro específico para parar a inicialização
+        throw new Error('REDIRECTING_TO_VIBE_EXCLUSIVE');
       }
     } catch (error) {
-      if (error.message.includes('Redirecionado')) {
+      // ⭐⭐ CORREÇÃO: Só relançar se for nosso erro de redirecionamento
+      if (error.message === 'REDIRECTING_TO_VIBE_EXCLUSIVE') {
         throw error;
       }
+      // Outros erros são silenciosos
     }
   }
 

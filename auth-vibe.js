@@ -67,19 +67,22 @@ class AuthVibeSystem {
     async applyRedirectLogic(isVibePage) {
         if (!this.redirectEnabled) return;
 
-        // ⭐⭐ CORREÇÃO DO LOOP: Lógica simplificada
+        // ⭐⭐ CORREÇÃO: Só redirecionar SE ESTIVER na página do Vibe mas NÃO TEM acordo
         if (isVibePage && !this.activeAgreement) {
             this.redirectToMessages();
             return;
         }
 
-        if (!isVibePage && this.activeAgreement) {
+        // ⭐⭐ CORREÇÃO: COMENTADO para evitar verificação duplicada com mensagens.js
+        /*
+        if (this.activeAgreement && !isVibePage) {
             const isAllowedPage = this.isAllowedPage();
             if (!isAllowedPage) {
                 this.redirectToVibeExclusive();
                 return;
             }
         }
+        */
 
         this.updateUI();
     }
