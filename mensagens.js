@@ -1,4 +1,4 @@
-// mensagens.js - Sistema completo CORRIGIDO com reset automático do contador
+// mensagens.js - Sistema completo CORRIGIDO com redirecionamento automático Vibe
 class MessagesSystem {
   constructor() {
     this.supabase = supabase;
@@ -26,8 +26,37 @@ class MessagesSystem {
       this.startPeriodicChecks();
       this.checkUrlParams();
       await this.initializeSistemaVibe();
+      
+      // ⭐⭐ NOVO: Verificação automática do Vibe Exclusive
+      await this.checkAndRedirectToVibeExclusive();
+      
     } catch (error) {
-      // Silencioso - sem notificação de erro
+      // Silencioso
+    }
+  }
+
+  // ⭐⭐ NOVA FUNÇÃO: Verificar e redirecionar automaticamente
+  async checkAndRedirectToVibeExclusive() {
+    try {
+      if (!this.currentUser) return;
+      
+      // Verificar se tem acordo Vibe ativo
+      const { data: agreement, error } = await this.supabase
+        .rpc('check_active_fidelity_agreement', {
+          p_user_id: this.currentUser.id
+        });
+
+      if (error || !agreement) return;
+      
+      if (agreement.has_active_agreement) {
+        console.log('🎯 Vibe Exclusive ativo - Redirecionando...');
+        // Pequeno delay para carregar a página primeiro
+        setTimeout(() => {
+          window.location.href = 'vibe-exclusivo.html';
+        }, 1000);
+      }
+    } catch (error) {
+      // Silencioso
     }
   }
 
@@ -40,58 +69,6 @@ class MessagesSystem {
     }
   }
 
-  // ⭐ FUNÇÃO CRÍTICA: Lógica EXATA para status
-  calculateUserStatus(lastOnlineAt, realStatus, isInvisible = false, userId = null) {
-    // 1. Se usuário é invisível E não é o usuário atual → SEMPRE "Offline"
-    if (isInvisible && userId !== this.currentUser?.id) {
-      return { status: 'invisible', text: 'Offline', class: 'status-offline' };
-    }
-
-    // 2. Se status real é "online" → "Online"
-    if (realStatus === 'online') {
-      return { status: 'online', text: 'Online', class: 'status-online' };
-    }
-
-    // 3. Verificar grace period de 2 minutos
-    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
-    const lastOnline = lastOnlineAt ? new Date(lastOnlineAt) : null;
-    const isWithinGracePeriod = lastOnline && lastOnline > twoMinutesAgo;
-
-    if (isWithinGracePeriod) {
-      return { status: 'online', text: 'Online', class: 'status-online' };
-    } else {
-      return { status: 'offline', text: 'Offline', class: 'status-offline' };
-    }
-  }
-
-  // ⭐ FUNÇÃO para buscar status de múltiplos usuários
-  async getMultipleUsersStatus(userIds) {
-    if (!userIds || userIds.length === 0) return {};
-    
-    try {
-      const { data: profiles, error } = await this.supabase
-        .from('profiles')
-        .select('id, last_online_at, real_status, is_invisible')
-        .in('id', userIds);
-
-      if (error || !profiles) return {};
-
-      const statusMap = {};
-      profiles.forEach(profile => {
-        statusMap[profile.id] = this.calculateUserStatus(
-          profile.last_online_at,
-          profile.real_status,
-          profile.is_invisible,
-          profile.id
-        );
-      });
-
-      return statusMap;
-    } catch (error) {
-      return {};
-    }
-  }
-
   async initializeSistemaVibe() {
     try {
       if (window.SistemaVibe && this.currentUser) {
@@ -99,7 +76,9 @@ class MessagesSystem {
         await this.sistemaVibe.initialize(this.currentUser);
         this.setupFidelityButtonHandlers();
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error('Erro ao inicializar Sistema Vibe:', error);
+    }
   }
 
   setupFidelityButtonHandlers() {
@@ -150,7 +129,9 @@ class MessagesSystem {
         this.currentUser.profile = profile;
         this.updateUserHeader(profile);
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error('Erro ao carregar dados do usuário:', error);
+    }
   }
 
   updateUserHeader(profile) {
@@ -242,7 +223,59 @@ class MessagesSystem {
     }
   }
 
-    async loadConversations() {
+    // ⭐ FUNÇÃO CRÍTICA: Lógica EXATA para status
+  calculateUserStatus(lastOnlineAt, realStatus, isInvisible = false, userId = null) {
+    // 1. Se usuário é invisível E não é o usuário atual → SEMPRE "Offline"
+    if (isInvisible && userId !== this.currentUser?.id) {
+      return { status: 'invisible', text: 'Offline', class: 'status-offline' };
+    }
+
+    // 2. Se status real é "online" → "Online"
+    if (realStatus === 'online') {
+      return { status: 'online', text: 'Online', class: 'status-online' };
+    }
+
+    // 3. Verificar grace period de 2 minutos
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+    const lastOnline = lastOnlineAt ? new Date(lastOnlineAt) : null;
+    const isWithinGracePeriod = lastOnline && lastOnline > twoMinutesAgo;
+
+    if (isWithinGracePeriod) {
+      return { status: 'online', text: 'Online', class: 'status-online' };
+    } else {
+      return { status: 'offline', text: 'Offline', class: 'status-offline' };
+    }
+  }
+
+  // ⭐ FUNÇÃO para buscar status de múltiplos usuários
+  async getMultipleUsersStatus(userIds) {
+    if (!userIds || userIds.length === 0) return {};
+    
+    try {
+      const { data: profiles, error } = await this.supabase
+        .from('profiles')
+        .select('id, last_online_at, real_status, is_invisible')
+        .in('id', userIds);
+
+      if (error || !profiles) return {};
+
+      const statusMap = {};
+      profiles.forEach(profile => {
+        statusMap[profile.id] = this.calculateUserStatus(
+          profile.last_online_at,
+          profile.real_status,
+          profile.is_invisible,
+          profile.id
+        );
+      });
+
+      return statusMap;
+    } catch (error) {
+      return {};
+    }
+  }
+
+  async loadConversations() {
     if (this.isLoading) return;
     
     try {
@@ -574,7 +607,7 @@ class MessagesSystem {
     this.scrollToBottom();
   }
 
-  groupMessagesByDate(messages) {
+    groupMessagesByDate(messages) {
     return messages.reduce((groups, message) => {
       const date = message.sent_at.split('T')[0];
       if (!groups[date]) {
@@ -724,7 +757,7 @@ class MessagesSystem {
     return { status: 'offline', text: 'Offline', class: 'status-offline' };
   }
 
-    async sendMessage() {
+  async sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const message = messageInput.value.trim();
     
