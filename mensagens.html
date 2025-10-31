@@ -308,33 +308,31 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Redirecionamento para Vibe Exclusive
-    async function redirecionarParaVibe() {
+    // VERIFICAÇÃO IMEDIATA - EXECUTA ANTES DE TUDO
+    (async function() {
         try {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return false;
+            if (!user) return;
             
             const { data: agreement } = await supabase
                 .rpc('check_active_fidelity_agreement', {
                     p_user_id: user.id
                 });
 
-            if (agreement && agreement[0]?.has_active_agreement) {
-                window.location.replace('vibe-exclusivo.html');
-                return true;
+            // VERIFICAÇÃO DIRETA - se tem acordo, redireciona IMEDIATAMENTE
+            if (agreement && agreement.has_active_agreement) {
+                window.location.replace('vibe-exclusive.html');
+                return; // PARA tudo aqui
             }
-            
         } catch (error) {
-            return false;
+            // Continua para mensagens normais
         }
-        return false;
-    }
-
-    // Executar verificação
-    (async function() {
-        const temVibe = await redirecionarParaVibe();
-        if (temVibe) return;
         
+        // SÓ CHEGA AQUI SE NÃO TEM ACORDO ATIVO
+        iniciarSistemaMensagens();
+    })();
+
+    function iniciarSistemaMensagens() {
         // ==================== CÓDIGO ORIGINAL ====================
         window.acceptProposal = function(proposalId) {
             if (window.sistemaVibe) {
@@ -467,7 +465,6 @@
                 if (data === 'success') {
                     showNotification('Proposta de Vibe Exclusive enviada!', 'success');
                     closeFidelityModal();
-                    updateFidelityButton();
                 } else {
                     showNotification(data, 'error');
                 }
@@ -513,12 +510,7 @@
                 </div>
             `;
 
-            loadFidelityManagementData();
             modal.style.display = 'flex';
-        }
-
-        async function loadFidelityManagementData() {
-            // Carregar dados do acordo
         }
 
         async function cancelFidelityAgreement() {
@@ -537,19 +529,12 @@
                 if (data === 'success') {
                     showNotification('Vibe Exclusive encerrado', 'success');
                     closeManageFidelityModal();
-                    updateFidelityButton();
                 } else {
                     showNotification(data, 'error');
                 }
 
             } catch (error) {
                 showNotification('Erro ao encerrar acordo', 'error');
-            }
-        }
-
-        function updateFidelityButton() {
-            if (window.MessagesSystem && window.MessagesSystem.updateFidelityButton) {
-                window.MessagesSystem.updateFidelityButton();
             }
         }
 
@@ -574,13 +559,6 @@
             
             // Verificar parâmetros da URL
             setTimeout(checkUrlParams, 1000);
-            
-            // Atualizar UI premium
-            setTimeout(async () => {
-                if (typeof PremiumManager !== 'undefined') {
-                    await PremiumManager.updateUIWithPremiumStatus();
-                }
-            }, 500);
         });
 
         // Função global para mostrar notificações
@@ -618,7 +596,13 @@
         window.showFidelityProposal = showFidelityProposal;
         window.showManageFidelity = showManageFidelity;
         window.showNotification = showNotification;
-    });
+        window.logout = logout;
+        window.closeUserInfoModal = closeUserInfoModal;
+        window.closeFidelityModal = closeFidelityModal;
+        window.closeManageFidelityModal = closeManageFidelityModal;
+        window.confirmFidelityProposal = confirmFidelityProposal;
+        window.cancelFidelityAgreement = cancelFidelityAgreement;
+    }
 </script>
 </body>
 </html>
