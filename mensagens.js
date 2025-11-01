@@ -1,4 +1,4 @@
-// mensagens.js - Sistema completo de mensagens com Vibe Exclusive
+// mensagens.js - Sistema completo de mensagens com BLOQUEIO Vibe Exclusive
 class MessagesSystem {
   constructor() {
     this.supabase = supabase;
@@ -18,9 +18,12 @@ class MessagesSystem {
     try {
       await this.checkAuth();
       
-      // Verificar se deve redirecionar para Vibe Exclusive
-      const shouldRedirect = await this.checkVibeStatus();
-      if (shouldRedirect) return; // Para a execução se for redirecionar
+      // ⭐⭐ BLOQUEIO CRÍTICO - Verificar se tem acordo Vibe Exclusive
+      const hasActiveAgreement = await this.checkActiveAgreement();
+      if (hasActiveAgreement) {
+        window.location.href = 'vibe-exclusive.html';
+        return; // BLOQUEIA completamente o carregamento
+      }
       
       await this.loadUserData();
       await this.initializeStatusSystem();
@@ -35,19 +38,14 @@ class MessagesSystem {
     }
   }
 
-  async checkVibeStatus() {
+  async checkActiveAgreement() {
     try {
       const { data: agreement, error } = await this.supabase
         .rpc('check_active_fidelity_agreement', {
           p_user_id: this.currentUser.id
         });
 
-      if (!error && agreement?.has_active_agreement) {
-        // Redirecionar para vibe-exclusive se tiver acordo ativo
-        window.location.href = 'vibe-exclusive.html';
-        return true;
-      }
-      return false;
+      return !error && agreement?.has_active_agreement;
     } catch (error) {
       return false;
     }
@@ -279,7 +277,7 @@ class MessagesSystem {
     }
   }
 
-  async loadConversationsFallback() {
+    async loadConversationsFallback() {
     try {
       const { data: messages, error } = await this.supabase
         .from('messages')
@@ -403,7 +401,7 @@ class MessagesSystem {
     });
   }
 
-    async selectConversation(otherUserId) {
+  async selectConversation(otherUserId) {
     try {
       document.querySelectorAll('.conversation-item').forEach(item => {
         item.classList.remove('active');
@@ -589,8 +587,7 @@ class MessagesSystem {
     if (emptyChat) emptyChat.style.display = 'none';
     if (chatHeader) chatHeader.style.display = 'flex';
   }
-
-  async updateChatHeader(otherUserId) {
+    async updateChatHeader(otherUserId) {
     const chatHeader = document.getElementById('chatHeader');
     if (!chatHeader) return;
     
@@ -830,7 +827,7 @@ class MessagesSystem {
     return { status: 'offline', text: 'Offline', class: 'status-offline' };
   }
 
-    async sendMessage() {
+  async sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const message = messageInput.value.trim();
     
@@ -1206,6 +1203,13 @@ class MessagesSystem {
 
   startPeriodicChecks() {
     setInterval(async () => {
+      // ⭐⭐ VERIFICAÇÃO CONTÍNUA - BLOQUEIO VIBE EXCLUSIVE
+      const hasActiveAgreement = await this.checkActiveAgreement();
+      if (hasActiveAgreement) {
+        window.location.href = 'vibe-exclusive.html';
+        return;
+      }
+      
       if (!this.isLoading && this.currentConversation) {
         await this.loadConversationMessages(this.currentConversation);
       }
