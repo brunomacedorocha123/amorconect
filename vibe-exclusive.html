@@ -587,7 +587,7 @@
         </aside>
     </main>
 
-   <script>
+  <script>
     const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -599,15 +599,11 @@
 
     document.addEventListener('DOMContentLoaded', async function() {
         if (isInitialized) return;
-        
         await initializeVibeExclusive();
     });
 
     async function initializeVibeExclusive() {
         try {
-            console.log('🔐 Iniciando Vibe Exclusive...');
-            
-            // ⭐⭐ VERIFICAÇÃO CRÍTICA - Evitar loop
             const shouldStay = await validateVibeAccess();
             if (!shouldStay) return;
 
@@ -617,21 +613,16 @@
             startRealTimeUpdates();
             
             isInitialized = true;
-            console.log('✅ Vibe Exclusive inicializado com sucesso');
             
         } catch (error) {
-            console.error('❌ Erro na inicialização:', error);
-            // Redirecionar seguro para mensagens em caso de erro
             setTimeout(() => {
                 window.location.replace('mensagens.html');
             }, 1000);
         }
     }
 
-    // ⭐⭐ FUNÇÃO NOVA: Validação de acesso ao Vibe
     async function validateVibeAccess() {
         try {
-            // Verificar autenticação primeiro
             const { data: { user }, error: authError } = await supabase.auth.getUser();
             if (authError || !user) {
                 window.location.href = 'login.html';
@@ -640,31 +631,25 @@
 
             currentUser = user;
 
-            // Verificar se tem acordo ativo
             const { data: agreement, error: agreementError } = await supabase
                 .rpc('check_active_fidelity_agreement', {
                     p_user_id: user.id
                 });
 
             if (agreementError) {
-                console.error('Erro ao verificar acordo:', agreementError);
                 window.location.replace('mensagens.html');
                 return false;
             }
 
-            // ⭐⭐ CORREÇÃO: Verificar corretamente a estrutura da resposta
             if (!agreement || !agreement.has_active_agreement) {
-                console.log('❌ Sem acordo ativo - Redirecionando para mensagens');
                 window.location.replace('mensagens.html');
                 return false;
             }
 
             activeAgreement = agreement;
-            console.log('✅ Acesso Vibe Exclusive validado');
             return true;
 
         } catch (error) {
-            console.error('Erro na validação:', error);
             window.location.replace('mensagens.html');
             return false;
         }
@@ -672,7 +657,6 @@
 
     async function checkAuthentication() {
         try {
-            // Já validado na função anterior, apenas garantir
             if (!currentUser) {
                 const { data: { user }, error } = await supabase.auth.getUser();
                 if (error || !user) {
@@ -681,7 +665,6 @@
                 }
                 currentUser = user;
             }
-
         } catch (error) {
             window.location.href = 'login.html';
         }
@@ -701,7 +684,6 @@
             updatePartnerUI(profile);
             
         } catch (error) {
-            console.error('Erro ao carregar parceiro:', error);
             document.getElementById('partnerName').textContent = 'Parceiro';
         }
     }
@@ -739,7 +721,6 @@
             document.getElementById('startDate').textContent = 
                 `Iniciado em ${startDate.toLocaleDateString('pt-BR')}`;
 
-            // Carregar estatísticas de mensagens
             const { data: messages, error } = await supabase
                 .from('messages')
                 .select('id')
@@ -752,14 +733,11 @@
                 document.getElementById('messagesCount').textContent = totalMessages;
                 document.getElementById('avgDaily').textContent = avgDaily;
                 
-                // Calcular força da conexão baseada em atividade
                 const connectionStrength = Math.min(100, Math.max(50, (avgDaily * 10) + (daysTogether * 2)));
                 document.getElementById('connectionStrength').textContent = `${connectionStrength}%`;
             }
 
-        } catch (error) {
-            console.log('Erro silencioso nas estatísticas');
-        }
+        } catch (error) {}
     }
 
     async function loadVibeMessages() {
@@ -783,13 +761,9 @@
             if (error) throw error;
 
             renderVibeMessages(messages);
-            
-            // Marcar mensagens como lidas
             await markMessagesAsRead();
             
-        } catch (error) {
-            console.log('Erro silencioso ao carregar mensagens');
-        }
+        } catch (error) {}
     }
 
     async function markMessagesAsRead() {
@@ -803,15 +777,12 @@
                 .eq('receiver_id', currentUser.id)
                 .is('read_at', null);
                 
-        } catch (error) {
-            // Silencioso
-        }
+        } catch (error) {}
     }
 
     function renderVibeMessages(messages) {
         const container = document.getElementById('vibeMessages');
         if (!messages || messages.length === 0) {
-            // Manter apenas a mensagem de boas-vindas
             const welcomeMsg = container.querySelector('.welcome-message');
             if (welcomeMsg) {
                 container.innerHTML = '';
@@ -869,7 +840,6 @@
                 }
             });
 
-            // Auto-focus no input
             setTimeout(() => {
                 messageInput.focus();
             }, 1000);
@@ -879,7 +849,6 @@
             sendBtn.addEventListener('click', sendVibeMessage);
         }
 
-        // Botões de ação
         document.addEventListener('click', function(e) {
             if (e.target.closest('.vibe-btn')) {
                 const btn = e.target.closest('.vibe-btn');
@@ -904,12 +873,11 @@
         }
 
         if (message.length > 1000) {
-            showNotification('Mensagem muito longa (máx. 1000 caracteres)', 'error');
+            showNotification('Mensagem muito longa', 'error');
             return;
         }
 
         try {
-            // Feedback visual imediato
             const sendBtn = document.getElementById('vibeSendBtn');
             const originalHtml = sendBtn.innerHTML;
             sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
@@ -928,7 +896,6 @@
                 messageInput.value = '';
                 messageInput.style.height = 'auto';
                 
-                // Recarregar mensagens e estatísticas
                 await loadVibeMessages();
                 await loadConnectionStats();
                 
@@ -938,10 +905,8 @@
             }
 
         } catch (error) {
-            console.error('Erro ao enviar mensagem:', error);
             showNotification('Erro ao enviar mensagem', 'error');
         } finally {
-            // Restaurar botão
             const sendBtn = document.getElementById('vibeSendBtn');
             if (sendBtn) {
                 sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
@@ -953,9 +918,6 @@
     function startRealTimeUpdates() {
         if (!activeAgreement) return;
 
-        console.log('🔔 Iniciando atualizações em tempo real...');
-
-        // Canal para novas mensagens
         supabase
             .channel('vibe_messages')
             .on(
@@ -968,11 +930,9 @@
                 },
                 async (payload) => {
                     if (payload.new.sender_id === activeAgreement.partner_id) {
-                        console.log('Nova mensagem recebida');
                         await loadVibeMessages();
                         await loadConnectionStats();
                         
-                        // Notificação visual
                         if (!document.hidden) {
                             showNotification('Nova mensagem!', 'info');
                         }
@@ -981,7 +941,6 @@
             )
             .subscribe();
 
-        // Canal para atualizações do acordo
         supabase
             .channel('vibe_agreement')
             .on(
@@ -993,8 +952,6 @@
                     filter: `id=eq.${activeAgreement.id}`
                 },
                 async (payload) => {
-                    console.log('Atualização no acordo detectada');
-                    // Recarregar dados se houver mudança no acordo
                     await loadVibeExclusiveData();
                 }
             )
@@ -1003,7 +960,6 @@
 
     function showMemories() {
         showNotification('✨ Memórias em breve disponível!', 'info');
-        // Implementar galeria de fotos/compartilhamentos especiais
     }
 
     function showConnectionDetails() {
@@ -1108,7 +1064,6 @@
                 showNotification('Vibe Exclusive encerrado', 'success');
                 closeCustomModal();
                 
-                // Redirecionar para mensagens após um breve delay
                 setTimeout(() => {
                     window.location.replace('mensagens.html');
                 }, 2000);
@@ -1117,12 +1072,10 @@
             }
 
         } catch (error) {
-            console.error('Erro ao encerrar acordo:', error);
             showNotification('Erro ao encerrar Vibe Exclusive', 'error');
         }
     }
 
-    // Funções auxiliares
     function escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -1149,7 +1102,6 @@
     }
 
     function showNotification(message, type = 'info') {
-        // Remover notificações existentes
         const existingNotifications = document.querySelectorAll('.vibe-notification');
         existingNotifications.forEach(notif => notif.remove());
 
@@ -1162,7 +1114,6 @@
             </div>
         `;
 
-        // Estilos da notificação
         notification.style.cssText = `
             position: fixed;
             top: 20px;
@@ -1188,7 +1139,6 @@
     }
 
     function showCustomModal(title, content) {
-        // Remover modal existente
         const existingModal = document.getElementById('customVibeModal');
         if (existingModal) existingModal.remove();
 
@@ -1210,7 +1160,6 @@
             </div>
         `;
 
-        // Estilos do modal
         const style = document.createElement('style');
         style.textContent = `
             .modal-overlay {
@@ -1288,7 +1237,6 @@
         if (modal) modal.remove();
     }
 
-    // Funções placeholder para as ações
     function showConnectionInsights() {
         showNotification('📈 Insights em desenvolvimento!', 'info');
         closeCustomModal();
@@ -1304,7 +1252,6 @@
         closeCustomModal();
     }
 
-    // Exportar funções globais
     window.showConnectionDetails = showConnectionDetails;
     window.manageVibeExclusive = manageVibeExclusive;
     window.closeCustomModal = closeCustomModal;
@@ -1314,19 +1261,15 @@
     window.exportConversation = exportConversation;
     window.customizeVibe = customizeVibe;
 
-    // Monitorar mudanças de visibilidade da página
     document.addEventListener('visibilitychange', function() {
         if (!document.hidden && activeAgreement) {
-            // Recarregar mensagens quando a página ficar visível
             loadVibeMessages();
             loadConnectionStats();
         }
     });
 
-    // Prevenir saída acidental
     window.addEventListener('beforeunload', function(e) {
         if (activeAgreement) {
-            // Não mostrar alerta para navegação interna
             if (e.target.activeElement && 
                 (e.target.activeElement.href || e.target.activeElement.onclick)) {
                 return;
@@ -1337,8 +1280,6 @@
             return e.returnValue;
         }
     });
-
-    console.log('🎯 Vibe Exclusive carregado e pronto!');
 </script>
     <script src="auth-vibe.js"></script>
 </body>
