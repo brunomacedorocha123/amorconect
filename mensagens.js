@@ -35,15 +35,9 @@ class MessagesSystem {
     }
   }
 
-  // ⭐⭐ FUNÇÃO CRÍTICA CORRIGIDA: Verificar e redirecionar para Vibe Exclusive
+  // ⭐⭐ FUNÇÃO CRÍTICA: Verificar e redirecionar para Vibe Exclusive
   async checkAndRedirectToVibeExclusive() {
     try {
-      // ⭐⭐ CORREÇÃO: Não verificar se já está no Vibe Exclusive
-      if (window.location.pathname.includes('vibe-exclusive') || 
-          window.location.pathname.includes('vibe-exclusivo')) {
-        return; // Já está na página correta
-      }
-
       const { data: { user } } = await this.supabase.auth.getUser();
       if (!user) return;
       
@@ -54,23 +48,28 @@ class MessagesSystem {
 
       if (error) return;
 
-      // ⭐⭐ CORREÇÃO: Verificar corretamente a estrutura da resposta
+      // ⭐⭐ VERIFICAÇÃO COMPLETA das possíveis estruturas
       if (agreement && agreement.has_active_agreement) {
-        // ⭐⭐ CORREÇÃO: Redirecionamento seguro sem loop
-        setTimeout(() => {
-          window.location.replace('vibe-exclusive.html');
-        }, 100);
-        
-        // ⭐⭐ CORREÇÃO: Lançar erro específico para parar a inicialização
-        throw new Error('REDIRECTING_TO_VIBE_EXCLUSIVE');
+        window.location.href = 'vibe-exclusive.html';
+        throw new Error('REDIRECT_TO_VIBE');
       }
+      
+      if (agreement && agreement[0]?.has_active_agreement) {
+        window.location.href = 'vibe-exclusive.html';
+        throw new Error('REDIRECT_TO_VIBE');
+      }
+
+      if (agreement && agreement.active) {
+        window.location.href = 'vibe-exclusive.html';
+        throw new Error('REDIRECT_TO_VIBE');
+      }
+      
     } catch (error) {
-      // ⭐⭐ CORREÇÃO: Só relançar se for nosso erro de redirecionamento
-      if (error.message === 'REDIRECTING_TO_VIBE_EXCLUSIVE') {
+      if (error.message === 'REDIRECT_TO_VIBE') {
         throw error;
       }
-      // Outros erros são silenciosos
     }
+    return false;
   }
 
   async initializeStatusSystem() {
@@ -326,7 +325,7 @@ class MessagesSystem {
     }
   }
 
-  async loadConversationsFallback() {
+    async loadConversationsFallback() {
     try {
       const { data: messages, error } = await this.supabase
         .from('messages')
@@ -503,7 +502,7 @@ class MessagesSystem {
     }
   }
 
-    async loadConversationMessagesFallback(otherUserId) {
+  async loadConversationMessagesFallback(otherUserId) {
     try {
       const { data: messages, error } = await this.supabase
         .from('messages')
@@ -731,7 +730,7 @@ class MessagesSystem {
     }
   }
 
-  async getUserStatus(userId) {
+    async getUserStatus(userId) {
     try {
       const { data: profile, error } = await this.supabase
         .from('profiles')
@@ -1051,7 +1050,7 @@ class MessagesSystem {
     }
   }
 
-    async showUserInfo(userId) {
+  async showUserInfo(userId) {
     this.showNotification('Funcionalidade em desenvolvimento', 'info');
   }
 

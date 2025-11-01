@@ -67,27 +67,31 @@ class AuthVibeSystem {
     async applyRedirectLogic(isVibePage) {
         if (!this.redirectEnabled) return;
 
-        // ⭐⭐ CORREÇÃO: Só redirecionar SE ESTIVER na página do Vibe mas NÃO TEM acordo
-        if (isVibePage && !this.activeAgreement) {
-            this.redirectToMessages();
-            return;
-        }
-
-        // ⭐⭐ CORREÇÃO: COMENTADO para evitar verificação duplicada com mensagens.js
-        /*
-        if (this.activeAgreement && !isVibePage) {
-            const isAllowedPage = this.isAllowedPage();
-            if (!isAllowedPage) {
-                this.redirectToVibeExclusive();
+        // ⭐⭐ CORREÇÃO: Lógica completa funcionando
+        if (isVibePage) {
+            // Se está na página do Vibe mas não tem acordo → vai para mensagens
+            if (!this.activeAgreement) {
+                this.redirectToMessages();
                 return;
             }
+        } else {
+            // ⭐⭐ CORREÇÃO: Se tem acordo ativo e NÃO está na página do Vibe
+            if (this.activeAgreement) {
+                const isAllowedPage = this.isAllowedPage();
+                
+                // ⭐⭐ SÓ redireciona se NÃO for página permitida
+                if (!isAllowedPage) {
+                    this.redirectToVibeExclusive();
+                    return;
+                }
+            }
         }
-        */
 
         this.updateUI();
     }
 
     isAllowedPage() {
+        // ⭐⭐ CORREÇÃO: mensagens.html NÃO é permitida durante Vibe Exclusive
         const allowedPages = [
             'painel.html',
             'configuracoes.html', 
@@ -105,7 +109,7 @@ class AuthVibeSystem {
         if (window.location.href.includes('vibe-exclusive')) return;
         
         setTimeout(() => {
-            window.location.href = 'vibe-exclusive.html';
+            window.location.replace('vibe-exclusive.html');
         }, 100);
     }
 
@@ -113,7 +117,7 @@ class AuthVibeSystem {
         if (window.location.href.includes('mensagens')) return;
         
         setTimeout(() => {
-            window.location.href = 'mensagens.html';
+            window.location.replace('mensagens.html');
         }, 100);
     }
 
