@@ -196,6 +196,9 @@ body {
 
 .action-buttons {
     flex-shrink: 0;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .btn-message {
@@ -309,7 +312,7 @@ body {
     color: var(--gold);
 }
 
-/* Gallery */
+/* ==================== GALERIA - MESMO TAMANHO DO PAINEL ==================== */
 .premium-lock {
     background: linear-gradient(135deg, var(--section-bg), var(--card-bg));
     border-radius: 12px;
@@ -342,42 +345,57 @@ body {
     padding: 0.8rem 1.5rem;
 }
 
+/* Grid da galeria - MESMO TAMANHO DO PAINEL */
 .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1rem;
+    margin-top: 1rem;
 }
 
+/* Itens da galeria - MESMO TAMANHO DO PAINEL */
 .gallery-item {
-    aspect-ratio: 1;
+    position: relative;
     border-radius: 12px;
     overflow: hidden;
+    aspect-ratio: 1;
+    background: var(--card-bg);
+    border: 2px solid var(--gold);
+    transition: all 0.3s ease;
     cursor: pointer;
-    transition: var(--transition);
-    border: 2px solid transparent;
 }
 
 .gallery-item:hover {
-    transform: scale(1.05);
-    border-color: var(--gold);
+    transform: translateY(-5px);
+    border-color: var(--light-gold);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
 
+/* Imagens da galeria - MESMO TAMANHO DO PAINEL */
 .gallery-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
+    transition: all 0.3s ease;
 }
 
+.gallery-item:hover .gallery-image {
+    transform: scale(1.05);
+}
+
+/* Galeria vazia */
 .empty-gallery {
     text-align: center;
     padding: 3rem 2rem;
     color: var(--beige);
+    grid-column: 1 / -1;
 }
 
 .empty-gallery i {
     font-size: 3rem;
-    margin-bottom: 1rem;
     color: var(--section-bg);
+    margin-bottom: 1rem;
 }
 
 .empty-gallery p {
@@ -451,6 +469,37 @@ body {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
+/* ===== BOTÃO FEEL NO PERFIL ===== */
+.btn-feel {
+    background: rgba(166, 91, 91, 0.1);
+    border: 2px solid var(--burgundy);
+    color: var(--burgundy);
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    transition: var(--transition);
+}
+
+.btn-feel:hover {
+    background: var(--burgundy);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(166, 91, 91, 0.4);
+}
+
+.btn-feel.active {
+    background: var(--burgundy);
+    color: var(--white);
+    border-color: var(--burgundy);
+}
+
+.btn-feel.active i {
+    color: var(--white);
+}
+
+.btn-feel i {
+    transition: var(--transition);
+}
+
 /* Responsividade */
 @media (max-width: 768px) {
     .profile-hero {
@@ -486,6 +535,23 @@ body {
     .modal-close-btn {
         top: -40px;
         right: -10px;
+    }
+    
+    .action-buttons {
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .btn-feel,
+    .btn-message {
+        flex: 1;
+        min-width: 140px;
+    }
+    
+    /* Galeria mobile - MESMO TAMANHO DO PAINEL MOBILE */
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 0.8rem;
     }
 }
 
@@ -687,58 +753,5 @@ body {
     .profile-basic-info .online-status-display {
         margin-top: 0.1rem;
         margin-bottom: 0.4rem;
-    }
-}
-
-/* ===== BOTÃO FEEL NO PERFIL ===== */
-.btn-feel {
-    background: rgba(166, 91, 91, 0.1);
-    border: 2px solid var(--burgundy);
-    color: var(--burgundy);
-    padding: 1rem 2rem;
-    font-size: 1.1rem;
-    transition: var(--transition);
-}
-
-.btn-feel:hover {
-    background: var(--burgundy);
-    color: var(--white);
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(166, 91, 91, 0.4);
-}
-
-.btn-feel.active {
-    background: var(--burgundy);
-    color: var(--white);
-    border-color: var(--burgundy);
-}
-
-.btn-feel.active i {
-    color: var(--white);
-}
-
-.btn-feel i {
-    transition: var(--transition);
-}
-
-/* Container dos botões de ação */
-.action-buttons {
-    flex-shrink: 0;
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-/* Responsivo */
-@media (max-width: 768px) {
-    .action-buttons {
-        justify-content: center;
-        width: 100%;
-    }
-    
-    .btn-feel,
-    .btn-message {
-        flex: 1;
-        min-width: 140px;
     }
 }
