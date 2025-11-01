@@ -17,6 +17,11 @@ class MessagesSystem {
   async initialize() {
     try {
       await this.checkAuth();
+      
+      // Verificar se deve redirecionar para Vibe Exclusive
+      const shouldRedirect = await this.checkVibeStatus();
+      if (shouldRedirect) return; // Para a execução se for redirecionar
+      
       await this.loadUserData();
       await this.initializeStatusSystem();
       await this.loadConversations();
@@ -26,6 +31,25 @@ class MessagesSystem {
       this.checkUrlParams();
       
     } catch (error) {
+      // Tratamento de erro silencioso
+    }
+  }
+
+  async checkVibeStatus() {
+    try {
+      const { data: agreement, error } = await this.supabase
+        .rpc('check_active_fidelity_agreement', {
+          p_user_id: this.currentUser.id
+        });
+
+      if (!error && agreement?.has_active_agreement) {
+        // Redirecionar para vibe-exclusive se tiver acordo ativo
+        window.location.href = 'vibe-exclusive.html';
+        return true;
+      }
+      return false;
+    } catch (error) {
+      return false;
     }
   }
 
@@ -65,7 +89,9 @@ class MessagesSystem {
         this.currentUser.profile = profile;
         this.updateUserHeader(profile);
       }
-    } catch (error) {}
+    } catch (error) {
+      // Silencioso
+    }
   }
 
   updateUserHeader(profile) {
@@ -201,7 +227,9 @@ class MessagesSystem {
           conv.status_info = statusInfo;
         }
       });
-    } catch (error) {}
+    } catch (error) {
+      // Silencioso
+    }
   }
 
   calculateUserStatus(lastOnlineAt, realStatus, isInvisible = false, userId = null) {
@@ -470,7 +498,9 @@ class MessagesSystem {
         .eq('sender_id', otherUserId)
         .eq('receiver_id', this.currentUser.id)
         .is('read_at', null);
-    } catch (error) {}
+    } catch (error) {
+      // Silencioso
+    }
   }
 
   formatMessages(messages) {
@@ -793,12 +823,14 @@ class MessagesSystem {
           userId
         );
       }
-    } catch (error) {}
+    } catch (error) {
+      // Silencioso
+    }
     
     return { status: 'offline', text: 'Offline', class: 'status-offline' };
   }
 
-  async sendMessage() {
+    async sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const message = messageInput.value.trim();
     
@@ -867,7 +899,7 @@ class MessagesSystem {
     }
   }
 
-    async sendMessageFallback(message) {
+  async sendMessageFallback(message) {
     try {
       const { data, error } = await this.supabase
         .from('messages')
@@ -924,7 +956,9 @@ class MessagesSystem {
           .eq('user_id', this.currentUser.id);
       }
 
-    } catch (error) {}
+    } catch (error) {
+      // Silencioso
+    }
   }
 
   async checkCanSendMessage() {
@@ -1020,7 +1054,9 @@ class MessagesSystem {
       `;
       counter.classList.remove('premium');
 
-    } catch (error) {}
+    } catch (error) {
+      // Silencioso
+    }
   }
 
   setupEventListeners() {
@@ -1224,7 +1260,7 @@ class MessagesSystem {
     }
   }
 
-    showLoading(containerId) {
+  showLoading(containerId) {
     const container = document.getElementById(containerId);
     if (container) {
       container.innerHTML = `
@@ -1325,6 +1361,7 @@ async function logout() {
       window.location.href = 'login.html';
     }
   } catch (error) {
+    // Silencioso
   }
 }
 

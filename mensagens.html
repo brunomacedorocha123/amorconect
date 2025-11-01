@@ -535,6 +535,15 @@
         }
     }
 
+    // Verificação de redirecionamento Vibe Exclusive
+    function checkVibeRedirect() {
+        setTimeout(() => {
+            if (window.AuthVibeSystem) {
+                window.AuthVibeSystem.checkAuthAndVibe();
+            }
+        }, 1000);
+    }
+
     // Inicialização quando o DOM estiver pronto
     document.addEventListener('DOMContentLoaded', function() {
         // Inicializar sistema de mensagens
@@ -547,6 +556,9 @@
         
         // Verificar parâmetros da URL
         setTimeout(checkUrlParams, 1000);
+        
+        // Verificar redirecionamento Vibe
+        checkVibeRedirect();
         
         // Atualizar UI premium
         setTimeout(async () => {
