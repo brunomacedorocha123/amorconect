@@ -10,73 +10,23 @@ class MessagesSystem {
     this.isLoading = false;
     
     this.statusSystem = null;
-    this.sistemaVibe = null;
     
     this.initialize();
   }
 
   async initialize() {
-  try {
-    // ⭐⭐ CORREÇÃO: Removida verificação duplicada para evitar loop
-    // O auth-vibe.js já cuida de todo o redirecionamento do Vibe Exclusive
-    // await this.checkAndRedirectToVibeExclusive();
-    
-    await this.checkAuth();
-    await this.loadUserData();
-    await this.initializeStatusSystem();
-    await this.loadConversations();
-    this.setupEventListeners();
-    this.updateMessageCounter();
-    this.startPeriodicChecks();
-    this.checkUrlParams();
-    await this.initializeSistemaVibe();
-    
-  } catch (error) {
-    // Silencioso
-  }
-}
-
-  // ⭐⭐ FUNÇÃO CRÍTICA: Verificar e redirecionar para Vibe Exclusive (CORRIGIDA)
-  async checkAndRedirectToVibeExclusive() {
     try {
-      // ⭐⭐ CORREÇÃO: Não redirecionar se já está na página vibe-exclusive
-      if (window.location.pathname.includes('vibe-exclusive') || 
-          window.location.pathname.includes('vibe-exclusivo')) {
-        return false;
-      }
-      
-      const { data: { user } } = await this.supabase.auth.getUser();
-      if (!user) return;
-      
-      const { data: agreement, error } = await this.supabase
-        .rpc('check_active_fidelity_agreement', {
-          p_user_id: user.id
-        });
-
-      if (error) return;
-
-      // ⭐⭐ VERIFICAÇÃO COMPLETA das possíveis estruturas
-      if (agreement && agreement.has_active_agreement) {
-        window.location.href = 'vibe-exclusive.html';
-        throw new Error('REDIRECT_TO_VIBE');
-      }
-      
-      if (agreement && agreement[0]?.has_active_agreement) {
-        window.location.href = 'vibe-exclusive.html';
-        throw new Error('REDIRECT_TO_VIBE');
-      }
-
-      if (agreement && agreement.active) {
-        window.location.href = 'vibe-exclusive.html';
-        throw new Error('REDIRECT_TO_VIBE');
-      }
+      await this.checkAuth();
+      await this.loadUserData();
+      await this.initializeStatusSystem();
+      await this.loadConversations();
+      this.setupEventListeners();
+      this.updateMessageCounter();
+      this.startPeriodicChecks();
+      this.checkUrlParams();
       
     } catch (error) {
-      if (error.message === 'REDIRECT_TO_VIBE') {
-        throw error;
-      }
     }
-    return false;
   }
 
   async initializeStatusSystem() {
@@ -85,37 +35,6 @@ class MessagesSystem {
       if (!this.statusSystem.currentUser) {
         await this.statusSystem.initialize(this.currentUser);
       }
-    }
-  }
-
-  async initializeSistemaVibe() {
-    try {
-      if (window.SistemaVibe && this.currentUser) {
-        this.sistemaVibe = new SistemaVibe();
-        await this.sistemaVibe.initialize(this.currentUser);
-        this.setupFidelityButtonHandlers();
-      }
-    } catch (error) {}
-  }
-
-  setupFidelityButtonHandlers() {
-    document.addEventListener('click', (e) => {
-      const fidelityBtn = e.target.closest('#fidelityProposeBtn');
-      if (fidelityBtn && !fidelityBtn.classList.contains('active')) {
-        this.handleFidelityProposal();
-      }
-    });
-  }
-
-  async handleFidelityProposal() {
-    if (!this.currentConversation) {
-      this.showNotification('Selecione uma conversa primeiro', 'error');
-      return;
-    }
-    if (this.sistemaVibe) {
-      await this.sistemaVibe.proposeFidelityAgreement(this.currentConversation);
-    } else {
-      this.showNotification('Sistema Vibe não disponível', 'error');
     }
   }
 
@@ -472,10 +391,6 @@ class MessagesSystem {
       this.showChatArea();
       await this.updateChatHeader(otherUserId);
       
-      if (this.sistemaVibe && typeof this.sistemaVibe.onConversationSelected === 'function') {
-        await this.sistemaVibe.onConversationSelected(otherUserId);
-      }
-      
     } catch (error) {
       this.showNotification('Erro ao carregar conversa', 'error');
     }
@@ -690,9 +605,9 @@ class MessagesSystem {
         </div>
       `;
 
-      if (this.sistemaVibe && typeof this.sistemaVibe.onConversationSelected === 'function') {
-        await this.sistemaVibe.onConversationSelected(otherUserId);
-      }
+      // Configurar botão Vibe Exclusive
+      this.setupVibeProposeButton(otherUserId);
+
     } catch (error) {
       const conversation = this.conversations.find(c => c.other_user_id === otherUserId);
       if (conversation) {
@@ -733,7 +648,132 @@ class MessagesSystem {
             </button>
           </div>
         `;
+
+        this.setupVibeProposeButton(otherUserId);
       }
+    }
+  }
+
+  async setupVibeProposeButton(otherUserId) {
+    const button = document.getElementById('fidelityProposeBtn');
+    if (!button) return;
+
+    // Verificar se pode mostrar botão Vibe Exclusive
+    const canShowButton = await this.canShowVibeButton(otherUserId);
+    
+    if (canShowButton) {
+      button.style.display = 'flex';
+      button.onclick = () => this.handleVibeProposal(otherUserId);
+    } else {
+      button.style.display = 'none';
+    }
+  }
+
+  async canShowVibeButton(otherUserId) {
+    try {
+      // 1. Verificar se ambos são Premium
+      const isBothPremium = await this.checkBothPremium(otherUserId);
+      if (!isBothPremium) return false;
+
+      // 2. Verificar se tem pelo menos 30 mensagens trocadas
+      const messageCount = await this.getMessageCount(otherUserId);
+      if (messageCount < 30) return false;
+
+      // 3. Verificar se já existe proposta pendente ou acordo ativo
+      const hasActiveProposal = await this.checkActiveProposal(otherUserId);
+      if (hasActiveProposal) return false;
+
+      return true;
+
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async checkBothPremium(otherUserId) {
+    try {
+      const { data: profiles, error } = await this.supabase
+        .from('profiles')
+        .select('is_premium')
+        .in('id', [this.currentUser.id, otherUserId]);
+
+      if (error || !profiles || profiles.length !== 2) return false;
+
+      return profiles.every(profile => profile.is_premium === true);
+
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async getMessageCount(otherUserId) {
+    try {
+      const { data: messages, error } = await this.supabase
+        .from('messages')
+        .select('id')
+        .or(`and(sender_id.eq.${this.currentUser.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${this.currentUser.id})`);
+
+      if (error) return 0;
+      return messages?.length || 0;
+
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  async checkActiveProposal(otherUserId) {
+    try {
+      const { data: agreement, error } = await this.supabase
+        .rpc('check_active_fidelity_agreement', {
+          p_user_id: this.currentUser.id
+        });
+
+      if (error) return false;
+
+      if (agreement?.has_active_agreement) return true;
+
+      const { data: proposals, error: proposalsError } = await this.supabase
+        .from('fidelity_agreements')
+        .select('*')
+        .or(`and(user_a.eq.${this.currentUser.id},user_b.eq.${otherUserId},status.eq.pending),and(user_a.eq.${otherUserId},user_b.eq.${this.currentUser.id},status.eq.pending)`)
+        .limit(1);
+
+      if (proposalsError) return false;
+      return proposals && proposals.length > 0;
+
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async handleVibeProposal(otherUserId) {
+    try {
+      const canPropose = await this.canShowVibeButton(otherUserId);
+      if (!canPropose) {
+        this.showNotification('Não é possível enviar proposta no momento', 'error');
+        return;
+      }
+
+      const { data, error } = await this.supabase
+        .rpc('propose_fidelity_agreement', {
+          p_proposer_id: this.currentUser.id,
+          p_receiver_id: otherUserId
+        });
+
+      if (error) {
+        this.showNotification('Erro ao enviar proposta', 'error');
+        return;
+      }
+
+      if (data === 'success') {
+        this.showNotification('Proposta de Vibe Exclusive enviada!', 'success');
+        this.setupVibeProposeButton(otherUserId);
+      } else {
+        this.showNotification(data, 'error');
+      }
+
+    } catch (error) {
+      this.showNotification('Erro ao enviar proposta', 'error');
     }
   }
 
@@ -781,7 +821,6 @@ class MessagesSystem {
       this.setSendButtonState(true);
       this.showMessageStatus('Enviando...', 'info');
 
-      // ⭐⭐ VERIFICAÇÃO PREMIUM CORRETA - Premium tem mensagens ilimitadas
       let isPremium = false;
       if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
         isPremium = await PremiumManager.checkPremiumStatus();
@@ -789,7 +828,6 @@ class MessagesSystem {
         isPremium = this.currentUser.profile.is_premium;
       }
       
-      // ⭐⭐ APENAS usuários FREE verificam limite
       if (!isPremium) {
         const canSend = await this.checkCanSendMessage();
         if (!canSend.can_send) {
@@ -893,7 +931,6 @@ class MessagesSystem {
     try {
       await this.resetDailyCounterIfNeeded();
 
-      // ⭐⭐ VERIFICAÇÃO PREMIUM - Premium não tem limite
       let isPremium = false;
       if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
         isPremium = await PremiumManager.checkPremiumStatus();
@@ -945,7 +982,6 @@ class MessagesSystem {
     try {
       await this.resetDailyCounterIfNeeded();
 
-      // ⭐⭐ VERIFICAÇÃO PREMIUM CORRETA - Premium mostra "Ilimitado"
       let isPremium = false;
       if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
         isPremium = await PremiumManager.checkPremiumStatus();
@@ -1289,7 +1325,6 @@ async function logout() {
       window.location.href = 'login.html';
     }
   } catch (error) {
-    // Logout silencioso
   }
 }
 
