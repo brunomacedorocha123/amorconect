@@ -17,9 +17,8 @@ class MessagesSystem {
 
   async initialize() {
     try {
-      // ⭐⭐ CORREÇÃO: Removida verificação de Vibe Exclusive para evitar conflito
-      // O auth-vibe.js já cuida de todo o redirecionamento
-      // await this.checkAndRedirectToVibeExclusive();
+      // ⭐⭐ VERIFICAÇÃO VIBE EXCLUSIVE - PRIMEIRO (MANTIDO ORIGINAL)
+      await this.checkAndRedirectToVibeExclusive();
       
       await this.checkAuth();
       await this.loadUserData();
@@ -36,10 +35,10 @@ class MessagesSystem {
     }
   }
 
-  // ⭐⭐ FUNÇÃO MANTIDA MAS COMENTADA NO INITIALIZE
+  // ⭐⭐ FUNÇÃO CRÍTICA: Verificar e redirecionar para Vibe Exclusive (CORRIGIDA)
   async checkAndRedirectToVibeExclusive() {
     try {
-      // ⭐⭐ VERIFICAÇÃO DE SEGURANÇA: Não redirecionar se já está na vibe
+      // ⭐⭐ CORREÇÃO: Não redirecionar se já está na página vibe-exclusive
       if (window.location.pathname.includes('vibe-exclusive') || 
           window.location.pathname.includes('vibe-exclusivo')) {
         return false;
@@ -758,7 +757,7 @@ class MessagesSystem {
     return { status: 'offline', text: 'Offline', class: 'status-offline' };
   }
 
-    async sendMessage() {
+  async sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const message = messageInput.value.trim();
     
@@ -781,10 +780,21 @@ class MessagesSystem {
       this.setSendButtonState(true);
       this.showMessageStatus('Enviando...', 'info');
 
-      const canSend = await this.checkCanSendMessage();
-      if (!canSend.can_send) {
-        this.handleSendError(canSend.reason);
-        return;
+      // ⭐⭐ VERIFICAÇÃO PREMIUM CORRETA - Premium tem mensagens ilimitadas
+      let isPremium = false;
+      if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
+        isPremium = await PremiumManager.checkPremiumStatus();
+      } else if (this.currentUser.profile?.is_premium) {
+        isPremium = this.currentUser.profile.is_premium;
+      }
+      
+      // ⭐⭐ APENAS usuários FREE verificam limite
+      if (!isPremium) {
+        const canSend = await this.checkCanSendMessage();
+        if (!canSend.can_send) {
+          this.handleSendError(canSend.reason);
+          return;
+        }
       }
 
       const { data, error } = await this.supabase
@@ -818,7 +828,7 @@ class MessagesSystem {
     }
   }
 
-  async sendMessageFallback(message) {
+    async sendMessageFallback(message) {
     try {
       const { data, error } = await this.supabase
         .from('messages')
@@ -882,6 +892,7 @@ class MessagesSystem {
     try {
       await this.resetDailyCounterIfNeeded();
 
+      // ⭐⭐ VERIFICAÇÃO PREMIUM - Premium não tem limite
       let isPremium = false;
       if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
         isPremium = await PremiumManager.checkPremiumStatus();
@@ -933,6 +944,7 @@ class MessagesSystem {
     try {
       await this.resetDailyCounterIfNeeded();
 
+      // ⭐⭐ VERIFICAÇÃO PREMIUM CORRETA - Premium mostra "Ilimitado"
       let isPremium = false;
       if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
         isPremium = await PremiumManager.checkPremiumStatus();
@@ -1129,7 +1141,7 @@ class MessagesSystem {
     }, 30000);
   }
 
-    escapeHtml(text) {
+  escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
     div.textContent = text;
@@ -1175,7 +1187,7 @@ class MessagesSystem {
     }
   }
 
-  showLoading(containerId) {
+    showLoading(containerId) {
     const container = document.getElementById(containerId);
     if (container) {
       container.innerHTML = `
@@ -1242,81 +1254,11 @@ class MessagesSystem {
       }, 3000);
     }
   }
-
-  // ⭐⭐ MÉTODO ADICIONAL: Verificar e atualizar botão Vibe Exclusive
-  updateFidelityButton() {
-    const fidelityBtn = document.getElementById('fidelityProposeBtn');
-    const proposalsBtn = document.getElementById('viewProposalsBtn');
-    
-    if (!fidelityBtn || !proposalsBtn) return;
-    
-    // Verificar se já existe acordo ativo com este usuário
-    if (this.currentConversation && this.sistemaVibe) {
-      this.sistemaVibe.checkExistingAgreement(this.currentConversation)
-        .then(hasAgreement => {
-          if (hasAgreement) {
-            fidelityBtn.style.display = 'none';
-            proposalsBtn.style.display = 'none';
-          } else {
-            fidelityBtn.style.display = 'flex';
-            proposalsBtn.style.display = 'flex';
-          }
-        })
-        .catch(() => {
-          fidelityBtn.style.display = 'flex';
-          proposalsBtn.style.display = 'flex';
-        });
-    }
-  }
-
-  // ⭐⭐ MÉTODO ADICIONAL: Integração com AuthVibeSystem
-  setupAuthVibeIntegration() {
-    if (!window.AuthVibeSystem) {
-      console.log('⏳ AuthVibeSystem não disponível para integração');
-      return;
-    }
-
-    console.log('🔗 Integrando com AuthVibeSystem...');
-    
-    // Quando uma conversa é selecionada, verificar se está em Vibe Exclusive
-    const originalSelectConversation = this.selectConversation;
-    
-    this.selectConversation = async function(otherUserId) {
-      if (window.AuthVibeSystem && window.AuthVibeSystem.activeAgreement) {
-        const partnerId = window.AuthVibeSystem.activeAgreement.partner_id;
-        
-        // ⭐⭐ BLOQUEAR: Não permitir selecionar outras conversas durante Vibe Exclusive
-        if (otherUserId !== partnerId) {
-          console.log('🚫 Tentativa de selecionar outra conversa durante Vibe Exclusive');
-          window.AuthVibeSystem.safeRedirectToVibeExclusive();
-          return;
-        }
-      }
-      
-      return originalSelectConversation.call(this, otherUserId);
-    };
-
-    console.log('✅ Integração com AuthVibeSystem concluída');
-  }
 }
 
 // ==================== INICIALIZAÇÃO GLOBAL ====================
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('🚀 Iniciando MessagesSystem...');
-  
-  // Aguardar um pouco para garantir que o Supabase esteja carregado
-  setTimeout(() => {
-    if (window.supabase && !window.MessagesSystem) {
-      window.MessagesSystem = new MessagesSystem();
-      
-      // Configurar integração após inicialização
-      setTimeout(() => {
-        if (window.MessagesSystem) {
-          window.MessagesSystem.setupAuthVibeIntegration();
-        }
-      }, 2000);
-    }
-  }, 500);
+  window.MessagesSystem = new MessagesSystem();
 });
 
 // ==================== FUNÇÕES GLOBAIS ====================
@@ -1351,16 +1293,12 @@ async function logout() {
 }
 
 // Monitor de autenticação
-if (window.supabase) {
-  supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_OUT') {
-      window.location.href = 'login.html';
-    }
-  });
-}
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT') {
+    window.location.href = 'login.html';
+  }
+});
 
 // Exportar funções globais
 window.logout = logout;
 window.MessagesSystem = MessagesSystem;
-
-console.log('🎯 MessagesSystem carregado e pronto!');
