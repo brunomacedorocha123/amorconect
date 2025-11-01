@@ -29,9 +29,7 @@ async function initializeProfile() {
             return;
         }
 
-        // Registrar visita automaticamente (silencioso)
         await registerProfileVisit();
-
         await loadUserData();
         await checkFeelStatus();
         setupMessageButton();
@@ -42,14 +40,13 @@ async function initializeProfile() {
     }
 }
 
-// SISTEMA DE REGISTRO DE VISITAS (SILENCIOSO)
+// Registrar visita automaticamente
 async function registerProfileVisit() {
     try {
         if (!currentUser || !visitedUserId || currentUser.id === visitedUserId) {
             return;
         }
 
-        // Registrar visita sem mostrar nada para o usuário
         await supabase
             .from('profile_visits')
             .upsert({
@@ -61,7 +58,7 @@ async function registerProfileVisit() {
             });
 
     } catch (error) {
-        // Silencioso - não mostrar erro
+        // Silencioso
     }
 }
 
@@ -92,11 +89,11 @@ async function loadUserData() {
 function fillProfileData(profile, details) {
     document.getElementById('profileNickname').textContent = profile.nickname || 'Usuário';
     
-    // STATUS ONLINE/OFFLINE VISÍVEL
+    // Status Online/Offline
     const isOnline = isUserOnline(profile.last_online_at);
     createOnlineStatusDisplay(isOnline);
     
-    // Localização (respeitando modo invisível)
+    // Localização
     if (profile.is_invisible) {
         document.getElementById('profileLocation').textContent = 'Localização oculta';
         hideSensitiveInfo();
@@ -151,7 +148,6 @@ function setupMessageButton() {
     }
 }
 
-// Função para enviar mensagem (redirecionar para mensagens.html)
 async function sendMessageToUser() {
     try {
         if (!currentUser || !visitedUserId) {
@@ -159,36 +155,30 @@ async function sendMessageToUser() {
             return;
         }
 
-        // Verificar se não é o próprio usuário
         if (currentUser.id === visitedUserId) {
             showNotification('Você não pode enviar mensagem para si mesmo', 'error');
             return;
         }
 
-        // Verificar se há bloqueio entre os usuários
         const isBlocked = await checkIfBlocked();
         if (isBlocked) {
             showNotification('Não é possível enviar mensagem para este usuário', 'error');
             return;
         }
 
-        // Verificar se usuário é premium ou tem mensagens disponíveis
         const canSend = await checkCanSendMessage();
         if (!canSend.can_send) {
             handleSendMessageError(canSend.reason);
             return;
         }
 
-        // Redirecionar para a página de mensagens com o usuário já selecionado
         window.location.href = `mensagens.html?user=${visitedUserId}`;
 
     } catch (error) {
-        console.error('Erro ao enviar mensagem:', error);
         showNotification('Erro ao tentar enviar mensagem', 'error');
     }
 }
 
-// Verificar se há bloqueio entre os usuários
 async function checkIfBlocked() {
     try {
         const { data, error } = await supabase
@@ -200,21 +190,17 @@ async function checkIfBlocked() {
 
         return data && data.length > 0;
     } catch (error) {
-        console.error('Erro ao verificar bloqueio:', error);
         return false;
     }
 }
 
-// Verificar se pode enviar mensagem
 async function checkCanSendMessage() {
     try {
-        // Se for premium, pode enviar ilimitado
         const isPremium = await checkCurrentUserPremium();
         if (isPremium) {
             return { can_send: true, reason: 'premium' };
         }
 
-        // Para usuários free, verificar limite diário
         const { data: limits, error } = await supabase
             .from('user_message_limits')
             .select('messages_sent_today, last_reset_date')
@@ -222,17 +208,14 @@ async function checkCanSendMessage() {
             .single();
 
         if (error) {
-            // Se não existe registro, pode enviar
             return { can_send: true, reason: 'can_send' };
         }
 
-        // Verificar se precisa resetar (passou da meia-noite)
         const today = new Date().toISOString().split('T')[0];
         if (limits.last_reset_date !== today) {
             return { can_send: true, reason: 'can_send' };
         }
 
-        // Verificar se atingiu o limite de 4 mensagens
         if (limits.messages_sent_today >= 4) {
             return { can_send: false, reason: 'limit_reached' };
         }
@@ -240,12 +223,10 @@ async function checkCanSendMessage() {
         return { can_send: true, reason: 'can_send' };
 
     } catch (error) {
-        console.error('Erro ao verificar permissão de mensagem:', error);
         return { can_send: false, reason: 'unknown_error' };
     }
 }
 
-// Tratar erros de envio de mensagem
 function handleSendMessageError(reason) {
     switch (reason) {
         case 'limit_reached':
@@ -264,7 +245,6 @@ function handleSendMessageError(reason) {
 
 // ==================== SISTEMA FEEL NO PERFIL ====================
 
-// Verificar status do Feel ao carregar perfil
 async function checkFeelStatus() {
     try {
         if (!currentUser || !visitedUserId || currentUser.id === visitedUserId) {
@@ -289,12 +269,10 @@ async function checkFeelStatus() {
             updateFeelButton(false);
         }
     } catch (error) {
-        console.error('Erro ao verificar feel:', error);
         updateFeelButton(false);
     }
 }
 
-// Atualizar aparência do botão
 function updateFeelButton(hasFeel) {
     const feelBtn = document.getElementById('feelBtn');
     const feelText = document.getElementById('feelText');
@@ -317,7 +295,6 @@ function updateFeelButton(hasFeel) {
     feelBtn.style.display = 'flex';
 }
 
-// Ocultar botão feel (próprio perfil)
 function hideFeelButton() {
     const feelBtn = document.getElementById('feelBtn');
     if (feelBtn) {
@@ -325,12 +302,10 @@ function hideFeelButton() {
     }
 }
 
-// Enviar Feel
 async function sendFeel() {
     try {
         if (!currentUser || !visitedUserId) return;
         
-        // Usar a função do FeelManager se disponível
         if (typeof window.FeelManager !== 'undefined') {
             const success = await window.FeelManager.sendFeel(visitedUserId);
             if (success) {
@@ -338,7 +313,6 @@ async function sendFeel() {
                 updateFeelButton(true);
             }
         } else {
-            // Fallback direto
             const { data, error } = await supabase
                 .from('user_feels')
                 .insert({
@@ -365,17 +339,14 @@ async function sendFeel() {
         }
         
     } catch (error) {
-        console.error('Erro ao enviar feel:', error);
         showNotification('Erro ao enviar Feel. Tente novamente.', 'error');
     }
 }
 
-// Remover Feel
 async function removeFeel() {
     try {
         if (!currentUser || !visitedUserId) return;
         
-        // Usar a função do FeelManager se disponível
         if (typeof window.FeelManager !== 'undefined') {
             const success = await window.FeelManager.removeFeel(visitedUserId);
             if (success) {
@@ -383,7 +354,6 @@ async function removeFeel() {
                 updateFeelButton(false);
             }
         } else {
-            // Fallback direto
             const { error } = await supabase
                 .from('user_feels')
                 .delete()
@@ -399,25 +369,122 @@ async function removeFeel() {
         }
         
     } catch (error) {
-        console.error('Erro ao remover feel:', error);
         showNotification('Erro ao remover Feel.', 'error');
     }
 }
 
-// ==================== FUNÇÕES EXISTENTES ====================
+// ==================== SISTEMA DE GALERIA CORRIGIDO ====================
 
-// FUNÇÃO: Criar display de status visível
+async function checkGalleryAccess() {
+    const premiumLock = document.getElementById('galleryPremiumLock');
+    const galleryContainer = document.getElementById('galleryContainer');
+    const noGallery = document.getElementById('noGalleryMessage');
+
+    const isVisitedUserPremium = await checkVisitedUserPremium();
+    
+    if (isVisitedUserPremium) {
+        premiumLock.style.display = 'none';
+        await loadUserGallery();
+        
+        const hasPhotos = document.querySelectorAll('.gallery-item').length > 0;
+        if (hasPhotos) {
+            galleryContainer.style.display = 'block';
+            noGallery.style.display = 'none';
+        } else {
+            galleryContainer.style.display = 'none';
+            noGallery.style.display = 'block';
+        }
+    } else {
+        premiumLock.style.display = 'block';
+        galleryContainer.style.display = 'none';
+        noGallery.style.display = 'none';
+    }
+}
+
+// CORREÇÃO: Verificar se o USUÁRIO VISITADO é premium
+async function checkVisitedUserPremium() {
+    try {
+        if (!visitedUserId) return false;
+        
+        const { data: subscription, error: subError } = await supabase
+            .from('user_subscriptions')
+            .select('status, expires_at')
+            .eq('user_id', visitedUserId)
+            .eq('status', 'active')
+            .gte('expires_at', new Date().toISOString())
+            .single();
+
+        if (subscription && !subError) {
+            return true;
+        }
+
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('is_premium')
+            .eq('id', visitedUserId)
+            .single();
+
+        return !profileError && profile?.is_premium;
+
+    } catch (error) {
+        return false;
+    }
+}
+
+async function loadUserGallery() {
+    try {
+        const { data: images, error } = await supabase
+            .from('user_gallery')
+            .select('*')
+            .eq('user_id', visitedUserId)
+            .eq('is_active', true)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        displayGallery(images || []);
+
+    } catch (error) {
+        displayGallery([]);
+    }
+}
+
+function displayGallery(images) {
+    const galleryGrid = document.getElementById('visitedUserGallery');
+    
+    if (!galleryGrid) return;
+    
+    if (!images || images.length === 0) {
+        galleryGrid.innerHTML = `
+            <div class="empty-gallery">
+                <i class="fas fa-images"></i>
+                <p>Este usuário não possui fotos na galeria</p>
+            </div>
+        `;
+        return;
+    }
+    
+    galleryGrid.innerHTML = images.map(image => `
+        <div class="gallery-item" onclick="openGalleryImage('${image.image_url}')">
+            <img src="${getImageUrl(image.image_url)}" 
+                 alt="${image.image_name}" 
+                 class="gallery-image"
+                 loading="lazy">
+        </div>
+    `).join('');
+}
+
+// ==================== FUNÇÕES AUXILIARES ====================
+
 function createOnlineStatusDisplay(isOnline) {
     const profileBasicInfo = document.querySelector('.profile-basic-info');
     if (!profileBasicInfo) return;
 
-    // Remover status anterior se existir
     const existingStatus = document.getElementById('onlineStatusDisplay');
     if (existingStatus) {
         existingStatus.remove();
     }
 
-    // Criar novo elemento de status
     const statusElement = document.createElement('div');
     statusElement.id = 'onlineStatusDisplay';
     statusElement.className = `online-status-display ${isOnline ? 'online' : 'offline'}`;
@@ -434,7 +501,6 @@ function createOnlineStatusDisplay(isOnline) {
         `;
     }
 
-    // Inserir após o elemento de localização
     const locationElement = document.getElementById('profileLocation');
     if (locationElement && locationElement.parentNode) {
         locationElement.parentNode.insertBefore(statusElement, locationElement.nextSibling);
@@ -443,7 +509,6 @@ function createOnlineStatusDisplay(isOnline) {
     }
 }
 
-// FUNÇÃO PARA OCULTAR INFORMAÇÕES SENSÍVEIS (MODO INVISÍVEL)
 function hideSensitiveInfo() {
     const locationElements = document.querySelectorAll('.profile-location, [data-location]');
     locationElements.forEach(el => {
@@ -452,7 +517,6 @@ function hideSensitiveInfo() {
         }
     });
     
-    // Adicionar aviso de modo invisível
     const profileHeader = document.querySelector('.profile-basic-info');
     if (profileHeader && !document.getElementById('invisibleWarning')) {
         const warning = document.createElement('div');
@@ -463,7 +527,55 @@ function hideSensitiveInfo() {
     }
 }
 
-// ==================== FUNÇÕES DE FORMATAÇÃO PARA PORTUGUÊS ====================
+async function updatePremiumBadge(profile) {
+    const badge = document.getElementById('visitedUserPremiumBadge');
+    if (!badge) return;
+
+    try {
+        const { data: subscription, error } = await supabase
+            .from('user_subscriptions')
+            .select('status, expires_at')
+            .eq('user_id', visitedUserId)
+            .eq('status', 'active')
+            .gte('expires_at', new Date().toISOString())
+            .single();
+
+        const isPremium = !error && subscription !== null;
+        
+        if (isPremium) {
+            badge.className = 'profile-premium-badge premium';
+            badge.innerHTML = '<i class="fas fa-crown"></i> Premium';
+        } else {
+            badge.className = 'profile-premium-badge free';
+            badge.innerHTML = '<i class="fas fa-user"></i> Free';
+        }
+    } catch (error) {
+        badge.className = 'profile-premium-badge free';
+        badge.innerHTML = '<i class="fas fa-user"></i> Free';
+    }
+}
+
+async function checkCurrentUserPremium() {
+    try {
+        if (!currentUser) return false;
+        
+        if (typeof PremiumManager !== 'undefined') {
+            return await PremiumManager.checkPremiumStatus();
+        }
+        
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_premium')
+            .eq('id', currentUser.id)
+            .single();
+            
+        return profile?.is_premium || false;
+    } catch (error) {
+        return false;
+    }
+}
+
+// ==================== FUNÇÕES DE FORMATAÇÃO ====================
 
 function formatLookingFor(value) {
     const options = {
@@ -578,7 +690,6 @@ function updateField(elementId, value) {
         if (span) {
             let displayValue = value;
             
-            // APLICA FORMATAÇÃO PARA PORTUGUÊS
             if (elementId === 'profileLookingFor') {
                 displayValue = formatLookingFor(value);
             } else if (elementId === 'profileGender') {
@@ -630,116 +741,6 @@ function updateList(containerId, items, sectionId) {
     }
 }
 
-async function updatePremiumBadge(profile) {
-    const badge = document.getElementById('visitedUserPremiumBadge');
-    if (!badge) return;
-
-    try {
-        const { data: subscription, error } = await supabase
-            .from('user_subscriptions')
-            .select('status, expires_at')
-            .eq('user_id', visitedUserId)
-            .eq('status', 'active')
-            .gte('expires_at', new Date().toISOString())
-            .single();
-
-        const isPremium = !error && subscription !== null;
-        
-        if (isPremium) {
-            badge.className = 'profile-premium-badge premium';
-            badge.innerHTML = '<i class="fas fa-crown"></i> Premium';
-        } else {
-            badge.className = 'profile-premium-badge free';
-            badge.innerHTML = '<i class="fas fa-user"></i> Free';
-        }
-    } catch (error) {
-        badge.className = 'profile-premium-badge free';
-        badge.innerHTML = '<i class="fas fa-user"></i> Free';
-    }
-}
-
-async function checkGalleryAccess() {
-    const premiumLock = document.getElementById('galleryPremiumLock');
-    const galleryContainer = document.getElementById('galleryContainer');
-    const noGallery = document.getElementById('noGalleryMessage');
-
-    const isCurrentUserPremium = await checkCurrentUserPremium();
-    
-    if (isCurrentUserPremium) {
-        premiumLock.style.display = 'none';
-        galleryContainer.style.display = 'block';
-        noGallery.style.display = 'none';
-        await loadUserGallery();
-    } else {
-        premiumLock.style.display = 'block';
-        galleryContainer.style.display = 'none';
-        noGallery.style.display = 'none';
-    }
-}
-
-async function checkCurrentUserPremium() {
-    try {
-        if (!currentUser) return false;
-        
-        if (typeof PremiumManager !== 'undefined') {
-            return await PremiumManager.checkPremiumStatus();
-        }
-        
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('is_premium')
-            .eq('id', currentUser.id)
-            .single();
-            
-        return profile?.is_premium || false;
-    } catch (error) {
-        return false;
-    }
-}
-
-async function loadUserGallery() {
-    try {
-        const { data: images, error } = await supabase
-            .from('user_gallery')
-            .select('*')
-            .eq('user_id', visitedUserId)
-            .eq('is_active', true)
-            .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        displayGallery(images || []);
-
-    } catch (error) {
-        displayGallery([]);
-    }
-}
-
-function displayGallery(images) {
-    const galleryGrid = document.getElementById('visitedUserGallery');
-    
-    if (!galleryGrid) return;
-    
-    if (!images || images.length === 0) {
-        galleryGrid.innerHTML = `
-            <div class="empty-gallery">
-                <i class="fas fa-images"></i>
-                <p>Este usuário não possui fotos na galeria</p>
-            </div>
-        `;
-        return;
-    }
-    
-    galleryGrid.innerHTML = images.map(image => `
-        <div class="gallery-item" onclick="openGalleryImage('${image.image_url}')">
-            <img src="${getImageUrl(image.image_url)}" 
-                 alt="${image.image_name}" 
-                 class="gallery-image"
-                 loading="lazy">
-        </div>
-    `).join('');
-}
-
 function calculateAge(birthDate) {
     const today = new Date();
     const birth = new Date(birthDate);
@@ -774,13 +775,10 @@ function openGalleryImage(imageUrl) {
     }
 }
 
-// Sistema de notificações
 function showNotification(message, type = 'success') {
-    // Usar sistema do home.js se disponível, ou fallback simples
     if (typeof window.showNotification === 'function') {
         window.showNotification(message, type);
     } else {
-        // Fallback simples
         alert(message);
     }
 }
@@ -803,8 +801,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-
-    // Botão de mensagem já configurado no setupMessageButton()
 });
 
 // Monitorar estado de autenticação
