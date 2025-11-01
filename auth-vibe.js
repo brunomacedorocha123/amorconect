@@ -1,4 +1,4 @@
-// auth-vibe.js - VERSÃO FINAL
+// auth-vibe.js - VERSÃO FINAL SEM LOOP
 class AuthVibeSystem {
     constructor() {
         this.supabase = null;
@@ -7,8 +7,12 @@ class AuthVibeSystem {
         this.isChecking = false;
         this.redirectEnabled = true;
         this.isInitialized = false;
+        
         this.lastRedirectTime = 0;
-        this.redirectCooldown = 2000;
+        this.redirectCooldown = 3000;
+        this.maxRedirectAttempts = 2;
+        this.redirectAttempts = 0;
+        this.redirectBlocked = false;
         
         this.initialize();
     }
@@ -23,7 +27,7 @@ class AuthVibeSystem {
                 this.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 window.supabase = this.supabase;
             } else {
-                this.supabase = window.supabase;
+                this.supabase = this.supabase;
             }
 
             await this.checkAuthAndVibe();
@@ -110,20 +114,28 @@ class AuthVibeSystem {
     }
 
     async applyRedirectLogic(isVibePage, isMessagesPage) {
-        if (!this.redirectEnabled) return;
+        if (!this.redirectEnabled || this.redirectBlocked) return;
 
         const now = Date.now();
+        
+        if (this.redirectAttempts >= this.maxRedirectAttempts) {
+            this.redirectBlocked = true;
+            return;
+        }
+        
         if (now - this.lastRedirectTime < this.redirectCooldown) return;
 
         if (this.activeAgreement) {
             if (isMessagesPage) {
                 this.lastRedirectTime = now;
+                this.redirectAttempts++;
                 window.location.href = 'vibe-exclusive.html';
                 return;
             }
         } else {
             if (isVibePage) {
                 this.lastRedirectTime = now;
+                this.redirectAttempts++;
                 window.location.href = 'mensagens.html';
                 return;
             }
@@ -191,7 +203,7 @@ class AuthVibeSystem {
     startPeriodicCheck() {
         setInterval(async () => {
             await this.checkAuthAndVibe();
-        }, 10000);
+        }, 15000);
     }
 
     startRealTimeListener() {
@@ -217,6 +229,8 @@ class AuthVibeSystem {
                         payload.old?.user_b === userId;
 
                     if (isRelevant) {
+                        this.redirectAttempts = 0;
+                        this.redirectBlocked = false;
                         this.checkAuthAndVibe();
                     }
                 }
@@ -244,6 +258,11 @@ class AuthVibeSystem {
     async forceCheck() {
         await this.checkAuthAndVibe();
         return this.getStatus();
+    }
+
+    resetRedirectProtection() {
+        this.redirectAttempts = 0;
+        this.redirectBlocked = false;
     }
 }
 
@@ -277,6 +296,12 @@ window.disableVibeRedirect = function() {
 window.enableVibeRedirect = function() {
     if (window.AuthVibeSystem) {
         window.AuthVibeSystem.enableRedirect();
+    }
+};
+
+window.resetVibeRedirect = function() {
+    if (window.AuthVibeSystem) {
+        window.AuthVibeSystem.resetRedirectProtection();
     }
 };
 
