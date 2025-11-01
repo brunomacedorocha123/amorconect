@@ -398,12 +398,15 @@ async function checkGalleryAccess() {
     const galleryContainer = document.getElementById('galleryContainer');
     const noGallery = document.getElementById('noGalleryMessage');
 
-    // SEMPRE carregar a galeria primeiro
-    await loadUserGallery();
-    
-    // Verificar se tem fotos
-    const hasPhotos = document.querySelectorAll('.gallery-item').length > 0;
-    
+    // 1. VERIFICAR SE USUÁRIO VISITADO TEM FOTOS
+    const { data: images } = await supabase
+        .from('user_gallery')
+        .select('*')
+        .eq('user_id', visitedUserId)
+        .eq('is_active', true);
+
+    const hasPhotos = images && images.length > 0;
+
     if (!hasPhotos) {
         // Não tem fotos - mostrar mensagem
         premiumLock.style.display = 'none';
@@ -412,27 +415,22 @@ async function checkGalleryAccess() {
         return;
     }
 
-    // Tem fotos - mostrar galeria SEMPRE
-    premiumLock.style.display = 'none';
-    galleryContainer.style.display = 'block';
-    noGallery.style.display = 'none';
-}
-
-async function loadUserGallery() {
-    try {
-        const { data: images, error } = await supabase
-            .from('user_gallery')
-            .select('*')
-            .eq('user_id', visitedUserId)
-            .eq('is_active', true)
-            .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        displayGallery(images || []);
-
-    } catch (error) {
-        displayGallery([]);
+    // 2. TEM FOTOS - VERIFICAR SE VISITANTE É PREMIUM
+    const isVisitorPremium = await checkCurrentUserPremium();
+    
+    if (isVisitorPremium) {
+        // VISITANTE É PREMIUM - MOSTRAR GALERIA
+        premiumLock.style.display = 'none';
+        galleryContainer.style.display = 'block';
+        noGallery.style.display = 'none';
+        
+        // Carregar e mostrar as fotos
+        displayGallery(images);
+    } else {
+        // VISITANTE É FREE - MOSTRAR BLOQUEIO
+        premiumLock.style.display = 'block';
+        galleryContainer.style.display = 'none';
+        noGallery.style.display = 'none';
     }
 }
 
