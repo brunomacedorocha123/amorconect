@@ -111,6 +111,10 @@ function fillProfileData(profile, details) {
         document.getElementById('profileAvatar').src = profile.avatar_url;
         document.getElementById('profileAvatar').style.display = 'block';
         document.getElementById('profileAvatarFallback').style.display = 'none';
+    } else {
+        // Mostrar iniciais do nome
+        const initials = getInitials(profile.nickname || 'Usuário');
+        document.getElementById('avatarInitials').textContent = initials;
     }
 
     // Idade
@@ -386,16 +390,18 @@ async function removeFeel() {
     }
 }
 
-// ==================== SISTEMA DE GALERIA ====================
+// ==================== SISTEMA DE GALERIA CORRIGIDO ====================
 
 async function checkGalleryAccess() {
     const premiumLock = document.getElementById('galleryPremiumLock');
     const galleryContainer = document.getElementById('galleryContainer');
     const noGallery = document.getElementById('noGalleryMessage');
 
+    // VERIFICAR SE O VISITANTE (VOCÊ) É PREMIUM
     const isVisitorPremium = await checkCurrentUserPremium();
     
     if (isVisitorPremium) {
+        // VISITANTE É PREMIUM - PODE VER QUALQUER GALERIA
         premiumLock.style.display = 'none';
         await loadUserGallery();
         
@@ -408,9 +414,48 @@ async function checkGalleryAccess() {
             noGallery.style.display = 'block';
         }
     } else {
-        premiumLock.style.display = 'block';
-        galleryContainer.style.display = 'none';
-        noGallery.style.display = 'none';
+        // VISITANTE É FREE - SÓ PODE VER GALERIA DE USUÁRIOS FREE
+        const visitedUserIsPremium = await checkVisitedUserPremium();
+        
+        if (visitedUserIsPremium) {
+            // USUÁRIO VISITADO É PREMIUM - BLOQUEIO PARA VISITANTE FREE
+            premiumLock.style.display = 'block';
+            galleryContainer.style.display = 'none';
+            noGallery.style.display = 'none';
+        } else {
+            // USUÁRIO VISITADO É FREE - PODE VER GALERIA
+            premiumLock.style.display = 'none';
+            await loadUserGallery();
+            
+            const hasPhotos = document.querySelectorAll('.gallery-item').length > 0;
+            if (hasPhotos) {
+                galleryContainer.style.display = 'block';
+                noGallery.style.display = 'none';
+            } else {
+                galleryContainer.style.display = 'none';
+                noGallery.style.display = 'block';
+            }
+        }
+    }
+}
+
+// VERIFICAR SE USUÁRIO VISITADO É PREMIUM
+async function checkVisitedUserPremium() {
+    try {
+        if (!visitedUserId) return false;
+        
+        const { data: subscription, error } = await supabase
+            .from('user_subscriptions')
+            .select('id')
+            .eq('user_id', visitedUserId)
+            .eq('status', 'active')
+            .gte('expires_at', new Date().toISOString())
+            .single();
+
+        return !!subscription;
+
+    } catch (error) {
+        return false;
     }
 }
 
@@ -457,7 +502,6 @@ function displayGallery(images) {
     `).join('');
 }
 
-// CONTINUA NA PRÓXIMA PARTE...
 // ==================== FUNÇÕES AUXILIARES ====================
 
 function createOnlineStatusDisplay(isOnline) {
@@ -557,6 +601,10 @@ async function checkCurrentUserPremium() {
     } catch (error) {
         return false;
     }
+}
+
+function getInitials(name) {
+    return name.split(' ').map(word => word[0]).join('').toUpperCase().substring(0, 2);
 }
 
 // ==================== FORMATAÇÃO EM PORTUGUÊS ====================
