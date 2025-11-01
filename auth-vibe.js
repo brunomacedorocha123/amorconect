@@ -1,4 +1,4 @@
-// auth-vibe.js - Sistema de Autenticação e Redirecionamento Vibe Exclusive
+// auth-vibe.js - VERSÃO FINAL
 class AuthVibeSystem {
     constructor() {
         this.supabase = null;
@@ -7,6 +7,8 @@ class AuthVibeSystem {
         this.isChecking = false;
         this.redirectEnabled = true;
         this.isInitialized = false;
+        this.lastRedirectTime = 0;
+        this.redirectCooldown = 2000;
         
         this.initialize();
     }
@@ -48,25 +50,52 @@ class AuthVibeSystem {
             
             this.currentUser = user;
             
+            const agreement = await this.getActiveAgreement();
+            this.activeAgreement = agreement;
+
             const isVibePage = this.isVibeExclusivePage();
-            
-            const { data: agreement, error: agreementError } = await this.supabase
-                .rpc('check_active_fidelity_agreement', {
-                    p_user_id: user.id
-                });
+            const isMessagesPage = this.isMessagesPage();
 
-            if (agreementError) {
-                this.activeAgreement = null;
-            } else {
-                this.activeAgreement = agreement?.has_active_agreement ? agreement : null;
-            }
-
-            // ⭐⭐ CORREÇÃO: SEMPRE aplicar lógica de redirecionamento
-            await this.applySafeRedirectLogic(isVibePage);
+            await this.applyRedirectLogic(isVibePage, isMessagesPage);
             
         } catch (error) {
         } finally {
             this.isChecking = false;
+        }
+    }
+
+    async getActiveAgreement() {
+        try {
+            const { data: agreement, error } = await this.supabase
+                .rpc('check_active_fidelity_agreement', {
+                    p_user_id: this.currentUser.id
+                });
+
+            if (!error && agreement?.has_active_agreement) {
+                return agreement;
+            }
+
+            const { data: directAgreement, error: directError } = await this.supabase
+                .from('fidelity_agreements')
+                .select('*')
+                .or(`user_a.eq.${this.currentUser.id},user_b.eq.${this.currentUser.id}`)
+                .eq('status', 'active')
+                .single();
+
+            if (!directError && directAgreement) {
+                return {
+                    has_active_agreement: true,
+                    partner_id: directAgreement.user_a === this.currentUser.id ? 
+                               directAgreement.user_b : directAgreement.user_a,
+                    agreement_id: directAgreement.id,
+                    accepted_at: directAgreement.accepted_at
+                };
+            }
+
+            return null;
+
+        } catch (error) {
+            return null;
         }
     }
 
@@ -75,42 +104,32 @@ class AuthVibeSystem {
         return path.includes('vibe-exclusive') || path.includes('vibe-exclusivo');
     }
 
-    async applySafeRedirectLogic(isVibePage) {
+    isMessagesPage() {
+        const path = window.location.pathname.toLowerCase();
+        return path.includes('mensagens') || path.includes('messages');
+    }
+
+    async applyRedirectLogic(isVibePage, isMessagesPage) {
         if (!this.redirectEnabled) return;
 
-        const currentPage = window.location.pathname.split('/').pop() || '';
+        const now = Date.now();
+        if (now - this.lastRedirectTime < this.redirectCooldown) return;
 
-        // ⭐⭐ CORREÇÃO CRÍTICA: Lógica simplificada e direta
         if (this.activeAgreement) {
-            // TEM acordo ativo
-            if (!isVibePage && currentPage === 'mensagens.html') {
-                // ⚠️ Está em mensagens.html com acordo ativo → REDIRECIONAR
-                this.safeRedirectToVibeExclusive();
+            if (isMessagesPage) {
+                this.lastRedirectTime = now;
+                window.location.href = 'vibe-exclusive.html';
                 return;
             }
         } else {
-            // NÃO TEM acordo ativo
             if (isVibePage) {
-                // ⚠️ Está em vibe-exclusive sem acordo → REDIRECIONAR
-                this.safeRedirectToMessages();
+                this.lastRedirectTime = now;
+                window.location.href = 'mensagens.html';
                 return;
             }
         }
 
         this.updateUI();
-    }
-
-    safeRedirectToVibeExclusive() {
-        if (this.isVibeExclusivePage()) return;
-        
-        // ⭐⭐ CORREÇÃO: Redirecionamento IMEDIATO e FORÇADO
-        window.location.href = 'vibe-exclusive.html';
-    }
-
-    safeRedirectToMessages() {
-        if (window.location.pathname.includes('mensagens.html')) return;
-        
-        window.location.href = 'mensagens.html';
     }
 
     handleNoAuth() {
@@ -172,7 +191,7 @@ class AuthVibeSystem {
     startPeriodicCheck() {
         setInterval(async () => {
             await this.checkAuthAndVibe();
-        }, 10000); // Verifica a cada 10 segundos
+        }, 10000);
     }
 
     startRealTimeListener() {
@@ -228,24 +247,20 @@ class AuthVibeSystem {
     }
 }
 
-// ⭐⭐ CORREÇÃO: Inicialização IMEDIATA e FORÇADA
 function initializeAuthVibe() {
     if (!window.AuthVibeSystem) {
         window.AuthVibeSystem = new AuthVibeSystem();
     }
 }
 
-// Inicializar quando a página carregar
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeAuthVibe);
 } else {
     initializeAuthVibe();
 }
 
-// Inicializar também com um timeout de segurança
 setTimeout(initializeAuthVibe, 1000);
 
-// Funções globais
 window.checkVibeStatus = async function() {
     if (window.AuthVibeSystem) {
         return await window.AuthVibeSystem.forceCheck();
