@@ -154,6 +154,124 @@ function fillProfileData(profile, details) {
     checkGalleryAccess();
 }
 
+// ==================== SISTEMA DE GALERIA CORRIGIDO ====================
+
+async function checkGalleryAccess() {
+    const premiumLock = document.getElementById('galleryPremiumLock');
+    const galleryContainer = document.getElementById('galleryContainer');
+    const noGallery = document.getElementById('noGalleryMessage');
+
+    try {
+        // 1. VERIFICAR SE USUÁRIO VISITADO É PREMIUM
+        const isVisitedUserPremium = await checkVisitedUserPremium();
+        
+        if (!isVisitedUserPremium) {
+            // Usuário visitado NÃO é premium - não tem galeria
+            premiumLock.style.display = 'none';
+            galleryContainer.style.display = 'none';
+            noGallery.style.display = 'block';
+            noGallery.innerHTML = `
+                <i class="fas fa-images"></i>
+                <p>Este usuário não possui galeria</p>
+            `;
+            return;
+        }
+
+        // 2. USUÁRIO VISITADO É PREMIUM - VERIFICAR SE TEM FOTOS
+        const { data: images, error } = await supabase
+            .from('user_gallery')
+            .select('*')
+            .eq('user_id', visitedUserId)
+            .eq('is_active', true)
+            .order('uploaded_at', { ascending: false });
+
+        if (error) throw error;
+
+        const hasPhotos = images && images.length > 0;
+
+        if (!hasPhotos) {
+            // É premium mas não tem fotos
+            premiumLock.style.display = 'none';
+            galleryContainer.style.display = 'none';
+            noGallery.style.display = 'block';
+            noGallery.innerHTML = `
+                <i class="fas fa-images"></i>
+                <p>Este usuário ainda não adicionou fotos à galeria</p>
+            `;
+            return;
+        }
+
+        // 3. TEM FOTOS - VERIFICAR SE VISITANTE É PREMIUM
+        const isVisitorPremium = await checkCurrentUserPremium();
+        
+        if (isVisitorPremium) {
+            // VISITANTE É PREMIUM - MOSTRAR GALERIA
+            premiumLock.style.display = 'none';
+            galleryContainer.style.display = 'block';
+            noGallery.style.display = 'none';
+            
+            // Carregar e mostrar as fotos
+            displayGallery(images);
+        } else {
+            // VISITANTE É FREE - MOSTRAR BLOQUEIO
+            premiumLock.style.display = 'block';
+            galleryContainer.style.display = 'none';
+            noGallery.style.display = 'none';
+        }
+
+    } catch (error) {
+        console.error('Erro ao verificar acesso à galeria:', error);
+        premiumLock.style.display = 'none';
+        galleryContainer.style.display = 'none';
+        noGallery.style.display = 'block';
+        noGallery.innerHTML = `
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>Erro ao carregar galeria</p>
+        `;
+    }
+}
+
+async function checkVisitedUserPremium() {
+    try {
+        const { data: subscription, error } = await supabase
+            .from('user_subscriptions')
+            .select('status, expires_at')
+            .eq('user_id', visitedUserId)
+            .eq('status', 'active')
+            .gte('expires_at', new Date().toISOString())
+            .single();
+
+        return !error && subscription !== null;
+    } catch (error) {
+        return false;
+    }
+}
+
+function displayGallery(images) {
+    const galleryGrid = document.getElementById('visitedUserGallery');
+    
+    if (!galleryGrid) return;
+    
+    if (!images || images.length === 0) {
+        galleryGrid.innerHTML = `
+            <div class="empty-gallery">
+                <i class="fas fa-images"></i>
+                <p>Nenhuma foto na galeria</p>
+            </div>
+        `;
+        return;
+    }
+    
+    galleryGrid.innerHTML = images.map(image => `
+        <div class="gallery-item" onclick="openGalleryImage('${image.image_url}')">
+            <img src="${getImageUrl(image.image_url)}" 
+                 alt="${image.image_name}" 
+                 class="gallery-image"
+                 loading="lazy">
+        </div>
+    `).join('');
+}
+
 // ==================== SISTEMA DE MENSAGENS ====================
 
 function setupMessageButton() {
@@ -390,75 +508,6 @@ async function removeFeel() {
     }
 }
 
-// CONTINUA NA PRÓXIMA PARTE...
-// ==================== SISTEMA DE GALERIA CORRIGIDO ====================
-
-async function checkGalleryAccess() {
-    const premiumLock = document.getElementById('galleryPremiumLock');
-    const galleryContainer = document.getElementById('galleryContainer');
-    const noGallery = document.getElementById('noGalleryMessage');
-
-    // 1. VERIFICAR SE USUÁRIO VISITADO TEM FOTOS
-    const { data: images } = await supabase
-        .from('user_gallery')
-        .select('*')
-        .eq('user_id', visitedUserId)
-        .eq('is_active', true);
-
-    const hasPhotos = images && images.length > 0;
-
-    if (!hasPhotos) {
-        // Não tem fotos - mostrar mensagem
-        premiumLock.style.display = 'none';
-        galleryContainer.style.display = 'none';
-        noGallery.style.display = 'block';
-        return;
-    }
-
-    // 2. TEM FOTOS - VERIFICAR SE VISITANTE É PREMIUM
-    const isVisitorPremium = await checkCurrentUserPremium();
-    
-    if (isVisitorPremium) {
-        // VISITANTE É PREMIUM - MOSTRAR GALERIA
-        premiumLock.style.display = 'none';
-        galleryContainer.style.display = 'block';
-        noGallery.style.display = 'none';
-        
-        // Carregar e mostrar as fotos
-        displayGallery(images);
-    } else {
-        // VISITANTE É FREE - MOSTRAR BLOQUEIO
-        premiumLock.style.display = 'block';
-        galleryContainer.style.display = 'none';
-        noGallery.style.display = 'none';
-    }
-}
-
-function displayGallery(images) {
-    const galleryGrid = document.getElementById('visitedUserGallery');
-    
-    if (!galleryGrid) return;
-    
-    if (!images || images.length === 0) {
-        galleryGrid.innerHTML = `
-            <div class="empty-gallery">
-                <i class="fas fa-images"></i>
-                <p>Este usuário não possui fotos na galeria</p>
-            </div>
-        `;
-        return;
-    }
-    
-    galleryGrid.innerHTML = images.map(image => `
-        <div class="gallery-item" onclick="openGalleryImage('${image.image_url}')">
-            <img src="${getImageUrl(image.image_url)}" 
-                 alt="${image.image_name}" 
-                 class="gallery-image"
-                 loading="lazy">
-        </div>
-    `).join('');
-}
-
 // ==================== FUNÇÕES AUXILIARES ====================
 
 function createOnlineStatusDisplay(isOnline) {
@@ -517,15 +566,7 @@ async function updatePremiumBadge(profile) {
     if (!badge) return;
 
     try {
-        const { data: subscription, error } = await supabase
-            .from('user_subscriptions')
-            .select('status, expires_at')
-            .eq('user_id', visitedUserId)
-            .eq('status', 'active')
-            .gte('expires_at', new Date().toISOString())
-            .single();
-
-        const isPremium = !error && subscription !== null;
+        const isPremium = await checkVisitedUserPremium();
         
         if (isPremium) {
             badge.className = 'profile-premium-badge premium';
@@ -548,13 +589,15 @@ async function checkCurrentUserPremium() {
             return await PremiumManager.checkPremiumStatus();
         }
         
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('is_premium')
-            .eq('id', currentUser.id)
+        const { data: subscription } = await supabase
+            .from('user_subscriptions')
+            .select('status, expires_at')
+            .eq('user_id', currentUser.id)
+            .eq('status', 'active')
+            .gte('expires_at', new Date().toISOString())
             .single();
             
-        return profile?.is_premium || false;
+        return subscription !== null;
     } catch (error) {
         return false;
     }
@@ -730,7 +773,6 @@ function updateList(containerId, items, sectionId) {
     }
 }
 
-// CONTINUA NA PRÓXIMA PARTE...
 // ==================== FUNÇÕES UTILITÁRIAS ====================
 
 function calculateAge(birthDate) {
