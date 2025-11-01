@@ -586,8 +586,7 @@
             </div>
         </aside>
     </main>
-
-  <script>
+<script>
     const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -607,7 +606,6 @@
             const shouldStay = await validateVibeAccess();
             if (!shouldStay) return;
 
-            await checkAuthentication();
             await loadVibeExclusiveData();
             setupEventListeners();
             startRealTimeUpdates();
@@ -615,9 +613,7 @@
             isInitialized = true;
             
         } catch (error) {
-            setTimeout(() => {
-                window.location.replace('mensagens.html');
-            }, 1000);
+            // Falha silenciosa - não redireciona automaticamente
         }
     }
 
@@ -637,12 +633,16 @@
                 });
 
             if (agreementError) {
-                window.location.replace('mensagens.html');
+                showNotification('Erro ao verificar acordo Vibe Exclusive', 'error');
                 return false;
             }
 
             if (!agreement || !agreement.has_active_agreement) {
-                window.location.replace('mensagens.html');
+                // MOSTRAR MENSAGEM EM VEZ DE REDIRECIONAR
+                showNotification('Você não tem um Vibe Exclusive ativo', 'error');
+                
+                // Adicionar botão para voltar às mensagens normais
+                addBackToMessagesButton();
                 return false;
             }
 
@@ -650,9 +650,41 @@
             return true;
 
         } catch (error) {
-            window.location.replace('mensagens.html');
+            showNotification('Erro ao carregar Vibe Exclusive', 'error');
             return false;
         }
+    }
+
+    function addBackToMessagesButton() {
+        const chatArea = document.querySelector('.vibe-chat-area');
+        if (!chatArea) return;
+
+        const errorContainer = document.createElement('div');
+        errorContainer.style.cssText = `
+            text-align: center;
+            padding: 40px 20px;
+            background: var(--exclusive-card);
+            border-radius: 20px;
+            border: 2px solid var(--exclusive-border);
+            margin: 20px;
+        `;
+
+        errorContainer.innerHTML = `
+            <div style="font-size: 4rem; margin-bottom: 20px;">💎</div>
+            <h3 style="color: var(--gold); margin-bottom: 15px;">Vibe Exclusive Não Ativo</h3>
+            <p style="margin-bottom: 25px; color: var(--exclusive-text); opacity: 0.8;">
+                Você não possui um acordo Vibe Exclusive ativo no momento.
+            </p>
+            <button onclick="goToNormalMessages()" class="vibe-btn primary" style="margin: 10px;">
+                <i class="fas fa-comments"></i> Ir para Mensagens Normais
+            </button>
+            <button onclick="location.reload()" class="vibe-btn secondary" style="margin: 10px;">
+                <i class="fas fa-sync-alt"></i> Tentar Novamente
+            </button>
+        `;
+
+        chatArea.innerHTML = '';
+        chatArea.appendChild(errorContainer);
     }
 
     async function checkAuthentication() {
@@ -737,7 +769,9 @@
                 document.getElementById('connectionStrength').textContent = `${connectionStrength}%`;
             }
 
-        } catch (error) {}
+        } catch (error) {
+            // Silencioso
+        }
     }
 
     async function loadVibeMessages() {
@@ -763,7 +797,9 @@
             renderVibeMessages(messages);
             await markMessagesAsRead();
             
-        } catch (error) {}
+        } catch (error) {
+            // Silencioso
+        }
     }
 
     async function markMessagesAsRead() {
@@ -777,7 +813,9 @@
                 .eq('receiver_id', currentUser.id)
                 .is('read_at', null);
                 
-        } catch (error) {}
+        } catch (error) {
+            // Silencioso
+        }
     }
 
     function renderVibeMessages(messages) {
@@ -841,7 +879,9 @@
             });
 
             setTimeout(() => {
-                messageInput.focus();
+                if (activeAgreement) {
+                    messageInput.focus();
+                }
             }, 1000);
         }
 
@@ -1064,8 +1104,9 @@
                 showNotification('Vibe Exclusive encerrado', 'success');
                 closeCustomModal();
                 
+                // Redirecionar apenas quando usuário CONFIRMA o encerramento
                 setTimeout(() => {
-                    window.location.replace('mensagens.html');
+                    window.location.href = 'mensagens.html';
                 }, 2000);
             } else {
                 throw new Error(data);
@@ -1252,6 +1293,11 @@
         closeCustomModal();
     }
 
+    function goToNormalMessages() {
+        window.location.href = 'mensagens.html';
+    }
+
+    // Funções globais
     window.showConnectionDetails = showConnectionDetails;
     window.manageVibeExclusive = manageVibeExclusive;
     window.closeCustomModal = closeCustomModal;
@@ -1260,24 +1306,12 @@
     window.showConnectionInsights = showConnectionInsights;
     window.exportConversation = exportConversation;
     window.customizeVibe = customizeVibe;
+    window.goToNormalMessages = goToNormalMessages;
 
     document.addEventListener('visibilitychange', function() {
         if (!document.hidden && activeAgreement) {
             loadVibeMessages();
             loadConnectionStats();
-        }
-    });
-
-    window.addEventListener('beforeunload', function(e) {
-        if (activeAgreement) {
-            if (e.target.activeElement && 
-                (e.target.activeElement.href || e.target.activeElement.onclick)) {
-                return;
-            }
-            
-            e.preventDefault();
-            e.returnValue = 'Você está em uma conexão Vibe Exclusive. Tem certeza que deseja sair?';
-            return e.returnValue;
         }
     });
 </script>
