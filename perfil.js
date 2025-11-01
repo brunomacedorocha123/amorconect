@@ -390,6 +390,7 @@ async function removeFeel() {
     }
 }
 
+// CONTINUA NA PRÓXIMA PARTE...
 // ==================== SISTEMA DE GALERIA CORRIGIDO ====================
 
 async function checkGalleryAccess() {
@@ -397,65 +398,33 @@ async function checkGalleryAccess() {
     const galleryContainer = document.getElementById('galleryContainer');
     const noGallery = document.getElementById('noGalleryMessage');
 
-    // VERIFICAR SE O VISITANTE (VOCÊ) É PREMIUM
+    // Primeiro, carregar as fotos do usuário visitado
+    await loadUserGallery();
+    
+    // Verificar se tem fotos
+    const hasPhotos = document.querySelectorAll('.gallery-item').length > 0;
+    
+    if (!hasPhotos) {
+        // Não tem fotos - mostrar mensagem
+        premiumLock.style.display = 'none';
+        galleryContainer.style.display = 'none';
+        noGallery.style.display = 'block';
+        return;
+    }
+
+    // Tem fotos - verificar se visitante é premium
     const isVisitorPremium = await checkCurrentUserPremium();
     
     if (isVisitorPremium) {
-        // VISITANTE É PREMIUM - PODE VER QUALQUER GALERIA
+        // Visitante é PREMIUM - mostrar galeria
         premiumLock.style.display = 'none';
-        await loadUserGallery();
-        
-        const hasPhotos = document.querySelectorAll('.gallery-item').length > 0;
-        if (hasPhotos) {
-            galleryContainer.style.display = 'block';
-            noGallery.style.display = 'none';
-        } else {
-            galleryContainer.style.display = 'none';
-            noGallery.style.display = 'block';
-        }
+        galleryContainer.style.display = 'block';
+        noGallery.style.display = 'none';
     } else {
-        // VISITANTE É FREE - SÓ PODE VER GALERIA DE USUÁRIOS FREE
-        const visitedUserIsPremium = await checkVisitedUserPremium();
-        
-        if (visitedUserIsPremium) {
-            // USUÁRIO VISITADO É PREMIUM - BLOQUEIO PARA VISITANTE FREE
-            premiumLock.style.display = 'block';
-            galleryContainer.style.display = 'none';
-            noGallery.style.display = 'none';
-        } else {
-            // USUÁRIO VISITADO É FREE - PODE VER GALERIA
-            premiumLock.style.display = 'none';
-            await loadUserGallery();
-            
-            const hasPhotos = document.querySelectorAll('.gallery-item').length > 0;
-            if (hasPhotos) {
-                galleryContainer.style.display = 'block';
-                noGallery.style.display = 'none';
-            } else {
-                galleryContainer.style.display = 'none';
-                noGallery.style.display = 'block';
-            }
-        }
-    }
-}
-
-// VERIFICAR SE USUÁRIO VISITADO É PREMIUM
-async function checkVisitedUserPremium() {
-    try {
-        if (!visitedUserId) return false;
-        
-        const { data: subscription, error } = await supabase
-            .from('user_subscriptions')
-            .select('id')
-            .eq('user_id', visitedUserId)
-            .eq('status', 'active')
-            .gte('expires_at', new Date().toISOString())
-            .single();
-
-        return !!subscription;
-
-    } catch (error) {
-        return false;
+        // Visitante é FREE - mostrar bloqueio
+        premiumLock.style.display = 'block';
+        galleryContainer.style.display = 'none';
+        noGallery.style.display = 'none';
     }
 }
 
@@ -773,6 +742,7 @@ function updateList(containerId, items, sectionId) {
     }
 }
 
+// CONTINUA NA PRÓXIMA PARTE...
 // ==================== FUNÇÕES UTILITÁRIAS ====================
 
 function calculateAge(birthDate) {
