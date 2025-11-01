@@ -17,8 +17,9 @@ class MessagesSystem {
 
   async initialize() {
     try {
-      // ⭐⭐ VERIFICAÇÃO VIBE EXCLUSIVE - PRIMEIRO
-      await this.checkAndRedirectToVibeExclusive();
+      // ⭐⭐ CORREÇÃO: Removida verificação de Vibe Exclusive para evitar conflito
+      // O auth-vibe.js já cuida de todo o redirecionamento
+      // await this.checkAndRedirectToVibeExclusive();
       
       await this.checkAuth();
       await this.loadUserData();
@@ -35,9 +36,15 @@ class MessagesSystem {
     }
   }
 
-  // ⭐⭐ FUNÇÃO CRÍTICA: Verificar e redirecionar para Vibe Exclusive
+  // ⭐⭐ FUNÇÃO MANTIDA MAS COMENTADA NO INITIALIZE
   async checkAndRedirectToVibeExclusive() {
     try {
+      // ⭐⭐ VERIFICAÇÃO DE SEGURANÇA: Não redirecionar se já está na vibe
+      if (window.location.pathname.includes('vibe-exclusive') || 
+          window.location.pathname.includes('vibe-exclusivo')) {
+        return false;
+      }
+      
       const { data: { user } } = await this.supabase.auth.getUser();
       if (!user) return;
       
@@ -325,7 +332,7 @@ class MessagesSystem {
     }
   }
 
-    async loadConversationsFallback() {
+  async loadConversationsFallback() {
     try {
       const { data: messages, error } = await this.supabase
         .from('messages')
@@ -449,7 +456,7 @@ class MessagesSystem {
     });
   }
 
-  async selectConversation(otherUserId) {
+    async selectConversation(otherUserId) {
     try {
       document.querySelectorAll('.conversation-item').forEach(item => {
         item.classList.remove('active');
@@ -730,7 +737,7 @@ class MessagesSystem {
     }
   }
 
-    async getUserStatus(userId) {
+  async getUserStatus(userId) {
     try {
       const { data: profile, error } = await this.supabase
         .from('profiles')
@@ -751,7 +758,7 @@ class MessagesSystem {
     return { status: 'offline', text: 'Offline', class: 'status-offline' };
   }
 
-  async sendMessage() {
+    async sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const message = messageInput.value.trim();
     
@@ -1122,7 +1129,7 @@ class MessagesSystem {
     }, 30000);
   }
 
-  escapeHtml(text) {
+    escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
     div.textContent = text;
@@ -1235,14 +1242,84 @@ class MessagesSystem {
       }, 3000);
     }
   }
+
+  // ⭐⭐ MÉTODO ADICIONAL: Verificar e atualizar botão Vibe Exclusive
+  updateFidelityButton() {
+    const fidelityBtn = document.getElementById('fidelityProposeBtn');
+    const proposalsBtn = document.getElementById('viewProposalsBtn');
+    
+    if (!fidelityBtn || !proposalsBtn) return;
+    
+    // Verificar se já existe acordo ativo com este usuário
+    if (this.currentConversation && this.sistemaVibe) {
+      this.sistemaVibe.checkExistingAgreement(this.currentConversation)
+        .then(hasAgreement => {
+          if (hasAgreement) {
+            fidelityBtn.style.display = 'none';
+            proposalsBtn.style.display = 'none';
+          } else {
+            fidelityBtn.style.display = 'flex';
+            proposalsBtn.style.display = 'flex';
+          }
+        })
+        .catch(() => {
+          fidelityBtn.style.display = 'flex';
+          proposalsBtn.style.display = 'flex';
+        });
+    }
+  }
+
+  // ⭐⭐ MÉTODO ADICIONAL: Integração com AuthVibeSystem
+  setupAuthVibeIntegration() {
+    if (!window.AuthVibeSystem) {
+      console.log('⏳ AuthVibeSystem não disponível para integração');
+      return;
+    }
+
+    console.log('🔗 Integrando com AuthVibeSystem...');
+    
+    // Quando uma conversa é selecionada, verificar se está em Vibe Exclusive
+    const originalSelectConversation = this.selectConversation;
+    
+    this.selectConversation = async function(otherUserId) {
+      if (window.AuthVibeSystem && window.AuthVibeSystem.activeAgreement) {
+        const partnerId = window.AuthVibeSystem.activeAgreement.partner_id;
+        
+        // ⭐⭐ BLOQUEAR: Não permitir selecionar outras conversas durante Vibe Exclusive
+        if (otherUserId !== partnerId) {
+          console.log('🚫 Tentativa de selecionar outra conversa durante Vibe Exclusive');
+          window.AuthVibeSystem.safeRedirectToVibeExclusive();
+          return;
+        }
+      }
+      
+      return originalSelectConversation.call(this, otherUserId);
+    };
+
+    console.log('✅ Integração com AuthVibeSystem concluída');
+  }
 }
 
-// Inicialização global
+// ==================== INICIALIZAÇÃO GLOBAL ====================
 document.addEventListener('DOMContentLoaded', function() {
-  window.MessagesSystem = new MessagesSystem();
+  console.log('🚀 Iniciando MessagesSystem...');
+  
+  // Aguardar um pouco para garantir que o Supabase esteja carregado
+  setTimeout(() => {
+    if (window.supabase && !window.MessagesSystem) {
+      window.MessagesSystem = new MessagesSystem();
+      
+      // Configurar integração após inicialização
+      setTimeout(() => {
+        if (window.MessagesSystem) {
+          window.MessagesSystem.setupAuthVibeIntegration();
+        }
+      }, 2000);
+    }
+  }, 500);
 });
 
-// Funções globais
+// ==================== FUNÇÕES GLOBAIS ====================
 window.refreshMessages = function() {
   if (window.MessagesSystem) {
     window.MessagesSystem.refreshMessages();
@@ -1261,20 +1338,29 @@ window.sendMessage = function() {
   }
 };
 
+// Função de logout global
 async function logout() {
   try {
     const { error } = await supabase.auth.signOut();
     if (!error) {
       window.location.href = 'login.html';
     }
-  } catch (error) {}
+  } catch (error) {
+    // Logout silencioso
+  }
 }
 
 // Monitor de autenticação
-supabase.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_OUT') {
-    window.location.href = 'login.html';
-  }
-});
+if (window.supabase) {
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT') {
+      window.location.href = 'login.html';
+    }
+  });
+}
 
+// Exportar funções globais
 window.logout = logout;
+window.MessagesSystem = MessagesSystem;
+
+console.log('🎯 MessagesSystem carregado e pronto!');
