@@ -398,7 +398,7 @@ async function checkGalleryAccess() {
     const galleryContainer = document.getElementById('galleryContainer');
     const noGallery = document.getElementById('noGalleryMessage');
 
-    // Primeiro, carregar as fotos do usuário visitado
+    // SEMPRE carregar a galeria primeiro
     await loadUserGallery();
     
     // Verificar se tem fotos
@@ -412,20 +412,10 @@ async function checkGalleryAccess() {
         return;
     }
 
-    // Tem fotos - verificar se visitante é premium
-    const isVisitorPremium = await checkCurrentUserPremium();
-    
-    if (isVisitorPremium) {
-        // Visitante é PREMIUM - mostrar galeria
-        premiumLock.style.display = 'none';
-        galleryContainer.style.display = 'block';
-        noGallery.style.display = 'none';
-    } else {
-        // Visitante é FREE - mostrar bloqueio
-        premiumLock.style.display = 'block';
-        galleryContainer.style.display = 'none';
-        noGallery.style.display = 'none';
-    }
+    // Tem fotos - mostrar galeria SEMPRE
+    premiumLock.style.display = 'none';
+    galleryContainer.style.display = 'block';
+    noGallery.style.display = 'none';
 }
 
 async function loadUserGallery() {
