@@ -162,11 +162,15 @@ async function checkGalleryAccess() {
     const noGallery = document.getElementById('noGalleryMessage');
 
     try {
+        console.log('=== INICIANDO VERIFICAÇÃO DE GALERIA ===');
+        console.log('ID do usuário visitado:', visitedUserId);
+
         // 1. VERIFICAR SE USUÁRIO VISITADO É PREMIUM
         const isVisitedUserPremium = await checkVisitedUserPremium();
+        console.log('Usuário visitado é premium?', isVisitedUserPremium);
         
         if (!isVisitedUserPremium) {
-            // Usuário visitado NÃO é premium - não tem galeria
+            console.log('Usuário NÃO é premium - ocultando galeria');
             premiumLock.style.display = 'none';
             galleryContainer.style.display = 'none';
             noGallery.style.display = 'block';
@@ -178,6 +182,7 @@ async function checkGalleryAccess() {
         }
 
         // 2. USUÁRIO VISITADO É PREMIUM - VERIFICAR SE TEM FOTOS
+        console.log('Buscando fotos do usuário...');
         const { data: images, error } = await supabase
             .from('user_gallery')
             .select('*')
@@ -185,12 +190,18 @@ async function checkGalleryAccess() {
             .eq('is_active', true)
             .order('uploaded_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+            console.error('Erro ao buscar fotos:', error);
+            throw error;
+        }
 
+        console.log('Fotos encontradas:', images);
         const hasPhotos = images && images.length > 0;
+        console.log('Tem fotos?', hasPhotos);
 
         if (!hasPhotos) {
             // É premium mas não tem fotos
+            console.log('Usuário é premium mas não tem fotos');
             premiumLock.style.display = 'none';
             galleryContainer.style.display = 'none';
             noGallery.style.display = 'block';
@@ -203,9 +214,11 @@ async function checkGalleryAccess() {
 
         // 3. TEM FOTOS - VERIFICAR SE VISITANTE É PREMIUM
         const isVisitorPremium = await checkCurrentUserPremium();
+        console.log('Visitante é premium?', isVisitorPremium);
         
         if (isVisitorPremium) {
             // VISITANTE É PREMIUM - MOSTRAR GALERIA
+            console.log('Mostrando galeria para visitante premium');
             premiumLock.style.display = 'none';
             galleryContainer.style.display = 'block';
             noGallery.style.display = 'none';
@@ -214,6 +227,7 @@ async function checkGalleryAccess() {
             displayGallery(images);
         } else {
             // VISITANTE É FREE - MOSTRAR BLOQUEIO
+            console.log('Mostrando bloqueio para visitante free');
             premiumLock.style.display = 'block';
             galleryContainer.style.display = 'none';
             noGallery.style.display = 'none';
@@ -241,8 +255,11 @@ async function checkVisitedUserPremium() {
             .gte('expires_at', new Date().toISOString())
             .single();
 
-        return !error && subscription !== null;
+        const isPremium = !error && subscription !== null;
+        console.log('Verificação de premium do visitado:', { subscription, error, isPremium });
+        return isPremium;
     } catch (error) {
+        console.error('Erro ao verificar premium do visitado:', error);
         return false;
     }
 }
@@ -250,7 +267,12 @@ async function checkVisitedUserPremium() {
 function displayGallery(images) {
     const galleryGrid = document.getElementById('visitedUserGallery');
     
-    if (!galleryGrid) return;
+    if (!galleryGrid) {
+        console.error('Elemento visitedUserGallery não encontrado');
+        return;
+    }
+    
+    console.log('Exibindo galeria com', images.length, 'fotos');
     
     if (!images || images.length === 0) {
         galleryGrid.innerHTML = `
@@ -262,14 +284,19 @@ function displayGallery(images) {
         return;
     }
     
-    galleryGrid.innerHTML = images.map(image => `
-        <div class="gallery-item" onclick="openGalleryImage('${image.image_url}')">
-            <img src="${getImageUrl(image.image_url)}" 
-                 alt="${image.image_name}" 
-                 class="gallery-image"
-                 loading="lazy">
-        </div>
-    `).join('');
+    galleryGrid.innerHTML = images.map((image, index) => {
+        const imageUrl = getImageUrl(image.image_url);
+        console.log(`Imagem ${index}:`, imageUrl);
+        return `
+            <div class="gallery-item" onclick="openGalleryImage('${image.image_url}')">
+                <img src="${imageUrl}" 
+                     alt="${image.image_name}" 
+                     class="gallery-image"
+                     loading="lazy"
+                     onerror="console.error('Erro ao carregar imagem:', this.src)">
+            </div>
+        `;
+    }).join('');
 }
 
 // ==================== SISTEMA DE MENSAGENS ====================
