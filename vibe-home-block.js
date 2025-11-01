@@ -1,22 +1,20 @@
-// vibe-home-block.js - BLOQUEIO COMPLETO E AGRESSIVO DA HOME
+// vibe-home-block.js - BLOQUEIO TOTAL SILENCIOSO
 class VibeHomeBlocker {
     constructor() {
         this.supabase = window.supabase;
         this.currentUser = null;
         this.isBlocking = false;
-        this.observer = null;
+        this.blockInterval = null;
         
         this.init();
     }
 
     async init() {
         try {
-            // Verificação ULTRA-RÁPIDA
             const hasVibeActive = await this.checkVibeStatus();
             
             if (hasVibeActive) {
-                console.log('VIBE ACTIVE DETECTADO - BLOQUEANDO HOME');
-                this.activateAggressiveBlocking();
+                this.activateTotalBlocking();
             }
             
         } catch (error) {
@@ -31,12 +29,10 @@ class VibeHomeBlocker {
             
             this.currentUser = user;
 
-            // PRIMEIRO: Verifica se o AuthVibeSystem já detectou
             if (window.AuthVibeSystem && window.AuthVibeSystem.activeAgreement) {
                 return true;
             }
 
-            // SEGUNDO: Verificação direta RÁPIDA
             const { data: agreement } = await this.supabase
                 .rpc('check_active_fidelity_agreement', {
                     p_user_id: user.id
@@ -46,7 +42,6 @@ class VibeHomeBlocker {
                 return true;
             }
 
-            // TERCEIRO: Busca direta na tabela
             const { data: directAgreements } = await this.supabase
                 .from('fidelity_agreements')
                 .select('*')
@@ -61,34 +56,34 @@ class VibeHomeBlocker {
         }
     }
 
-    activateAggressiveBlocking() {
+    activateTotalBlocking() {
         if (this.isBlocking) return;
         this.isBlocking = true;
 
-        // ⭐⭐ ESTRATÉGIA AGRESSIVA: MÚLTIPLAS CAMADAS DE BLOQUEIO ⭐⭐
+        // BLOQUEIO IMEDIATO
+        this.destroyAllUserContent();
 
-        // 1. BLOQUEIO IMEDIATO
-        this.blockImmediately();
-
-        // 2. BLOQUEIO RECORRENTE (em caso de carregamento tardio)
-        const intervals = [100, 500, 1000, 2000, 3000, 5000];
+        // BLOQUEIO RECORRENTE
+        const intervals = [100, 300, 500, 1000, 2000, 3000, 5000, 8000];
         intervals.forEach(delay => {
-            setTimeout(() => this.blockImmediately(), delay);
+            setTimeout(() => this.destroyAllUserContent(), delay);
         });
 
-        // 3. OBSERVADOR DE MUDANÇAS NO DOM
-        this.startDOMObserver();
+        // BLOQUEIO CONTÍNUO
+        this.blockInterval = setInterval(() => {
+            this.destroyAllUserContent();
+        }, 1000);
 
-        // 4. INTERCEPTADOR DE FUNÇÕES DO home.js
-        this.interceptHomeFunctions();
+        // INTERCEPTA FUNÇÕES
+        this.interceptAllFunctions();
 
-        // 5. BLOQUEIO CONTÍNUO
-        this.startContinuousBlocking();
+        // OBSERVA MUDANÇAS
+        this.observeAllChanges();
     }
 
-    blockImmediately() {
-        // REMOVE SEÇÕES COMPLETAS
-        const sectionsToDestroy = [
+    destroyAllUserContent() {
+        // DESTRÓI SEÇÕES COMPLETAS
+        const sections = [
             '.users-section',
             '#visitorsSection', 
             '#feelsSection',
@@ -97,219 +92,99 @@ class VibeHomeBlocker {
             '#feelsContainer'
         ];
         
-        sectionsToDestroy.forEach(selector => {
+        sections.forEach(selector => {
             const elements = document.querySelectorAll(selector);
             elements.forEach(element => {
                 element.style.display = 'none';
                 element.innerHTML = '';
-                element.remove();
             });
         });
 
         // DESTRÓI CARDS INDIVIDUAIS
-        const userCards = document.querySelectorAll('.user-card, [class*="card"]');
-        userCards.forEach(card => {
+        const cards = document.querySelectorAll('.user-card, [class*="card"]');
+        cards.forEach(card => {
             card.style.display = 'none';
             card.innerHTML = '';
-            card.remove();
         });
 
-        // REMOVE CONTEÚDO DE USUÁRIOS DE QUALQUER LUGAR
+        // DESTRÓI POR CONTEÚDO
         document.querySelectorAll('*').forEach(element => {
             const text = element.textContent || '';
             if (text.includes('Ver Perfil') || 
                 text.includes('Pessoas para Conhecer') ||
-                text.includes('Online') ||
-                element.querySelector('img') && element.textContent.includes('user')) {
+                text.includes('Conhecer') ||
+                (element.querySelector && element.querySelector('img'))) {
                 element.style.display = 'none';
                 element.innerHTML = '';
             }
         });
 
-        // MODIFICA MENSAGEM DE BOAS-VINDAS
+        // MODIFICA MENSAGEM
         this.modifyWelcomeMessage();
 
-        // ADICIONA MENSAGEM DO VIBE
+        // ADICIONA MENSAGEM VIBE
         this.addVibeMessage();
     }
 
     modifyWelcomeMessage() {
-        const welcomeSelectors = [
-            '#welcomeMessage',
-            '.welcome-content h1',
-            '.welcome-section h1',
-            '[class*="welcome"] h1'
-        ];
-        
-        welcomeSelectors.forEach(selector => {
+        const selectors = ['#welcomeMessage', '.welcome-content h1', '.welcome-section h1'];
+        selectors.forEach(selector => {
             const element = document.querySelector(selector);
             if (element) {
                 element.textContent = '💎 Vibe Exclusive Ativo';
                 element.style.color = '#C6A664';
-                element.style.fontWeight = '700';
             }
         });
     }
 
     addVibeMessage() {
-        // Remove mensagem anterior se existir
-        const existingMessage = document.getElementById('vibeHomeBlockMessage');
-        if (existingMessage) existingMessage.remove();
-
+        if (document.getElementById('vibeHomeBlockMessage')) return;
+        
         const messageDiv = document.createElement('div');
         messageDiv.id = 'vibeHomeBlockMessage';
         messageDiv.innerHTML = `
             <div style="
-                background: linear-gradient(135deg, rgba(198, 166, 100, 0.2), rgba(166, 91, 91, 0.2));
-                border: 3px solid #C6A664;
-                border-radius: 25px;
-                padding: 50px 40px;
+                background: linear-gradient(135deg, rgba(198, 166, 100, 0.15), rgba(166, 91, 91, 0.15));
+                border: 2px solid #C6A664;
+                border-radius: 20px;
+                padding: 40px 30px;
                 text-align: center;
-                margin: 40px 0;
+                margin: 30px 0;
                 color: #333;
-                box-shadow: 0 15px 50px rgba(198, 166, 100, 0.25);
-                backdrop-filter: blur(10px);
             ">
-                <div style="font-size: 6rem; margin-bottom: 30px; animation: float 3s ease-in-out infinite;">💎</div>
-                <h3 style="color: #C6A664; margin-bottom: 25px; font-size: 2.2rem; font-weight: 800;">
-                    CONEXÃO EXCLUSIVA ATIVA
+                <div style="font-size: 4rem; margin-bottom: 20px;">💎</div>
+                <h3 style="color: #C6A664; margin-bottom: 15px; font-size: 1.8rem;">
+                    Vibe Exclusive Ativo
                 </h3>
-                <p style="margin-bottom: 35px; opacity: 0.95; font-size: 1.3rem; line-height: 1.7; max-width: 600px; margin-left: auto; margin-right: auto;">
-                    Seu Vibe Exclusive está ativo!<br>
-                    <strong>Todas as funcionalidades de descoberta e interação foram desativadas temporariamente.</strong>
+                <p style="margin-bottom: 25px; opacity: 0.9; font-size: 1.1rem;">
+                    Sua conexão exclusiva está ativa!
                 </p>
-                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                    <button onclick="window.location.href='vibe-exclusive.html'" style="
-                        background: linear-gradient(135deg, #C6A664, #A65B5B);
-                        color: white;
-                        border: none;
-                        padding: 18px 35px;
-                        border-radius: 15px;
-                        cursor: pointer;
-                        font-weight: 700;
-                        font-size: 1.1rem;
-                        transition: all 0.3s ease;
-                        box-shadow: 0 6px 25px rgba(198, 166, 100, 0.4);
-                    " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 30px rgba(198, 166, 100, 0.6)'" 
-                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 25px rgba(198, 166, 100, 0.4)'">
-                        <i class="fas fa-gem" style="margin-right: 10px;"></i>
-                        IR PARA VIBE EXCLUSIVE
-                    </button>
-                </div>
-                <p style="margin-top: 25px; opacity: 0.7; font-size: 0.9rem;">
-                    💫 Aproveite sua conexão especial!
-                </p>
+                <button onclick="window.location.href='vibe-exclusive.html'" style="
+                    background: linear-gradient(135deg, #C6A664, #A65B5B);
+                    color: white;
+                    border: none;
+                    padding: 14px 28px;
+                    border-radius: 12px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    font-size: 1rem;
+                ">
+                    <i class="fas fa-gem" style="margin-right: 8px;"></i>
+                    Ir para Vibe Exclusive
+                </button>
             </div>
-            
-            <style>
-                @keyframes float {
-                    0%, 100% { transform: translateY(0px); }
-                    50% { transform: translateY(-10px); }
-                }
-            </style>
         `;
 
-        // INSERE EM VÁRIOS PONTOS POSSÍVEIS
-        const insertStrategies = [
-            // Estratégia 1: Após welcome section
-            () => {
-                const welcome = document.querySelector('.welcome-section');
-                if (welcome) {
-                    welcome.parentNode.insertBefore(messageDiv, welcome.nextSibling);
-                    return true;
-                }
-                return false;
-            },
-            // Estratégia 2: No início do container principal
-            () => {
-                const container = document.querySelector('.container') || document.querySelector('main');
-                if (container) {
-                    container.insertBefore(messageDiv, container.firstChild);
-                    return true;
-                }
-                return false;
-            },
-            // Estratégia 3: No body como último recurso
-            () => {
-                document.body.insertBefore(messageDiv, document.body.firstChild);
-                return true;
-            }
-        ];
-
-        for (const strategy of insertStrategies) {
-            if (strategy()) break;
+        const container = document.querySelector('.container') || document.querySelector('main');
+        if (container) {
+            container.insertBefore(messageDiv, container.firstChild);
         }
     }
 
-    startDOMObserver() {
-        // Observa TODAS as mudanças no DOM
-        this.observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === 1) { // Element node
-                        this.destroyNewContent(node);
-                    }
-                });
-            });
-        });
-
-        this.observer.observe(document.body, {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ['style', 'class']
-        });
-    }
-
-    destroyNewContent(node) {
-        // DESTRÓI qualquer conteúdo novo relacionado a usuários
-        const destroySelectors = [
-            '.user-card',
-            '.users-grid',
-            '.users-section',
-            '#visitorsSection',
-            '#feelsSection',
-            '#visitorsContainer', 
-            '#feelsContainer',
-            '[class*="user"]',
-            '[class*="card"]'
-        ];
-
-        destroySelectors.forEach(selector => {
-            if (node.matches && node.matches(selector)) {
-                node.style.display = 'none';
-                node.innerHTML = '';
-                node.remove();
-            }
-            
-            if (node.querySelectorAll) {
-                const elements = node.querySelectorAll(selector);
-                elements.forEach(el => {
-                    el.style.display = 'none';
-                    el.innerHTML = '';
-                    el.remove();
-                });
-            }
-        });
-
-        // Destrói por conteúdo de texto também
-        const text = node.textContent || '';
-        if (text.includes('Ver Perfil') || 
-            text.includes('Pessoas para Conhecer') ||
-            text.includes('Conhecer') ||
-            (node.querySelector && (node.querySelector('img') || node.querySelector('.user-avatar')))) {
-            node.style.display = 'none';
-            node.innerHTML = '';
-            node.remove();
-        }
-    }
-
-    interceptHomeFunctions() {
-        // INTERCEPTA as funções principais do home.js
+    interceptAllFunctions() {
         if (window.loadUsers) {
             window.originalLoadUsers = window.loadUsers;
             window.loadUsers = () => {
-                // Não faz nada - bloqueia completamente
                 const usersGrid = document.getElementById('usersGrid');
                 if (usersGrid) {
                     usersGrid.innerHTML = '';
@@ -321,7 +196,6 @@ class VibeHomeBlocker {
         if (window.displayUsers) {
             window.originalDisplayUsers = window.displayUsers;
             window.displayUsers = () => {
-                // Não mostra usuários
                 const usersGrid = document.getElementById('usersGrid');
                 if (usersGrid) {
                     usersGrid.innerHTML = '';
@@ -331,46 +205,39 @@ class VibeHomeBlocker {
         }
     }
 
-    startContinuousBlocking() {
-        // BLOQUEIO CONTÍNUO a cada 2 segundos
-        setInterval(() => {
-            this.blockImmediately();
-        }, 2000);
+    observeAllChanges() {
+        const observer = new MutationObserver(() => {
+            this.destroyAllUserContent();
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
     }
 
     destroy() {
-        if (this.observer) {
-            this.observer.disconnect();
+        if (this.blockInterval) {
+            clearInterval(this.blockInterval);
         }
         this.isBlocking = false;
     }
 }
 
-// ==================== INICIALIZAÇÃO ULTRA-AGRESSIVA ====================
-function initializeVibeHomeBlocker() {
-    // Espera um pouco para o supabase carregar
-    setTimeout(() => {
-        if (window.supabase) {
-            new VibeHomeBlocker();
-        } else {
-            // Tenta novamente se supabase não estiver pronto
-            setTimeout(() => {
-                new VibeHomeBlocker();
-            }, 2000);
-        }
-    }, 1000);
+// INICIALIZAÇÃO MULTIPLA
+function initializeBlocker() {
+    if (window.supabase) {
+        new VibeHomeBlocker();
+    } else {
+        setTimeout(initializeBlocker, 1000);
+    }
 }
 
-// MÚLTIPLAS INICIALIZAÇÕES PARA GARANTIR
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeVibeHomeBlocker);
+    document.addEventListener('DOMContentLoaded', initializeBlocker);
 } else {
-    initializeVibeHomeBlocker();
+    initializeBlocker();
 }
 
-// INICIALIZAÇÃO TARDIA COMO BACKUP
-setTimeout(initializeVibeHomeBlocker, 3000);
-setTimeout(initializeVibeHomeBlocker, 6000);
-
-// ==================== FUNÇÕES GLOBAIS ====================
-window.VibeHomeBlocker = VibeHomeBlocker;
+setTimeout(initializeBlocker, 2000);
+setTimeout(initializeBlocker, 5000);
