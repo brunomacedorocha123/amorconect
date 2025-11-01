@@ -1,4 +1,4 @@
-// auth-vibe.js - VERSÃO APENAS PARA VERIFICAÇÃO E UI
+// auth-vibe.js - SISTEMA COMPLETO DE BLOQUEIO VIBE EXCLUSIVE
 class AuthVibeSystem {
     constructor() {
         this.supabase = null;
@@ -6,6 +6,7 @@ class AuthVibeSystem {
         this.activeAgreement = null;
         this.isChecking = false;
         this.isInitialized = false;
+        this.redirecting = false;
         
         this.initialize();
     }
@@ -17,7 +18,7 @@ class AuthVibeSystem {
             if (!window.supabase) {
                 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
                 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
-                this.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 window.supabase = this.supabase;
             } else {
                 this.supabase = window.supabase;
@@ -25,7 +26,6 @@ class AuthVibeSystem {
 
             await this.checkAuthAndVibe();
             this.startPeriodicCheck();
-            this.startRealTimeListener();
             
             this.isInitialized = true;
             
@@ -35,7 +35,7 @@ class AuthVibeSystem {
     }
 
     async checkAuthAndVibe() {
-        if (this.isChecking) return;
+        if (this.isChecking || this.redirecting) return;
         
         this.isChecking = true;
         
@@ -52,8 +52,12 @@ class AuthVibeSystem {
             const agreement = await this.getActiveAgreement();
             this.activeAgreement = agreement;
 
-            // ATUALIZAR UI APENAS - SEM REDIRECIONAMENTO
-            this.updateUI();
+            // ⭐⭐ REDIRECIONAMENTO CRÍTICO - SE TEM VIBE ATIVO
+            if (this.activeAgreement) {
+                await this.handleVibeActive();
+            } else {
+                this.handleVibeInactive();
+            }
             
         } catch (error) {
             // Falha silenciosa
@@ -97,21 +101,80 @@ class AuthVibeSystem {
         }
     }
 
-    handleNoAuth() {
-        const publicPages = ['login.html', 'cadastro.html', 'index.html', ''];
-        const currentPage = window.location.pathname.split('/').pop() || '';
+    async handleVibeActive() {
+        // ⭐⭐ VERIFICA SE JÁ ESTÁ NA PÁGINA CORRETA
+        const isOnVibePage = window.location.pathname.includes('vibe-exclusive.html');
         
-        if (!publicPages.includes(currentPage)) {
-            window.location.href = 'login.html';
+        if (!isOnVibePage) {
+            // ⭐⭐ REDIRECIONA PARA VIBE EXCLUSIVE
+            this.redirecting = true;
+            
+            // Páginas que devem ser BLOQUEADAS com redirecionamento
+            const blockedPages = [
+                'mensagens.html',
+                'busca.html'
+            ];
+            
+            const currentPage = window.location.pathname.split('/').pop();
+            
+            if (blockedPages.includes(currentPage) || 
+                window.location.pathname.includes('mensagens') ||
+                window.location.pathname.includes('busca')) {
+                
+                window.location.href = 'vibe-exclusive.html';
+                return;
+            }
+            
+            // Para outras páginas (home, painel), só modifica os links
+            this.modifyPageLinks();
         }
+        
+        // Adiciona indicador visual do Vibe Ativo
+        this.addVibeIndicator();
     }
 
-    updateUI() {
-        if (this.activeAgreement) {
-            this.addVibeIndicator();
-        } else {
-            this.removeVibeIndicator();
-        }
+    handleVibeInactive() {
+        // Remove indicador visual se existir
+        this.removeVibeIndicator();
+        
+        // Restaura links normais se estavam modificados
+        this.restorePageLinks();
+    }
+
+    modifyPageLinks() {
+        // ⭐⭐ MODIFICA TODOS OS LINKS DO MENU
+        setTimeout(() => {
+            const mensagensLinks = document.querySelectorAll('a[href="mensagens.html"]');
+            mensagensLinks.forEach(link => {
+                link.href = 'vibe-exclusive.html';
+                if (!link.querySelector('.vibe-indicator')) {
+                    const indicator = document.createElement('span');
+                    indicator.className = 'vibe-indicator';
+                    indicator.innerHTML = ' 💎';
+                    indicator.style.cssText = `
+                        color: #C6A664;
+                        margin-left: 5px;
+                        font-size: 0.8em;
+                    `;
+                    link.appendChild(indicator);
+                }
+            });
+
+            // Interceptador de cliques como backup
+            document.addEventListener('click', (e) => {
+                const link = e.target.closest('a');
+                if (link && link.getAttribute('href') === 'mensagens.html') {
+                    e.preventDefault();
+                    window.location.href = 'vibe-exclusive.html';
+                }
+            });
+        }, 1000);
+    }
+
+    restorePageLinks() {
+        // Restaura links originais se necessário
+        const vibeIndicators = document.querySelectorAll('.vibe-indicator');
+        vibeIndicators.forEach(indicator => indicator.remove());
     }
 
     addVibeIndicator() {
@@ -153,40 +216,19 @@ class AuthVibeSystem {
         }
     }
 
+    handleNoAuth() {
+        const publicPages = ['login.html', 'cadastro.html', 'index.html', ''];
+        const currentPage = window.location.pathname.split('/').pop() || '';
+        
+        if (!publicPages.includes(currentPage)) {
+            window.location.href = 'login.html';
+        }
+    }
+
     startPeriodicCheck() {
         setInterval(async () => {
             await this.checkAuthAndVibe();
-        }, 30000); // Apenas a cada 30 segundos
-    }
-
-    startRealTimeListener() {
-        if (!this.currentUser) return;
-
-        this.supabase
-            .channel('global_vibe_updates')
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'fidelity_agreements'
-                },
-                (payload) => {
-                    const userId = this.currentUser?.id;
-                    if (!userId) return;
-
-                    const isRelevant = 
-                        payload.new?.user_a === userId || 
-                        payload.new?.user_b === userId ||
-                        payload.old?.user_a === userId || 
-                        payload.old?.user_b === userId;
-
-                    if (isRelevant) {
-                        this.checkAuthAndVibe();
-                    }
-                }
-            )
-            .subscribe();
+        }, 30000);
     }
 
     getStatus() {
@@ -204,6 +246,7 @@ class AuthVibeSystem {
     }
 }
 
+// ==================== INICIALIZAÇÃO GLOBAL ====================
 function initializeAuthVibe() {
     if (!window.AuthVibeSystem) {
         window.AuthVibeSystem = new AuthVibeSystem();
@@ -218,6 +261,7 @@ if (document.readyState === 'loading') {
 
 setTimeout(initializeAuthVibe, 1000);
 
+// ==================== FUNÇÕES GLOBAIS ====================
 window.checkVibeStatus = async function() {
     if (window.AuthVibeSystem) {
         return await window.AuthVibeSystem.forceCheck();
