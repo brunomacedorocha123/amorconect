@@ -16,24 +16,25 @@ class MessagesSystem {
   }
 
   async initialize() {
-    try {
-      // ⭐⭐ VERIFICAÇÃO VIBE EXCLUSIVE - PRIMEIRO (MANTIDO ORIGINAL)
-      await this.checkAndRedirectToVibeExclusive();
-      
-      await this.checkAuth();
-      await this.loadUserData();
-      await this.initializeStatusSystem();
-      await this.loadConversations();
-      this.setupEventListeners();
-      this.updateMessageCounter();
-      this.startPeriodicChecks();
-      this.checkUrlParams();
-      await this.initializeSistemaVibe();
-      
-    } catch (error) {
-      // Silencioso
-    }
+  try {
+    // ⭐⭐ CORREÇÃO: Removida verificação duplicada para evitar loop
+    // O auth-vibe.js já cuida de todo o redirecionamento do Vibe Exclusive
+    // await this.checkAndRedirectToVibeExclusive();
+    
+    await this.checkAuth();
+    await this.loadUserData();
+    await this.initializeStatusSystem();
+    await this.loadConversations();
+    this.setupEventListeners();
+    this.updateMessageCounter();
+    this.startPeriodicChecks();
+    this.checkUrlParams();
+    await this.initializeSistemaVibe();
+    
+  } catch (error) {
+    // Silencioso
   }
+}
 
   // ⭐⭐ FUNÇÃO CRÍTICA: Verificar e redirecionar para Vibe Exclusive (CORRIGIDA)
   async checkAndRedirectToVibeExclusive() {
