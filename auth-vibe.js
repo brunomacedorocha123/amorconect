@@ -7,7 +7,6 @@ class AuthVibeSystem {
         this.isChecking = false;
         this.isInitialized = false;
         this.redirecting = false;
-        this.homeModified = false;
         
         this.initialize();
     }
@@ -113,24 +112,22 @@ class AuthVibeSystem {
         if (!isOnVibePage) {
             this.redirecting = true;
             
-            const blockedPages = [
-                'mensagens.html',
-                'busca.html'
-            ];
-            
+            // ⭐⭐ PÁGINAS BLOQUEADAS - REDIRECIONA ⭐⭐
+            const blockedPages = ['mensagens.html', 'busca.html', 'home.html'];
             const currentPage = window.location.pathname.split('/').pop();
             
             if (blockedPages.includes(currentPage) || 
                 window.location.pathname.includes('mensagens') ||
-                window.location.pathname.includes('busca')) {
+                window.location.pathname.includes('busca') ||
+                window.location.pathname.includes('home')) {
                 
                 window.location.href = 'vibe-exclusive.html';
                 return;
             }
             
-            // ⭐⭐ MODIFICA A HOME SE ESTIVER NELA
+            // ⭐⭐ SE ESTÁ NA HOME, BLOQUEIA CONTEÚDO ⭐⭐
             if (this.isHomePage()) {
-                this.takeControlOfHome();
+                this.blockHomeContent();
             }
             
             this.modifyPageLinks();
@@ -143,76 +140,62 @@ class AuthVibeSystem {
         const currentPage = window.location.pathname.split('/').pop();
         return window.location.pathname.includes('home.html') || 
                currentPage === '' || 
-               currentPage === 'index.html';
-    }
-
-    takeControlOfHome() {
-        // ESTRATÉGIA AGGRESSIVA: DOMINA A HOME COMPLETAMENTE
-        if (this.homeModified) return;
-        
-        // 1. BLOQUEIA IMEDIATAMENTE
-        this.blockHomeContent();
-        
-        // 2. TENTATIVAS MÚLTIPLAS (em caso de carregamento tardio)
-        const attempts = [500, 1000, 2000, 3000, 5000, 8000];
-        
-        attempts.forEach(delay => {
-            setTimeout(() => {
-                this.blockHomeContent();
-            }, delay);
-        });
-        
-        // 3. OBSERVA MUDANÇAS NO DOM (para conteúdo carregado dinamicamente)
-        this.observeHomeChanges();
-        
-        this.homeModified = true;
+               currentPage === 'index.html' ||
+               window.location.pathname === '/' ||
+               window.location.pathname.endsWith('/');
     }
 
     blockHomeContent() {
-        // REMOVE TODOS OS CARDS DE USUÁRIOS
-        const userSections = [
-            '.users-section',
-            '.users-grid', 
-            '.user-card',
-            '[class*="user"]',
-            '[class*="card"]'
-        ];
-        
-        userSections.forEach(selector => {
-            const elements = document.querySelectorAll(selector);
-            elements.forEach(element => {
-                if (this.isUserContent(element)) {
+        // AGUARDA O CARREGAMENTO E BLOQUEIA CONTEÚDO
+        setTimeout(() => {
+            // REMOVE SEÇÕES DE USUÁRIOS
+            const userSections = ['.users-section', '.users-grid'];
+            userSections.forEach(selector => {
+                const element = document.querySelector(selector);
+                if (element) {
                     element.style.display = 'none';
                     element.innerHTML = '';
                 }
             });
-        });
-        
-        // REMOVE SEÇÕES DE VISITANTES E CURTIDAS
-        const sectionsToRemove = [
-            '#visitorsSection',
-            '#visitorsContainer',
-            '#feelsSection', 
-            '#feelsContainer',
-            '.visitors-section',
-            '.feels-section'
-        ];
-        
-        sectionsToRemove.forEach(selector => {
-            const elements = document.querySelectorAll(selector);
-            elements.forEach(element => {
-                element.style.display = 'none';
-                element.innerHTML = '';
+            
+            // REMOVE SEÇÕES DE VISITANTES E CURTIDAS
+            const sectionsToRemove = ['#visitorsSection', '#feelsSection'];
+            sectionsToRemove.forEach(selector => {
+                const element = document.querySelector(selector);
+                if (element) {
+                    element.style.display = 'none';
+                    element.innerHTML = '';
+                }
             });
-        });
-        
-        // MODIFICA MENSAGEM DE BOAS-VINDAS
-        const welcomeSelectors = [
-            '#welcomeMessage',
-            '.welcome-content h1',
-            '.welcome-section h1'
-        ];
-        
+            
+            // REMOVE CONTAINERS
+            const containersToRemove = ['#visitorsContainer', '#feelsContainer'];
+            containersToRemove.forEach(selector => {
+                const element = document.querySelector(selector);
+                if (element) {
+                    element.style.display = 'none';
+                    element.innerHTML = '';
+                }
+            });
+            
+            // REMOVE CARDS INDIVIDUAIS
+            const userCards = document.querySelectorAll('.user-card');
+            userCards.forEach(card => {
+                card.style.display = 'none';
+                card.innerHTML = '';
+            });
+            
+            // MODIFICA MENSAGEM DE BOAS-VINDAS
+            this.modifyWelcomeMessage();
+            
+            // ADICIONA MENSAGEM DO VIBE
+            this.addVibeHomeMessage();
+            
+        }, 2000);
+    }
+
+    modifyWelcomeMessage() {
+        const welcomeSelectors = ['#welcomeMessage', '.welcome-content h1'];
         welcomeSelectors.forEach(selector => {
             const element = document.querySelector(selector);
             if (element) {
@@ -220,20 +203,6 @@ class AuthVibeSystem {
                 element.style.color = '#C6A664';
             }
         });
-        
-        // ADICIONA MENSAGEM DO VIBE EXCLUSIVE (SÓ UMA VEZ)
-        this.addVibeHomeMessage();
-    }
-
-    isUserContent(element) {
-        const text = element.textContent || '';
-        return text.includes('Conhecer') || 
-               text.includes('Pessoas') ||
-               text.includes('Online') ||
-               text.includes('Ver Perfil') ||
-               element.querySelector('img') ||
-               element.querySelector('.user-avatar') ||
-               element.classList.contains('user-card');
     }
 
     addVibeHomeMessage() {
@@ -249,90 +218,44 @@ class AuthVibeSystem {
                 padding: 30px;
                 text-align: center;
                 margin: 20px 0;
-                color: var(--text-color, #333);
+                color: #333;
             ">
                 <div style="font-size: 3rem; margin-bottom: 15px;">💎</div>
                 <h3 style="color: #C6A664; margin-bottom: 10px;">Vibe Exclusive Ativo</h3>
                 <p style="margin-bottom: 15px; opacity: 0.8;">
-                    Você está em uma conexão exclusiva. As funcionalidades de busca, 
-                    descoberta e interação com outros perfis foram temporariamente desativadas.
+                    Você está em uma conexão exclusiva. As funcionalidades de busca 
+                    e descoberta foram temporariamente desativadas.
                 </p>
-                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                    <button onclick="goToVibeExclusive()" style="
-                        background: linear-gradient(135deg, #C6A664, #A65B5B);
-                        color: white;
-                        border: none;
-                        padding: 12px 24px;
-                        border-radius: 10px;
-                        cursor: pointer;
-                        font-weight: 600;
-                        font-size: 14px;
-                    ">
-                        <i class="fas fa-gem"></i> Ir para Vibe Exclusive
-                    </button>
-                </div>
+                <button onclick="window.location.href='vibe-exclusive.html'" style="
+                    background: linear-gradient(135deg, #C6A664, #A65B5B);
+                    color: white;
+                    border: none;
+                    padding: 12px 24px;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    font-weight: 600;
+                ">
+                    <i class="fas fa-gem"></i> Ir para Vibe Exclusive
+                </button>
             </div>
         `;
 
-        // INSERE NA HOME - TENTA VÁRIOS LOCAIS
-        const insertPoints = [
-            '.welcome-section',
-            '.main-content .container',
-            '.users-section',
-            '#visitorsSection'
-        ];
-        
-        for (const selector of insertPoints) {
-            const element = document.querySelector(selector);
-            if (element) {
-                element.parentNode.insertBefore(messageDiv, element.nextSibling);
-                break;
-            }
+        // INSERE NA HOME
+        const welcomeSection = document.querySelector('.welcome-section');
+        if (welcomeSection) {
+            welcomeSection.parentNode.insertBefore(messageDiv, welcomeSection.nextSibling);
         }
-        
-        // SE NÃO ENCONTROU NENHUM, ADICIONA NO TOPO
-        if (!messageDiv.parentNode) {
-            const container = document.querySelector('.container') || document.querySelector('main');
-            if (container) {
-                container.insertBefore(messageDiv, container.firstChild);
-            }
-        }
-    }
-
-    observeHomeChanges() {
-        // OBSERVA MUDANÇAS NO DOM PARA BLOQUEAR CONTEÚDO NOVO
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === 1) { // Element node
-                        if (this.isUserContent(node)) {
-                            node.style.display = 'none';
-                            node.innerHTML = '';
-                        }
-                        
-                        // VERIFICA FILHOS TAMBÉM
-                        const userElements = node.querySelectorAll ? node.querySelectorAll('*') : [];
-                        userElements.forEach(child => {
-                            if (this.isUserContent(child)) {
-                                child.style.display = 'none';
-                                child.innerHTML = '';
-                            }
-                        });
-                    }
-                });
-            });
-        });
-        
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
     }
 
     handleVibeInactive() {
         this.removeVibeIndicator();
         this.restorePageLinks();
-        this.homeModified = false;
+        
+        // REMOVE MENSAGEM DA HOME SE EXISTIR
+        const vibeMessage = document.getElementById('vibeHomeMessage');
+        if (vibeMessage) {
+            vibeMessage.remove();
+        }
     }
 
     modifyPageLinks() {
@@ -404,11 +327,6 @@ class AuthVibeSystem {
         const existingIndicator = document.getElementById('vibeGlobalIndicator');
         if (existingIndicator) {
             existingIndicator.remove();
-        }
-        
-        const homeMessage = document.getElementById('vibeHomeMessage');
-        if (homeMessage) {
-            homeMessage.remove();
         }
     }
 
