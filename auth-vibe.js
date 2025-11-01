@@ -127,6 +127,13 @@ class AuthVibeSystem {
                 return;
             }
             
+            // ⭐⭐ MODIFICA A HOME SE ESTIVER NELA
+            if (window.location.pathname.includes('home.html') || 
+                currentPage === '' || 
+                currentPage === 'index.html') {
+                this.modifyHomePage();
+            }
+            
             this.modifyPageLinks();
         }
         
@@ -136,6 +143,113 @@ class AuthVibeSystem {
     handleVibeInactive() {
         this.removeVibeIndicator();
         this.restorePageLinks();
+        this.restoreHomePage();
+    }
+
+    modifyHomePage() {
+        // AGUARDA O CARREGAMENTO DA HOME
+        setTimeout(() => {
+            // 1. REMOVE SEÇÃO DE USUÁRIOS
+            const usersSection = document.querySelector('.users-section');
+            if (usersSection) usersSection.style.display = 'none';
+            
+            // 2. REMOVE SEÇÃO DE VISITANTES
+            const visitorsSection = document.getElementById('visitorsSection');
+            if (visitorsSection) visitorsSection.style.display = 'none';
+            
+            // 3. REMOVE SEÇÃO DE CURTIDAS
+            const feelsSection = document.getElementById('feelsSection');
+            if (feelsSection) feelsSection.style.display = 'none';
+            
+            // 4. MODIFICA O TEXTO DE BOAS-VINDAS
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            if (welcomeMessage) {
+                welcomeMessage.textContent = 'Modo Vibe Exclusive Ativo';
+            }
+            
+            // 5. ADICIONA MENSAGEM EXPLICATIVA
+            this.addVibeExclusiveMessage();
+            
+        }, 2000);
+    }
+
+    addVibeExclusiveMessage() {
+        const existingMessage = document.getElementById('vibeHomeMessage');
+        if (existingMessage) existingMessage.remove();
+
+        const messageDiv = document.createElement('div');
+        messageDiv.id = 'vibeHomeMessage';
+        messageDiv.innerHTML = `
+            <div style="
+                background: linear-gradient(135deg, rgba(198, 166, 100, 0.1), rgba(166, 91, 91, 0.1));
+                border: 2px solid #C6A664;
+                border-radius: 15px;
+                padding: 30px;
+                text-align: center;
+                margin: 20px 0;
+                color: var(--exclusive-text);
+            ">
+                <div style="font-size: 3rem; margin-bottom: 15px;">💎</div>
+                <h3 style="color: #C6A664; margin-bottom: 10px;">Vibe Exclusive Ativo</h3>
+                <p style="margin-bottom: 15px; opacity: 0.8;">
+                    Você está em uma conexão exclusiva. As funcionalidades de busca e 
+                    descoberta foram temporariamente desativadas.
+                </p>
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <button onclick="goToVibeExclusive()" style="
+                        background: linear-gradient(135deg, #C6A664, #A65B5B);
+                        color: white;
+                        border: none;
+                        padding: 10px 20px;
+                        border-radius: 10px;
+                        cursor: pointer;
+                        font-weight: 600;
+                    ">
+                        <i class="fas fa-gem"></i> Ir para Vibe Exclusive
+                    </button>
+                    <button onclick="manageVibeHome()" style="
+                        background: rgba(255, 255, 255, 0.1);
+                        color: var(--exclusive-text);
+                        border: 1px solid #C6A664;
+                        padding: 10px 20px;
+                        border-radius: 10px;
+                        cursor: pointer;
+                        font-weight: 600;
+                    ">
+                        <i class="fas fa-cog"></i> Gerenciar Vibe
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // INSERE DEPOIS DA SEÇÃO DE BOAS-VINDAS
+        const welcomeSection = document.querySelector('.welcome-section');
+        if (welcomeSection) {
+            welcomeSection.parentNode.insertBefore(messageDiv, welcomeSection.nextSibling);
+        }
+    }
+
+    restoreHomePage() {
+        // RESTAURA ELEMENTOS DA HOME SE ESTIVEREM OCULTOS
+        setTimeout(() => {
+            const usersSection = document.querySelector('.users-section');
+            if (usersSection) usersSection.style.display = 'block';
+            
+            const visitorsSection = document.getElementById('visitorsSection');
+            if (visitorsSection) visitorsSection.style.display = 'block';
+            
+            const feelsSection = document.getElementById('feelsSection');
+            if (feelsSection) feelsSection.style.display = 'block';
+            
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            if (welcomeMessage) {
+                welcomeMessage.textContent = 'Bem-vindo ao PulseLove!';
+            }
+            
+            const vibeMessage = document.getElementById('vibeHomeMessage');
+            if (vibeMessage) vibeMessage.remove();
+            
+        }, 1000);
     }
 
     modifyPageLinks() {
@@ -254,6 +368,7 @@ if (document.readyState === 'loading') {
 
 setTimeout(initializeAuthVibe, 1000);
 
+// ==================== FUNÇÕES GLOBAIS ====================
 window.checkVibeStatus = async function() {
     if (window.AuthVibeSystem) {
         return await window.AuthVibeSystem.forceCheck();
@@ -267,4 +382,8 @@ window.goToVibeExclusive = function() {
 
 window.goToNormalMessages = function() {
     window.location.href = 'mensagens.html';
+};
+
+window.manageVibeHome = function() {
+    window.location.href = 'vibe-exclusive.html';
 };
