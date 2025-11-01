@@ -575,7 +575,7 @@ async function checkCurrentUserPremium() {
     }
 }
 
-// ==================== FUNÇÕES DE FORMATAÇÃO ====================
+// ==================== FUNÇÕES DE FORMATAÇÃO PARA PORTUGUÊS ====================
 
 function formatLookingFor(value) {
     const options = {
