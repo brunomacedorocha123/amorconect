@@ -33,6 +33,7 @@ async function initializeProfile() {
         await loadUserData();
         await checkFeelStatus();
         setupMessageButton();
+        setupModalEvents();
 
     } catch (error) {
         alert('Erro ao carregar perfil');
@@ -40,7 +41,8 @@ async function initializeProfile() {
     }
 }
 
-// Registrar visita automaticamente
+// ==================== SISTEMA DE VISITAS ====================
+
 async function registerProfileVisit() {
     try {
         if (!currentUser || !visitedUserId || currentUser.id === visitedUserId) {
@@ -61,6 +63,8 @@ async function registerProfileVisit() {
         // Silencioso
     }
 }
+
+// ==================== CARREGAMENTO DE DADOS ====================
 
 async function loadUserData() {
     try {
@@ -87,6 +91,7 @@ async function loadUserData() {
 }
 
 function fillProfileData(profile, details) {
+    // Informações básicas
     document.getElementById('profileNickname').textContent = profile.nickname || 'Usuário';
     
     // Status Online/Offline
@@ -108,13 +113,16 @@ function fillProfileData(profile, details) {
         document.getElementById('profileAvatarFallback').style.display = 'none';
     }
 
+    // Idade
     if (profile.birth_date) {
         const age = calculateAge(profile.birth_date);
         document.getElementById('profileAge').textContent = age;
     }
 
+    // Badge Premium
     updatePremiumBadge(profile);
 
+    // Campos do perfil
     updateField('profileRelationshipStatus', details.relationship_status);
     updateField('profileLookingFor', details.looking_for);
     updateField('profileGender', details.gender);
@@ -127,19 +135,22 @@ function fillProfileData(profile, details) {
     updateField('profileExercise', details.exercise);
     updateField('profilePets', details.has_pets);
 
+    // Descrição
     if (details.description) {
         document.getElementById('profileDescription').textContent = details.description;
     } else {
         document.getElementById('descriptionSection').style.display = 'none';
     }
 
+    // Características e Interesses
     updateList('profileCharacteristics', details.characteristics, 'characteristicsSection');
     updateList('profileInterests', details.interests, 'interestsSection');
 
+    // Galeria
     checkGalleryAccess();
 }
 
-// ==================== BOTÃO ENVIAR MENSAGEM ====================
+// ==================== SISTEMA DE MENSAGENS ====================
 
 function setupMessageButton() {
     const sendMessageBtn = document.getElementById('sendMessageBtn');
@@ -243,7 +254,7 @@ function handleSendMessageError(reason) {
     }
 }
 
-// ==================== SISTEMA FEEL NO PERFIL ====================
+// ==================== SISTEMA FEEL ====================
 
 async function checkFeelStatus() {
     try {
@@ -311,6 +322,7 @@ async function sendFeel() {
             if (success) {
                 feelStatus.hasGivenFeel = true;
                 updateFeelButton(true);
+                showNotification('Feel enviado com sucesso! ❤️');
             }
         } else {
             const { data, error } = await supabase
@@ -352,6 +364,7 @@ async function removeFeel() {
             if (success) {
                 feelStatus.hasGivenFeel = false;
                 updateFeelButton(false);
+                showNotification('Feel removido');
             }
         } else {
             const { error } = await supabase
@@ -373,18 +386,16 @@ async function removeFeel() {
     }
 }
 
-// ==================== SISTEMA DE GALERIA CORRIGIDO ====================
+// ==================== SISTEMA DE GALERIA ====================
 
 async function checkGalleryAccess() {
     const premiumLock = document.getElementById('galleryPremiumLock');
     const galleryContainer = document.getElementById('galleryContainer');
     const noGallery = document.getElementById('noGalleryMessage');
 
-    // VERIFICAR SE O VISITANTE (VOCÊ) É PREMIUM
     const isVisitorPremium = await checkCurrentUserPremium();
     
     if (isVisitorPremium) {
-        // VISITANTE É PREMIUM - pode ver qualquer galeria
         premiumLock.style.display = 'none';
         await loadUserGallery();
         
@@ -397,7 +408,6 @@ async function checkGalleryAccess() {
             noGallery.style.display = 'block';
         }
     } else {
-        // VISITANTE É FREE - mostra bloqueio
         premiumLock.style.display = 'block';
         galleryContainer.style.display = 'none';
         noGallery.style.display = 'none';
@@ -447,6 +457,7 @@ function displayGallery(images) {
     `).join('');
 }
 
+// CONTINUA NA PRÓXIMA PARTE...
 // ==================== FUNÇÕES AUXILIARES ====================
 
 function createOnlineStatusDisplay(isOnline) {
@@ -548,7 +559,7 @@ async function checkCurrentUserPremium() {
     }
 }
 
-// ==================== FUNÇÕES DE FORMATAÇÃO PARA PORTUGUÊS ====================
+// ==================== FORMATAÇÃO EM PORTUGUÊS ====================
 
 function formatLookingFor(value) {
     const options = {
@@ -714,6 +725,8 @@ function updateList(containerId, items, sectionId) {
     }
 }
 
+// ==================== FUNÇÕES UTILITÁRIAS ====================
+
 function calculateAge(birthDate) {
     const today = new Date();
     const birth = new Date(birthDate);
@@ -756,8 +769,9 @@ function showNotification(message, type = 'success') {
     }
 }
 
-// Event Listeners
-document.addEventListener('DOMContentLoaded', function() {
+// ==================== EVENT LISTENERS ====================
+
+function setupModalEvents() {
     const modal = document.getElementById('imageModal');
     const closeBtn = document.getElementById('closeModalBtn');
     
@@ -774,16 +788,26 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-});
 
-// Monitorar estado de autenticação
+    // Fechar modal com ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('imageModal');
+            if (modal) modal.classList.remove('active');
+        }
+    });
+}
+
+// ==================== MONITOR DE AUTENTICAÇÃO ====================
+
 supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
         window.location.href = 'login.html';
     }
 });
 
-// Exportar funções para uso global
+// ==================== EXPORTAÇÕES GLOBAIS ====================
+
 window.profileViewer = {
     initializeProfile,
     loadUserData,
@@ -793,3 +817,10 @@ window.profileViewer = {
     removeFeel,
     sendMessageToUser
 };
+
+// Inicialização automática quando disponível
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeProfile);
+} else {
+    initializeProfile();
+}
