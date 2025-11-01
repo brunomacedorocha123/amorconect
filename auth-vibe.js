@@ -52,7 +52,6 @@ class AuthVibeSystem {
             const agreement = await this.getActiveAgreement();
             this.activeAgreement = agreement;
 
-            // ⭐⭐ REDIRECIONAMENTO CRÍTICO - SE TEM VIBE ATIVO
             if (this.activeAgreement) {
                 await this.handleVibeActive();
             } else {
@@ -68,6 +67,7 @@ class AuthVibeSystem {
 
     async getActiveAgreement() {
         try {
+            // PRIMEIRO: Tenta pela RPC function
             const { data: agreement, error } = await this.supabase
                 .rpc('check_active_fidelity_agreement', {
                     p_user_id: this.currentUser.id
@@ -77,21 +77,26 @@ class AuthVibeSystem {
                 return agreement;
             }
 
-            const { data: directAgreement, error: directError } = await this.supabase
+            // SEGUNDO: Busca DIRETA na tabela como fallback
+            const { data: directAgreements, error: directError } = await this.supabase
                 .from('fidelity_agreements')
                 .select('*')
                 .or(`user_a.eq.${this.currentUser.id},user_b.eq.${this.currentUser.id}`)
-                .eq('status', 'active')
-                .single();
+                .in('status', ['active', 'accepted']);
 
-            if (!directError && directAgreement) {
-                return {
-                    has_active_agreement: true,
-                    partner_id: directAgreement.user_a === this.currentUser.id ? 
-                               directAgreement.user_b : directAgreement.user_a,
-                    agreement_id: directAgreement.id,
-                    accepted_at: directAgreement.accepted_at
-                };
+            if (!directError && directAgreements && directAgreements.length > 0) {
+                const activeAgreement = directAgreements
+                    .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0];
+                
+                if (activeAgreement && (activeAgreement.status === 'active' || activeAgreement.status === 'accepted')) {
+                    return {
+                        has_active_agreement: true,
+                        partner_id: activeAgreement.user_a === this.currentUser.id ? 
+                                   activeAgreement.user_b : activeAgreement.user_a,
+                        agreement_id: activeAgreement.id,
+                        accepted_at: activeAgreement.accepted_at || activeAgreement.updated_at
+                    };
+                }
             }
 
             return null;
@@ -102,14 +107,11 @@ class AuthVibeSystem {
     }
 
     async handleVibeActive() {
-        // ⭐⭐ VERIFICA SE JÁ ESTÁ NA PÁGINA CORRETA
         const isOnVibePage = window.location.pathname.includes('vibe-exclusive.html');
         
         if (!isOnVibePage) {
-            // ⭐⭐ REDIRECIONA PARA VIBE EXCLUSIVE
             this.redirecting = true;
             
-            // Páginas que devem ser BLOQUEADAS com redirecionamento
             const blockedPages = [
                 'mensagens.html',
                 'busca.html'
@@ -125,24 +127,18 @@ class AuthVibeSystem {
                 return;
             }
             
-            // Para outras páginas (home, painel), só modifica os links
             this.modifyPageLinks();
         }
         
-        // Adiciona indicador visual do Vibe Ativo
         this.addVibeIndicator();
     }
 
     handleVibeInactive() {
-        // Remove indicador visual se existir
         this.removeVibeIndicator();
-        
-        // Restaura links normais se estavam modificados
         this.restorePageLinks();
     }
 
     modifyPageLinks() {
-        // ⭐⭐ MODIFICA TODOS OS LINKS DO MENU
         setTimeout(() => {
             const mensagensLinks = document.querySelectorAll('a[href="mensagens.html"]');
             mensagensLinks.forEach(link => {
@@ -160,7 +156,6 @@ class AuthVibeSystem {
                 }
             });
 
-            // Interceptador de cliques como backup
             document.addEventListener('click', (e) => {
                 const link = e.target.closest('a');
                 if (link && link.getAttribute('href') === 'mensagens.html') {
@@ -172,7 +167,6 @@ class AuthVibeSystem {
     }
 
     restorePageLinks() {
-        // Restaura links originais se necessário
         const vibeIndicators = document.querySelectorAll('.vibe-indicator');
         vibeIndicators.forEach(indicator => indicator.remove());
     }
@@ -246,7 +240,6 @@ class AuthVibeSystem {
     }
 }
 
-// ==================== INICIALIZAÇÃO GLOBAL ====================
 function initializeAuthVibe() {
     if (!window.AuthVibeSystem) {
         window.AuthVibeSystem = new AuthVibeSystem();
@@ -261,7 +254,6 @@ if (document.readyState === 'loading') {
 
 setTimeout(initializeAuthVibe, 1000);
 
-// ==================== FUNÇÕES GLOBAIS ====================
 window.checkVibeStatus = async function() {
     if (window.AuthVibeSystem) {
         return await window.AuthVibeSystem.forceCheck();
