@@ -162,7 +162,7 @@ async function checkGalleryAccess() {
     const noGallery = document.getElementById('noGalleryMessage');
 
     try {
-        // 1. VERIFICAR SE USUÁRIO VISITADO É PREMIUM
+        // 1. VERIFICAR SE USUÁRIO VISITADO É PREMIUM (para TER galeria)
         const isVisitedUserPremium = await checkVisitedUserPremium();
         
         if (!isVisitedUserPremium) {
@@ -201,7 +201,7 @@ async function checkGalleryAccess() {
             return;
         }
 
-        // 3. TEM FOTOS - VERIFICAR SE VISITANTE É PREMIUM
+        // 3. TEM FOTOS - VERIFICAR SE VISITANTE É PREMIUM PARA VER
         const isVisitorPremium = await checkCurrentUserPremium();
         
         if (isVisitorPremium) {
@@ -522,7 +522,6 @@ async function removeFeel() {
     }
 }
 
-// CONTINUA NA PRÓXIMA MENSAGEM...
 // ==================== FUNÇÕES AUXILIARES ====================
 
 function createOnlineStatusDisplay(isOnline) {
