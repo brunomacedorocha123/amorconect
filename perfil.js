@@ -380,9 +380,11 @@ async function checkGalleryAccess() {
     const galleryContainer = document.getElementById('galleryContainer');
     const noGallery = document.getElementById('noGalleryMessage');
 
-    const isVisitedUserPremium = await checkVisitedUserPremium();
+    // VERIFICAR SE O VISITANTE (VOCÊ) É PREMIUM
+    const isVisitorPremium = await checkCurrentUserPremium();
     
-    if (isVisitedUserPremium) {
+    if (isVisitorPremium) {
+        // VISITANTE É PREMIUM - pode ver qualquer galeria
         premiumLock.style.display = 'none';
         await loadUserGallery();
         
@@ -395,39 +397,10 @@ async function checkGalleryAccess() {
             noGallery.style.display = 'block';
         }
     } else {
+        // VISITANTE É FREE - mostra bloqueio
         premiumLock.style.display = 'block';
         galleryContainer.style.display = 'none';
         noGallery.style.display = 'none';
-    }
-}
-
-// CORREÇÃO: Verificar se o USUÁRIO VISITADO é premium
-async function checkVisitedUserPremium() {
-    try {
-        if (!visitedUserId) return false;
-        
-        const { data: subscription, error: subError } = await supabase
-            .from('user_subscriptions')
-            .select('status, expires_at')
-            .eq('user_id', visitedUserId)
-            .eq('status', 'active')
-            .gte('expires_at', new Date().toISOString())
-            .single();
-
-        if (subscription && !subError) {
-            return true;
-        }
-
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('is_premium')
-            .eq('id', visitedUserId)
-            .single();
-
-        return !profileError && profile?.is_premium;
-
-    } catch (error) {
-        return false;
     }
 }
 
