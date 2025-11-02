@@ -1,4 +1,4 @@
-/* busca-mobile.css - COMPLETO */
+/* busca-mobile.css - COMPLETO E CORRETO */
 @media (max-width: 768px) {
     /* ========== HEADER MOBILE ========== */
     .header-content {
@@ -93,7 +93,7 @@
         }
     }
 
-    /* BOTÃO FECHAR DOURADO - ÚNICO X */
+    /* BOTÃO FECHAR DOURADO - ÚNICO X PEQUENO */
     .menu-close {
         position: absolute;
         top: 10px;
@@ -117,6 +117,11 @@
         background: var(--gold);
         color: var(--dark-bg);
         transform: scale(1.1);
+    }
+
+    /* REMOVER QUALQUER OUTRO X QUE EXISTA */
+    .fa-times:not(.menu-close .fa-times) {
+        display: none !important;
     }
 
     /* LINHA DOS 6 BOTÕES - SÓ ÍCONES */
@@ -225,6 +230,26 @@
     .menu-toggle.active span:nth-child(3) {
         transform: rotate(-45deg) translate(6px, -6px);
         background: var(--gold);
+    }
+
+    /* ========== CORREÇÕES ESPECÍFICAS ========== */
+    
+    /* REMOVER BOTÃO BUSCAR COMPLETAMENTE */
+    #searchButton {
+        display: none !important;
+    }
+    
+    /* REMOVER QUALQUER OUTRO BOTÃO BUSCAR */
+    button[type="submit"]:contains("Buscar"),
+    .btn[type="submit"] {
+        display: none !important;
+    }
+
+    /* REMOVER QUALQUER X EXTRA */
+    .fa-times-circle,
+    .close-btn:not(.menu-close),
+    .close-button:not(.menu-close) {
+        display: none !important;
     }
 
     /* ========== CONTEÚDO DA PÁGINA BUSCA MOBILE ========== */
@@ -345,11 +370,6 @@
         font-size: 0.85rem;
         cursor: pointer;
         color: var(--text-color);
-    }
-
-    /* REMOVER BOTÃO BUSCAR DO FORMULÁRIO */
-    #searchButton {
-        display: none !important;
     }
 
     /* BOTÃO LIMPAR FILTROS */
@@ -803,29 +823,17 @@
     }
 }
 
-/* NOTIFICAÇÕES */
-.notification {
-    position: fixed;
-    top: 100px;
-    right: 20px;
-    background: #4299e1;
-    color: white;
-    padding: 16px 20px;
-    border-radius: 12px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-    z-index: 10000;
-    max-width: 350px;
-    animation: slideInRight 0.3s ease;
+/* GARANTIR QUE NÃO HAJA X DUPLICADO */
+.fa-times:not(.menu-close .fa-times),
+.fa-times-circle,
+.close-btn:not(.menu-close),
+.close-button:not(.menu-close) {
+    display: none !important;
 }
 
-.notification-error {
-    background: #f56565;
-}
-
-.notification-success {
-    background: #48bb78;
-}
-
-.notification-info {
-    background: #4299e1;
+/* GARANTIR QUE NÃO HAJA BOTÃO BUSCAR */
+#searchButton,
+button[type="submit"],
+.btn[type="submit"] {
+    display: none !important;
 }
