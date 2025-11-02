@@ -30,14 +30,14 @@
         display: block;
     }
 
-    /* MENU HAMBURGUER */
+    /* MENU HAMBURGUER DOURADO */
     .menu-toggle {
         display: flex;
         order: 2;
         flex-direction: column;
         cursor: pointer;
         padding: 12px;
-        background: linear-gradient(135deg, var(--burgundy), var(--gold));
+        background: transparent;
         border: 2px solid var(--gold);
         border-radius: 12px;
         gap: 4px;
@@ -58,12 +58,12 @@
     .menu-toggle span {
         width: 25px;
         height: 3px;
-        background: var(--white);
+        background: var(--gold);
         transition: var(--transition);
         border-radius: 2px;
     }
 
-    /* ========== MENU MOBILE COMPLETAMENTE REFEITO - HORIZONTAL BONITO ========== */
+    /* ========== MENU MOBILE HORIZONTAL COMPACTO ========== */
     nav {
         display: none;
         position: fixed;
@@ -71,23 +71,21 @@
         left: 0;
         width: 100%;
         height: auto;
-        background: linear-gradient(160deg, var(--dark-bg) 0%, var(--burgundy) 100%);
+        background: var(--dark-bg);
         z-index: 1001;
-        padding: 80px 1.5rem 2rem;
-        backdrop-filter: blur(20px);
-        border-bottom: 4px solid var(--gold);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        padding: 50px 1rem 1rem;
+        border-bottom: 2px solid var(--gold);
     }
 
     nav.active {
         display: flex;
-        animation: slideDown 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        animation: slideDown 0.3s ease-out;
     }
 
     @keyframes slideDown {
         from {
             opacity: 0;
-            transform: translateY(-20px);
+            transform: translateY(-10px);
         }
         to {
             opacity: 1;
@@ -95,50 +93,38 @@
         }
     }
 
-    /* TÍTULO E FECHAR */
-    nav::before {
-        content: 'Navegação';
-        position: absolute;
-        top: 25px;
-        left: 50%;
-        transform: translateX(-50%);
-        color: var(--gold);
-        font-size: 1.4rem;
-        font-weight: 700;
-        text-align: center;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
-
+    /* BOTÃO FECHAR DOURADO */
     .menu-close {
         position: absolute;
-        top: 20px;
-        right: 20px;
-        background: var(--error);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
+        top: 10px;
+        right: 10px;
+        background: transparent;
+        color: var(--gold);
+        border: 2px solid var(--gold);
+        border-radius: 8px;
+        width: 35px;
+        height: 35px;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         z-index: 1003;
-        font-size: 1.2rem;
-        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+        font-size: 1.1rem;
         transition: var(--transition);
     }
 
     .menu-close:hover {
+        background: var(--gold);
+        color: var(--dark-bg);
         transform: scale(1.1);
-        background: #dc2626;
     }
 
-    /* GRID DE NAVEGAÇÃO HORIZONTAL */
+    /* LINHA ÚNICA HORIZONTAL COM 5 BOTÕES */
     nav ul {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
         width: 100%;
         padding: 0;
         margin: 0;
@@ -146,83 +132,63 @@
     }
 
     nav ul li {
+        flex: 1;
         text-align: center;
     }
 
-    /* CARDS DE NAVEGAÇÃO */
+    /* BOTÕES CIRCULARES DOURADOS */
     nav a {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        padding: 1.5rem 0.5rem;
-        background: linear-gradient(135deg, rgba(198, 166, 100, 0.1) 0%, rgba(74, 85, 104, 0.2) 100%);
-        color: var(--light-gold);
+        gap: 5px;
+        padding: 0.8rem 0.3rem;
+        background: transparent;
+        color: var(--gold);
         text-decoration: none;
-        font-size: 0.9rem;
+        font-size: 0.75rem;
         font-weight: 600;
-        border-radius: 16px;
-        border: 2px solid rgba(198, 166, 100, 0.3);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        backdrop-filter: blur(10px);
-        min-height: 100px;
-        position: relative;
-        overflow: hidden;
-    }
-
-    /* EFEITO HOVER NOS CARDS */
-    nav a::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(198, 166, 100, 0.2), transparent);
-        transition: left 0.6s;
+        border-radius: 12px;
+        border: 2px solid var(--gold);
+        transition: all 0.3s ease;
+        min-height: 70px;
     }
 
     nav a:hover {
-        background: linear-gradient(135deg, var(--gold) 0%, var(--light-gold) 100%);
+        background: var(--gold);
         color: var(--dark-bg);
-        transform: translateY(-5px) scale(1.05);
-        border-color: var(--gold);
-        box-shadow: 0 10px 25px rgba(198, 166, 100, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(198, 166, 100, 0.3);
     }
 
-    nav a:hover::before {
-        left: 100%;
-    }
-
-    /* ÍCONES MAIORES E BONITOS */
+    /* ÍCONES DOURADOS MAIORES */
     nav a i {
-        font-size: 1.8rem;
+        font-size: 1.4rem;
         color: var(--gold);
         transition: var(--transition);
-        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
     }
 
     nav a:hover i {
         color: var(--dark-bg);
-        transform: scale(1.1);
     }
 
-    /* BADGE DE NOTIFICAÇÃO NO MENU */
+    /* BADGE DE NOTIFICAÇÃO */
     .notification-badge {
         position: absolute;
-        top: 12px;
-        right: 12px;
+        top: 5px;
+        right: 5px;
         background: var(--error);
         color: white;
         border-radius: 50%;
-        width: 20px;
-        height: 20px;
-        font-size: 0.7rem;
+        width: 18px;
+        height: 18px;
+        font-size: 0.65rem;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: bold;
+        border: 2px solid var(--dark-bg);
     }
 
     /* RESTANTE DO CÓDIGO PERMANECE IGUAL */
@@ -246,7 +212,7 @@
 
     .menu-toggle.active span:nth-child(1) {
         transform: rotate(45deg) translate(6px, 6px);
-        background: var(--white);
+        background: var(--gold);
     }
 
     .menu-toggle.active span:nth-child(2) {
@@ -255,7 +221,7 @@
 
     .menu-toggle.active span:nth-child(3) {
         transform: rotate(-45deg) translate(6px, -6px);
-        background: var(--white);
+        background: var(--gold);
     }
 
     .main-content {
@@ -399,79 +365,78 @@
     }
 }
 
-/* MOBILE PEQUENO - GRID 2 COLUNAS */
+/* MOBILE PEQUENO - BOTÕES MAIS COMPACTOS */
 @media (max-width: 480px) {
-    nav ul {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.8rem;
+    nav {
+        padding: 45px 0.8rem 0.8rem;
     }
 
     nav a {
-        padding: 1.2rem 0.5rem;
-        min-height: 90px;
-        font-size: 0.85rem;
+        padding: 0.7rem 0.2rem;
+        min-height: 65px;
+        font-size: 0.7rem;
     }
 
     nav a i {
-        font-size: 1.6rem;
-    }
-
-    nav {
-        padding: 70px 1rem 1.5rem;
-    }
-
-    nav::before {
-        font-size: 1.2rem;
-        top: 20px;
+        font-size: 1.3rem;
     }
 
     .menu-close {
-        top: 15px;
-        right: 15px;
-        width: 35px;
-        height: 35px;
+        top: 8px;
+        right: 8px;
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
     }
 
-    /* Restante do código pequeno */
+    .menu-toggle {
+        padding: 10px;
+        margin-right: 12px;
+        top: 15px;
+    }
 }
 
 /* MOBILE MUITO PEQUENO */
 @media (max-width: 360px) {
-    nav ul {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.6rem;
+    nav {
+        padding: 40px 0.5rem 0.5rem;
     }
 
     nav a {
-        padding: 1rem 0.3rem;
-        min-height: 80px;
-        font-size: 0.8rem;
+        padding: 0.6rem 0.1rem;
+        min-height: 60px;
+        font-size: 0.65rem;
     }
 
     nav a i {
-        font-size: 1.4rem;
+        font-size: 1.2rem;
     }
 
-    nav {
-        padding: 65px 0.8rem 1rem;
+    nav ul {
+        gap: 0.3rem;
+    }
+
+    .menu-close {
+        top: 5px;
+        right: 5px;
+        width: 30px;
+        height: 30px;
     }
 }
 
-/* LANDSCAPE - GRID MAIOR */
+/* LANDSCAPE - MAIS COMPACTO AINDA */
 @media (max-width: 768px) and (orientation: landscape) {
-    nav ul {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 0.8rem;
+    nav {
+        padding: 35px 1rem 0.8rem;
     }
 
     nav a {
-        padding: 1rem 0.5rem;
-        min-height: 85px;
+        padding: 0.6rem 0.2rem;
+        min-height: 55px;
+        font-size: 0.7rem;
     }
 
-    nav {
-        padding: 60px 1rem 1rem;
-        max-height: 70vh;
-        overflow-y: auto;
+    nav a i {
+        font-size: 1.2rem;
     }
 }
