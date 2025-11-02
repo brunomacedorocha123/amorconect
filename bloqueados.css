@@ -1,4 +1,225 @@
-/* bloqueados.css - Estilos específicos para a página de usuários bloqueados */
+/* bloqueados.css - CABEÇALHO SIMPLIFICADO */
+:root {
+    --gold: #C6A664;
+    --light-gold: #D4B978;
+    --burgundy: #A65B5B;
+    --dark-burgundy: #8A4A4A;
+    --light-bg: #f8f9fa;
+    --white: #ffffff;
+    --card-bg: #ffffff;
+    --section-bg: #f1f3f5;
+    --dark-bg: #1A1A1A;
+    --dark-card: #242424;
+    --dark-text: #2d3748;
+    --text-primary: #2d3748;
+    --text-secondary: #4a5568;
+    --text-light: #718096;
+    --text-white: #ffffff;
+    --online: #48bb78;
+    --offline: #a0aec0;
+    --error: #f56565;
+    --success: #48bb78;
+    --warning: #ed8936;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
+    --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.05);
+    --transition: all 0.3s ease;
+    --border-radius: 16px;
+    --border-radius-sm: 8px;
+}
+
+/* ===== CABEÇALHO SIMPLIFICADO - APENAS ÍCONES ===== */
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 70px;
+    position: relative;
+    padding: 0 15px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.logo-img {
+    height: 45px;
+    width: auto;
+    object-fit: contain;
+    transition: var(--transition);
+}
+
+.logo:hover .logo-img {
+    transform: scale(1.05);
+}
+
+.menu-toggle {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    gap: 4px;
+}
+
+.menu-toggle span {
+    width: 25px;
+    height: 3px;
+    background: var(--gold);
+    transition: var(--transition);
+}
+
+/* Menu de navegação centralizado - apenas ícones */
+nav {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+    gap: 0.8rem;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+/* Remove textos dos links, mantém apenas ícones */
+nav a {
+    color: var(--text-white);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+    padding: 0.8rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    position: relative;
+}
+
+nav a i {
+    font-size: 1.3rem;
+}
+
+nav a:hover {
+    color: var(--gold);
+    background: rgba(198, 166, 100, 0.1);
+    transform: translateY(-2px);
+}
+
+nav a.active {
+    background: var(--gold);
+    color: var(--dark-bg);
+    font-weight: 600;
+}
+
+/* Remove botão Premium */
+nav ul li:has(.premium-link) {
+    display: none;
+}
+
+/* User Menu na direita */
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-left: auto;
+}
+
+.user-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--burgundy), var(--gold));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-white);
+    font-weight: bold;
+    font-size: 1rem;
+    border: 2px solid var(--gold);
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-fallback {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--burgundy), var(--gold));
+}
+
+.user-info {
+    display: none; /* Esconde info do usuário */
+}
+
+.btn {
+    padding: 0.7rem 1.5rem;
+    border-radius: 30px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--gold);
+    color: var(--gold);
+}
+
+.btn-primary {
+    background: var(--burgundy);
+    color: var(--text-white);
+    border: 2px solid var(--burgundy);
+}
+
+.btn-outline:hover {
+    background: var(--gold);
+    color: var(--dark-bg);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(198, 166, 100, 0.3);
+}
+
+.btn-primary:hover {
+    background: var(--dark-burgundy);
+    border-color: var(--dark-burgundy);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(166, 91, 91, 0.4);
+}
+
+.logout-btn {
+    padding: 0.6rem;
+    font-size: 0.85rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
 /* ===== ESTILOS DA PÁGINA DE BLOQUEADOS ===== */
 
@@ -388,6 +609,61 @@ body {
 
 /* ===== RESPONSIVO ===== */
 @media (max-width: 768px) {
+    /* Header Mobile */
+    .header-content {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 10px 0;
+        gap: 10px;
+    }
+    
+    .logo {
+        order: 1;
+    }
+    
+    .menu-toggle {
+        display: flex;
+        order: 2;
+        margin-left: auto;
+    }
+    
+    nav {
+        order: 4;
+        position: static;
+        transform: none;
+        width: 100%;
+        display: none;
+    }
+    
+    nav.active {
+        display: flex;
+    }
+    
+    nav ul {
+        justify-content: center;
+        width: 100%;
+        padding: 10px 0;
+    }
+    
+    .user-menu {
+        order: 3;
+        margin-left: 0;
+    }
+    
+    .user-info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .user-name {
+        font-size: 0.9rem;
+    }
+    
+    .user-status {
+        font-size: 0.75rem;
+    }
+    
     /* Correção modais mobile */
     .modal {
         padding: 10px;
@@ -533,34 +809,6 @@ body {
     }
 }
 
-/* Orientação Landscape em Mobile */
-@media (max-width: 768px) and (orientation: landscape) {
-    .modal {
-        padding: 5px;
-    }
-    
-    .modal-content {
-        max-height: 85vh;
-    }
-    
-    .premium-upsell-section {
-        padding: 1.2rem;
-    }
-    
-    .upsell-content {
-        flex-direction: row;
-        gap: 1.5rem;
-    }
-    
-    .upsell-text {
-        text-align: left;
-    }
-    
-    .blocked-stats {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
 /* Animações */
 @keyframes fadeInUp {
     from {
@@ -604,9 +852,4 @@ body {
 /* Scroll suave para a página inteira */
 html {
     scroll-behavior: smooth;
-}
-
-/* Garantir que os modais não afetem o scroll da página principal */
-body:not(.modal-open) {
-    overflow-y: auto !important;
 }
