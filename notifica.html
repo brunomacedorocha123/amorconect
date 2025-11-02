@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minhas Notificações - Amor Conect</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
+   <style>
     * {
         margin: 0;
         padding: 0;
@@ -14,30 +14,38 @@
     }
 
     :root {
-        --gold: #D4AF37;
-        --gold-dark: #B8860B;
-        --gold-light: #FFD700;
-        --black: #000000;
-        --black-soft: #1A1A1A;
-        --black-light: #2D2D2D;
-        --white: #FFFFFF;
-        --white-soft: #F8F8F8;
-        --gray: #666666;
-        --gray-light: #E5E5E5;
-        --gray-dark: #404040;
-        --success: #10B981;
-        --warning: #F59E0B;
-        --danger: #EF4444;
-        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        --shadow-gold: 0 4px 12px rgba(212, 175, 55, 0.3);
+        --gold: #C6A664;
+        --light-gold: #D4B978;
+        --burgundy: #A65B5B;
+        --dark-burgundy: #8A4A4A;
+        --light-bg: #f8f9fa;
+        --white: #ffffff;
+        --card-bg: #ffffff;
+        --section-bg: #f1f3f5;
+        --dark-bg: #1A1A1A;
+        --dark-card: #242424;
+        --text-primary: #2d3748;
+        --text-secondary: #4a5568;
+        --text-light: #718096;
+        --text-white: #ffffff;
+        --online: #48bb78;
+        --offline: #a0aec0;
+        --success: #48bb78;
+        --warning: #ed8936;
+        --danger: #f56565;
+        --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.12);
+        --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.05);
+        --transition: all 0.3s ease;
+        --border-radius: 16px;
+        --border-radius-sm: 8px;
     }
 
     body {
-        background: var(--white);
+        background: var(--light-bg);
         min-height: 100vh;
         padding: 20px;
-        color: var(--black-soft);
+        color: var(--text-primary);
     }
 
     .container {
@@ -49,10 +57,10 @@
         text-align: center;
         margin-bottom: 2rem;
         padding: 2.5rem 2rem;
-        background: var(--white);
-        border-radius: 16px;
-        box-shadow: var(--shadow-lg);
-        border: 2px solid var(--black-light);
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow);
+        border: 1px solid rgba(198, 166, 100, 0.2);
         position: relative;
         overflow: hidden;
     }
@@ -64,11 +72,11 @@
         left: 0;
         right: 0;
         height: 4px;
-        background: linear-gradient(90deg, var(--gold), var(--gold-light));
+        background: linear-gradient(90deg, var(--gold), var(--light-gold));
     }
 
     .header h1 {
-        color: var(--black);
+        color: var(--text-primary);
         margin-bottom: 0.5rem;
         font-size: 2.2rem;
         font-weight: 700;
@@ -86,7 +94,7 @@
     }
 
     .header p {
-        color: var(--gray-dark);
+        color: var(--text-secondary);
         font-size: 1.1rem;
         max-width: 500px;
         margin: 0 auto;
@@ -100,29 +108,29 @@
         gap: 1.2rem;
         margin-top: 1.5rem;
         padding: 1.5rem;
-        background: var(--white);
-        border-radius: 12px;
-        border: 2px solid var(--gold);
-        transition: all 0.3s ease;
+        background: var(--section-bg);
+        border-radius: var(--border-radius);
+        border: 1px solid rgba(198, 166, 100, 0.2);
+        transition: var(--transition);
     }
 
     .user-info:hover {
         transform: translateY(-2px);
-        box-shadow: var(--shadow-gold);
+        box-shadow: var(--shadow-card);
     }
 
     .user-avatar {
         width: 60px;
         height: 60px;
         border-radius: 50%;
-        background: linear-gradient(135deg, var(--gold), var(--gold-light));
+        background: linear-gradient(135deg, var(--burgundy), var(--gold));
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--black);
+        color: var(--text-white);
         font-weight: bold;
         font-size: 1.4rem;
-        box-shadow: var(--shadow-gold);
+        box-shadow: 0 4px 12px rgba(166, 91, 91, 0.3);
         border: 3px solid var(--white);
     }
 
@@ -132,12 +140,12 @@
 
     .user-details div:first-child {
         font-weight: 700;
-        color: var(--black);
+        color: var(--text-primary);
         font-size: 1.2rem;
     }
 
     .user-details small {
-        color: var(--gray-dark);
+        color: var(--text-secondary);
         display: block;
         margin-top: 0.2rem;
         font-weight: 500;
@@ -148,25 +156,24 @@
         margin-top: 0.3rem;
         padding: 0.4rem 1rem;
         background: var(--gold);
-        color: var(--black);
+        color: var(--dark-bg);
         border-radius: 20px;
         display: inline-block;
         font-weight: 700;
-        box-shadow: var(--shadow-gold);
-        border: 1px solid var(--gold-dark);
+        box-shadow: 0 4px 12px rgba(198, 166, 100, 0.3);
     }
 
     .notifications-container {
-        background: var(--white);
-        border-radius: 16px;
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
         padding: 2rem;
-        box-shadow: var(--shadow-lg);
+        box-shadow: var(--shadow);
         margin-bottom: 2rem;
-        border: 2px solid var(--black-light);
+        border: 1px solid rgba(198, 166, 100, 0.2);
     }
 
     .section-title {
-        color: var(--black);
+        color: var(--text-primary);
         margin-bottom: 1.5rem;
         display: flex;
         justify-content: space-between;
@@ -189,44 +196,44 @@
         margin-bottom: 1.5rem;
         flex-wrap: wrap;
         justify-content: center;
-        background: var(--white);
+        background: var(--section-bg);
         padding: 1rem;
-        border-radius: 12px;
-        border: 2px solid var(--gray-light);
+        border-radius: var(--border-radius);
+        border: 1px solid rgba(0, 0, 0, 0.1);
     }
 
     .filter-btn {
         padding: 0.7rem 1.4rem;
-        border: 2px solid var(--black);
+        border: 2px solid rgba(0, 0, 0, 0.1);
         background: var(--white);
         border-radius: 25px;
         cursor: pointer;
         font-size: 0.9rem;
-        transition: all 0.3s ease;
-        color: var(--black);
+        transition: var(--transition);
+        color: var(--text-primary);
         font-weight: 600;
     }
 
     .filter-btn.active {
         background: var(--gold);
-        color: var(--black);
+        color: var(--dark-bg);
         border-color: var(--gold);
-        box-shadow: var(--shadow-gold);
+        box-shadow: 0 4px 12px rgba(198, 166, 100, 0.3);
     }
 
     .filter-btn:hover:not(.active) {
         transform: translateY(-2px);
         border-color: var(--gold);
-        box-shadow: var(--shadow);
+        box-shadow: var(--shadow-card);
     }
 
     .btn {
         padding: 0.8rem 1.6rem;
         border: none;
-        border-radius: 10px;
+        border-radius: var(--border-radius-sm);
         cursor: pointer;
         font-weight: 700;
-        transition: all 0.3s ease;
+        transition: var(--transition);
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
@@ -234,42 +241,41 @@
     }
 
     .btn-primary {
-        background: var(--gold);
-        color: var(--black);
-        box-shadow: var(--shadow-gold);
-        border: 1px solid var(--gold-dark);
+        background: var(--burgundy);
+        color: var(--text-white);
+        box-shadow: 0 4px 12px rgba(166, 91, 91, 0.3);
+        border: 2px solid var(--burgundy);
     }
 
     .btn-primary:hover {
-        background: var(--gold-light);
+        background: var(--dark-burgundy);
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+        box-shadow: 0 6px 20px rgba(166, 91, 91, 0.4);
     }
 
     .notification-item {
-        background: var(--white);
+        background: var(--card-bg);
         border-left: 4px solid var(--gold);
         padding: 1.5rem;
         margin-bottom: 1rem;
-        border-radius: 0 12px 12px 0;
-        transition: all 0.3s ease;
+        border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        transition: var(--transition);
         cursor: pointer;
         position: relative;
-        border: 2px solid var(--gray-light);
+        border: 1px solid rgba(0, 0, 0, 0.05);
     }
 
     .notification-item:hover {
         transform: translateX(5px);
-        box-shadow: var(--shadow-lg);
+        box-shadow: var(--shadow-hover);
         border-left-width: 6px;
-        border-color: var(--gold);
     }
 
     .notification-item.unread {
-        background: var(--white);
-        border-left-color: var(--gold-light);
+        background: var(--card-bg);
+        border-left-color: var(--light-gold);
         border: 2px solid var(--gold);
-        box-shadow: var(--shadow-gold);
+        box-shadow: 0 4px 12px rgba(198, 166, 100, 0.2);
     }
 
     .notification-item.unread::before {
@@ -277,7 +283,7 @@
         position: absolute;
         top: 12px;
         right: 12px;
-        color: var(--gold-light);
+        color: var(--light-gold);
         font-size: 1.2rem;
         animation: pulse 2s infinite;
     }
@@ -299,7 +305,7 @@
     .notification-title {
         font-weight: 700;
         font-size: 1.1rem;
-        color: var(--black);
+        color: var(--text-primary);
         margin-bottom: 0.5rem;
         display: flex;
         align-items: center;
@@ -308,7 +314,7 @@
     }
 
     .notification-message {
-        color: var(--black-light);
+        color: var(--text-secondary);
         line-height: 1.5;
         margin-bottom: 0.8rem;
         font-weight: 500;
@@ -316,7 +322,7 @@
 
     .notification-meta {
         font-size: 0.85rem;
-        color: var(--gray-dark);
+        color: var(--text-light);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -334,41 +340,40 @@
     }
 
     .badge-warning {
-        background: var(--gold-light);
-        color: var(--black);
-        border: 1px solid var(--gold);
+        background: #FEF3C7;
+        color: #D97706;
+        border: 1px solid #FBBF24;
     }
 
     .badge-bonus {
-        background: var(--gold);
-        color: var(--black);
-        border: 1px solid var(--gold-dark);
+        background: #D1FAE5;
+        color: #065F46;
+        border: 1px solid #34D399;
     }
 
     .badge-info {
-        background: var(--white);
-        color: var(--black);
+        background: #FEF3C7;
+        color: var(--burgundy);
         border: 1px solid var(--gold);
     }
 
     .badge-new {
-        background: var(--gold-light);
-        color: var(--black);
+        background: var(--light-gold);
+        color: var(--dark-bg);
         font-weight: 700;
-        box-shadow: var(--shadow-gold);
-        border: 1px solid var(--gold);
+        box-shadow: 0 4px 12px rgba(198, 166, 100, 0.3);
     }
 
     .loading {
         text-align: center;
         padding: 3rem;
-        color: var(--gray);
+        color: var(--text-light);
     }
 
     .spinner {
         width: 40px;
         height: 40px;
-        border: 4px solid var(--gray-light);
+        border: 4px solid var(--section-bg);
         border-top: 4px solid var(--gold);
         border-radius: 50%;
         animation: spin 1s linear infinite;
@@ -383,7 +388,7 @@
     .empty-state {
         text-align: center;
         padding: 3rem;
-        color: var(--gray);
+        color: var(--text-light);
     }
 
     .empty-state .icon {
@@ -393,13 +398,13 @@
     }
 
     .empty-state h3 {
-        color: var(--black);
+        color: var(--text-primary);
         margin-bottom: 0.5rem;
         font-weight: 700;
     }
 
     .empty-state p {
-        color: var(--gray-dark);
+        color: var(--text-secondary);
         margin-bottom: 1.5rem;
         font-weight: 500;
     }
@@ -408,11 +413,11 @@
         position: fixed;
         top: 20px;
         left: 20px;
-        background: var(--white);
-        color: var(--black);
-        border: 2px solid var(--gold);
+        background: var(--card-bg);
+        color: var(--burgundy);
+        border: 2px solid var(--burgundy);
         padding: 0.8rem 1.4rem;
-        border-radius: 10px;
+        border-radius: var(--border-radius-sm);
         cursor: pointer;
         font-weight: 700;
         box-shadow: var(--shadow);
@@ -420,58 +425,58 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        transition: all 0.3s ease;
+        transition: var(--transition);
     }
 
     .back-btn:hover {
         transform: translateY(-2px);
-        box-shadow: var(--shadow-lg);
-        background: var(--gold);
-        color: var(--black);
+        box-shadow: var(--shadow-hover);
+        background: var(--burgundy);
+        color: var(--text-white);
     }
 
     .mark-read-btn {
         background: transparent;
         border: 2px solid var(--gold);
-        color: var(--black);
+        color: var(--text-primary);
         padding: 0.5rem 1rem;
         border-radius: 20px;
         font-size: 0.75rem;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: var(--transition);
         font-weight: 600;
         white-space: nowrap;
     }
 
     .mark-read-btn:hover {
         background: var(--gold);
-        color: var(--black);
+        color: var(--dark-bg);
         transform: translateY(-1px);
-        box-shadow: var(--shadow-gold);
+        box-shadow: 0 4px 12px rgba(198, 166, 100, 0.3);
     }
 
     .mark-all-read-btn {
         background: var(--success);
-        color: var(--white);
+        color: var(--text-white);
         border: none;
         padding: 0.6rem 1.2rem;
-        border-radius: 8px;
+        border-radius: var(--border-radius-sm);
         cursor: pointer;
         font-size: 0.8rem;
         font-weight: 700;
-        transition: all 0.3s ease;
+        transition: var(--transition);
         box-shadow: var(--shadow);
-        border: 1px solid #0DA271;
+        border: 1px solid #38A169;
     }
 
     .mark-all-read-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
     }
 
     .notification-count {
         background: var(--danger);
-        color: var(--white);
+        color: var(--text-white);
         border-radius: 50%;
         width: 24px;
         height: 24px;
@@ -482,7 +487,7 @@
         margin-left: 0.5rem;
         font-weight: 700;
         box-shadow: var(--shadow);
-        border: 1px solid #DC2626;
+        border: 1px solid #E53E3E;
     }
 
     .actions-container {
