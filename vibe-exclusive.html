@@ -756,7 +756,7 @@
         </div>
     </div>
 
-    <script>
+   <script>
         // ==================== SISTEMA VIBE EXCLUSIVE COMPLETO ====================
 
 const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
@@ -767,6 +767,41 @@ let currentUser = null;
 let partnerUser = null;
 let activeAgreement = null;
 let isInitialized = false;
+let partnerStatusInterval = null;
+
+// ✅ SISTEMA DE STATUS DO PARCEIRO
+async function updatePartnerStatus() {
+    if (!activeAgreement || !window.StatusSystem) return;
+    
+    const partnerStatus = await window.StatusSystem.getUserStatus(activeAgreement.partner_id);
+    
+    const statusDot = document.querySelector('.partner-status .status-dot');
+    const statusText = document.querySelector('.partner-status span');
+    
+    if (statusDot && statusText) {
+        statusDot.style.background = partnerStatus.status === 'online' ? 'var(--success)' : 'var(--error)';
+        statusText.textContent = partnerStatus.text;
+    }
+}
+
+function startPartnerStatusUpdates() {
+    if (partnerStatusInterval) {
+        clearInterval(partnerStatusInterval);
+    }
+    
+    partnerStatusInterval = setInterval(async () => {
+        if (activeAgreement) {
+            await updatePartnerStatus();
+        }
+    }, 30000);
+}
+
+function stopPartnerStatusUpdates() {
+    if (partnerStatusInterval) {
+        clearInterval(partnerStatusInterval);
+        partnerStatusInterval = null;
+    }
+}
 
 document.addEventListener('DOMContentLoaded', async function() {
     if (isInitialized) return;
@@ -781,17 +816,17 @@ async function initializeVibeExclusive() {
         await loadVibeExclusiveData();
         setupEventListeners();
         startRealTimeUpdates();
+        startPartnerStatusUpdates();
         
         isInitialized = true;
         
     } catch (error) {
-        // Falha silenciosa
+        return;
     }
 }
 
 async function validateVibeAccess() {
     try {
-        // USA A MESMA VERIFICAÇÃO DO auth-vibe.js
         if (window.AuthVibeSystem && window.AuthVibeSystem.activeAgreement) {
             activeAgreement = window.AuthVibeSystem.activeAgreement;
             return true;
@@ -805,7 +840,6 @@ async function validateVibeAccess() {
 
         currentUser = user;
 
-        // VERIFICAÇÃO DIRETA (MESMA LÓGICA DO auth-vibe.js)
         const { data: agreement, error } = await supabase
             .rpc('check_active_fidelity_agreement', {
                 p_user_id: user.id
@@ -816,7 +850,6 @@ async function validateVibeAccess() {
             return true;
         }
 
-        // FALLBACK: BUSCA DIRETA
         const { data: directAgreements, error: directError } = await supabase
             .from('fidelity_agreements')
             .select('*')
@@ -839,7 +872,6 @@ async function validateVibeAccess() {
             }
         }
 
-        // SE CHEGOU AQUI, REALMENTE NÃO TEM ACORDO
         showNoAgreementMessage();
         return false;
 
@@ -889,10 +921,13 @@ async function loadPartnerInfo(partnerId) {
             .eq('id', partnerId)
             .single();
 
-        if (error) throw error;
+        if (error) return;
 
         partnerUser = profile;
         updatePartnerUI(profile);
+        
+        // ✅ ATUALIZAR STATUS DO PARCEIRO AO CARREGAR
+        await updatePartnerStatus();
         
     } catch (error) {
         document.getElementById('partnerName').textContent = 'Parceiro';
@@ -949,7 +984,7 @@ async function loadConnectionStats() {
         }
 
     } catch (error) {
-        // Silencioso
+        return;
     }
 }
 
@@ -971,13 +1006,13 @@ async function loadVibeMessages() {
             .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${activeAgreement.partner_id}),and(sender_id.eq.${activeAgreement.partner_id},receiver_id.eq.${currentUser.id})`)
             .order('sent_at', { ascending: true });
 
-        if (error) throw error;
+        if (error) return;
 
         renderVibeMessages(messages);
         await markMessagesAsRead();
         
     } catch (error) {
-        // Silencioso
+        return;
     }
 }
 
@@ -993,7 +1028,7 @@ async function markMessagesAsRead() {
             .is('read_at', null);
             
     } catch (error) {
-        // Silencioso
+        return;
     }
 }
 
@@ -1094,7 +1129,7 @@ async function sendVibeMessage() {
                 p_message: message
             });
 
-        if (error) throw error;
+        if (error) return;
 
         if (data === 'success') {
             messageInput.value = '';
@@ -1102,12 +1137,10 @@ async function sendVibeMessage() {
             
             await loadVibeMessages();
             await loadConnectionStats();
-        } else {
-            throw new Error(data);
         }
 
     } catch (error) {
-        // Falha silenciosa
+        return;
     } finally {
         const sendBtn = document.getElementById('vibeSendBtn');
         if (sendBtn) {
@@ -1152,37 +1185,29 @@ function closeCancelModal() {
 
 async function confirmCancelVibe() {
     try {
-        // Mostrar loading
         const btn = document.querySelector('.btn-danger');
         const originalText = btn.innerHTML;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelando...';
         btn.disabled = true;
 
-        // Chamar função de cancelamento no Supabase
         const { data, error } = await supabase
             .rpc('cancel_fidelity_agreement', {
                 p_user_id: currentUser.id
             });
 
-        if (error) throw error;
+        if (error) return;
 
         if (data === 'success') {
-            // Mostrar mensagem de sucesso
             btn.innerHTML = '<i class="fas fa-check"></i> Cancelado!';
             
-            // Redirecionar para mensagens normais após 2 segundos
             setTimeout(() => {
                 window.location.href = 'mensagens.html';
             }, 2000);
-        } else {
-            throw new Error(data);
         }
 
     } catch (error) {
-        // Mostrar erro
         alert('Erro ao cancelar Vibe Exclusive: ' + error.message);
         
-        // Restaurar botão
         const btn = document.querySelector('.btn-danger');
         btn.innerHTML = '<i class="fas fa-times"></i> Confirmar Cancelamento';
         btn.disabled = false;
@@ -1190,7 +1215,6 @@ async function confirmCancelVibe() {
 }
 
 function showMemories() {
-    // Em desenvolvimento
     alert('Funcionalidade em desenvolvimento!');
 }
 
@@ -1362,9 +1386,14 @@ document.addEventListener('visibilitychange', function() {
     if (!document.hidden && activeAgreement) {
         loadVibeMessages();
         loadConnectionStats();
+        updatePartnerStatus(); // ✅ ATUALIZAR STATUS QUANDO PÁGINA FICA VISÍVEL
     }
 });
 </script>
-    <script src="auth-vibe.js"></script>
+
+<!-- ✅ MANTENHA AMBOS OS SCRIPTS -->
+<script src="auth-vibe.js"></script>
+<script src="status.js"></script>
+    
 </body>
 </html>
