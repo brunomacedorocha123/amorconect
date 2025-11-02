@@ -1,0 +1,570 @@
+/* busca-mobile.css */
+@media (max-width: 768px) {
+    /* Header Mobile */
+    .header-content {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 10px 0;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+    }
+
+    /* LOGO CENTRALIZADA */
+    .logo {
+        order: 1;
+        flex: 0 0 auto;
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .logo img {
+        width: auto;
+        height: 140px;
+        max-height: 150px;
+        object-fit: contain;
+        margin: 0 !important;
+        display: block;
+    }
+
+    /* MENU HAMBURGUER DOURADO */
+    .menu-toggle {
+        display: flex;
+        order: 2;
+        flex-direction: column;
+        cursor: pointer;
+        padding: 12px;
+        background: transparent;
+        border: 2px solid var(--gold);
+        border-radius: 12px;
+        gap: 4px;
+        z-index: 1002;
+        margin-right: 15px;
+        transition: var(--transition);
+        box-shadow: 0 4px 12px rgba(198, 166, 100, 0.3);
+        position: absolute;
+        right: 15px;
+        top: 20px;
+    }
+
+    .menu-toggle:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 18px rgba(198, 166, 100, 0.4);
+    }
+
+    .menu-toggle span {
+        width: 25px;
+        height: 3px;
+        background: var(--gold);
+        transition: var(--transition);
+        border-radius: 2px;
+    }
+
+    /* ========== MENU MOBILE HORIZONTAL COMPACTO ========== */
+    nav {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: auto;
+        background: var(--dark-bg);
+        z-index: 1001;
+        padding: 50px 1rem 1rem;
+        border-bottom: 2px solid var(--gold);
+    }
+
+    nav.active {
+        display: flex;
+        animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* BOTÃO FECHAR DOURADO */
+    .menu-close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: transparent;
+        color: var(--gold);
+        border: 2px solid var(--gold);
+        border-radius: 8px;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 1003;
+        font-size: 1.1rem;
+        transition: var(--transition);
+    }
+
+    .menu-close:hover {
+        background: var(--gold);
+        color: var(--dark-bg);
+        transform: scale(1.1);
+    }
+
+    /* LINHA DOS 6 BOTÕES */
+    nav ul {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+        margin-top: 30px;
+    }
+
+    nav ul li {
+        flex: 1;
+        text-align: center;
+    }
+
+    /* BOTÕES CIRCULARES DOURADOS */
+    nav a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 0.8rem 0.3rem;
+        background: transparent;
+        color: var(--gold);
+        text-decoration: none;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: 12px;
+        border: 2px solid var(--gold);
+        transition: all 0.3s ease;
+        min-height: 70px;
+        position: relative;
+    }
+
+    nav a:hover, nav a.active {
+        background: var(--gold);
+        color: var(--dark-bg);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(198, 166, 100, 0.3);
+    }
+
+    /* ÍCONES DOURADOS MAIORES */
+    nav a i {
+        font-size: 1.4rem;
+        color: var(--gold);
+        transition: var(--transition);
+    }
+
+    nav a:hover i, nav a.active i {
+        color: var(--dark-bg);
+    }
+
+    /* BADGE DE NOTIFICAÇÃO */
+    .notification-badge {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: var(--error);
+        color: white;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        font-size: 0.65rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        border: 2px solid var(--dark-bg);
+    }
+
+    /* USER-MENU ORIGINAL (FORA DO NAV) - MANTIDO COMO ESTAVA */
+    .user-menu {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        margin-top: 15px;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .user-info {
+        align-items: center;
+        text-align: center;
+    }
+
+    /* ANIMAÇÃO HAMBURGUER */
+    .menu-toggle.active span:nth-child(1) {
+        transform: rotate(45deg) translate(6px, 6px);
+        background: var(--gold);
+    }
+
+    .menu-toggle.active span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .menu-toggle.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(6px, -6px);
+        background: var(--gold);
+    }
+
+    /* ========== CONTEÚDO DA PÁGINA BUSCA MOBILE ========== */
+    .main-content {
+        padding: 1rem 0;
+    }
+
+    .page-header {
+        text-align: center;
+        padding: 1.5rem 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header p {
+        font-size: 1rem;
+        color: var(--text-light);
+    }
+
+    /* LAYOUT DE BUSCA MOBILE */
+    .search-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    /* FILTROS MOBILE */
+    .filters-sidebar {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 1.2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .filters-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+    }
+
+    .filters-header h3 {
+        font-size: 1.2rem;
+    }
+
+    .filter-group {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.2rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .filter-group:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+
+    .filter-group h4 {
+        font-size: 1rem;
+        margin-bottom: 0.8rem;
+        color: var(--gold);
+    }
+
+    .form-group {
+        margin-bottom: 0.8rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.3rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.6rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--dark-bg);
+        color: var(--text-color);
+        font-size: 0.9rem;
+    }
+
+    .checkbox-group {
+        margin-bottom: 0.6rem;
+    }
+
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        cursor: pointer;
+    }
+
+    /* RESULTADOS MOBILE */
+    .results-section {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 1.2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+    }
+
+    .results-header h3 {
+        font-size: 1.2rem;
+    }
+
+    .results-count {
+        font-size: 0.85rem;
+        color: var(--text-light);
+    }
+
+    .results-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    /* CARDS DE USUÁRIO MOBILE */
+    .user-card {
+        background: var(--dark-bg);
+        border-radius: 12px;
+        padding: 1.2rem;
+        border: 1px solid var(--border-color);
+        transition: var(--transition);
+    }
+
+    .user-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(198, 166, 100, 0.2);
+    }
+
+    .user-header {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .user-avatar-small {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: var(--gold);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: var(--dark-bg);
+        font-size: 1rem;
+    }
+
+    .user-info-small {
+        flex: 1;
+    }
+
+    .user-name {
+        font-weight: 600;
+        margin-bottom: 0.2rem;
+    }
+
+    .user-details {
+        font-size: 0.8rem;
+        color: var(--text-light);
+    }
+
+    .user-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+
+    .btn-sm {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+
+    /* ESTADOS VAZIOS */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--text-light);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: var(--gold);
+    }
+
+    /* BOTÕES */
+    .btn {
+        padding: 0.7rem 1.2rem;
+        border-radius: 8px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .btn-primary {
+        background: var(--gold);
+        color: var(--dark-bg);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(198, 166, 100, 0.3);
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: var(--gold);
+        border: 2px solid var(--gold);
+    }
+
+    .btn-outline:hover {
+        background: var(--gold);
+        color: var(--dark-bg);
+    }
+
+    .btn-block {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .btn-sm {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* MOBILE PEQUENO */
+@media (max-width: 480px) {
+    nav {
+        padding: 45px 0.8rem 0.8rem;
+    }
+
+    nav ul {
+        margin-top: 25px;
+    }
+
+    nav a {
+        padding: 0.7rem 0.2rem;
+        min-height: 65px;
+        font-size: 0.7rem;
+    }
+
+    nav a i {
+        font-size: 1.3rem;
+    }
+
+    .menu-close {
+        top: 8px;
+        right: 8px;
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+
+    .menu-toggle {
+        padding: 10px;
+        margin-right: 12px;
+        top: 15px;
+    }
+
+    .page-header h1 {
+        font-size: 1.6rem;
+    }
+
+    .filters-sidebar,
+    .results-section {
+        padding: 1rem;
+    }
+}
+
+/* MOBILE MUITO PEQUENO */
+@media (max-width: 360px) {
+    nav {
+        padding: 40px 0.5rem 0.5rem;
+    }
+
+    nav ul {
+        margin-top: 20px;
+    }
+
+    nav a {
+        padding: 0.6rem 0.1rem;
+        min-height: 60px;
+        font-size: 0.65rem;
+    }
+
+    nav a i {
+        font-size: 1.2rem;
+    }
+
+    nav ul {
+        gap: 0.3rem;
+    }
+
+    .menu-close {
+        top: 5px;
+        right: 5px;
+        width: 30px;
+        height: 30px;
+    }
+
+    .page-header h1 {
+        font-size: 1.4rem;
+    }
+}
+
+/* LANDSCAPE */
+@media (max-width: 768px) and (orientation: landscape) {
+    nav {
+        padding: 35px 1rem 0.8rem;
+    }
+
+    nav ul {
+        margin-top: 20px;
+    }
+
+    nav a {
+        padding: 0.6rem 0.2rem;
+        min-height: 55px;
+        font-size: 0.7rem;
+    }
+
+    nav a i {
+        font-size: 1.2rem;
+    }
+}

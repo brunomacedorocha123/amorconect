@@ -5,39 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buscar Pessoas - Amor Conect</title>
     <link rel="stylesheet" href="busca.css">
+    <link rel="stylesheet" href="busca-mobile.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <!-- Header -->
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <img src="logopulselove.png" alt="Amor Conect">
-                </div>
-                <nav>
-                    <ul>
-                        <li><a href="home.html"><i class="fas fa-home"></i> Home</a></li>
-                        <li><a href="mensagens.html"><i class="fas fa-envelope"></i> Mensagens</a></li>
-                        <li><a href="busca.html" class="active"><i class="fas fa-search"></i> Buscar</a></li>
-                    </ul>
-                </nav>
-                <div class="user-menu">
-                    <div class="user-info">
-                        <div class="user-avatar">
-                            <div class="user-avatar-fallback">U</div>
-                            <img class="avatar-image" style="display: none;" alt="Avatar do usuário">
-                        </div>
-                        <span id="userNickname">Usuário</span>
-                        <div id="premiumBadge" class="premium-badge free">
-                            <i class="fas fa-user"></i> Free
-                        </div>
+   <header>
+    <div class="container">
+        <div class="header-content">
+            <div class="logo">
+                <img src="logopulselove.png" alt="Amor Conect">
+            </div>
+            <!-- BOTÃO HAMBURGUER MOBILE -->
+            <button class="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <!-- MENU MOBILE COMPLETO -->
+            <nav>
+                <button class="menu-close"><i class="fas fa-times"></i></button>
+                <ul>
+                    <li><a href="home.html"><i class="fas fa-home"></i> Início</a></li>
+                    <li><a href="mensagens.html"><i class="fas fa-envelope"></i> Mensagens</a></li>
+                    <li><a href="busca.html" class="active"><i class="fas fa-search"></i> Buscar</a></li>
+                    <li><a href="perfil.html"><i class="fas fa-user"></i> Perfil</a></li>
+                    <li><a href="bloqueados.html"><i class="fas fa-shield-alt"></i> Bloqueados</a></li>
+                    <li><a href="notificacoes.html"><i class="fas fa-bell"></i> Notificações</a></li>
+                </ul>
+            </nav>
+            <!-- USER MENU (MANTIDO COMO ESTAVA) -->
+            <div class="user-menu">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <div class="user-avatar-fallback">U</div>
+                        <img class="avatar-image" style="display: none;" alt="Avatar do usuário">
+                    </div>
+                    <span id="userNickname">Usuário</span>
+                    <div id="premiumBadge" class="premium-badge free">
+                        <i class="fas fa-user"></i> Free
                     </div>
                 </div>
             </div>
         </div>
-    </header>
+    </div>
+</header>
 
     <!-- Main Content -->
     <main class="main-content">

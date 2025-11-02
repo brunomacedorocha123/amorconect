@@ -526,3 +526,33 @@ supabase.auth.onAuthStateChange((event, session) => {
 });
 
 window.SearchManager = SearchManager;
+
+// Menu Mobile para Busca
+document.addEventListener('DOMContentLoaded', function() {
+    const menuToggle = document.querySelector('.menu-toggle');
+    const menuClose = document.querySelector('.menu-close');
+    const nav = document.querySelector('nav');
+    
+    if (menuToggle && nav) {
+        menuToggle.addEventListener('click', function() {
+            nav.classList.add('active');
+            menuToggle.classList.add('active');
+        });
+        
+        if (menuClose) {
+            menuClose.addEventListener('click', function() {
+                nav.classList.remove('active');
+                menuToggle.classList.remove('active');
+            });
+        }
+        
+        // Fechar menu ao clicar em um link
+        const navLinks = document.querySelectorAll('nav a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                nav.classList.remove('active');
+                menuToggle.classList.remove('active');
+            });
+        });
+    }
+});
