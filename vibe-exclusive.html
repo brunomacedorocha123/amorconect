@@ -767,23 +767,60 @@ let currentUser = null;
 let partnerUser = null;
 let activeAgreement = null;
 let isInitialized = false;
+
+// ✅ SISTEMA DE STATUS DO PARCEIRO - MESMA LÓGICA DA HOME
 let partnerStatusInterval = null;
 
-// ✅ SISTEMA DE STATUS DO PARCEIRO
+// ✅ FUNÇÃO PARA ATUALIZAR STATUS REAL DO PARCEIRO
 async function updatePartnerStatus() {
-    if (!activeAgreement || !window.StatusSystem) return;
+    if (!activeAgreement) return;
     
-    const partnerStatus = await window.StatusSystem.getUserStatus(activeAgreement.partner_id);
-    
-    const statusDot = document.querySelector('.partner-status .status-dot');
-    const statusText = document.querySelector('.partner-status span');
-    
-    if (statusDot && statusText) {
-        statusDot.style.background = partnerStatus.status === 'online' ? 'var(--success)' : 'var(--error)';
-        statusText.textContent = partnerStatus.text;
+    try {
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('last_online_at, real_status, is_invisible')
+            .eq('id', activeAgreement.partner_id)
+            .single();
+
+        if (error || !profile) return;
+
+        // ✅ MESMA LÓGICA DA HOME.JS - STATUS REAL COM GRACE PERIOD
+        let status, text, dotColor;
+        
+        if (profile.real_status === 'online') {
+            status = 'online';
+            text = 'Online';
+            dotColor = 'var(--success)';
+        } else {
+            const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+            const lastOnline = profile.last_online_at ? new Date(profile.last_online_at) : null;
+            const isWithinGracePeriod = lastOnline && lastOnline > twoMinutesAgo;
+            
+            if (isWithinGracePeriod) {
+                status = 'online';
+                text = 'Online';
+                dotColor = 'var(--success)';
+            } else {
+                status = 'offline';
+                text = 'Offline';
+                dotColor = 'var(--error)';
+            }
+        }
+
+        // Atualiza a UI
+        const statusDot = document.querySelector('.partner-status .status-dot');
+        const statusText = document.querySelector('.partner-status span');
+        
+        if (statusDot && statusText) {
+            statusDot.style.background = dotColor;
+            statusText.textContent = text;
+        }
+    } catch (error) {
+        return;
     }
 }
 
+// ✅ INICIAR ATUALIZAÇÃO PERIÓDICA DO STATUS
 function startPartnerStatusUpdates() {
     if (partnerStatusInterval) {
         clearInterval(partnerStatusInterval);
@@ -796,6 +833,7 @@ function startPartnerStatusUpdates() {
     }, 30000);
 }
 
+// ✅ PARAR ATUALIZAÇÃO DO STATUS
 function stopPartnerStatusUpdates() {
     if (partnerStatusInterval) {
         clearInterval(partnerStatusInterval);
