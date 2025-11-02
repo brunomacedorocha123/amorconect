@@ -126,7 +126,7 @@ function fillProfileData(profile, details) {
     // Badge Premium
     updatePremiumBadge(profile);
 
-    // Campos do perfil
+    // ========== CAMPOS DO PERFIL COM LACUNAS PREENCHIDAS ==========
     updateField('profileRelationshipStatus', details.relationship_status);
     updateField('profileLookingFor', details.looking_for);
     updateField('profileGender', details.gender);
@@ -134,11 +134,13 @@ function fillProfileData(profile, details) {
     updateField('profileProfession', details.profession);
     updateField('profileZodiac', details.zodiac);
     updateField('profileReligion', details.religion);
-    updateField('profileDrinking', details.drinking);
-    updateField('profileSmoking', details.smoking);
-    updateField('profileExercise', details.exercise);
-    updateField('profilePets', details.has_pets);
-
+    
+    // ========== CAMPOS COM DETALHES ESPECÍFICOS ==========
+    updateExerciseField(details.exercise, details.exercise_details);
+    updatePetsField(details.has_pets, details.pets_details);
+    updateDrinkingField(details.drinking);
+    updateSmokingField(details.smoking);
+    
     // Descrição
     if (details.description) {
         document.getElementById('profileDescription').textContent = details.description;
@@ -152,6 +154,101 @@ function fillProfileData(profile, details) {
 
     // Galeria
     checkGalleryAccess();
+}
+
+// ========== NOVAS FUNÇÕES PARA LACUNAS ESPECÍFICAS ==========
+
+function updateExerciseField(exerciseValue, exerciseDetails) {
+    const element = document.getElementById('profileExercise');
+    if (!element) return;
+
+    const span = element.querySelector('span');
+    if (!span) return;
+
+    let displayValue = formatExercise(exerciseValue);
+    
+    // Se tem detalhes específicos, mostrar junto
+    if (exerciseDetails && exerciseValue !== 'nao_pratico') {
+        span.innerHTML = `
+            <div class="lifestyle-content">
+                <span class="lifestyle-main">${displayValue}</span>
+                <span class="lifestyle-detail">${exerciseDetails}</span>
+            </div>
+        `;
+    } else if (exerciseDetails && exerciseValue === 'nao_pratico') {
+        // Se marcou "não pratico" mas preencheu detalhes, mostrar só os detalhes
+        span.innerHTML = `
+            <div class="lifestyle-content">
+                <span class="lifestyle-main">Não pratico</span>
+            </div>
+        `;
+    } else {
+        // Sem detalhes, mostrar apenas o valor principal
+        span.innerHTML = `
+            <div class="lifestyle-content">
+                <span class="lifestyle-main">${displayValue || 'Não informado'}</span>
+            </div>
+        `;
+    }
+}
+
+function updatePetsField(hasPets, petsDetails) {
+    const element = document.getElementById('profilePets');
+    if (!element) return;
+
+    const span = element.querySelector('span');
+    if (!span) return;
+
+    let displayValue = formatPets(hasPets);
+    
+    // Se tem pets e detalhes, mostrar junto
+    if (petsDetails && hasPets === 'sim') {
+        span.innerHTML = `
+            <div class="lifestyle-content">
+                <span class="lifestyle-main">${displayValue}</span>
+                <span class="lifestyle-detail">${petsDetails}</span>
+            </div>
+        `;
+    } else {
+        // Sem detalhes ou não tem pets
+        span.innerHTML = `
+            <div class="lifestyle-content">
+                <span class="lifestyle-main">${displayValue || 'Não informado'}</span>
+            </div>
+        `;
+    }
+}
+
+function updateDrinkingField(drinkingValue) {
+    const element = document.getElementById('profileDrinking');
+    if (!element) return;
+
+    const span = element.querySelector('span');
+    if (!span) return;
+
+    let displayValue = formatDrinking(drinkingValue);
+    
+    span.innerHTML = `
+        <div class="lifestyle-content">
+            <span class="lifestyle-main">${displayValue || 'Não informado'}</span>
+        </div>
+    `;
+}
+
+function updateSmokingField(smokingValue) {
+    const element = document.getElementById('profileSmoking');
+    if (!element) return;
+
+    const span = element.querySelector('span');
+    if (!span) return;
+
+    let displayValue = formatSmoking(smokingValue);
+    
+    span.innerHTML = `
+        <div class="lifestyle-content">
+            <span class="lifestyle-main">${displayValue || 'Não informado'}</span>
+        </div>
+    `;
 }
 
 // ==================== SISTEMA DE GALERIA CORRIGIDO ====================
@@ -746,14 +843,6 @@ function updateField(elementId, value) {
                 displayValue = formatZodiac(value);
             } else if (elementId === 'profileReligion') {
                 displayValue = formatReligion(value);
-            } else if (elementId === 'profileDrinking') {
-                displayValue = formatDrinking(value);
-            } else if (elementId === 'profileSmoking') {
-                displayValue = formatSmoking(value);
-            } else if (elementId === 'profileExercise') {
-                displayValue = formatExercise(value);
-            } else if (elementId === 'profilePets') {
-                displayValue = formatPets(value);
             }
             
             span.textContent = displayValue || 'Não informado';
