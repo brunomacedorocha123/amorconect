@@ -93,7 +93,7 @@
         }
     }
 
-    /* BOTÃO FECHAR DOURADO */
+    /* BOTÃO FECHAR DOURADO - MANTIDO NO MESMO LUGAR */
     .menu-close {
         position: absolute;
         top: 10px;
@@ -119,7 +119,7 @@
         transform: scale(1.1);
     }
 
-    /* LINHA ÚNICA HORIZONTAL COM 5 BOTÕES */
+    /* LINHA DOS BOTÕES MAIS ABAIXO - AJUSTE PRINCIPAL */
     nav ul {
         display: flex;
         justify-content: space-between;
@@ -129,6 +129,7 @@
         padding: 0;
         margin: 0;
         list-style: none;
+        margin-top: 25px; /* AUMENTEI a margem superior para abaixar os botões */
     }
 
     nav ul li {
@@ -191,7 +192,7 @@
         border: 2px solid var(--dark-bg);
     }
 
-    /* RESTANTE DO CÓDIGO PERMANECE IGUAL */
+    /* USER-MENU PERMANECE NO MESMO LUGAR (SEM ALTERAÇÕES) */
     .user-menu {
         order: 3;
         width: 100%;
@@ -371,6 +372,10 @@
         padding: 45px 0.8rem 0.8rem;
     }
 
+    nav ul {
+        margin-top: 20px; /* Ajuste proporcional para mobile pequeno */
+    }
+
     nav a {
         padding: 0.7rem 0.2rem;
         min-height: 65px;
@@ -402,6 +407,10 @@
         padding: 40px 0.5rem 0.5rem;
     }
 
+    nav ul {
+        margin-top: 18px; /* Ajuste proporcional para mobile muito pequeno */
+    }
+
     nav a {
         padding: 0.6rem 0.1rem;
         min-height: 60px;
@@ -428,6 +437,10 @@
 @media (max-width: 768px) and (orientation: landscape) {
     nav {
         padding: 35px 1rem 0.8rem;
+    }
+
+    nav ul {
+        margin-top: 15px; /* Ajuste proporcional para landscape */
     }
 
     nav a {
