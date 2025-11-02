@@ -1,5 +1,16 @@
 /* busca-mobile.css - COMPLETO E CORRETO */
 @media (max-width: 768px) {
+    /* ========== CORREÇÃO DO X DUPLICADO ========== */
+    .menu-close .fa-times {
+        display: none !important;
+    }
+    
+    .menu-close::after {
+        content: "×";
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
     /* ========== HEADER MOBILE ========== */
     .header-content {
         flex-wrap: wrap;
@@ -93,7 +104,7 @@
         }
     }
 
-    /* BOTÃO FECHAR DOURADO - ÚNICO X PEQUENO */
+    /* BOTÃO FECHAR DOURADO - SEM X DUPLICADO */
     .menu-close {
         position: absolute;
         top: 10px;
@@ -119,12 +130,7 @@
         transform: scale(1.1);
     }
 
-    /* REMOVER QUALQUER OUTRO X QUE EXISTA */
-    .fa-times:not(.menu-close .fa-times) {
-        display: none !important;
-    }
-
-    /* LINHA DOS 6 BOTÕES - SÓ ÍCONES */
+    /* LINHA DOS 5 BOTÕES - SÓ ÍCONES */
     nav ul {
         display: flex;
         justify-content: space-between;
@@ -232,23 +238,8 @@
         background: var(--gold);
     }
 
-    /* ========== CORREÇÕES ESPECÍFICAS ========== */
-    
-    /* REMOVER BOTÃO BUSCAR COMPLETAMENTE */
+    /* ========== REMOVER BOTÃO BUSCAR ========== */
     #searchButton {
-        display: none !important;
-    }
-    
-    /* REMOVER QUALQUER OUTRO BOTÃO BUSCAR */
-    button[type="submit"]:contains("Buscar"),
-    .btn[type="submit"] {
-        display: none !important;
-    }
-
-    /* REMOVER QUALQUER X EXTRA */
-    .fa-times-circle,
-    .close-btn:not(.menu-close),
-    .close-button:not(.menu-close) {
         display: none !important;
     }
 
@@ -821,19 +812,4 @@
         transform: translateX(0);
         opacity: 1;
     }
-}
-
-/* GARANTIR QUE NÃO HAJA X DUPLICADO */
-.fa-times:not(.menu-close .fa-times),
-.fa-times-circle,
-.close-btn:not(.menu-close),
-.close-button:not(.menu-close) {
-    display: none !important;
-}
-
-/* GARANTIR QUE NÃO HAJA BOTÃO BUSCAR */
-#searchButton,
-button[type="submit"],
-.btn[type="submit"] {
-    display: none !important;
 }
