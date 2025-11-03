@@ -1,4 +1,4 @@
-/* busca-mobile.css */
+/* busca-mobile.css - VERSÃO FINAL CORRIGIDA */
 @media (max-width: 768px) {
     /* Header Mobile - IDÊNTICO AO HOME */
     .header-content {
@@ -219,8 +219,11 @@
 
     .page-header {
         padding: 1.5rem 1rem;
-        margin-bottom: 1.5rem;
+        margin: 0 0.8rem 1.5rem 0.8rem;
         text-align: center;
+        background: var(--card-bg);
+        border-radius: 15px;
+        border: 2px solid var(--gold);
     }
 
     .page-header h1 {
@@ -241,14 +244,15 @@
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
+        padding: 0 0.8rem;
     }
 
-    /* FILTROS - COM MARGENS CORRIGIDAS */
+    /* FILTROS - COM MARGENS CORRIGIDAS E ALINHAMENTO CENTRALIZADO */
     .filters-sidebar {
         background: var(--card-bg);
         border-radius: 15px;
         padding: 1.5rem;
-        margin: 0 0.5rem 1rem 0.5rem;
+        margin: 0 0 1rem 0;
         border: 1px solid var(--gold);
     }
 
@@ -257,6 +261,7 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 1.5rem;
+        padding: 0 0.3rem;
     }
 
     .filters-header h3 {
@@ -264,16 +269,18 @@
         color: var(--gold);
     }
 
-    /* GRUPOS DE FILTROS COM MARGENS CORRIGIDAS */
+    /* GRUPOS DE FILTROS COM ALINHAMENTO CENTRALIZADO */
     .filter-group {
         margin-bottom: 1.5rem;
         border-bottom: 1px solid var(--section-bg);
         padding-bottom: 1rem;
+        padding: 0 0.3rem 1rem 0.3rem;
     }
 
     .filter-group:last-child {
         border-bottom: none;
         margin-bottom: 1rem;
+        padding-bottom: 0;
     }
 
     .filter-group h4 {
@@ -283,11 +290,16 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        padding: 0 0.3rem;
     }
 
     /* FORMULÁRIOS MOBILE COM ALINHAMENTO CORRIGIDO */
     .form-group {
         margin-bottom: 1rem;
+        padding: 0 0.3rem;
+    }
+
+    .form-group label {
         padding: 0 0.3rem;
     }
 
@@ -298,21 +310,25 @@
     }
 
     /* CHECKBOX MOBILE COM ALINHAMENTO CORRIGIDO */
+    .checkbox-group {
+        padding: 0 0.3rem;
+    }
+
     .checkbox-label {
-        padding: 0.8rem 0.3rem;
+        padding: 0.8rem 0.5rem;
         font-size: 0.9rem;
+        margin: 0.2rem 0;
     }
 
     /* BOTÕES MOBILE COM MARGENS CORRIGIDAS */
     .btn {
         padding: 0.8rem 1.5rem;
         font-size: 0.95rem;
-        margin: 0 0.3rem;
     }
 
     .btn-block {
-        width: calc(100% - 0.6rem);
-        margin: 0 0.3rem;
+        width: 100%;
+        margin: 0.5rem 0 0 0;
     }
 
     /* SEÇÃO DE RESULTADOS COM MARGENS CORRIGIDAS */
@@ -320,7 +336,7 @@
         background: var(--card-bg);
         border-radius: 15px;
         padding: 1.5rem;
-        margin: 0 0.5rem;
+        margin: 0;
         border: 1px solid var(--gold);
     }
 
@@ -330,6 +346,7 @@
         gap: 1rem;
         margin-bottom: 1.5rem;
         text-align: center;
+        padding: 0 0.3rem;
     }
 
     .results-header h3 {
@@ -357,7 +374,7 @@
         padding: 1.2rem;
         border: 2px solid transparent;
         transition: var(--transition);
-        margin: 0 0.2rem;
+        margin: 0;
     }
 
     .profile-card:hover {
@@ -407,6 +424,7 @@
         gap: 1rem;
         margin-bottom: 1rem;
         justify-content: space-around;
+        padding: 0 0.5rem;
     }
 
     .stat-number {
@@ -422,6 +440,7 @@
         flex-wrap: wrap;
         gap: 0.4rem;
         margin-bottom: 1rem;
+        padding: 0 0.2rem;
     }
 
     .tag {
@@ -445,7 +464,7 @@
     .empty-state {
         padding: 2rem 1rem;
         text-align: center;
-        margin: 0 0.5rem;
+        margin: 0;
     }
 
     .empty-state i {
@@ -496,9 +515,13 @@
         top: 15px;
     }
 
+    .search-container {
+        padding: 0 0.6rem;
+    }
+
     .page-header {
         padding: 1.2rem 0.8rem;
-        margin: 0 0.5rem 1.5rem 0.5rem;
+        margin: 0 0.6rem 1.5rem 0.6rem;
     }
 
     .page-header h1 {
@@ -508,12 +531,12 @@
     .filters-sidebar,
     .results-section {
         padding: 1.2rem;
-        margin: 0 0.5rem 1rem 0.5rem;
+        margin: 0 0 1rem 0;
     }
 
     .profile-card {
         padding: 1rem;
-        margin: 0 0.3rem;
+        margin: 0;
     }
 
     .profile-avatar {
@@ -533,6 +556,17 @@
 
     .btn-profile {
         width: 100%;
+    }
+
+    .filter-group,
+    .form-group,
+    .checkbox-group {
+        padding: 0 0.2rem;
+    }
+
+    .filters-header,
+    .results-header {
+        padding: 0 0.2rem;
     }
 }
 
@@ -567,15 +601,30 @@
         height: 30px;
     }
 
+    .search-container {
+        padding: 0 0.4rem;
+    }
+
+    .page-header {
+        margin: 0 0.4rem 1rem 0.4rem;
+        padding: 1rem 0.6rem;
+    }
+
     .filters-sidebar,
     .results-section {
-        margin: 0 0.3rem 1rem 0.3rem;
+        margin: 0 0 1rem 0;
         padding: 1rem;
     }
 
     .profile-card {
-        margin: 0 0.2rem;
+        margin: 0;
         padding: 0.8rem;
+    }
+
+    .filter-group,
+    .form-group,
+    .checkbox-group {
+        padding: 0 0.1rem;
     }
 }
 
@@ -601,16 +650,22 @@
 
     .search-container {
         gap: 1rem;
+        padding: 0 0.6rem;
     }
 
     .filters-sidebar {
         padding: 1rem;
-        margin: 0 0.5rem 0.5rem 0.5rem;
+        margin: 0 0 0.5rem 0;
     }
 
     .results-section {
         padding: 1rem;
-        margin: 0 0.5rem;
+        margin: 0;
+    }
+
+    .page-header {
+        margin: 0 0.6rem 1rem 0.6rem;
+        padding: 1rem;
     }
 }
 
