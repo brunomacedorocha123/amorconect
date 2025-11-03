@@ -796,16 +796,19 @@
     }
 }
 
-/* REMOVER QUALQUER ELEMENTO QUE NÃO SEJA O menu-close ORIGINAL */
-button:not(.menu-toggle):not(.btn):not(.menu-close) {
+/* BOTÃO FECHAR DOURADO - X PEQUENO FUNCIONAL */
+.menu-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    /* ... resto do estilo ... */
+}
+
+/* ========== REMOVER X DUPLICADO ========== */
+header .menu-close:not(nav .menu-close) {
     display: none !important;
 }
 
-/* GARANTIR QUE SÓ EXISTA UM X FUNCIONAL */
-nav .menu-close {
-    display: flex !important; /* MANTÉM o X que funciona */
-}
-
-header .menu-close:not(nav .menu-close) {
-    display: none !important; /* REMOVE X duplicado no header */
+.menu-close ~ .menu-close {
+    display: none !important;
 }
