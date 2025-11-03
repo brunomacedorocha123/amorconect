@@ -1,16 +1,5 @@
 /* busca-mobile.css - COMPLETO E CORRETO */
 @media (max-width: 768px) {
-    /* ========== CORREÇÃO DO X DUPLICADO ========== */
-    .menu-close .fa-times {
-        display: none !important;
-    }
-    
-    .menu-close::after {
-        content: "×";
-        font-size: 1.2rem;
-        font-weight: bold;
-    }
-
     /* ========== HEADER MOBILE ========== */
     .header-content {
         flex-wrap: wrap;
@@ -120,7 +109,8 @@
         justify-content: center;
         cursor: pointer;
         z-index: 1003;
-        font-size: 1.1rem;
+        font-size: 1.3rem;
+        font-weight: bold;
         transition: var(--transition);
     }
 
