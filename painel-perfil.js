@@ -585,19 +585,8 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeMobileMenu() {
     const menuToggle = document.querySelector('.menu-toggle');
     const nav = document.querySelector('nav');
-    const menuClose = document.querySelector('.menu-close');
     
     if (menuToggle && nav) {
-        // Criar botão de fechar se não existir
-        if (!menuClose) {
-            const closeBtn = document.createElement('button');
-            closeBtn.className = 'menu-close';
-            closeBtn.innerHTML = '×';
-            nav.appendChild(closeBtn);
-            
-            closeBtn.addEventListener('click', closeMobileMenu);
-        }
-        
         menuToggle.addEventListener('click', toggleMobileMenu);
         
         // Fechar menu ao clicar em um link
@@ -644,12 +633,3 @@ function closeMobileMenu() {
         document.body.style.overflow = '';
     }
 }
-
-// Exportar para uso global (MANTER ESTE BLOCO NO FINAL)
-window.supabase = supabase;
-window.profileManager = {
-    loadUserProfile,
-    saveProfile: handleProfileSave,
-    showNotification,
-    updateInvisibleModeUI
-};
