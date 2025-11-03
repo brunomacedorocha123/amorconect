@@ -529,37 +529,4 @@ document.addEventListener('DOMContentLoaded', function() {
     const menuToggle = document.querySelector('.menu-toggle');
     const nav = document.querySelector('nav');
     
-    // Remover X duplicados - manter apenas o primeiro
-    const allMenuCloses = document.querySelectorAll('.menu-close');
-    allMenuCloses.forEach((closeBtn, index) => {
-        if (index > 0) {
-            closeBtn.remove();
-        }
-    });
-    
-    // Configurar menu com o X que sobrou
-    const menuClose = document.querySelector('.menu-close');
-    
-    if (menuToggle && nav) {
-        menuToggle.addEventListener('click', function() {
-            nav.classList.add('active');
-            menuToggle.classList.add('active');
-        });
-        
-        if (menuClose) {
-            menuClose.addEventListener('click', function() {
-                nav.classList.remove('active');
-                menuToggle.classList.remove('active');
-            });
-        }
-        
-        // Fechar menu ao clicar em um link
-        const navLinks = document.querySelectorAll('nav a');
-        navLinks.forEach(link => {
-            link.addEventListener('click', function() {
-                nav.classList.remove('active');
-                menuToggle.classList.remove('active');
-            });
-        });
-    }
-});
+  });

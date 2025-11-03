@@ -1,4 +1,4 @@
-/* busca-mobile.css - COMPLETO E CORRETO */
+/* busca-mobile.css - VERSÃO CORRIGIDA E ALINHADA */
 @media (max-width: 768px) {
     /* ========== HEADER MOBILE ========== */
     .header-content {
@@ -30,7 +30,7 @@
         display: block;
     }
 
-    /* MENU HAMBURGUER DOURADO */
+    /* MENU HAMBURGUER DOURADO - POSICIONAMENTO CORRETO */
     .menu-toggle {
         display: flex;
         order: 2;
@@ -93,7 +93,7 @@
         }
     }
 
-    /* BOTÃO FECHAR DOURADO - X PEQUENO FUNCIONAL */
+    /* BOTÃO FECHAR DOURADO - ÚNICO X FUNCIONAL */
     .menu-close {
         position: absolute;
         top: 10px;
@@ -110,6 +110,7 @@
         cursor: pointer;
         z-index: 1003;
         font-weight: bold;
+        font-size: 16px;
         transition: var(--transition);
     }
 
@@ -117,6 +118,12 @@
         background: var(--gold);
         color: var(--dark-bg);
         transform: scale(1.1);
+    }
+
+    /* REMOVER QUALQUER OUTRO BOTÃO DE FECHAR DUPLICADO */
+    header button:not(.menu-toggle):not(.menu-close),
+    nav button:not(.menu-close) {
+        display: none !important;
     }
 
     /* LINHA DOS 5 BOTÕES - SÓ ÍCONES */
@@ -232,26 +239,36 @@
         display: none !important;
     }
 
-    /* ========== CONTEÚDO DA PÁGINA BUSCA MOBILE ========== */
+    /* ========== CONTEÚDO PRINCIPAL - CONTAINER ALINHADO ========== */
     .main-content {
         padding: 1rem 0;
+        display: flex;
+        justify-content: center;
     }
 
     .container {
         padding: 0 1rem;
+        width: 100%;
+        max-width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
-    /* PAGE HEADER */
+    /* PAGE HEADER - CENTRALIZADO */
     .page-header {
         text-align: center;
         padding: 1.5rem 1rem;
         margin-bottom: 1.5rem;
+        width: 100%;
+        max-width: 600px;
     }
 
     .page-header h1 {
         font-size: 1.8rem;
         margin-bottom: 0.5rem;
         color: var(--gold);
+        justify-content: center;
     }
 
     .page-header p {
@@ -259,20 +276,27 @@
         color: var(--text-light);
     }
 
-    /* SEARCH CONTAINER */
+    /* ========== SEARCH CONTAINER - COMPLETAMENTE ALINHADO ========== */
     .search-container {
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
+        width: 100%;
+        max-width: 500px;
+        align-items: center;
+        margin: 0 auto;
     }
 
-    /* FILTERS SIDEBAR */
+    /* FILTERS SIDEBAR - CENTRALIZADO */
     .filters-sidebar {
         background: var(--card-bg);
         border-radius: 12px;
-        padding: 1.2rem;
+        padding: 1.5rem;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         border: 1px solid var(--border-color);
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
     }
 
     .filters-header {
@@ -282,18 +306,24 @@
         margin-bottom: 1.2rem;
         padding-bottom: 0.8rem;
         border-bottom: 1px solid var(--border-color);
+        width: 100%;
     }
 
     .filters-header h3 {
         font-size: 1.2rem;
         color: var(--gold);
         margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     .filter-group {
         margin-bottom: 1.5rem;
         padding-bottom: 1.2rem;
         border-bottom: 1px solid var(--border-color);
+        width: 100%;
+        text-align: center;
     }
 
     .filter-group:last-child {
@@ -307,11 +337,15 @@
         color: var(--gold);
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 0.5rem;
+        width: 100%;
     }
 
     .form-group {
         margin-bottom: 0.8rem;
+        width: 100%;
+        text-align: left;
     }
 
     .form-group label {
@@ -320,6 +354,7 @@
         font-size: 0.85rem;
         font-weight: 500;
         color: var(--text-color);
+        width: 100%;
     }
 
     .form-control {
@@ -341,6 +376,9 @@
 
     .checkbox-group {
         margin-bottom: 0.6rem;
+        width: 100%;
+        display: flex;
+        justify-content: flex-start;
     }
 
     .checkbox-label {
@@ -350,6 +388,7 @@
         font-size: 0.85rem;
         cursor: pointer;
         color: var(--text-color);
+        width: auto;
     }
 
     /* BOTÃO LIMPAR FILTROS */
@@ -358,13 +397,16 @@
         font-size: 0.8rem;
     }
 
-    /* RESULTS SECTION */
+    /* RESULTS SECTION - CENTRALIZADO */
     .results-section {
         background: var(--card-bg);
         border-radius: 12px;
-        padding: 1.2rem;
+        padding: 1.5rem;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         border: 1px solid var(--border-color);
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
     }
 
     .results-header {
@@ -374,6 +416,7 @@
         margin-bottom: 1.2rem;
         padding-bottom: 0.8rem;
         border-bottom: 1px solid var(--border-color);
+        width: 100%;
     }
 
     .results-header h3 {
@@ -396,6 +439,7 @@
         display: grid;
         grid-template-columns: 1fr;
         gap: 1rem;
+        width: 100%;
     }
 
     /* PROFILE CARDS */
@@ -406,6 +450,7 @@
         border: 1px solid var(--border-color);
         transition: var(--transition);
         cursor: pointer;
+        width: 100%;
     }
 
     .profile-card:hover {
@@ -423,6 +468,7 @@
         align-items: center;
         gap: 0.8rem;
         margin-bottom: 0.8rem;
+        width: 100%;
     }
 
     .profile-avatar {
@@ -437,6 +483,7 @@
         color: var(--dark-bg);
         font-size: 1.2rem;
         overflow: hidden;
+        flex-shrink: 0;
     }
 
     .profile-avatar img {
@@ -447,6 +494,7 @@
 
     .profile-info {
         flex: 1;
+        min-width: 0;
     }
 
     .profile-name {
@@ -454,12 +502,16 @@
         align-items: center;
         gap: 0.5rem;
         margin-bottom: 0.3rem;
+        width: 100%;
     }
 
     .profile-name h4 {
         margin: 0;
         font-size: 1.1rem;
         color: var(--text-color);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .profile-badge {
@@ -467,6 +519,7 @@
         border-radius: 12px;
         font-size: 0.7rem;
         font-weight: 600;
+        flex-shrink: 0;
     }
 
     .profile-badge.premium {
@@ -485,6 +538,7 @@
         gap: 0.3rem;
         font-size: 0.8rem;
         color: var(--text-light);
+        width: 100%;
     }
 
     /* PROFILE STATS */
@@ -494,10 +548,13 @@
         margin-bottom: 0.8rem;
         padding: 0.8rem 0;
         border-bottom: 1px solid var(--border-color);
+        width: 100%;
+        justify-content: space-around;
     }
 
     .stat {
         text-align: center;
+        flex: 1;
     }
 
     .stat-number {
@@ -520,6 +577,8 @@
         flex-wrap: wrap;
         gap: 0.4rem;
         margin-bottom: 0.8rem;
+        width: 100%;
+        justify-content: flex-start;
     }
 
     .tag {
@@ -535,6 +594,7 @@
     .profile-actions {
         display: flex;
         gap: 0.5rem;
+        width: 100%;
     }
 
     .btn-profile {
@@ -606,6 +666,7 @@
         text-align: center;
         padding: 3rem 1rem;
         color: var(--text-light);
+        width: 100%;
     }
 
     .empty-state i {
@@ -629,6 +690,7 @@
         grid-template-columns: 1fr;
         gap: 2rem;
         text-align: center;
+        width: 100%;
     }
 
     .social-links {
@@ -642,6 +704,31 @@
     .footer-bottom {
         padding-top: 1.5rem;
         text-align: center;
+        width: 100%;
+    }
+}
+
+/* ========== CORREÇÕES ESPECÍFICAS PARA O X DUPLO ========== */
+@media (max-width: 768px) {
+    /* GARANTIR QUE SÓ EXISTA UM BOTÃO DE FECHAR */
+    nav .menu-close {
+        display: flex !important;
+    }
+    
+    /* ESCONDER QUALQUER OUTRO ELEMENTO QUE POSSA SER UM X DUPLICADO */
+    .close-button:not(.menu-close),
+    .nav-close:not(.menu-close),
+    button[aria-label="Fechar menu"]:not(.menu-close) {
+        display: none !important;
+        visibility: hidden !important;
+    }
+    
+    /* REMOVER PSEUDO-ELEMENTOS QUE POSSAM CRIAR X EXTRA */
+    .menu-toggle::before,
+    .menu-toggle::after,
+    .menu-close::before,
+    .menu-close::after {
+        content: none !important;
     }
 }
 
@@ -664,7 +751,6 @@
         font-size: 1.3rem;
     }
 
-    
     .menu-toggle {
         padding: 10px;
         margin-right: 12px;
@@ -702,6 +788,12 @@
     .btn-profile {
         width: 100%;
     }
+    
+    /* GARANTIR CENTRALIZAÇÃO EM TELAS MUITO PEQUENAS */
+    .search-container {
+        max-width: 100%;
+        padding: 0 0.5rem;
+    }
 }
 
 /* MOBILE MUITO PEQUENO */
@@ -732,6 +824,7 @@
         right: 5px;
         width: 30px;
         height: 30px;
+        font-size: 14px;
     }
 
     .page-header h1 {
@@ -753,6 +846,11 @@
 
     .stat-number {
         font-size: 1rem;
+    }
+    
+    /* AJUSTES FINOS DE CENTRALIZAÇÃO */
+    .container {
+        padding: 0 0.5rem;
     }
 }
 
@@ -782,6 +880,11 @@
     .page-header h1 {
         font-size: 1.5rem;
     }
+    
+    /* GARANTIR QUE O CONTAINER FIQUE CENTRALIZADO EM LANDSCAPE */
+    .search-container {
+        max-width: 450px;
+    }
 }
 
 /* ANIMAÇÕES */
@@ -796,19 +899,24 @@
     }
 }
 
-/* ========== REMOVER X GRANDE ========== */
-/* Encontrar e remover o botão duplicado */
-header button.menu-close:not(nav .menu-close),
-header button:not(.menu-toggle):not(.btn):not(nav .menu-close) {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-}
-
-/* Garantir que só o menu-close dentro do nav fique visível */
-nav .menu-close {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
+/* ========== GARANTIR QUE VARIÁVEIS CSS ESTEJAM DEFINIDAS ========== */
+@media (max-width: 768px) {
+    :root {
+        --gold: #C6A664;
+        --light-gold: #D4B978;
+        --burgundy: #A65B5B;
+        --dark-burgundy: #8A4A4A;
+        --dark-bg: #1A1A1A;
+        --card-bg: #242424;
+        --section-bg: #2A2A2A;
+        --white: #F5F5F5;
+        --beige: #E8DCC3;
+        --light-beige: #F0E9D8;
+        --shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        --transition: all 0.3s ease;
+        --text-color: #F5F5F5;
+        --text-light: #E8DCC3;
+        --border-color: #C6A664;
+        --error: #dc2626;
+    }
 }
