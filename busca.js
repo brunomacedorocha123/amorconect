@@ -524,61 +524,64 @@ supabase.auth.onAuthStateChange((event, session) => {
 
 window.SearchManager = SearchManager;
 
-// Menu Mobile para Busca
-document.addEventListener('DOMContentLoaded', function() {
-    const menuToggle = document.querySelector('.menu-toggle');
-    const nav = document.querySelector('nav');
-    
-  });
-
-  // Menu Mobile para Busca - CÓDIGO COMPLETO E FUNCIONAL
+// ========== MENU MOBILE CORRIGIDO - VERSÃO DEFINITIVA ==========
 document.addEventListener('DOMContentLoaded', function() {
     const menuToggle = document.querySelector('.menu-toggle');
     const nav = document.querySelector('nav');
     const menuClose = document.querySelector('.menu-close');
     const body = document.body;
 
+    // Verificar se elementos existem
+    if (!menuToggle || !nav || !menuClose) {
+        return;
+    }
+
     // Função para abrir o menu
     function openMenu() {
         nav.classList.add('active');
         menuToggle.classList.add('active');
-        body.style.overflow = 'hidden'; // Previne scroll do body
+        body.classList.add('menu-open');
     }
 
     // Função para fechar o menu
     function closeMenu() {
         nav.classList.remove('active');
         menuToggle.classList.remove('active');
-        body.style.overflow = ''; // Restaura scroll do body
+        body.classList.remove('menu-open');
     }
 
     // Evento de clique no botão hamburguer
-    if (menuToggle) {
-        menuToggle.addEventListener('click', function(e) {
-            e.stopPropagation();
+    menuToggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        if (nav.classList.contains('active')) {
+            closeMenu();
+        } else {
             openMenu();
-        });
-    }
+        }
+    });
 
     // Evento de clique no botão fechar (X)
-    if (menuClose) {
-        menuClose.addEventListener('click', function(e) {
-            e.stopPropagation();
-            closeMenu();
-        });
-    }
+    menuClose.addEventListener('click', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        closeMenu();
+    });
 
     // Fechar menu ao clicar em um link
     const navLinks = document.querySelectorAll('nav a');
     navLinks.forEach(link => {
-        link.addEventListener('click', closeMenu);
+        link.addEventListener('click', function() {
+            setTimeout(closeMenu, 100);
+        });
     });
 
     // Fechar menu ao clicar fora dele
     document.addEventListener('click', function(e) {
         if (nav.classList.contains('active') && 
             !nav.contains(e.target) && 
-            e.target !== menuToggle) {
+            !menuToggle.contains(e.target)) {
             closeMenu();
         }
     });
@@ -596,17 +599,32 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Garantir que o menu funcione mesmo após carregamento dinâmico
-window.addEventListener('load', function() {
-    // Re-inicializa os event listeners se necessário
-    const menuToggle = document.querySelector('.menu-toggle');
-    const menuClose = document.querySelector('.menu-close');
-    
-    if (menuToggle && !menuToggle.hasAttribute('data-listener-added')) {
-        menuToggle.setAttribute('data-listener-added', 'true');
+// Adicionar CSS dinâmico para controle de scroll
+const menuStyles = document.createElement('style');
+menuStyles.textContent = `
+    body.menu-open {
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        height: 100%;
     }
     
-    if (menuClose && !menuClose.hasAttribute('data-listener-added')) {
-        menuClose.setAttribute('data-listener-added', 'true');
+    body.menu-open .main-content {
+        filter: blur(2px);
+        pointer-events: none;
+        transition: filter 0.3s ease;
     }
-});
+    
+    nav.active {
+        display: block !important;
+    }
+    
+    .menu-toggle span {
+        transition: all 0.3s ease;
+    }
+    
+    nav {
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+`;
+document.head.appendChild(menuStyles);
