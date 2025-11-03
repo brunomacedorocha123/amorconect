@@ -664,13 +664,7 @@
         font-size: 1.3rem;
     }
 
-    .menu-close {
-        top: 8px;
-        right: 8px;
-        width: 32px;
-        height: 32px;
-    }
-
+    
     .menu-toggle {
         padding: 10px;
         margin-right: 12px;
