@@ -1,4 +1,4 @@
-/* painel-mobile.css - VERSÃO COMPLETA COM BOTÃO HAMBURGUER - APENAS ÍCONES */
+/* painel-mobile.css - VERSÃO CORRIGIDA - APENAS ÍCONES SEM TEXTOS */
 @media (max-width: 768px) {
     /* Header Mobile - IDÊNTICO AO BUSCA */
     .header-content {
@@ -93,7 +93,7 @@
         }
     }
 
-    /* BOTÃO FECHAR DOURADO - ÚNICO BOTÃO DE FECHAR */
+    /* BOTÃO FECHAR DOURADO */
     .menu-close {
         position: absolute;
         top: 10px;
@@ -142,7 +142,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 0.8rem;
+        padding: 1rem;
         background: transparent;
         color: var(--gold);
         text-decoration: none;
@@ -170,9 +170,14 @@
         color: var(--dark-bg);
     }
 
-    /* REMOVER COMPLETAMENTE OS TEXTOS DO MENU - APENAS ÍCONES */
+    /* REMOVER COMPLETAMENTE OS TEXTOS - GARANTIDO */
     nav a span {
         display: none !important;
+    }
+
+    /* REMOVER QUALQUER TEXTO QUE TENHA FICADO */
+    nav a {
+        font-size: 0 !important;
     }
 
     /* USER-MENU - AJUSTADO */
@@ -190,10 +195,6 @@
         text-align: center;
     }
 
-    .logout-btn {
-        margin-top: 10px;
-    }
-
     .menu-toggle.active span:nth-child(1) {
         transform: rotate(45deg) translate(6px, 6px);
         background: var(--gold);
@@ -209,6 +210,7 @@
     }
 
     /* ========== CONTEÚDO ESPECÍFICO DO PAINEL MOBILE ========== */
+    /* REMOVER ESPAÇAMENTO DUPLICADO - APENAS UM HEADER */
     .main-content {
         padding: 1rem 0;
     }
@@ -490,8 +492,8 @@
     }
 
     nav a {
-        padding: 0.7rem;
-        min-height: 65px;
+        padding: 0.8rem;
+        min-height: 60px;
     }
 
     nav a i {
@@ -517,11 +519,7 @@
     }
 
     .logo img {
-        height: 45px;
-    }
-
-    .logo h1 {
-        font-size: 1.2rem;
+        height: 120px;
     }
 
     .user-avatar {
@@ -542,6 +540,7 @@
 
     .page-header {
         padding: 1.2rem;
+        margin: 0 0.6rem 1rem 0.6rem;
     }
 
     .page-header h1 {
@@ -684,8 +683,8 @@
     }
 
     nav a {
-        padding: 0.6rem;
-        min-height: 60px;
+        padding: 0.7rem;
+        min-height: 55px;
     }
 
     nav a i {
@@ -757,7 +756,7 @@
 
     nav a {
         padding: 0.6rem;
-        min-height: 55px;
+        min-height: 50px;
     }
 
     nav a i {
@@ -906,66 +905,5 @@
     .menu-close,
     nav a {
         transition: none;
-    }
-}
-
-/* ========== MODO ESCURO (backup) ========== */
-@media (prefers-color-scheme: dark) {
-    .avatar-upload-container {
-        background: var(--card-bg);
-    }
-
-    /* PREMIUM ELEMENTS DARK MODE */
-    .free-limit-warning {
-        background: #332701;
-        border-color: #665004;
-        color: #e6c74d;
-    }
-
-    .premium-benefit {
-        background: linear-gradient(135deg, #1a237e, #283593);
-        border-color: #3949ab;
-        color: #8c9eff;
-    }
-
-    .plan-status.premium {
-        background: linear-gradient(135deg, #1b5e20, #2e7d32);
-        border-color: #4caf50;
-        color: #a5d6a7;
-    }
-
-    .plan-status.free {
-        background: #37474f;
-        border-color: #546e7a;
-        color: #b0bec5;
-    }
-}
-
-/* ========== MOBILE SPECIFIC PREMIUM STYLES ========== */
-@media (max-width: 768px) {
-    /* Garantir que elementos premium sejam bem visíveis */
-    [data-premium-only] {
-        border-left: 3px solid #ffd700;
-        padding-left: 10px;
-    }
-
-    [data-free-only] {
-        border-left: 3px solid #6c757d;
-        padding-left: 10px;
-    }
-
-    /* Melhorar contraste para leitura */
-    .free-limit-warning {
-        border-left: 4px solid #ffc107;
-    }
-
-    .premium-benefit {
-        border-left: 4px solid #2196f3;
-    }
-
-    /* Botão de upgrade mais destacado */
-    .btn-premium {
-        box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
-        font-weight: 700;
     }
 }
