@@ -796,29 +796,20 @@
     }
 }
 
-/* ========== REMOÇÃO NUCLEAR ========== */
-/* Remove qualquer elemento que possa ser um X */
-* {
-    content: none !important;
+/* ========== IDENTIFICAR OS BOTÕES ========== */
+.menu-close {
+    border: 5px solid red !important;
+    background: yellow !important;
+    color: black !important;
+    font-size: 20px !important;
 }
 
-/* Remove todos os botões exceto os essenciais */
-button:not(.menu-toggle):not(.btn):not(.menu-close) {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
+/* Marcar o primeiro menu-close */
+.menu-close:nth-child(1) {
+    background: limegreen !important;
 }
 
-/* Remove qualquer texto 'x' ou 'X' */
-* {
-    text-transform: none !important;
-}
-
-/* Força mostrar apenas o menu-close funcional */
-nav .menu-close {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    pointer-events: all !important;
+/* Marcar o segundo menu-close */ 
+.menu-close:nth-child(2) {
+    background: orange !important;
 }
