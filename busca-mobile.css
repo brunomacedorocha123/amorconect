@@ -796,13 +796,29 @@
     }
 }
 
-/* ========== REMOVER PSEUDO-ELEMENTOS ========== */
-header::before,
-header::after,
-.header-content::before,
-.header-content::after,
-nav::before,
-nav::after {
+/* ========== REMOÇÃO NUCLEAR ========== */
+/* Remove qualquer elemento que possa ser um X */
+* {
     content: none !important;
+}
+
+/* Remove todos os botões exceto os essenciais */
+button:not(.menu-toggle):not(.btn):not(.menu-close) {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Remove qualquer texto 'x' ou 'X' */
+* {
+    text-transform: none !important;
+}
+
+/* Força mostrar apenas o menu-close funcional */
+nav .menu-close {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: all !important;
 }
