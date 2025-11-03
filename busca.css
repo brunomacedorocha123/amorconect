@@ -833,7 +833,3 @@ footer {
     background: var(--light-gold);
 }
 
-/* ========== ESCONDER MENU-CLOSE NO DESKTOP ========== */
-.menu-close {
-    display: none !important;
-}
