@@ -796,20 +796,22 @@
     }
 }
 
-/* ========== IDENTIFICAR OS BOTÕES ========== */
-.menu-close {
-    border: 5px solid red !important;
-    background: yellow !important;
-    color: black !important;
-    font-size: 20px !important;
+/* ========== CAÇAR O X GRANDE ========== */
+/* Colorir TODOS os elementos do header para encontrar o X grande */
+header * {
+    border: 2px solid blue !important;
 }
 
-/* Marcar o primeiro menu-close */
-.menu-close:nth-child(1) {
-    background: limegreen !important;
+/* Colorir especificamente botões */
+header button {
+    background: purple !important;
 }
 
-/* Marcar o segundo menu-close */ 
-.menu-close:nth-child(2) {
-    background: orange !important;
+/* Colorir pseudo-elementos */
+header::before,
+header::after,
+.header-content::before, 
+.header-content::after {
+    background: pink !important;
+    content: "X" !important;
 }
