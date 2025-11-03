@@ -691,9 +691,7 @@ footer {
         height: 50px;
     }
     
-    nav {
-        display: none;
-    }
+    /* NAV REMOVIDO - AGORA CONTROLADO PELO busca-mobile.css */
     
     .user-menu {
         justify-content: center;
