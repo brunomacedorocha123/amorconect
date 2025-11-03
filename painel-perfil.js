@@ -574,3 +574,82 @@ window.profileManager = {
     showNotification,
     updateInvisibleModeUI
 };
+
+// ... todo o código anterior do painel-perfil.js ...
+
+// ========== CONTROLE DO MENU HAMBURGUER ==========
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMobileMenu();
+});
+
+function initializeMobileMenu() {
+    const menuToggle = document.querySelector('.menu-toggle');
+    const nav = document.querySelector('nav');
+    const menuClose = document.querySelector('.menu-close');
+    
+    if (menuToggle && nav) {
+        // Criar botão de fechar se não existir
+        if (!menuClose) {
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'menu-close';
+            closeBtn.innerHTML = '×';
+            nav.appendChild(closeBtn);
+            
+            closeBtn.addEventListener('click', closeMobileMenu);
+        }
+        
+        menuToggle.addEventListener('click', toggleMobileMenu);
+        
+        // Fechar menu ao clicar em um link
+        const navLinks = nav.querySelectorAll('a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', closeMobileMenu);
+        });
+        
+        // Fechar menu ao clicar fora
+        document.addEventListener('click', function(event) {
+            if (nav.classList.contains('active') && 
+                !nav.contains(event.target) && 
+                !menuToggle.contains(event.target)) {
+                closeMobileMenu();
+            }
+        });
+    }
+}
+
+function toggleMobileMenu() {
+    const nav = document.querySelector('nav');
+    const menuToggle = document.querySelector('.menu-toggle');
+    
+    if (nav && menuToggle) {
+        nav.classList.toggle('active');
+        menuToggle.classList.toggle('active');
+        
+        // Prevenir scroll do body quando menu aberto
+        if (nav.classList.contains('active')) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+    }
+}
+
+function closeMobileMenu() {
+    const nav = document.querySelector('nav');
+    const menuToggle = document.querySelector('.menu-toggle');
+    
+    if (nav && menuToggle) {
+        nav.classList.remove('active');
+        menuToggle.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+// Exportar para uso global (MANTER ESTE BLOCO NO FINAL)
+window.supabase = supabase;
+window.profileManager = {
+    loadUserProfile,
+    saveProfile: handleProfileSave,
+    showNotification,
+    updateInvisibleModeUI
+};

@@ -1,221 +1,358 @@
-/* ========== MOBILE STYLES ========== */
+/* painel-mobile.css - VERSÃO COMPLETA COM BOTÃO HAMBURGUER */
 @media (max-width: 768px) {
-    .container {
-        padding: 0 15px;
-    }
-    
+    /* Header Mobile - IDÊNTICO AO BUSCA */
     .header-content {
-        flex-direction: column;
+        flex-wrap: wrap;
         height: auto;
-        padding: 15px 0;
-        gap: 15px;
-        text-align: center;
+        padding: 10px 0;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
     }
-    
+
+    /* LOGO CENTRALIZADA - IDÊNTICO */
     .logo {
+        order: 1;
+        flex: 0 0 auto;
+        display: flex;
         justify-content: center;
+        width: 100%;
+        margin: 0 auto;
     }
-    
+
     .logo img {
-        height: 50px;
+        width: auto;
+        height: 140px;
+        max-height: 150px;
+        object-fit: contain;
+        margin: 0 !important;
+        display: block;
     }
-    
-    .logo h1 {
-        font-size: 1.4rem;
+
+    /* MENU HAMBURGUER DOURADO - IDÊNTICO */
+    .menu-toggle {
+        display: flex;
+        order: 2;
+        flex-direction: column;
+        cursor: pointer;
+        padding: 12px;
+        background: transparent;
+        border: 2px solid var(--gold);
+        border-radius: 12px;
+        gap: 4px;
+        z-index: 1002;
+        margin-right: 15px;
+        transition: var(--transition);
+        box-shadow: 0 4px 12px rgba(198, 166, 100, 0.3);
+        position: absolute;
+        right: 15px;
+        top: 20px;
     }
-    
+
+    .menu-toggle:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 18px rgba(198, 166, 100, 0.4);
+    }
+
+    .menu-toggle span {
+        width: 25px;
+        height: 3px;
+        background: var(--gold);
+        transition: var(--transition);
+        border-radius: 2px;
+    }
+
+    /* ========== MENU MOBILE HORIZONTAL COMPACTO ========== */
     nav {
         display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: auto;
+        background: var(--dark-bg);
+        z-index: 1001;
+        padding: 50px 1rem 1rem;
+        border-bottom: 2px solid var(--gold);
     }
-    
-    .user-menu {
+
+    nav.active {
+        display: flex;
+        animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* BOTÃO FECHAR DOURADO - ÚNICO BOTÃO DE FECHAR */
+    .menu-close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: transparent;
+        color: var(--gold);
+        border: 2px solid var(--gold);
+        border-radius: 8px;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
         justify-content: center;
-    }
-    
-    .user-info {
-        justify-content: center;
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .user-avatar {
-        width: 45px;
-        height: 45px;
+        cursor: pointer;
+        z-index: 1003;
         font-size: 1.1rem;
+        transition: var(--transition);
     }
-    
-    /* CORREÇÃO: Remover câmera do avatar do cabeçalho */
-    .user-avatar .avatar-overlay {
+
+    .menu-close:hover {
+        background: var(--gold);
+        color: var(--dark-bg);
+        transform: scale(1.1);
+    }
+
+    /* LINHA DOS 3 BOTÕES MAIS ABAIXO - APENAS ÍCONES (SEM PERFIL) */
+    nav ul {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+        margin-top: 30px;
+    }
+
+    nav ul li {
+        flex: 1;
+        text-align: center;
+    }
+
+    /* BOTÕES CIRCULARES DOURADOS - APENAS ÍCONES */
+    nav a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 0.8rem 0.3rem;
+        background: transparent;
+        color: var(--gold);
+        text-decoration: none;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: 12px;
+        border: 2px solid var(--gold);
+        transition: all 0.3s ease;
+        min-height: 70px;
+    }
+
+    nav a:hover {
+        background: var(--gold);
+        color: var(--dark-bg);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(198, 166, 100, 0.3);
+    }
+
+    /* ÍCONES DOURADOS MAIORES - MANTIDOS */
+    nav a i {
+        font-size: 1.4rem;
+        color: var(--gold);
+        transition: var(--transition);
+    }
+
+    nav a:hover i {
+        color: var(--dark-bg);
+    }
+
+    /* REMOVER TEXTOS DO MENU - APENAS ÍCONES */
+    nav a span {
         display: none !important;
     }
-    
-    /* Garantir que avatar do cabeçalho mostra imagem */
-    .user-avatar .avatar-image {
-        display: block !important;
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: cover !important;
-        border-radius: 50% !important;
+
+    /* USER-MENU - AJUSTADO */
+    .user-menu {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        margin-top: 15px;
+        gap: 1rem;
+        flex-wrap: wrap;
     }
-    
-    /* PREMIUM BADGE MOBILE */
-    .premium-badge {
-        font-size: 10px;
-        padding: 3px 10px;
-        margin: 5px 0 0 0;
+
+    .user-info {
+        align-items: center;
+        text-align: center;
     }
-    
+
+    .logout-btn {
+        margin-top: 10px;
+    }
+
+    .menu-toggle.active span:nth-child(1) {
+        transform: rotate(45deg) translate(6px, 6px);
+        background: var(--gold);
+    }
+
+    .menu-toggle.active span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .menu-toggle.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(6px, -6px);
+        background: var(--gold);
+    }
+
+    /* ========== CONTEÚDO ESPECÍFICO DO PAINEL MOBILE ========== */
     .main-content {
         padding: 1rem 0;
     }
-    
+
     .page-header {
-        padding: 1.5rem;
-        margin-bottom: 2rem;
+        padding: 1.5rem 1rem;
+        margin: 0 0.8rem 1.5rem 0.8rem;
+        text-align: center;
+        background: var(--card-bg);
+        border-radius: 15px;
+        border: 2px solid var(--gold);
     }
-    
+
     .page-header h1 {
         font-size: 1.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.8rem;
     }
-    
+
     .page-header p {
         font-size: 1rem;
+        margin-top: 0.5rem;
     }
-    
+
     /* PLAN INFO MOBILE */
     .plan-info-container {
         margin: 10px 0;
     }
-    
+
     .plan-status {
         flex-direction: column;
         text-align: center;
         gap: 8px;
         padding: 12px;
     }
-    
+
     .upgrade-link {
         margin-left: 0;
         margin-top: 8px;
         padding: 6px 12px;
         font-size: 0.9rem;
     }
-    
+
+    /* FORM SECTIONS MOBILE */
     .form-section {
         padding: 1.5rem;
         margin-bottom: 1.5rem;
     }
-    
+
     .form-section h3 {
         font-size: 1.2rem;
     }
-    
+
     .section-description {
         font-size: 0.9rem;
     }
-    
+
     /* PREMIUM STATUS INFO MOBILE */
     .premium-status-info {
         margin-bottom: 12px;
     }
-    
+
     .free-limit-warning,
     .premium-benefit {
         padding: 10px;
         font-size: 0.85rem;
     }
-    
+
     .free-limit-warning i,
     .premium-benefit i {
         font-size: 0.9rem;
     }
-    
+
     .form-grid {
         grid-template-columns: 1fr;
         gap: 1rem;
     }
-    
+
     .form-group {
         margin-bottom: 1rem;
     }
-    
+
     .form-control {
         padding: 0.7rem 0.9rem;
         font-size: 0.95rem;
     }
-    
+
     .characteristics-grid {
         grid-template-columns: 1fr;
         gap: 0.8rem;
     }
-    
+
     .characteristic-checkbox {
         padding: 0.8rem;
         font-size: 0.9rem;
     }
-    
+
     .interests-grid {
         grid-template-columns: 1fr;
         gap: 0.8rem;
     }
-    
+
     .interest-checkbox {
         padding: 0.7rem;
         font-size: 0.9rem;
     }
-    
+
     .form-actions {
         flex-direction: column;
         gap: 0.8rem;
         margin-top: 2rem;
     }
-    
+
     .btn {
         width: 100%;
         justify-content: center;
         padding: 1rem 1.5rem;
     }
-    
+
     /* BOTÃO PREMIUM MOBILE */
     .btn-premium {
         order: -1;
         margin-bottom: 10px;
     }
-    
-    footer {
-        padding: 2rem 0 1rem;
-    }
-    
-    .footer-content {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-        text-align: center;
-    }
-    
-    .footer-column h3 {
-        font-size: 1.2rem;
-    }
-    
-    .notification {
-        top: 80px;
-        right: 10px;
-        left: 10px;
-        max-width: none;
-    }
-    
+
     /* ========== UPLOAD DE AVATAR MOBILE ========== */
     .avatar-upload-container {
         padding: 1rem;
         gap: 1rem;
     }
-    
+
     /* Avatar grande da seção Foto do Perfil */
     .user-avatar-large {
         width: 120px;
         height: 120px;
         font-size: 2.5rem;
     }
-    
+
     /* Garantir que avatar grande mostra imagem */
     .user-avatar-large .avatar-image-large {
         display: block !important;
@@ -224,7 +361,7 @@
         object-fit: cover !important;
         border-radius: 50% !important;
     }
-    
+
     .user-avatar-fallback-large {
         display: flex;
         align-items: center;
@@ -232,60 +369,72 @@
         width: 100%;
         height: 100%;
     }
-    
+
     .avatar-overlay-large {
         opacity: 0.9;
         background: rgba(0, 0, 0, 0.8);
     }
-    
+
     .avatar-overlay-large i {
         font-size: 1.2rem;
     }
-    
+
     .avatar-overlay-large span {
         font-size: 0.7rem;
     }
-    
+
     .avatar-upload-actions {
         flex-direction: column;
         width: 100%;
         max-width: 250px;
         gap: 10px;
     }
-    
+
     .avatar-upload-actions .btn {
         width: 100%;
     }
-    
+
     .upload-progress {
         max-width: 250px;
     }
-    
+
     /* ========== GALERIA MOBILE ========== */
     .gallery-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 0.8rem;
     }
-    
+
     .gallery-item {
         border-width: 2px;
     }
-    
+
     .empty-gallery {
         padding: 2rem 1rem;
     }
-    
+
     .empty-gallery i {
         font-size: 2.5rem;
     }
-    
+
+    /* DANGER ZONE MOBILE */
+    .danger-zone {
+        text-align: center;
+    }
+
+    .danger-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
     /* MODAL MOBILE */
     .modal-container {
         width: 100%;
         height: 100%;
         padding: 10px;
     }
-    
+
     .modal-close-btn {
         top: 10px;
         right: 10px;
@@ -293,168 +442,402 @@
         height: 40px;
         font-size: 1.2rem;
     }
-    
+
     .modal-image-wrapper {
         max-width: 95%;
         max-height: 95%;
     }
-    
+
     #modalImageView {
         border-radius: 8px;
     }
+
+    /* PREMIUM FEATURE MOBILE */
+    .premium-feature-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .premium-feature-status {
+        order: -1;
+    }
+
+    .upgrade-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.8rem;
+    }
+
+    .premium-feature-container {
+        padding: 1.2rem;
+        margin: 0.5rem 0;
+    }
+
+    .premium-upgrade-cta {
+        padding: 1.2rem;
+    }
+
+    .premium-checkbox {
+        padding: 0.8rem;
+    }
 }
 
-/* ========== SMALL MOBILE ========== */
+/* MOBILE PEQUENO - BOTÕES MAIS COMPACTOS */
 @media (max-width: 480px) {
+    nav {
+        padding: 45px 0.8rem 0.8rem;
+    }
+
+    nav ul {
+        margin-top: 25px;
+    }
+
+    nav a {
+        padding: 0.7rem 0.2rem;
+        min-height: 65px;
+        font-size: 0.7rem;
+    }
+
+    nav a i {
+        font-size: 1.3rem;
+    }
+
+    .menu-close {
+        top: 8px;
+        right: 8px;
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+
+    .menu-toggle {
+        padding: 10px;
+        margin-right: 12px;
+        top: 15px;
+    }
+
     .container {
         padding: 0 10px;
     }
-    
+
     .logo img {
         height: 45px;
     }
-    
+
     .logo h1 {
         font-size: 1.2rem;
     }
-    
+
     .user-avatar {
         width: 40px;
         height: 40px;
         font-size: 1rem;
     }
-    
+
     #userNickname {
         font-size: 0.9rem;
     }
-    
+
     /* PREMIUM BADGE SMALL MOBILE */
     .premium-badge {
         font-size: 9px;
         padding: 2px 8px;
     }
-    
+
     .page-header {
         padding: 1.2rem;
     }
-    
+
     .page-header h1 {
         font-size: 1.6rem;
     }
-    
+
     /* PLAN INFO SMALL MOBILE */
     .plan-status {
         padding: 10px;
     }
-    
+
     .plan-status i {
         font-size: 1.1rem;
     }
-    
+
     .plan-status strong {
         font-size: 0.95rem;
     }
-    
+
     .upgrade-link {
         font-size: 0.85rem;
         padding: 5px 10px;
     }
-    
+
     .form-section {
         padding: 1.2rem;
     }
-    
+
     .form-section h3 {
         font-size: 1.1rem;
     }
-    
+
     /* PREMIUM STATUS SMALL MOBILE */
     .free-limit-warning,
     .premium-benefit {
         padding: 8px;
         font-size: 0.8rem;
     }
-    
+
     .btn {
         padding: 0.9rem 1.2rem;
         font-size: 0.95rem;
     }
-    
-    footer {
-        padding: 1.5rem 0 1rem;
-    }
-    
-    .copyright {
-        font-size: 0.9rem;
-    }
-    
+
     /* ========== UPLOAD DE AVATAR SMALL MOBILE ========== */
     .avatar-upload-container {
         padding: 0.8rem;
     }
-    
+
     /* Avatar grande menor em mobile pequeno */
     .user-avatar-large {
         width: 100px;
         height: 100px;
         font-size: 2rem;
     }
-    
+
     .avatar-overlay-large {
         padding: 0.5rem;
     }
-    
+
     .avatar-overlay-large i {
         font-size: 1rem;
         margin-bottom: 0.3rem;
     }
-    
+
     .avatar-overlay-large span {
         font-size: 0.65rem;
         line-height: 1.2;
     }
-    
+
     .avatar-upload-actions {
         max-width: 200px;
     }
-    
+
     .section-description {
         text-align: center;
     }
-    
+
     /* ========== GALERIA SMALL MOBILE ========== */
     .gallery-grid {
         grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
         gap: 0.6rem;
     }
-    
+
     .gallery-item {
         border-width: 1px;
     }
-    
+
     .empty-gallery {
         padding: 1.5rem 1rem;
     }
-    
+
     .empty-gallery i {
         font-size: 2rem;
     }
-    
+
     /* Melhorar usabilidade em touch */
     .user-avatar-large {
         border-width: 3px;
     }
-    
+
     .characteristic-checkbox,
     .interest-checkbox {
         padding: 1rem;
         margin: 0.2rem;
     }
-    
+
     .characteristic-checkbox input[type="checkbox"],
     .interest-checkbox input[type="checkbox"] {
         transform: scale(1.2);
         margin-right: 0.5rem;
+    }
+
+    /* PREMIUM FEATURE SMALL MOBILE */
+    .premium-feature-info h4 {
+        font-size: 1.1rem;
+    }
+
+    .premium-feature-info p {
+        font-size: 0.85rem;
+    }
+
+    .upgrade-text h4 {
+        font-size: 1rem;
+    }
+
+    .upgrade-text p {
+        font-size: 0.8rem;
+    }
+}
+
+/* MOBILE MUITO PEQUENO */
+@media (max-width: 360px) {
+    nav {
+        padding: 40px 0.5rem 0.5rem;
+    }
+
+    nav ul {
+        margin-top: 20px;
+    }
+
+    nav a {
+        padding: 0.6rem 0.1rem;
+        min-height: 60px;
+        font-size: 0.65rem;
+    }
+
+    nav a i {
+        font-size: 1.2rem;
+    }
+
+    nav ul {
+        gap: 0.3rem;
+    }
+
+    .menu-close {
+        top: 5px;
+        right: 5px;
+        width: 30px;
+        height: 30px;
+    }
+
+    .premium-badge {
+        font-size: 8px;
+        padding: 2px 6px;
+    }
+
+    .plan-status {
+        padding: 8px;
+    }
+
+    .plan-status strong {
+        font-size: 0.9rem;
+    }
+
+    .upgrade-link {
+        font-size: 0.8rem;
+        padding: 4px 8px;
+    }
+
+    .free-limit-warning,
+    .premium-benefit {
+        font-size: 0.75rem;
+        padding: 6px;
+    }
+
+    .avatar-upload-actions .btn {
+        font-size: 0.85rem;
+        padding: 0.8rem 1rem;
+    }
+
+    /* Avatar muito pequeno */
+    .user-avatar-large {
+        width: 90px;
+        height: 90px;
+        font-size: 1.8rem;
+    }
+
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 0.5rem;
+    }
+}
+
+/* LANDSCAPE - MAIS COMPACTO AINDA */
+@media (max-width: 768px) and (orientation: landscape) {
+    nav {
+        padding: 35px 1rem 0.8rem;
+    }
+
+    nav ul {
+        margin-top: 20px;
+    }
+
+    nav a {
+        padding: 0.6rem 0.2rem;
+        min-height: 55px;
+        font-size: 0.7rem;
+    }
+
+    nav a i {
+        font-size: 1.2rem;
+    }
+
+    .avatar-upload-container {
+        flex-direction: row;
+        justify-content: center;
+        text-align: left;
+    }
+
+    .avatar-preview-large {
+        margin-right: 1.5rem;
+    }
+
+    .user-avatar-large {
+        width: 100px;
+        height: 100px;
+    }
+
+    .avatar-upload-actions {
+        flex-direction: column;
+        width: auto;
+    }
+
+    /* PREMIUM INFO LANDSCAPE */
+    .premium-status-info {
+        text-align: center;
+    }
+
+    .plan-status {
+        flex-direction: row;
+        padding: 10px;
+    }
+
+    /* GALERIA LANDSCAPE */
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.6rem;
+    }
+}
+
+/* ANIMAÇÃO DO MENU HAMBURGUER */
+.menu-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(6px, 6px);
+    background: var(--gold);
+}
+
+.menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.menu-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(6px, -6px);
+    background: var(--gold);
+}
+
+/* ========== GARANTIR QUE AVATARS APARECEM NO MOBILE ========== */
+@media (max-width: 768px) {
+    /* Avatar do header sempre visível */
+    .user-avatar {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    .user-avatar-fallback {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 100% !important;
+        height: 100% !important;
     }
 }
 
@@ -463,100 +846,43 @@
     .avatar-upload-container {
         padding: 1.5rem;
     }
-    
+
     .user-avatar-large {
         width: 130px;
         height: 130px;
     }
-    
+
     .avatar-upload-actions {
         flex-direction: row;
         flex-wrap: wrap;
         gap: 10px;
     }
-    
+
     .avatar-upload-actions .btn {
         width: auto;
         min-width: 160px;
     }
-    
+
     /* GALERIA TABLET */
     .gallery-grid {
         grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     }
-    
+
     /* PREMIUM BADGE TABLET */
     .premium-badge {
         font-size: 11px;
         padding: 4px 12px;
     }
-    
+
     /* PLAN INFO TABLET */
     .plan-status {
         flex-direction: row;
         justify-content: space-between;
     }
-    
+
     .upgrade-link {
         margin-left: auto;
         margin-top: 0;
-    }
-}
-
-/* ========== ORIENTAÇÃO LANDSCAPE ========== */
-@media (max-width: 768px) and (orientation: landscape) {
-    .avatar-upload-container {
-        flex-direction: row;
-        justify-content: center;
-        text-align: left;
-    }
-    
-    .avatar-preview-large {
-        margin-right: 1.5rem;
-    }
-    
-    .user-avatar-large {
-        width: 100px;
-        height: 100px;
-    }
-    
-    .avatar-upload-actions {
-        flex-direction: column;
-        width: auto;
-    }
-    
-    /* PREMIUM INFO LANDSCAPE */
-    .premium-status-info {
-        text-align: center;
-    }
-    
-    .plan-status {
-        flex-direction: row;
-        padding: 10px;
-    }
-    
-    /* GALERIA LANDSCAPE */
-    .gallery-grid {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 0.6rem;
-    }
-}
-
-/* ========== ALTA DENSIDADE DE PIXELS ========== */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    .user-avatar-large {
-        border-width: 3px;
-    }
-    
-    .avatar-image,
-    .avatar-image-large {
-        image-rendering: -webkit-optimize-contrast;
-        image-rendering: crisp-edges;
-    }
-    
-    /* PREMIUM BADGE HIGH DPI */
-    .premium-badge.active {
-        box-shadow: 0 2px 12px rgba(255, 215, 0, 0.4);
     }
 }
 
@@ -568,18 +894,24 @@
     .avatar-overlay-large {
         transition: none;
     }
-    
+
     .user-avatar:hover,
     .user-avatar-large:hover {
         transform: none;
     }
-    
+
     .premium-badge,
     .btn-premium {
         transition: none;
     }
-    
+
     .gallery-item {
+        transition: none;
+    }
+
+    .menu-toggle,
+    .menu-close,
+    nav a {
         transition: none;
     }
 }
@@ -589,26 +921,26 @@
     .avatar-upload-container {
         background: var(--card-bg);
     }
-    
+
     /* PREMIUM ELEMENTS DARK MODE */
     .free-limit-warning {
         background: #332701;
         border-color: #665004;
         color: #e6c74d;
     }
-    
+
     .premium-benefit {
         background: linear-gradient(135deg, #1a237e, #283593);
         border-color: #3949ab;
         color: #8c9eff;
     }
-    
+
     .plan-status.premium {
         background: linear-gradient(135deg, #1b5e20, #2e7d32);
         border-color: #4caf50;
         color: #a5d6a7;
     }
-    
+
     .plan-status.free {
         background: #37474f;
         border-color: #546e7a;
@@ -623,136 +955,24 @@
         border-left: 3px solid #ffd700;
         padding-left: 10px;
     }
-    
+
     [data-free-only] {
         border-left: 3px solid #6c757d;
         padding-left: 10px;
     }
-    
+
     /* Melhorar contraste para leitura */
     .free-limit-warning {
         border-left: 4px solid #ffc107;
     }
-    
+
     .premium-benefit {
         border-left: 4px solid #2196f3;
     }
-    
+
     /* Botão de upgrade mais destacado */
     .btn-premium {
         box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
         font-weight: 700;
-    }
-}
-
-/* ========== VERY SMALL SCREENS ========== */
-@media (max-width: 360px) {
-    .premium-badge {
-        font-size: 8px;
-        padding: 2px 6px;
-    }
-    
-    .plan-status {
-        padding: 8px;
-    }
-    
-    .plan-status strong {
-        font-size: 0.9rem;
-    }
-    
-    .upgrade-link {
-        font-size: 0.8rem;
-        padding: 4px 8px;
-    }
-    
-    .free-limit-warning,
-    .premium-benefit {
-        font-size: 0.75rem;
-        padding: 6px;
-    }
-    
-    .avatar-upload-actions .btn {
-        font-size: 0.85rem;
-        padding: 0.8rem 1rem;
-    }
-    
-    /* Avatar muito pequeno */
-    .user-avatar-large {
-        width: 90px;
-        height: 90px;
-        font-size: 1.8rem;
-    }
-    
-    .gallery-grid {
-        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-        gap: 0.5rem;
-    }
-}
-
-/* ========== GARANTIR QUE AVATARS APARECEM NO MOBILE ========== */
-@media (max-width: 768px) {
-    /* Avatar do header sempre visível */
-    .user-avatar {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-    
-    .user-avatar-fallback {
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        width: 100% !important;
-        height: 100% !important;
-    }
-}
-
-/* ========== MODO INVISÍVEL MOBILE ========== */
-@media (max-width: 768px) {
-    .premium-feature-header {
-        flex-direction: column;
-        gap: 1rem;
-        text-align: center;
-    }
-    
-    .premium-feature-status {
-        order: -1;
-    }
-    
-    .upgrade-content {
-        flex-direction: column;
-        text-align: center;
-        gap: 0.8rem;
-    }
-    
-    .premium-feature-container {
-        padding: 1.2rem;
-        margin: 0.5rem 0;
-    }
-    
-    .premium-upgrade-cta {
-        padding: 1.2rem;
-    }
-    
-    .premium-checkbox {
-        padding: 0.8rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .premium-feature-info h4 {
-        font-size: 1.1rem;
-    }
-    
-    .premium-feature-info p {
-        font-size: 0.85rem;
-    }
-    
-    .upgrade-text h4 {
-        font-size: 1rem;
-    }
-    
-    .upgrade-text p {
-        font-size: 0.8rem;
     }
 }
