@@ -530,3 +530,83 @@ document.addEventListener('DOMContentLoaded', function() {
     const nav = document.querySelector('nav');
     
   });
+
+  // Menu Mobile para Busca - CÓDIGO COMPLETO E FUNCIONAL
+document.addEventListener('DOMContentLoaded', function() {
+    const menuToggle = document.querySelector('.menu-toggle');
+    const nav = document.querySelector('nav');
+    const menuClose = document.querySelector('.menu-close');
+    const body = document.body;
+
+    // Função para abrir o menu
+    function openMenu() {
+        nav.classList.add('active');
+        menuToggle.classList.add('active');
+        body.style.overflow = 'hidden'; // Previne scroll do body
+    }
+
+    // Função para fechar o menu
+    function closeMenu() {
+        nav.classList.remove('active');
+        menuToggle.classList.remove('active');
+        body.style.overflow = ''; // Restaura scroll do body
+    }
+
+    // Evento de clique no botão hamburguer
+    if (menuToggle) {
+        menuToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            openMenu();
+        });
+    }
+
+    // Evento de clique no botão fechar (X)
+    if (menuClose) {
+        menuClose.addEventListener('click', function(e) {
+            e.stopPropagation();
+            closeMenu();
+        });
+    }
+
+    // Fechar menu ao clicar em um link
+    const navLinks = document.querySelectorAll('nav a');
+    navLinks.forEach(link => {
+        link.addEventListener('click', closeMenu);
+    });
+
+    // Fechar menu ao clicar fora dele
+    document.addEventListener('click', function(e) {
+        if (nav.classList.contains('active') && 
+            !nav.contains(e.target) && 
+            e.target !== menuToggle) {
+            closeMenu();
+        }
+    });
+
+    // Fechar menu com tecla ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && nav.classList.contains('active')) {
+            closeMenu();
+        }
+    });
+
+    // Prevenir que clique dentro do menu feche ele
+    nav.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+});
+
+// Garantir que o menu funcione mesmo após carregamento dinâmico
+window.addEventListener('load', function() {
+    // Re-inicializa os event listeners se necessário
+    const menuToggle = document.querySelector('.menu-toggle');
+    const menuClose = document.querySelector('.menu-close');
+    
+    if (menuToggle && !menuToggle.hasAttribute('data-listener-added')) {
+        menuToggle.setAttribute('data-listener-added', 'true');
+    }
+    
+    if (menuClose && !menuClose.hasAttribute('data-listener-added')) {
+        menuClose.setAttribute('data-listener-added', 'true');
+    }
+});

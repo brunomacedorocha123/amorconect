@@ -1,66 +1,92 @@
-/* busca-mobile.css - VERSÃO CORRIGIDA E ALINHADA */
+/* busca-mobile.css - VERSÃO CORRIGIDA - HEADER COMPACTO */
 @media (max-width: 768px) {
-    /* ========== HEADER MOBILE ========== */
+    /* ========== HEADER MOBILE COMPACTO ========== */
     .header-content {
-        flex-wrap: wrap;
-        height: auto;
-        padding: 10px 0;
-        gap: 10px;
+        display: flex;
         align-items: center;
         justify-content: space-between;
+        height: 70px;
+        padding: 5px 0;
         position: relative;
+        flex-wrap: nowrap;
+        gap: 10px;
     }
 
-    /* LOGO CENTRALIZADA */
+    /* LOGO COMPACTA */
     .logo {
-        order: 1;
         flex: 0 0 auto;
         display: flex;
-        justify-content: center;
-        width: 100%;
-        margin: 0 auto;
+        justify-content: flex-start;
+        width: auto;
+        margin: 0;
     }
 
     .logo img {
         width: auto;
-        height: 140px;
-        max-height: 150px;
+        height: 50px;
+        max-height: 50px;
         object-fit: contain;
         margin: 0 !important;
         display: block;
     }
 
-    /* MENU HAMBURGUER DOURADO - POSICIONAMENTO CORRETO */
+    /* MENU HAMBURGUER DOURADO - COMPACTADO */
     .menu-toggle {
         display: flex;
-        order: 2;
         flex-direction: column;
         cursor: pointer;
-        padding: 12px;
+        padding: 10px;
         background: transparent;
         border: 2px solid var(--gold);
-        border-radius: 12px;
-        gap: 4px;
+        border-radius: 8px;
+        gap: 3px;
         z-index: 1002;
-        margin-right: 15px;
         transition: var(--transition);
-        box-shadow: 0 4px 12px rgba(198, 166, 100, 0.3);
-        position: absolute;
-        right: 15px;
-        top: 20px;
+        box-shadow: 0 2px 8px rgba(198, 166, 100, 0.3);
+        position: relative;
+        margin-left: auto;
     }
 
     .menu-toggle:hover {
         transform: scale(1.05);
-        box-shadow: 0 6px 18px rgba(198, 166, 100, 0.4);
+        box-shadow: 0 4px 12px rgba(198, 166, 100, 0.4);
     }
 
     .menu-toggle span {
-        width: 25px;
-        height: 3px;
+        width: 22px;
+        height: 2px;
         background: var(--gold);
         transition: var(--transition);
         border-radius: 2px;
+    }
+
+    /* USER MENU COMPACTO */
+    .user-menu {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 0 0 auto;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    #userNickname {
+        display: none; /* Esconde nome em mobile */
+    }
+
+    .premium-badge {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
     }
 
     /* ========== MENU MOBILE HORIZONTAL COMPACTO ========== */
@@ -186,39 +212,6 @@
         color: var(--dark-bg);
     }
 
-    /* BADGE DE NOTIFICAÇÃO */
-    .notification-badge {
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        background: var(--error);
-        color: white;
-        border-radius: 50%;
-        width: 18px;
-        height: 18px;
-        font-size: 0.65rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        border: 2px solid var(--dark-bg);
-    }
-
-    /* USER-MENU ORIGINAL */
-    .user-menu {
-        order: 3;
-        width: 100%;
-        justify-content: center;
-        margin-top: 15px;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .user-info {
-        align-items: center;
-        text-align: center;
-    }
-
     /* ANIMAÇÃO HAMBURGUER */
     .menu-toggle.active span:nth-child(1) {
         transform: rotate(45deg) translate(6px, 6px);
@@ -232,11 +225,6 @@
     .menu-toggle.active span:nth-child(3) {
         transform: rotate(-45deg) translate(6px, -6px);
         background: var(--gold);
-    }
-
-    /* ========== REMOVER BOTÃO BUSCAR ========== */
-    #searchButton {
-        display: none !important;
     }
 
     /* ========== CONTEÚDO PRINCIPAL - CONTAINER ALINHADO ========== */
@@ -734,6 +722,29 @@
 
 /* MOBILE PEQUENO */
 @media (max-width: 480px) {
+    .header-content {
+        height: 60px;
+        padding: 3px 0;
+    }
+
+    .logo img {
+        height: 45px;
+    }
+
+    .menu-toggle {
+        padding: 8px;
+    }
+
+    .menu-toggle span {
+        width: 20px;
+        height: 2px;
+    }
+
+    .user-avatar {
+        width: 35px;
+        height: 35px;
+    }
+
     nav {
         padding: 45px 0.8rem 0.8rem;
     }
@@ -749,12 +760,6 @@
 
     nav a i {
         font-size: 1.3rem;
-    }
-
-    .menu-toggle {
-        padding: 10px;
-        margin-right: 12px;
-        top: 15px;
     }
 
     .page-header h1 {
@@ -798,6 +803,14 @@
 
 /* MOBILE MUITO PEQUENO */
 @media (max-width: 360px) {
+    .header-content {
+        height: 55px;
+    }
+
+    .logo img {
+        height: 40px;
+    }
+
     nav {
         padding: 40px 0.5rem 0.5rem;
     }
