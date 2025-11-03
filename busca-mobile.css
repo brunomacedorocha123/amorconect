@@ -93,7 +93,7 @@
         }
     }
 
-    /* BOTÃO FECHAR DOURADO - APENAS O X PEQUENO DO HTML */
+    /* BOTÃO FECHAR DOURADO - X PEQUENO FUNCIONAL */
     .menu-close {
         position: absolute;
         top: 10px;
@@ -109,7 +109,6 @@
         justify-content: center;
         cursor: pointer;
         z-index: 1003;
-        font-size: 1.3rem;
         font-weight: bold;
         transition: var(--transition);
     }
@@ -670,7 +669,6 @@
         right: 8px;
         width: 32px;
         height: 32px;
-        font-size: 1rem;
     }
 
     .menu-toggle {
