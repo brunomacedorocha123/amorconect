@@ -63,7 +63,7 @@
         border-radius: 2px;
     }
 
-    /* ========== MENU MOBILE HORIZONTAL COMPACTO - IDÊNTICO ========== */
+    /* ========== MENU MOBILE HORIZONTAL COMPACTO ========== */
     nav {
         display: none;
         position: fixed;
@@ -119,7 +119,7 @@
         transform: scale(1.1);
     }
 
-    /* LINHA DOS 5 BOTÕES MAIS ABAIXO - IDÊNTICO */
+    /* LINHA DOS 5 BOTÕES MAIS ABAIXO - APENAS ÍCONES */
     nav ul {
         display: flex;
         justify-content: space-between;
@@ -137,7 +137,7 @@
         text-align: center;
     }
 
-    /* BOTÕES CIRCULARES DOURADOS - IDÊNTICO */
+    /* BOTÕES CIRCULARES DOURADOS - APENAS ÍCONES */
     nav a {
         display: flex;
         flex-direction: column;
@@ -163,7 +163,7 @@
         box-shadow: 0 4px 12px rgba(198, 166, 100, 0.3);
     }
 
-    /* ÍCONES DOURADOS MAIORES - IDÊNTICO */
+    /* ÍCONES DOURADOS MAIORES - MANTIDOS */
     nav a i {
         font-size: 1.4rem;
         color: var(--gold);
@@ -172,6 +172,11 @@
 
     nav a:hover i {
         color: var(--dark-bg);
+    }
+
+    /* REMOVER TEXTOS DO MENU - APENAS ÍCONES */
+    nav a span {
+        display: none !important;
     }
 
     /* USER-MENU - AJUSTADO */
@@ -238,12 +243,12 @@
         gap: 1.5rem;
     }
 
-    /* FILTROS - ACORDEÃO/MODAL */
+    /* FILTROS - COM MARGENS CORRIGIDAS */
     .filters-sidebar {
         background: var(--card-bg);
         border-radius: 15px;
         padding: 1.5rem;
-        margin-bottom: 1rem;
+        margin: 0 0.5rem 1rem 0.5rem;
         border: 1px solid var(--gold);
     }
 
@@ -259,7 +264,7 @@
         color: var(--gold);
     }
 
-    /* GRUPOS DE FILTROS COM ACORDEÃO */
+    /* GRUPOS DE FILTROS COM MARGENS CORRIGIDAS */
     .filter-group {
         margin-bottom: 1.5rem;
         border-bottom: 1px solid var(--section-bg);
@@ -280,9 +285,10 @@
         gap: 0.5rem;
     }
 
-    /* FORMULÁRIOS MOBILE */
+    /* FORMULÁRIOS MOBILE COM ALINHAMENTO CORRIGIDO */
     .form-group {
         margin-bottom: 1rem;
+        padding: 0 0.3rem;
     }
 
     .form-control {
@@ -291,27 +297,30 @@
         font-size: 1rem;
     }
 
-    /* CHECKBOX MOBILE */
+    /* CHECKBOX MOBILE COM ALINHAMENTO CORRIGIDO */
     .checkbox-label {
-        padding: 0.8rem;
+        padding: 0.8rem 0.3rem;
         font-size: 0.9rem;
     }
 
-    /* BOTÕES MOBILE */
+    /* BOTÕES MOBILE COM MARGENS CORRIGIDAS */
     .btn {
         padding: 0.8rem 1.5rem;
         font-size: 0.95rem;
+        margin: 0 0.3rem;
     }
 
     .btn-block {
-        width: 100%;
+        width: calc(100% - 0.6rem);
+        margin: 0 0.3rem;
     }
 
-    /* SEÇÃO DE RESULTADOS */
+    /* SEÇÃO DE RESULTADOS COM MARGENS CORRIGIDAS */
     .results-section {
         background: var(--card-bg);
         border-radius: 15px;
         padding: 1.5rem;
+        margin: 0 0.5rem;
         border: 1px solid var(--gold);
     }
 
@@ -333,20 +342,22 @@
         color: var(--beige);
     }
 
-    /* GRID DE RESULTADOS - 1 COLUNA */
+    /* GRID DE RESULTADOS - 1 COLUNA COM MARGENS CORRIGIDAS */
     .results-grid {
         display: flex;
         flex-direction: column;
         gap: 1rem;
+        padding: 0 0.3rem;
     }
 
-    /* CARDS DE PERFIL MOBILE */
+    /* CARDS DE PERFIL MOBILE COM ALINHAMENTO CORRIGIDO */
     .profile-card {
         background: var(--section-bg);
         border-radius: 12px;
         padding: 1.2rem;
         border: 2px solid transparent;
         transition: var(--transition);
+        margin: 0 0.2rem;
     }
 
     .profile-card:hover {
@@ -421,6 +432,7 @@
     .profile-actions {
         display: flex;
         gap: 0.5rem;
+        padding: 0 0.2rem;
     }
 
     .btn-profile {
@@ -429,10 +441,11 @@
         font-size: 0.85rem;
     }
 
-    /* ESTADOS VAZIOS */
+    /* ESTADOS VAZIOS COM MARGENS CORRIGIDAS */
     .empty-state {
         padding: 2rem 1rem;
         text-align: center;
+        margin: 0 0.5rem;
     }
 
     .empty-state i {
@@ -485,6 +498,7 @@
 
     .page-header {
         padding: 1.2rem 0.8rem;
+        margin: 0 0.5rem 1.5rem 0.5rem;
     }
 
     .page-header h1 {
@@ -494,10 +508,12 @@
     .filters-sidebar,
     .results-section {
         padding: 1.2rem;
+        margin: 0 0.5rem 1rem 0.5rem;
     }
 
     .profile-card {
         padding: 1rem;
+        margin: 0 0.3rem;
     }
 
     .profile-avatar {
@@ -508,6 +524,15 @@
 
     .profile-name h4 {
         font-size: 1rem;
+    }
+
+    .profile-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .btn-profile {
+        width: 100%;
     }
 }
 
@@ -542,12 +567,15 @@
         height: 30px;
     }
 
-    .profile-actions {
-        flex-direction: column;
+    .filters-sidebar,
+    .results-section {
+        margin: 0 0.3rem 1rem 0.3rem;
+        padding: 1rem;
     }
 
-    .btn-profile {
-        width: 100%;
+    .profile-card {
+        margin: 0 0.2rem;
+        padding: 0.8rem;
     }
 }
 
@@ -577,10 +605,12 @@
 
     .filters-sidebar {
         padding: 1rem;
+        margin: 0 0.5rem 0.5rem 0.5rem;
     }
 
     .results-section {
         padding: 1rem;
+        margin: 0 0.5rem;
     }
 }
 
