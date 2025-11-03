@@ -11,40 +11,53 @@
 </head>
 <body>
     <!-- Header -->
-   <header>
-    <div class="container">
-        <div class="header-content">
-            <div class="logo">
-                <img src="logopulselove.png" alt="Amor Conect">
-            </div>
-            
-            <!-- MENU MOBILE (SÓ ÍCONES) -->
-<nav>
-    <ul>
-        <li><a href="home.html" title="Início"><i class="fas fa-home"></i><span>Início</span></a></li>
-        <li><a href="mensagens.html" title="Mensagens"><i class="fas fa-envelope"></i><span>Mensagens</span></a></li>
-        <li><a href="perfil.html" title="Perfil"><i class="fas fa-user"></i><span>Perfil</span></a></li>
-        <li><a href="bloqueados.html" title="Bloqueados"><i class="fas fa-shield-alt"></i><span>Bloqueados</span></a></li>
-        <li><a href="notificacoes.html" title="Notificações"><i class="fas fa-bell"></i><span>Notificações</span></a></li>
-    </ul>
-</nav>
-            
-            <!-- USER MENU (ORIGINAL) -->
-            <div class="user-menu">
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <div class="user-avatar-fallback">U</div>
-                        <img class="avatar-image" style="display: none;" alt="Avatar do usuário">
-                    </div>
-                    <span id="userNickname">Usuário</span>
-                    <div id="premiumBadge" class="premium-badge free">
-                        <i class="fas fa-user"></i> Free
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="logopulselove.png" alt="Amor Conect">
+                </div>
+                
+                <!-- MENU HAMBURGUER MOBILE -->
+                <button class="menu-toggle" id="menuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+
+                <!-- BOTÃO FECHAR MENU -->
+                <button class="menu-close" id="menuClose" style="display: none;">
+                    <i class="fas fa-times"></i>
+                </button>
+                
+                <!-- MENU MOBILE (SÓ ÍCONES) -->
+                <nav>
+                    <ul>
+                        <li><a href="home.html" title="Início"><i class="fas fa-home"></i><span>Início</span></a></li>
+                        <li><a href="mensagens.html" title="Mensagens"><i class="fas fa-envelope"></i><span>Mensagens</span></a></li>
+                        <li><a href="perfil.html" title="Perfil"><i class="fas fa-user"></i><span>Perfil</span></a></li>
+                        <li><a href="bloqueados.html" title="Bloqueados"><i class="fas fa-shield-alt"></i><span>Bloqueados</span></a></li>
+                        <li><a href="notificacoes.html" title="Notificações"><i class="fas fa-bell"></i><span>Notificações</span></a></li>
+                    </ul>
+                </nav>
+                
+                <!-- USER MENU (ORIGINAL) -->
+                <div class="user-menu">
+                    <div class="user-info">
+                        <div class="user-avatar" onclick="window.location.href='perfil.html'">
+                            <div class="user-avatar-fallback">U</div>
+                            <img class="avatar-image" style="display: none;" alt="Avatar do usuário">
+                        </div>
+                        <span id="userNickname">Usuário</span>
+                        <div id="premiumBadge" class="premium-badge free">
+                            <i class="fas fa-user"></i> Free
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</header>
+    </header>
+
     <!-- Main Content -->
     <main class="main-content">
         <div class="container">
@@ -60,7 +73,7 @@
                 <aside class="filters-sidebar">
                     <div class="filters-header">
                         <h3><i class="fas fa-filter"></i> Filtros</h3>
-                        <button class="btn btn-outline btn-sm" id="clearFilters">
+                        <button class="btn btn-outline btn-sm" id="clearFilters" type="button">
                             <i class="fas fa-times"></i> Limpar
                         </button>
                     </div>
@@ -332,5 +345,73 @@
     <script src="auth-vibe.js"></script>
     <script src="premium-check.js"></script>
     <script src="busca.js"></script>
+    
+    <!-- Script do Menu Mobile -->
+    <script>
+        // Menu Mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menuToggle');
+            const menuClose = document.getElementById('menuClose');
+            const nav = document.querySelector('nav');
+            
+            if (menuToggle && nav) {
+                menuToggle.addEventListener('click', function() {
+                    nav.classList.add('active');
+                    menuClose.style.display = 'flex';
+                    menuToggle.style.display = 'none';
+                });
+            }
+            
+            if (menuClose && nav) {
+                menuClose.addEventListener('click', function() {
+                    nav.classList.remove('active');
+                    menuClose.style.display = 'none';
+                    menuToggle.style.display = 'flex';
+                });
+            }
+            
+            // Fechar menu ao clicar em um link
+            const navLinks = document.querySelectorAll('nav a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    nav.classList.remove('active');
+                    menuClose.style.display = 'none';
+                    menuToggle.style.display = 'flex';
+                });
+            });
+
+            // Redirecionamento correto para o perfil do usuário atual
+            const userAvatar = document.querySelector('.user-avatar');
+            if (userAvatar) {
+                userAvatar.addEventListener('click', function() {
+                    window.location.href = 'perfil.html';
+                });
+            }
+
+            // Adicionar cursor pointer para indicar que é clicável
+            const userAvatarElements = document.querySelectorAll('.user-avatar, .user-info');
+            userAvatarElements.forEach(element => {
+                element.style.cursor = 'pointer';
+            });
+        });
+
+        // Função global para visualizar perfil (corrigida)
+        function viewUserProfile(userId) {
+            if (!userId) {
+                console.error('ID do usuário não fornecido');
+                return;
+            }
+            window.location.href = `perfil.html?id=${userId}`;
+        }
+
+        // Função global para enviar mensagem
+        function sendMessageToUser(userId) {
+            if (!userId) {
+                console.error('ID do usuário não fornecido');
+                return;
+            }
+            window.location.href = `mensagens.html?user=${userId}`;
+        }
+    </script>
 </body>
 </html>

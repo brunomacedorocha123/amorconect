@@ -1,4 +1,4 @@
-// busca.js - Sistema completo de busca
+// busca.js - Sistema completo de busca (VERSÃO CORRIGIDA - APENAS FUNÇÕES DE CLIQUE)
 const SearchManager = {
     currentUser: null,
     currentFilters: {},
@@ -365,7 +365,7 @@ const SearchManager = {
         const hasPhoto = !!profile.avatar_url;
 
         return `
-            <div class="profile-card ${isOnline ? 'online' : ''}" onclick="SearchManager.viewProfile('${profile.id}')">
+            <div class="profile-card ${isOnline ? 'online' : ''}" onclick="viewUserProfile('${profile.id}')">
                 <div class="profile-header">
                     <div class="profile-avatar">
                         ${hasPhoto ? 
@@ -417,10 +417,10 @@ const SearchManager = {
                 ` : ''}
 
                 <div class="profile-actions">
-                    <button class="btn btn-secondary btn-profile" onclick="event.stopPropagation(); SearchManager.sendMessage('${profile.id}')">
+                    <button class="btn btn-secondary btn-profile" onclick="event.stopPropagation(); sendMessageToUser('${profile.id}')">
                         <i class="fas fa-paper-plane"></i> Mensagem
                     </button>
-                    <button class="btn btn-primary btn-profile" onclick="event.stopPropagation(); SearchManager.viewProfile('${profile.id}')">
+                    <button class="btn btn-primary btn-profile" onclick="event.stopPropagation(); viewUserProfile('${profile.id}')">
                         <i class="fas fa-eye"></i> Ver Perfil
                     </button>
                 </div>
@@ -473,14 +473,6 @@ const SearchManager = {
         }
     },
 
-    viewProfile(userId) {
-        window.location.href = `perfil.html?id=${userId}`;
-    },
-
-    sendMessage(userId) {
-        window.location.href = `mensagens.html?user=${userId}`;
-    },
-
     showNotification(message, type = 'info') {
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
@@ -512,6 +504,23 @@ const SearchManager = {
     }
 };
 
+// Funções globais para navegação (CORRIGIDAS)
+function viewUserProfile(userId) {
+    if (!userId) {
+        console.error('ID do usuário não fornecido');
+        return;
+    }
+    window.location.href = `perfil.html?id=${userId}`;
+}
+
+function sendMessageToUser(userId) {
+    if (!userId) {
+        console.error('ID do usuário não fornecido');
+        return;
+    }
+    window.location.href = `mensagens.html?user=${userId}`;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     SearchManager.initialize();
 });
@@ -523,4 +532,3 @@ supabase.auth.onAuthStateChange((event, session) => {
 });
 
 window.SearchManager = SearchManager;
-
