@@ -487,7 +487,6 @@ const SearchManager = {
         notification.innerHTML = `
             <div class="notification-content">
                 <span class="notification-message">${message}</span>
-                <button class="notification-close">×</button>
             </div>
         `;
 
@@ -506,8 +505,6 @@ const SearchManager = {
         `;
 
         document.body.appendChild(notification);
-
-        notification.querySelector('.notification-close').onclick = () => notification.remove();
 
         setTimeout(() => {
             if (notification.parentElement) notification.remove();
