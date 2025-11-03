@@ -796,16 +796,13 @@
     }
 }
 
-/* ========== TESTE: REMOVER TODOS OS BOTÕES DO HEADER ========== */
-header button:not(.menu-toggle) {
+/* ========== REMOVER PSEUDO-ELEMENTOS ========== */
+header::before,
+header::after,
+.header-content::before,
+.header-content::after,
+nav::before,
+nav::after {
+    content: none !important;
     display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-}
-
-/* ========== E DEPOIS RESTAURAR SÓ O menu-close DENTRO DO NAV ========== */
-nav .menu-close {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
 }
