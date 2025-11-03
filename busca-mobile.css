@@ -796,19 +796,16 @@
     }
 }
 
-/* BOTÃO FECHAR DOURADO - X PEQUENO FUNCIONAL */
-.menu-close {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    /* ... resto do estilo ... */
+/* ========== TESTE: REMOVER TODOS OS BOTÕES DO HEADER ========== */
+header button:not(.menu-toggle) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
 }
 
-/* ========== REMOVER X DUPLICADO ========== */
-header .menu-close:not(nav .menu-close) {
-    display: none !important;
-}
-
-.menu-close ~ .menu-close {
-    display: none !important;
+/* ========== E DEPOIS RESTAURAR SÓ O menu-close DENTRO DO NAV ========== */
+nav .menu-close {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
