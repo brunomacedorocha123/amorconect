@@ -510,7 +510,7 @@ function viewUserProfile(userId) {
         console.error('ID do usuário não fornecido');
         return;
     }
-    window.location.href = `perfil.html?id=${userId}`;
+    window.location.href = `painel.html?id=${userId}`;
 }
 
 function sendMessageToUser(userId) {
