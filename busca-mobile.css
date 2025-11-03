@@ -93,7 +93,7 @@
         }
     }
 
-    /* BOTÃO FECHAR DOURADO - SEM X DUPLICADO */
+    /* BOTÃO FECHAR DOURADO - APENAS O X PEQUENO DO HTML */
     .menu-close {
         position: absolute;
         top: 10px;
