@@ -527,8 +527,18 @@ window.SearchManager = SearchManager;
 // Menu Mobile para Busca
 document.addEventListener('DOMContentLoaded', function() {
     const menuToggle = document.querySelector('.menu-toggle');
-    const menuClose = document.querySelector('.menu-close');
     const nav = document.querySelector('nav');
+    
+    // Remover X duplicados - manter apenas o primeiro
+    const allMenuCloses = document.querySelectorAll('.menu-close');
+    allMenuCloses.forEach((closeBtn, index) => {
+        if (index > 0) {
+            closeBtn.remove();
+        }
+    });
+    
+    // Configurar menu com o X que sobrou
+    const menuClose = document.querySelector('.menu-close');
     
     if (menuToggle && nav) {
         menuToggle.addEventListener('click', function() {
