@@ -796,22 +796,19 @@
     }
 }
 
-/* ========== CAÇAR O X GRANDE ========== */
-/* Colorir TODOS os elementos do header para encontrar o X grande */
-header * {
-    border: 2px solid blue !important;
+/* ========== REMOVER X GRANDE ========== */
+/* Encontrar e remover o botão duplicado */
+header button.menu-close:not(nav .menu-close),
+header button:not(.menu-toggle):not(.btn):not(nav .menu-close) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
 
-/* Colorir especificamente botões */
-header button {
-    background: purple !important;
-}
-
-/* Colorir pseudo-elementos */
-header::before,
-header::after,
-.header-content::before, 
-.header-content::after {
-    background: pink !important;
-    content: "X" !important;
+/* Garantir que só o menu-close dentro do nav fique visível */
+nav .menu-close {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
