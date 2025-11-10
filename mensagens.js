@@ -1,4 +1,3 @@
-// mensagens.js - Sistema completo de mensagens com BLOQUEIO Vibe Exclusive
 class MessagesSystem {
   constructor() {
     this.supabase = supabase;
@@ -10,6 +9,7 @@ class MessagesSystem {
     this.isLoading = false;
     
     this.statusSystem = null;
+    this.isMobileMenuOpen = false; // ⭐ NOVO: Controle do menu mobile
     
     this.initialize();
   }
@@ -29,6 +29,7 @@ class MessagesSystem {
       await this.initializeStatusSystem();
       await this.loadConversations();
       this.setupEventListeners();
+      this.setupMobileMenu(); // ⭐ NOVO: Inicializar menu mobile
       this.updateMessageCounter();
       this.startPeriodicChecks();
       this.checkUrlParams();
@@ -38,7 +39,102 @@ class MessagesSystem {
     }
   }
 
-  async checkActiveAgreement() {
+  // ⭐⭐ NOVO: CONFIGURAÇÃO COMPLETA DO MENU HAMBURGER
+  setupMobileMenu() {
+    const menuToggle = document.querySelector('.menu-toggle');
+    const nav = document.querySelector('nav');
+    const menuClose = document.querySelector('.menu-close');
+    const navLinks = document.querySelectorAll('nav a');
+    
+    if (!menuToggle || !nav) {
+      console.log('Elementos do menu não encontrados');
+      return;
+    }
+
+    // Abrir menu
+    menuToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.openMobileMenu();
+    });
+    
+    // Fechar menu
+    if (menuClose) {
+      menuClose.addEventListener('click', () => {
+        this.closeMobileMenu();
+      });
+    }
+    
+    // Fechar menu ao clicar nos links
+    navLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        this.closeMobileMenu();
+      });
+    });
+    
+    // Fechar menu ao clicar fora
+    document.addEventListener('click', (e) => {
+      if (this.isMobileMenuOpen && !nav.contains(e.target) && !menuToggle.contains(e.target)) {
+        this.closeMobileMenu();
+      }
+    });
+    
+    // Fechar com ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.isMobileMenuOpen) {
+        this.closeMobileMenu();
+      }
+    });
+  }
+
+  // ⭐⭐ NOVO: ABRIR MENU MOBILE
+  openMobileMenu() {
+    const nav = document.querySelector('nav');
+    const menuToggle = document.querySelector('.menu-toggle');
+    
+    if (!nav || !menuToggle) return;
+    
+    nav.classList.add('active');
+    menuToggle.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    this.isMobileMenuOpen = true;
+    
+    // Animações suaves
+    setTimeout(() => {
+      nav.style.transform = 'translateY(0)';
+      nav.style.opacity = '1';
+    }, 10);
+  }
+
+  // ⭐⭐ NOVO: FECHAR MENU MOBILE
+  closeMobileMenu() {
+    const nav = document.querySelector('nav');
+    const menuToggle = document.querySelector('.menu-toggle');
+    
+    if (!nav || !menuToggle) return;
+    
+    nav.classList.remove('active');
+    menuToggle.classList.remove('active');
+    document.body.style.overflow = '';
+    this.isMobileMenuOpen = false;
+    
+    // Resetar estilos
+    setTimeout(() => {
+      nav.style.transform = '';
+      nav.style.opacity = '';
+    }, 300);
+  }
+
+  // ⭐⭐ NOVO: TOGGLE MENU (opcional)
+  toggleMobileMenu() {
+    if (this.isMobileMenuOpen) {
+      this.closeMobileMenu();
+    } else {
+      this.openMobileMenu();
+    }
+  }
+
+  // CONTINUA... (seu código original abaixo)
+    async checkActiveAgreement() {
     try {
       const { data: agreement, error } = await this.supabase
         .rpc('check_active_fidelity_agreement', {
@@ -332,8 +428,7 @@ class MessagesSystem {
       this.showError('conversationsList', 'Erro ao carregar conversas');
     }
   }
-
-  renderConversations() {
+    renderConversations() {
     const container = document.getElementById('conversationsList');
     if (!container) return;
     
@@ -587,7 +682,8 @@ class MessagesSystem {
     if (emptyChat) emptyChat.style.display = 'none';
     if (chatHeader) chatHeader.style.display = 'flex';
   }
-    async updateChatHeader(otherUserId) {
+
+      async updateChatHeader(otherUserId) {
     const chatHeader = document.getElementById('chatHeader');
     if (!chatHeader) return;
     
@@ -896,7 +992,7 @@ class MessagesSystem {
     }
   }
 
-  async sendMessageFallback(message) {
+    async sendMessageFallback(message) {
     try {
       const { data, error } = await this.supabase
         .from('messages')
@@ -1201,7 +1297,7 @@ class MessagesSystem {
     }
   }
 
-  startPeriodicChecks() {
+    startPeriodicChecks() {
     setInterval(async () => {
       // ⭐⭐ VERIFICAÇÃO CONTÍNUA - BLOQUEIO VIBE EXCLUSIVE
       const hasActiveAgreement = await this.checkActiveAgreement();
@@ -1354,6 +1450,20 @@ window.selectConversation = function(userId) {
 window.sendMessage = function() {
   if (window.MessagesSystem) {
     window.MessagesSystem.sendMessage();
+  }
+};
+
+// ⭐⭐ NOVO: FUNÇÃO GLOBAL PARA TOGGLE DO MENU HAMBURGER
+window.toggleMobileMenu = function() {
+  if (window.MessagesSystem) {
+    window.MessagesSystem.toggleMobileMenu();
+  }
+};
+
+// ⭐⭐ NOVO: FUNÇÃO GLOBAL PARA FECHAR MENU MOBILE
+window.closeMobileMenu = function() {
+  if (window.MessagesSystem) {
+    window.MessagesSystem.closeMobileMenu();
   }
 };
 
