@@ -1490,6 +1490,8 @@ footer {
     padding: 1rem !important;
 }
 
+/* ==================== STICKERS CSS - COMPLETO ==================== */
+
 /* STICKERS NO CHAT */
 .message.sticker-message .message-content {
     background: transparent !important;
@@ -1515,4 +1517,200 @@ footer {
     font-size: 0.8rem;
     color: #999;
     font-style: italic;
+}
+
+/* ========== MODAL DE STICKERS (FALTANDO NO SEU CSS) ========== */
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: var(--bg-primary, #1a1a1a);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    max-width: 90%;
+    max-height: 90%;
+    overflow: hidden;
+}
+
+.stickers-modal {
+    max-width: 500px;
+    background: var(--bg-primary, #1a1a1a);
+    border: 1px solid var(--border-color, #333);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color, #333);
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--text-primary, #fff);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary, #999);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.modal-close:hover {
+    background: var(--bg-hover, #333);
+}
+
+.modal-body {
+    padding: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color, #333);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Stickers Grid */
+.stickers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 1rem;
+    padding: 0.5rem;
+}
+
+.sticker-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    border: 1px solid transparent;
+}
+
+.sticker-item:hover {
+    background: var(--bg-hover, #2a2a2a);
+    border-color: var(--primary-color, #ff6b6b);
+    transform: scale(1.05);
+}
+
+.sticker-video-container {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #000;
+}
+
+.sticker-video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+}
+
+.sticker-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    border-radius: 8px;
+}
+
+.sticker-item:hover .sticker-overlay {
+    opacity: 1;
+}
+
+.sticker-overlay i {
+    color: white;
+    font-size: 1.5rem;
+}
+
+.sticker-name {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-primary, #fff);
+    text-align: center;
+    font-weight: 500;
+}
+
+/* Categorias */
+.stickers-categories {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color, #333);
+    flex-wrap: wrap;
+}
+
+.category-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color, #333);
+    border-radius: 20px;
+    background: transparent;
+    color: var(--text-primary, #fff);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+}
+
+.category-btn.active {
+    background: var(--primary-color, #ff6b6b);
+    border-color: var(--primary-color, #ff6b6b);
+    color: white;
+}
+
+.category-btn:hover:not(.active) {
+    background: var(--bg-hover, #2a2a2a);
+}
+
+/* Info do Sticker */
+.sticker-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: var(--bg-secondary, #2a2a2a);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #999);
 }
