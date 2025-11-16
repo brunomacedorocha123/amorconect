@@ -1,4 +1,4 @@
-// mensagens-temporeal.js - SISTEMA INTELIGENTE SEM PISCAR
+// mensagens-temporeal.js - SISTEMA CORRIGIDO COM SUPORTE A STICKERS
 class RealTimeMessages {
     constructor(messagesSystem) {
         this.messagesSystem = messagesSystem;
@@ -6,11 +6,11 @@ class RealTimeMessages {
         this.currentUser = messagesSystem.currentUser;
         
         // Sistema de debounce e controle
-        this.updateQueue = new Map(); // Filas por conversa
+        this.updateQueue = new Map();
         this.isUpdating = false;
         this.lastUpdateTime = 0;
-        this.updateDelay = 2000; // 2 segundos entre updates
-        this.batchDelay = 500; // 500ms para agrupar updates
+        this.updateDelay = 2000;
+        this.batchDelay = 500;
         
         // Cache para evitar updates desnecessários
         this.lastMessageCounts = new Map();
@@ -26,9 +26,9 @@ class RealTimeMessages {
         this.setupConnectionMonitor();
     }
 
-    // 🎯 LISTENERS INTELIGENTES - Só capturam, não atualizam diretamente
+    // 🎯 LISTENERS INTELIGENTES COM SUPORTE A STICKERS
     setupRealTimeListeners() {
-        // Listener para novas mensagens
+        // Listener para novas mensagens (incluindo stickers)
         this.supabase
             .channel('smart_messages')
             .on(
@@ -42,6 +42,19 @@ class RealTimeMessages {
                 (payload) => {
                     console.log('📨 Nova mensagem detectada:', payload.new);
                     this.queueUpdate('new_message', payload.new);
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'sticker_messages',
+                    filter: `receiver_id=eq.${this.currentUser.id}`
+                },
+                (payload) => {
+                    console.log('🎨 Nova mensagem de sticker detectada:', payload.new);
+                    this.queueUpdate('new_sticker', payload.new);
                 }
             )
             .on(
@@ -78,7 +91,6 @@ class RealTimeMessages {
         const conversationId = this.getConversationIdFromData(type, data);
         if (!conversationId) return;
 
-        // Criar/atualizar fila para esta conversa
         if (!this.updateQueue.has(conversationId)) {
             this.updateQueue.set(conversationId, {
                 types: new Set(),
@@ -94,7 +106,6 @@ class RealTimeMessages {
 
         console.log(`📦 Update enfileirado para conversa ${conversationId}:`, Array.from(queue.types));
 
-        // Agendar processamento com debounce
         this.scheduleProcessing();
     }
 
@@ -103,8 +114,10 @@ class RealTimeMessages {
             case 'new_message':
             case 'message_update':
                 return data.sender_id === this.currentUser.id ? data.receiver_id : data.sender_id;
+            case 'new_sticker':
+                return data.sender_id === this.currentUser.id ? data.receiver_id : data.sender_id;
             case 'status_update':
-                return data.id; // ID do usuário cujo status mudou
+                return data.id;
             default:
                 return null;
         }
@@ -115,13 +128,11 @@ class RealTimeMessages {
         const now = Date.now();
         const timeSinceLastUpdate = now - this.lastUpdateTime;
 
-        // Se já passou tempo suficiente, processar imediatamente
         if (timeSinceLastUpdate > this.updateDelay && !this.isUpdating) {
             this.processQueue();
             return;
         }
 
-        // Caso contrário, agendar com debounce
         if (this.processTimeout) clearTimeout(this.processTimeout);
         
         this.processTimeout = setTimeout(() => {
@@ -152,7 +163,6 @@ class RealTimeMessages {
         } finally {
             this.isUpdating = false;
             
-            // Verificar se chegaram mais updates durante o processamento
             if (this.updateQueue.size > 0) {
                 setTimeout(() => this.processQueue(), this.batchDelay);
             }
@@ -166,23 +176,30 @@ class RealTimeMessages {
 
         console.log(`🎯 Atualizando conversa ${conversationId} (tipos: ${types.join(', ')})`);
 
-        // 🎯 ATUALIZAR LISTA DE CONVERSAS (se necessário)
-        if (types.includes('new_message') || types.includes('message_update')) {
+        // 🎯 ATUALIZAR LISTA DE CONVERSAS
+        if (types.includes('new_message') || types.includes('new_sticker') || types.includes('message_update')) {
             await this.updateConversationItem(conversationId);
         }
 
         // 🎯 ATUALIZAR MENSAGENS (apenas se for conversa atual)
-        if (isCurrentConversation && (types.includes('new_message') || types.includes('message_update'))) {
-            await this.updateMessagesSmart(conversationId);
+        if (isCurrentConversation) {
+            if (types.includes('new_message') || types.includes('message_update')) {
+                await this.updateMessagesSmart(conversationId);
+            }
+            
+            // 🎯 NOVO: PROCESSAR STICKERS
+            if (types.includes('new_sticker')) {
+                await this.processStickerMessages(queue.data);
+            }
         }
 
-        // 🎯 ATUALIZAR STATUS (se houver mudança de status)
+        // 🎯 ATUALIZAR STATUS
         if (types.includes('status_update')) {
             await this.updateUserStatus(conversationId);
         }
 
-        // 🎯 NOTIFICAÇÃO (apenas se não for conversa atual)
-        if (types.includes('new_message') && !isCurrentConversation) {
+        // 🎯 NOTIFICAÇÃO
+        if ((types.includes('new_message') || types.includes('new_sticker')) && !isCurrentConversation) {
             this.showSmartNotification(queue.data[0]);
         }
 
@@ -190,121 +207,55 @@ class RealTimeMessages {
         await this.messagesSystem.updateMessageCounter();
     }
 
-    // 🎯 ATUALIZAÇÃO ESPECÍFICA DA CONVERSA (SEM RECARREGAR TUDO)
-    async updateConversationItem(conversationId) {
-        try {
-            // Buscar dados atualizados apenas desta conversa
-            const { data: conversation, error } = await this.supabase
-                .rpc('get_conversation_data', {
-                    p_user_id: this.currentUser.id,
-                    p_other_user_id: conversationId
-                });
-
-            if (error || !conversation) return;
-
-            // Atualizar item específico na lista
-            const conversationElement = document.querySelector(`[data-user-id="${conversationId}"]`);
-            if (conversationElement) {
-                this.updateConversationElement(conversationElement, conversation);
-            } else {
-                // Se não existe na lista, recarregar lista completa (raro)
-                await this.messagesSystem.loadConversations();
-            }
-
-        } catch (error) {
-            console.error('Erro ao atualizar item da conversa:', error);
-        }
-    }
-
-    // 🎯 ATUALIZAR ELEMENTO DA CONVERSA (SEM RE-RENDER)
-    updateConversationElement(element, conversation) {
-        // Atualizar apenas os elementos que mudaram
-        const lastMessageEl = element.querySelector('.conversation-last-message');
-        const timeEl = element.querySelector('.conversation-time');
-        const unreadEl = element.querySelector('.conversation-unread');
-
-        if (lastMessageEl) {
-            lastMessageEl.textContent = this.messagesSystem.escapeHtml(
-                conversation.last_message || 'Nenhuma mensagem'
-            );
-        }
-
-        if (timeEl) {
-            timeEl.textContent = this.messagesSystem.formatTime(conversation.last_message_at);
-        }
-
-        if (unreadEl && conversation.unread_count > 0) {
-            unreadEl.textContent = conversation.unread_count;
-            unreadEl.style.display = 'inline-block';
-        } else if (unreadEl) {
-            unreadEl.style.display = 'none';
-        }
-    }
-
-    // 🎯 ATUALIZAÇÃO INTELIGENTE DE MENSAGENS
-    async updateMessagesSmart(conversationId) {
-        try {
-            // Buscar apenas mensagens novas (últimos 30 segundos)
-            const timeThreshold = new Date(Date.now() - 30000).toISOString();
-            
-            const { data: newMessages, error } = await this.supabase
-                .from('messages')
-                .select(`
-                    id,
-                    sender_id,
-                    receiver_id,
-                    message,
-                    sent_at,
-                    read_at,
-                    sender:profiles!messages_sender_id_fkey(nickname)
-                `)
-                .or(`and(sender_id.eq.${this.currentUser.id},receiver_id.eq.${conversationId}),and(sender_id.eq.${conversationId},receiver_id.eq.${this.currentUser.id})`)
-                .gte('sent_at', timeThreshold)
-                .order('sent_at', { ascending: true });
-
-            if (error || !newMessages || newMessages.length === 0) return;
-
-            // Adicionar novas mensagens sem recarregar tudo
-            this.appendNewMessages(newMessages);
-
-        } catch (error) {
-            console.error('Erro ao atualizar mensagens:', error);
-            // Fallback: recarregar apenas esta conversa
-            await this.messagesSystem.loadConversationMessages(conversationId);
-        }
-    }
-
-    // 🎯 ADICIONAR NOVAS MENSAGENS (SEM PISCAR)
-    appendNewMessages(newMessages) {
+    // 🎯 NOVA FUNÇÃO: PROCESSAR MENSAGENS DE STICKER
+    async processStickerMessages(stickerMessages) {
+        console.log('🎨 Processando mensagens de sticker:', stickerMessages);
+        
         const container = document.getElementById('messagesHistory');
         if (!container) return;
 
-        const existingIds = new Set();
-        container.querySelectorAll('.message').forEach(msg => {
-            const id = msg.dataset.messageId;
-            if (id) existingIds.add(id);
-        });
+        for (const stickerMsg of stickerMessages) {
+            // Buscar dados completos do sticker
+            const { data: stickerData, error } = await this.supabase
+                .from('sticker_messages')
+                .select(`
+                    *,
+                    sticker:stickers(*)
+                `)
+                .eq('id', stickerMsg.id)
+                .single();
 
-        let addedCount = 0;
-        newMessages.forEach(msg => {
-            if (!existingIds.has(msg.id.toString())) {
-                this.appendMessageElement(container, msg);
-                addedCount++;
+            if (error || !stickerData) {
+                console.error('❌ Erro ao buscar dados do sticker:', error);
+                continue;
             }
-        });
 
-        if (addedCount > 0) {
-            console.log(`✅ ${addedCount} nova(s) mensagem(ns) adicionada(s)`);
-            this.messagesSystem.scrollToBottom();
+            // Verificar se já existe
+            const existingMessage = container.querySelector(`[data-message-id="${stickerData.id}"]`);
+            if (existingMessage) continue;
+
+            // Criar elemento do sticker
+            this.createStickerMessageElement(container, stickerData);
         }
+
+        // Rolagem para baixo
+        this.messagesSystem.scrollToBottom();
     }
 
-    // 🎯 CRIAR E ADICIONAR ELEMENTO DE MENSAGEM
-    appendMessageElement(container, msg) {
-        const isOwnMessage = msg.sender_id === this.currentUser.id;
+    // 🎯 NOVA FUNÇÃO: CRIAR ELEMENTO DE MENSAGEM DE STICKER
+    createStickerMessageElement(container, stickerData) {
+        const isOwnMessage = stickerData.sender_id === this.currentUser.id;
+        const sticker = stickerData.sticker;
         
-        // Verificar se precisa criar grupo de data
-        const messageDate = msg.sent_at.split('T')[0];
+        if (!sticker) {
+            console.error('❌ Sticker não encontrado:', stickerData);
+            return;
+        }
+
+        const videoUrl = `https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/${sticker.name}.mp4`;
+
+        // Criar grupo de data se necessário
+        const messageDate = stickerData.sent_at.split('T')[0];
         const lastGroup = container.lastElementChild;
         
         let targetGroup = lastGroup;
@@ -312,25 +263,33 @@ class RealTimeMessages {
             targetGroup = this.createMessageGroup(container, messageDate);
         }
 
-        // Criar elemento da mensagem
+        // Criar elemento da mensagem de sticker
         const messageElement = document.createElement('div');
-        messageElement.className = `message ${isOwnMessage ? 'own' : 'other'}`;
-        messageElement.dataset.messageId = msg.id;
+        messageElement.className = `message ${isOwnMessage ? 'own' : 'other'} sticker-message`;
+        messageElement.dataset.messageId = stickerData.id;
         
         messageElement.innerHTML = `
-            <div class="message-content">${this.messagesSystem.escapeHtml(msg.message)}</div>
-            <div class="message-time">${this.messagesSystem.formatTime(msg.sent_at)}</div>
+            <div class="message-sticker">
+                <video width="120" height="120" loop muted playsinline autoplay>
+                    <source src="${videoUrl}" type="video/mp4">
+                </video>
+                <div class="sticker-caption">${sticker.display_name}</div>
+            </div>
+            <div class="message-time">${this.messagesSystem.formatTime(stickerData.sent_at)}</div>
             ${isOwnMessage ? `
                 <div class="message-status">
-                    <i class="fas ${this.getMessageStatusIcon(msg)}"></i>
-                    ${this.getMessageStatusText(msg)}
+                    <i class="fas ${this.getMessageStatusIcon(stickerData)}"></i>
+                    ${this.getMessageStatusText(stickerData)}
                 </div>
             ` : ''}
         `;
 
         targetGroup.appendChild(messageElement);
+        
+        console.log('✅ Sticker adicionado ao chat:', sticker.display_name);
     }
 
+    // 🎯 FUNÇÕES EXISTENTES (mantidas para compatibilidade)
     createMessageGroup(container, date) {
         const groupElement = document.createElement('div');
         groupElement.className = 'message-group';
@@ -355,18 +314,186 @@ class RealTimeMessages {
         return 'Enviada';
     }
 
-    // 🎯 ATUALIZAR STATUS DO USUÁRIO
+    async updateConversationItem(conversationId) {
+        try {
+            const { data: conversation, error } = await this.supabase
+                .rpc('get_conversation_data', {
+                    p_user_id: this.currentUser.id,
+                    p_other_user_id: conversationId
+                });
+
+            if (error || !conversation) return;
+
+            const conversationElement = document.querySelector(`[data-user-id="${conversationId}"]`);
+            if (conversationElement) {
+                this.updateConversationElement(conversationElement, conversation);
+            } else {
+                await this.messagesSystem.loadConversations();
+            }
+
+        } catch (error) {
+            console.error('Erro ao atualizar item da conversa:', error);
+        }
+    }
+
+    updateConversationElement(element, conversation) {
+        const lastMessageEl = element.querySelector('.conversation-last-message');
+        const timeEl = element.querySelector('.conversation-time');
+        const unreadEl = element.querySelector('.conversation-unread');
+
+        if (lastMessageEl) {
+            // Mostrar "🎨 Sticker" para stickers
+            const lastMessage = conversation.last_message || 'Nenhuma mensagem';
+            const displayMessage = lastMessage.includes('[STICKER:') ? '🎨 Sticker' : lastMessage;
+            lastMessageEl.textContent = this.messagesSystem.escapeHtml(displayMessage);
+        }
+
+        if (timeEl) {
+            timeEl.textContent = this.messagesSystem.formatTime(conversation.last_message_at);
+        }
+
+        if (unreadEl && conversation.unread_count > 0) {
+            unreadEl.textContent = conversation.unread_count;
+            unreadEl.style.display = 'inline-block';
+        } else if (unreadEl) {
+            unreadEl.style.display = 'none';
+        }
+    }
+
+    async updateMessagesSmart(conversationId) {
+        try {
+            const timeThreshold = new Date(Date.now() - 30000).toISOString();
+            
+            const { data: newMessages, error } = await this.supabase
+                .from('messages')
+                .select(`
+                    id,
+                    sender_id,
+                    receiver_id,
+                    message,
+                    sent_at,
+                    read_at,
+                    is_sticker,
+                    sticker_name,
+                    sender:profiles!messages_sender_id_fkey(nickname)
+                `)
+                .or(`and(sender_id.eq.${this.currentUser.id},receiver_id.eq.${conversationId}),and(sender_id.eq.${conversationId},receiver_id.eq.${this.currentUser.id})`)
+                .gte('sent_at', timeThreshold)
+                .order('sent_at', { ascending: true });
+
+            if (error || !newMessages || newMessages.length === 0) return;
+
+            this.appendNewMessages(newMessages);
+
+        } catch (error) {
+            console.error('Erro ao atualizar mensagens:', error);
+            await this.messagesSystem.loadConversationMessages(conversationId);
+        }
+    }
+
+    appendNewMessages(newMessages) {
+        const container = document.getElementById('messagesHistory');
+        if (!container) return;
+
+        const existingIds = new Set();
+        container.querySelectorAll('.message').forEach(msg => {
+            const id = msg.dataset.messageId;
+            if (id) existingIds.add(id);
+        });
+
+        let addedCount = 0;
+        newMessages.forEach(msg => {
+            if (!existingIds.has(msg.id.toString())) {
+                if (msg.is_sticker && msg.sticker_name) {
+                    // Criar sticker a partir de mensagem normal
+                    this.createStickerFromMessage(container, msg);
+                } else {
+                    this.appendMessageElement(container, msg);
+                }
+                addedCount++;
+            }
+        });
+
+        if (addedCount > 0) {
+            console.log(`✅ ${addedCount} nova(s) mensagem(ns) adicionada(s)`);
+            this.messagesSystem.scrollToBottom();
+        }
+    }
+
+    // 🎯 NOVA FUNÇÃO: CRIAR STICKER A PARTIR DE MENSAGEM NORMAL
+    createStickerFromMessage(container, message) {
+        const isOwnMessage = message.sender_id === this.currentUser.id;
+        const videoUrl = `https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/${message.sticker_name}.mp4`;
+
+        const messageDate = message.sent_at.split('T')[0];
+        const lastGroup = container.lastElementChild;
+        
+        let targetGroup = lastGroup;
+        if (!lastGroup || !lastGroup.classList.contains('message-group')) {
+            targetGroup = this.createMessageGroup(container, messageDate);
+        }
+
+        const messageElement = document.createElement('div');
+        messageElement.className = `message ${isOwnMessage ? 'own' : 'other'} sticker-message`;
+        messageElement.dataset.messageId = message.id;
+        
+        messageElement.innerHTML = `
+            <div class="message-sticker">
+                <video width="120" height="120" loop muted playsinline autoplay>
+                    <source src="${videoUrl}" type="video/mp4">
+                </video>
+                <div class="sticker-caption">${message.sticker_name}</div>
+            </div>
+            <div class="message-time">${this.messagesSystem.formatTime(message.sent_at)}</div>
+            ${isOwnMessage ? `
+                <div class="message-status">
+                    <i class="fas ${this.getMessageStatusIcon(message)}"></i>
+                    ${this.getMessageStatusText(message)}
+                </div>
+            ` : ''}
+        `;
+
+        targetGroup.appendChild(messageElement);
+    }
+
+    appendMessageElement(container, msg) {
+        const isOwnMessage = msg.sender_id === this.currentUser.id;
+        
+        const messageDate = msg.sent_at.split('T')[0];
+        const lastGroup = container.lastElementChild;
+        
+        let targetGroup = lastGroup;
+        if (!lastGroup || !lastGroup.classList.contains('message-group')) {
+            targetGroup = this.createMessageGroup(container, messageDate);
+        }
+
+        const messageElement = document.createElement('div');
+        messageElement.className = `message ${isOwnMessage ? 'own' : 'other'}`;
+        messageElement.dataset.messageId = msg.id;
+        
+        messageElement.innerHTML = `
+            <div class="message-content">${this.messagesSystem.escapeHtml(msg.message)}</div>
+            <div class="message-time">${this.messagesSystem.formatTime(msg.sent_at)}</div>
+            ${isOwnMessage ? `
+                <div class="message-status">
+                    <i class="fas ${this.getMessageStatusIcon(msg)}"></i>
+                    ${this.getMessageStatusText(msg)}
+                </div>
+            ` : ''}
+        `;
+
+        targetGroup.appendChild(messageElement);
+    }
+
     async updateUserStatus(userId) {
         try {
             const statusInfo = await this.messagesSystem.getUserStatus(userId);
             
-            // Atualizar status na lista de conversas
             const conversationElement = document.querySelector(`[data-user-id="${userId}"]`);
             if (conversationElement) {
                 this.updateStatusElement(conversationElement, statusInfo);
             }
 
-            // Atualizar status no header do chat (se for conversa atual)
             if (this.messagesSystem.currentConversation === userId) {
                 this.updateChatHeaderStatus(statusInfo);
             }
@@ -417,16 +544,12 @@ class RealTimeMessages {
         }
     }
 
-    // 🎯 NOTIFICAÇÃO INTELIGENTE
     showSmartNotification(message) {
-        // Só mostrar notificação se a página não está em foco
         if (!document.hidden) {
-            // Pequena vibração no item da conversa
             this.highlightConversationItem(message.sender_id);
             return;
         }
 
-        // Notificação do navegador se página em segundo plano
         this.showBrowserNotification(message);
     }
 
@@ -442,31 +565,27 @@ class RealTimeMessages {
         }
     }
 
-    // 🎯 POLLING INTELIGENTE (apenas como fallback)
     startIntelligentPolling() {
         this.pollingInterval = setInterval(async () => {
-            // Só fazer polling se não houver updates recentes
             const timeSinceLastUpdate = Date.now() - this.lastUpdateTime;
-            if (timeSinceLastUpdate > 60000) { // 1 minuto
+            if (timeSinceLastUpdate > 60000) {
                 await this.checkForSilentUpdates();
             }
-        }, 30000); // Verificar a cada 30 segundos
+        }, 30000);
     }
 
     async checkForSilentUpdates() {
         try {
-            // Verificar se há mensagens muito recentes que possam ter sido perdidas
             const { data: recentMessages, error } = await this.supabase
                 .from('messages')
                 .select('id, sender_id, sent_at')
                 .eq('receiver_id', this.currentUser.id)
-                .gte('sent_at', new Date(Date.now() - 120000).toISOString()) // Últimos 2 minutos
+                .gte('sent_at', new Date(Date.now() - 120000).toISOString())
                 .order('sent_at', { ascending: false })
                 .limit(5);
 
             if (error || !recentMessages || recentMessages.length === 0) return;
 
-            // Processar mensagens perdidas
             recentMessages.forEach(msg => {
                 this.queueUpdate('new_message', msg);
             });
@@ -476,7 +595,6 @@ class RealTimeMessages {
         }
     }
 
-    // 🎯 ATUALIZAÇÃO MANUAL (preserva a inteligência)
     setupManualRefresh() {
         const refreshBtn = document.getElementById('refreshMessages');
         if (refreshBtn) {
@@ -494,7 +612,6 @@ class RealTimeMessages {
                 refreshBtn.classList.add('loading');
             }
 
-            // Limpar fila e forçar atualização completa
             this.updateQueue.clear();
             await this.messagesSystem.loadConversations();
             
@@ -516,7 +633,6 @@ class RealTimeMessages {
         }
     }
 
-    // 🎯 MONITOR DE CONEXÃO
     setupConnectionMonitor() {
         window.addEventListener('online', () => {
             this.showUpdateStatus('Conexão restaurada', 'success');
@@ -527,7 +643,6 @@ class RealTimeMessages {
         });
     }
 
-    // 🎯 UTILITÁRIOS
     showUpdateStatus(message, type) {
         if (this.messagesSystem.showMessageStatus) {
             this.messagesSystem.showMessageStatus(message, type);
@@ -550,7 +665,6 @@ class RealTimeMessages {
         }
     }
 
-    // 🎯 LIMPEZA
     destroy() {
         if (this.pollingInterval) {
             clearInterval(this.pollingInterval);
@@ -589,6 +703,10 @@ style.textContent = `
         animation: messageSlideIn 0.3s ease;
     }
     
+    .sticker-message {
+        animation: stickerSlideIn 0.4s ease;
+    }
+    
     @keyframes messageSlideIn {
         from {
             opacity: 0;
@@ -597,6 +715,17 @@ style.textContent = `
         to {
             opacity: 1;
             transform: translateY(0);
+        }
+    }
+    
+    @keyframes stickerSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
         }
     }
     
