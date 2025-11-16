@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- Header (mantido igual) -->
+    <!-- Header -->
     <header>
         <div class="container">
             <div class="header-content">
@@ -182,7 +182,7 @@
         </div>
     </main>
 
-    <!-- Footer (mantido igual) -->
+    <!-- Footer -->
     <footer>
         <div class="container">
             <div class="footer-content">
@@ -239,7 +239,7 @@
         </div>
     </footer>
 
-    <!-- Modal de Stickers -->
+    <!-- Modal de Stickers DINÂMICO -->
     <div id="stickersModal" class="modal">
         <div class="modal-content stickers-modal">
             <div class="modal-header">
@@ -248,48 +248,22 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
+            
+            <!-- Categorias -->
+            <div class="stickers-categories" id="stickersCategories">
+                <!-- Categorias serão carregadas aqui pelo JavaScript -->
+            </div>
+            
             <div class="modal-body">
                 <div class="stickers-grid" id="stickersGrid">
-                    <!-- Stickers serão carregados aqui -->
-                    <div class="sticker-item" data-sticker="videoanel.mp4">
-                        <video width="80" height="80" loop muted playsinline>
-                            <source src="stickers/videoanel.mp4" type="video/mp4">
-                        </video>
-                        <span class="sticker-name">Anel</span>
+                    <!-- Stickers serão carregados DINAMICAMENTE pelo JavaScript -->
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <p>Carregando stickers...</p>
                     </div>
-                    <div class="sticker-item" data-sticker="videoboanoite.mp4">
-                        <video width="80" height="80" loop muted playsinline>
-                            <source src="stickers/videoboanoite.mp4" type="video/mp4">
-                        </video>
-                        <span class="sticker-name">Boa Noite</span>
-                    </div>
-                    <div class="sticker-item" data-sticker="videobolo.mp4">
-                        <video width="80" height="80" loop muted playsinline>
-                            <source src="stickers/videobolo.mp4" type="video/mp4">
-                        </video>
-                        <span class="sticker-name">Bolo</span>
-                    </div>
-                    <div class="sticker-item" data-sticker="videobomdia.mp4">
-                        <video width="80" height="80" loop muted playsinline>
-                            <source src="stickers/videobomdia.mp4" type="video/mp4">
-                        </video>
-                        <span class="sticker-name">Bom Dia</span>
-                    </div>
-                    <div class="sticker-item" data-sticker="videocachorinho.mp4">
-                        <video width="80" height="80" loop muted playsinline>
-                            <source src="stickers/videocachorinho.mp4" type="video/mp4">
-                        </video>
-                        <span class="sticker-name">Cachorrinho</span>
-                    </div>
-                    <div class="sticker-item" data-sticker="videocafe.mp4">
-                        <video width="80" height="80" loop muted playsinline>
-                            <source src="stickers/videocafe.mp4" type="video/mp4">
-                        </video>
-                        <span class="sticker-name">Café</span>
-                    </div>
-                    <!-- Continuo no próximo comentário... -->
                 </div>
             </div>
+            
             <div class="modal-footer">
                 <div class="sticker-info">
                     <i class="fas fa-info-circle"></i>
@@ -363,16 +337,16 @@
         </div>
     </div>
 
+    <!-- SCRIPTS -->
     <script src="auth-vibe.js"></script>
     <script src="premium-check.js"></script>
     <script src="sistema-vibe.js"></script> 
     <script src="mensagens.js"></script>
     <script src="mensagens-temporeal.js"></script>
-    <!-- NOVO: Script dos Stickers -->
+    <!-- NOVO: Sistema de Stickers -->
     <script src="stickers.js"></script>
 
-        <!-- Script Principal -->
-    <script>
+        <script>
         // Configuração do Supabase
         const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
