@@ -1490,159 +1490,29 @@ footer {
     padding: 1rem !important;
 }
 
-/* Item do Sticker */
-.sticker-item {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    padding: 0.5rem !important;
-    border-radius: 8px !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
-    background: transparent !important;
-    border: 1px solid transparent !important;
-}
-
-.sticker-item:hover {
-    background: var(--bg-hover) !important;
-    border-color: var(--primary-color) !important;
-    transform: scale(1.05) !important;
-}
-
-/* Container do Vídeo - CORREÇÃO MAIS IMPORTANTE */
-.sticker-video-container {
-    position: relative !important;
-    width: 80px !important;
-    height: 80px !important;
-    border-radius: 8px !important;
-    overflow: hidden !important;
-    background: #000 !important;
-}
-
-/* VÍDEO - REMOVER CONTROLES E GARANTIR AUTOPLAY */
-.sticker-video-container video {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    border-radius: 8px !important;
-    
-    /* REMOVER CONTROLES - ESSENCIAL */
-    controls: false !important;
-    -webkit-controls: none !important;
-    controlslist: nodownload nofullscreen noremoteplayback !important;
-    
-    /* GARANTIR AUTOPLAY */
-    autoplay: true !important;
-    muted: true !important;
-    loop: true !important;
-    playsinline: true !important;
-    
-    /* REMOVER ESTILOS PADRÃO */
-    border: none !important;
-    outline: none !important;
-}
-
-/* Overlay do Sticker */
-.sticker-overlay {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    background: rgba(0, 0, 0, 0.3) !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    opacity: 0 !important;
-    transition: opacity 0.2s ease !important;
-    border-radius: 8px !important;
-}
-
-.sticker-item:hover .sticker-overlay {
-    opacity: 1 !important;
-}
-
-.sticker-overlay i {
-    color: white !important;
-    font-size: 1.5rem !important;
-}
-
-/* Nome do Sticker */
-.sticker-name {
-    margin-top: 0.5rem !important;
-    font-size: 0.8rem !important;
-    color: var(--text-primary) !important;
-    text-align: center !important;
-    font-weight: 500 !important;
-}
-
-/* Categorias */
-.stickers-categories {
-    display: flex !important;
-    gap: 0.5rem !important;
-    padding: 1rem !important;
-    border-bottom: 1px solid var(--border-color) !important;
-    flex-wrap: wrap !important;
-}
-
-.category-btn {
-    display: flex !important;
-    align-items: center !important;
-    gap: 0.5rem !important;
-    padding: 0.5rem 1rem !important;
-    border: 1px solid var(--border-color) !important;
-    border-radius: 20px !important;
-    background: transparent !important;
-    color: var(--text-primary) !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
-    font-size: 0.9rem !important;
-}
-
-.category-btn.active {
-    background: var(--primary-color) !important;
-    border-color: var(--primary-color) !important;
-    color: white !important;
-}
-
-.category-btn:hover:not(.active) {
-    background: var(--bg-hover) !important;
-}
-
-/* Info do Sticker */
-.sticker-info {
-    display: flex !important;
-    align-items: center !important;
-    gap: 0.5rem !important;
-    padding: 0.5rem !important;
-    background: var(--bg-secondary) !important;
-    border-radius: 6px !important;
-    font-size: 0.85rem !important;
-    color: var(--text-secondary) !important;
-}
-
-/* Mensagem de Sticker no Chat */
+/* STICKERS NO CHAT */
 .message.sticker-message .message-content {
     background: transparent !important;
+    border: none !important;
     padding: 0 !important;
 }
 
-.message-sticker {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    gap: 0.5rem !important;
+.sticker-in-chat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
 }
 
-.message-sticker video {
-    width: 120px !important;
-    height: 120px !important;
-    border-radius: 12px !important;
-    object-fit: cover !important;
+.sticker-in-chat video {
+    width: 120px;
+    height: 120px;
+    border-radius: 12px;
+    object-fit: cover;
 }
 
-.sticker-caption {
-    font-size: 0.8rem !important;
-    color: var(--text-secondary) !important;
-    font-style: italic !important;
+.sticker-label {
+    font-size: 0.8rem;
+    color: #999;
+    font-style: italic;
 }

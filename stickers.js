@@ -1,46 +1,50 @@
-// stickers.js - SISTEMA 100% CORRIGIDO
+// stickers.js - SISTEMA NOVO E SIMPLES
 class StickersSystem {
     constructor() {
         this.supabase = window.supabase;
         this.currentUser = null;
         this.currentConversation = null;
-        this.lastSentSticker = null;
-        this.stickers = [
-            { name: 'videocoracao', display_name: 'Coração', category: 'amor' },
-            { name: 'videobomdia', display_name: 'Bom Dia', category: 'cumprimentos' },
-            { name: 'videobolo', display_name: 'Bolo', category: 'comida' },
-            { name: 'videocachorinho', display_name: 'Cachorrinho', category: 'animais' }
-        ];
     }
 
+    // Inicializar
     initialize(user) {
         this.currentUser = user;
-        console.log('✅ StickersSystem inicializado');
-        this.setupStickerButton();
+        console.log('🎯 StickersSystem NOVO inicializado!');
+        this.setupEventListeners();
     }
 
-    setupStickerButton() {
+    // Configurar botões
+    setupEventListeners() {
+        // Botão de abrir modal
         const stickerBtn = document.getElementById('stickerBtn');
         if (stickerBtn) {
-            stickerBtn.onclick = () => this.openModal();
+            stickerBtn.onclick = () => this.openStickerModal();
+        }
+
+        // Botão de fechar modal
+        const closeBtn = document.querySelector('#stickersModal .modal-close');
+        if (closeBtn) {
+            closeBtn.onclick = () => this.closeStickerModal();
         }
     }
 
-    openModal() {
-        if (!this.hasConversation()) {
-            this.showNotification('Selecione uma conversa primeiro', 'error');
-            return;
-        }
+    // Abrir modal de stickers
+    async openStickerModal() {
+        if (!this.checkConversation()) return;
 
         const modal = document.getElementById('stickersModal');
-        if (modal) {
-            this.renderStickers();
-            modal.style.display = 'flex';
-            this.playAllVideos();
-        }
+        if (!modal) return;
+
+        // Carregar stickers
+        await this.loadStickers();
+        
+        // Mostrar modal
+        modal.style.display = 'flex';
+        this.playAllVideos();
     }
 
-    closeModal() {
+    // Fechar modal
+    closeStickerModal() {
         const modal = document.getElementById('stickersModal');
         if (modal) {
             modal.style.display = 'none';
@@ -48,22 +52,55 @@ class StickersSystem {
         }
     }
 
-    hasConversation() {
-        if (window.MessagesSystem && window.MessagesSystem.currentConversation) {
-            this.currentConversation = window.MessagesSystem.currentConversation;
-            return true;
+    // Verificar se tem conversa selecionada
+    checkConversation() {
+        if (!window.MessagesSystem || !window.MessagesSystem.currentConversation) {
+            this.showNotification('❌ Selecione uma conversa primeiro!', 'error');
+            return false;
         }
-        return false;
+        this.currentConversation = window.MessagesSystem.currentConversation;
+        return true;
     }
 
-    renderStickers() {
+    // Carregar stickers do banco
+    async loadStickers() {
+        try {
+            const { data: stickers, error } = await this.supabase
+                .from('stickers')
+                .select('*')
+                .order('category');
+
+            if (error) throw error;
+
+            this.renderStickers(stickers || []);
+        } catch (error) {
+            console.error('Erro ao carregar stickers:', error);
+            // Fallback com stickers fixos
+            this.renderStickers(this.getFallbackStickers());
+        }
+    }
+
+    // Stickers de fallback
+    getFallbackStickers() {
+        return [
+            { name: 'videoanel', display_name: 'Anel', category: 'amor' },
+            { name: 'videoboanoite', display_name: 'Boa Noite', category: 'cumprimentos' },
+            { name: 'videobolo', display_name: 'Bolo', category: 'comida' },
+            { name: 'videobomdia', display_name: 'Bom Dia', category: 'cumprimentos' },
+            { name: 'videocachorinho', display_name: 'Cachorrinho', category: 'animais' },
+            { name: 'videocoracao', display_name: 'Coração', category: 'amor' }
+        ];
+    }
+
+    // Renderizar stickers no modal
+    renderStickers(stickers) {
         const grid = document.getElementById('stickersGrid');
         if (!grid) return;
 
-        grid.innerHTML = this.stickers.map(sticker => `
-            <div class="sticker-item" data-category="${sticker.category}" onclick="stickersSystem.sendSticker('${sticker.name}')">
+        grid.innerHTML = stickers.map(sticker => `
+            <div class="sticker-item" onclick="stickersSystem.sendSticker('${sticker.name}')">
                 <div class="sticker-video-container">
-                    <video width="80" height="80" loop muted playsinline autoplay>
+                    <video loop muted playsinline autoplay>
                         <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/${sticker.name}.mp4" type="video/mp4">
                     </video>
                     <div class="sticker-overlay">
@@ -75,96 +112,44 @@ class StickersSystem {
         `).join('');
     }
 
-    filterStickers(category) {
-        const buttons = document.querySelectorAll('.category-btn');
-        buttons.forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
-
-        const items = document.querySelectorAll('.sticker-item');
-        items.forEach(item => {
-            if (category === 'all' || item.dataset.category === category) {
-                item.style.display = 'flex';
-            } else {
-                item.style.display = 'none';
-            }
-        });
-    }
-
+    // ENVIAR STICKER - FUNÇÃO PRINCIPAL
     async sendSticker(stickerName) {
-        if (!this.currentUser || !this.currentConversation) {
-            this.showNotification('Erro: selecione uma conversa', 'error');
-            return;
-        }
-
+        console.log(`🔄 Enviando sticker: ${stickerName}`);
+        
         try {
-            console.log(`🎯 Enviando sticker: ${stickerName}`);
-            this.lastSentSticker = stickerName;
-
-            // Verificar se pode enviar (limite diário)
-            const canSend = await this.checkCanSendMessage();
-            if (!canSend) {
-                this.showNotification('🚫 Limite diário de 4 mensagens atingido! Volte amanhã.', 'error');
+            // 1. Verificar se pode enviar
+            if (!await this.canSendMessage()) {
+                this.showNotification('🚫 Limite de mensagens atingido!', 'error');
                 return;
             }
 
-            // Enviar via RPC
-            const { data, error } = await this.supabase
-                .rpc('send_sticker_message', {
-                    p_sender_id: this.currentUser.id,
-                    p_receiver_id: this.currentConversation,
-                    p_sticker_name: stickerName
-                });
-
-            if (error) throw error;
-
-            if (data === 'success') {
-                this.showNotification('🎉 Sticker enviado!', 'success');
-                this.closeModal();
-                await this.refreshConversation();
+            // 2. Enviar sticker
+            const success = await this.sendStickerToDatabase(stickerName);
+            
+            if (success) {
+                // 3. MOSTRAR NO CHAT (IMPORTANTE!)
                 this.showStickerInChat(stickerName);
-            } else {
-                this.showNotification(`Erro: ${data}`, 'error');
+                
+                // 4. Feedback e limpeza
+                this.showNotification('✅ Sticker enviado!', 'success');
+                this.closeStickerModal();
+                
+                // 5. Atualizar contador
+                this.updateMessageCounter();
             }
 
         } catch (error) {
-            console.error('❌ Erro ao enviar sticker:', error);
-            // Fallback
-            await this.sendStickerFallback(stickerName);
+            console.error('Erro ao enviar sticker:', error);
+            this.showNotification('❌ Erro ao enviar sticker', 'error');
         }
     }
 
-    async sendStickerFallback(stickerName) {
-        try {
-            const { data, error } = await this.supabase
-                .from('messages')
-                .insert({
-                    sender_id: this.currentUser.id,
-                    receiver_id: this.currentConversation,
-                    message: '[STICKER]',
-                    sent_at: new Date().toISOString(),
-                    is_sticker: true,
-                    sticker_name: stickerName
-                });
+    // Verificar se pode enviar mensagem
+    async canSendMessage() {
+        // Se for premium, pode enviar ilimitado
+        if (await this.isPremiumUser()) return true;
 
-            if (error) throw error;
-
-            this.showNotification('🎉 Sticker enviado!', 'success');
-            this.closeModal();
-            await this.refreshConversation();
-            this.showStickerInChat(stickerName);
-
-        } catch (fallbackError) {
-            this.showNotification('❌ Erro crítico ao enviar sticker', 'error');
-        }
-    }
-
-    async checkCanSendMessage() {
-        // Verificar se é premium
-        if (window.PremiumManager && await PremiumManager.checkPremiumStatus()) {
-            return true;
-        }
-
-        // Verificar limite para free
+        // Verificar limite free (4 mensagens)
         try {
             const { data: limits, error } = await this.supabase
                 .from('user_message_limits')
@@ -173,52 +158,96 @@ class StickersSystem {
                 .single();
 
             if (error) return true; // Em caso de erro, permitir
-
+            
             return (limits?.messages_sent_today || 0) < 4;
-
         } catch (error) {
-            return true; // Em caso de erro, permitir
+            return true;
         }
     }
 
-    // 🎯 NOVA FUNÇÃO: MOSTRAR STICKER NO CHAT
-    showStickerInChat(stickerName) {
-        const container = document.getElementById('messagesHistory');
-        if (!container) return;
+    // Verificar se usuário é premium
+    async isPremiumUser() {
+        try {
+            const { data: profile, error } = await this.supabase
+                .from('profiles')
+                .select('is_premium')
+                .eq('id', this.currentUser.id)
+                .single();
 
-        // Remover estado vazio se existir
-        const emptyChat = container.querySelector('.empty-state, .empty-chat');
-        if (emptyChat) {
-            emptyChat.style.display = 'none';
+            return !error && profile?.is_premium;
+        } catch (error) {
+            return false;
         }
+    }
 
-        // Criar elemento do sticker
+    // Enviar sticker para o banco
+    async sendStickerToDatabase(stickerName) {
+        try {
+            // Tentar RPC primeiro
+            const { data, error } = await this.supabase
+                .rpc('send_sticker_message', {
+                    p_sender_id: this.currentUser.id,
+                    p_receiver_id: this.currentConversation,
+                    p_sticker_name: stickerName
+                });
+
+            if (!error && data === 'success') return true;
+
+            // Fallback: inserção direta
+            const { error: insertError } = await this.supabase
+                .from('messages')
+                .insert({
+                    sender_id: this.currentUser.id,
+                    receiver_id: this.currentConversation,
+                    message: `[STICKER:${stickerName}]`,
+                    sent_at: new Date().toISOString(),
+                    is_sticker: true,
+                    sticker_name: stickerName
+                });
+
+            return !insertError;
+
+        } catch (error) {
+            return false;
+        }
+    }
+
+    // 🎯 FUNÇÃO MAIS IMPORTANTE: MOSTRAR STICKER NO CHAT
+    showStickerInChat(stickerName) {
+        const messagesContainer = document.getElementById('messagesHistory');
+        if (!messagesContainer) return;
+
+        // Remover mensagem de "nenhuma mensagem" se existir
+        const emptyState = messagesContainer.querySelector('.empty-state, .empty-chat');
+        if (emptyState) emptyState.style.display = 'none';
+
+        // Criar HTML do sticker
         const stickerHTML = `
             <div class="message own sticker-message">
-                <div class="message-sticker">
-                    <video width="120" height="120" loop muted playsinline autoplay>
-                        <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/${stickerName}.mp4" type="video/mp4">
-                    </video>
-                    <div class="sticker-caption">${this.getStickerDisplayName(stickerName)}</div>
+                <div class="message-content">
+                    <div class="sticker-in-chat">
+                        <video width="120" height="120" loop muted playsinline autoplay>
+                            <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/${stickerName}.mp4" type="video/mp4">
+                        </video>
+                        <div class="sticker-label">Sticker</div>
+                    </div>
                 </div>
                 <div class="message-time">Agora</div>
                 <div class="message-status">
-                    <i class="fas fa-check status-sent"></i>
-                    Enviada
+                    <i class="fas fa-check"></i>
+                    Enviado
                 </div>
             </div>
         `;
 
         // Adicionar ao chat
-        container.innerHTML += stickerHTML;
+        messagesContainer.innerHTML += stickerHTML;
+        
+        // Rolagem automática
         this.scrollToBottom();
     }
 
-    getStickerDisplayName(stickerName) {
-        const sticker = this.stickers.find(s => s.name === stickerName);
-        return sticker ? sticker.display_name : stickerName;
-    }
-
+    // Rolagem para baixo
     scrollToBottom() {
         const container = document.getElementById('messagesHistory');
         if (container) {
@@ -228,33 +257,32 @@ class StickersSystem {
         }
     }
 
-    async refreshConversation() {
-        if (window.MessagesSystem && this.currentConversation) {
-            await window.MessagesSystem.loadConversationMessages(this.currentConversation);
-            await window.MessagesSystem.loadConversations();
+    // Atualizar contador de mensagens
+    updateMessageCounter() {
+        if (window.MessagesSystem && window.MessagesSystem.updateMessageCounter) {
             window.MessagesSystem.updateMessageCounter();
         }
     }
 
+    // Controlar vídeos
     playAllVideos() {
         setTimeout(() => {
-            const videos = document.querySelectorAll('#stickersModal video');
-            videos.forEach(video => {
-                video.play().catch(e => console.log('Video autoplay bloqueado'));
+            document.querySelectorAll('#stickersModal video').forEach(video => {
+                video.play().catch(e => console.log('Autoplay bloqueado'));
             });
         }, 100);
     }
 
     pauseAllVideos() {
-        const videos = document.querySelectorAll('#stickersModal video');
-        videos.forEach(video => {
+        document.querySelectorAll('#stickersModal video').forEach(video => {
             video.pause();
             video.currentTime = 0;
         });
     }
 
+    // Notificação
     showNotification(message, type = 'info') {
-        if (typeof window.showNotification === 'function') {
+        if (window.showNotification) {
             window.showNotification(message, type);
         } else {
             alert(message);
@@ -265,20 +293,11 @@ class StickersSystem {
 // INICIALIZAÇÃO GLOBAL
 window.stickersSystem = new StickersSystem();
 
-// Inicializar quando o sistema estiver pronto
-function initializeStickersSystem() {
-    if (window.MessagesSystem && window.MessagesSystem.currentUser) {
-        window.stickersSystem.initialize(window.MessagesSystem.currentUser);
-    } else {
-        setTimeout(initializeStickersSystem, 1000);
-    }
-}
-
+// Inicializar quando usuário estiver pronto
 document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(initializeStickersSystem, 2000);
+    setTimeout(() => {
+        if (window.MessagesSystem && window.MessagesSystem.currentUser) {
+            window.stickersSystem.initialize(window.MessagesSystem.currentUser);
+        }
+    }, 2000);
 });
-
-// FUNÇÕES GLOBAIS PARA HTML
-window.openStickersModal = () => window.stickersSystem.openModal();
-window.closeStickersModal = () => window.stickersSystem.closeModal();
-window.sendSticker = (stickerName) => window.stickersSystem.sendSticker(stickerName);
