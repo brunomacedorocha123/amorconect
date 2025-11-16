@@ -1,4 +1,4 @@
-// stickers.js - SISTEMA 100% FUNCIONAL E COMPLETO
+// stickers.js - SISTEMA DE STICKERS COMPLETO E FUNCIONAL
 class StickersSystem {
     constructor() {
         this.supabase = window.supabase;
@@ -30,123 +30,99 @@ class StickersSystem {
     }
 
     async initialize(currentUser) {
-        this.currentUser = currentUser;
-        this.isInitialized = true;
-        
-        console.log('🎯 Inicializando Sistema de Stickers...');
-        console.log('👤 Usuário:', this.currentUser.id);
-        
-        // Configurar TODOS os eventos
-        this.setupEventListeners();
-        this.setupStickerModal();
-        
-        console.log('✅ Sistema de Stickers INICIALIZADO com sucesso!');
+        try {
+            this.currentUser = currentUser;
+            this.isInitialized = true;
+            
+            console.log('🎯 Sistema de Stickers inicializando...');
+            console.log('👤 Usuário:', this.currentUser.id);
+            
+            // Configurar eventos no modal EXISTENTE do HTML
+            this.setupStickersModal();
+            
+            // Configurar botão de stickers
+            this.setupStickerButton();
+            
+            console.log('✅ StickersSystem inicializado com sucesso!');
+            
+        } catch (error) {
+            console.error('❌ Erro na inicialização do StickersSystem:', error);
+        }
     }
 
-    setupStickerModal() {
-        console.log('🔧 Configurando modal de stickers...');
-        
-        // Remover modal existente se houver
-        const existingModal = document.getElementById('stickersModal');
-        if (existingModal) {
-            existingModal.remove();
+    setupStickerButton() {
+        const stickerBtn = document.getElementById('stickerBtn');
+        if (!stickerBtn) {
+            console.error('❌ Botão de stickers não encontrado!');
+            return;
         }
 
-        // Criar modal COMPLETO
-        const modalHTML = `
-            <div id="stickersModal" class="modal">
-                <div class="modal-content stickers-modal">
-                    <div class="modal-header">
-                        <h3><i class="fas fa-smile"></i> Stickers</h3>
-                        <button class="modal-close" onclick="StickersSystem.closeModal()">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    
-                    <!-- Categorias -->
-                    <div class="stickers-categories" id="stickersCategories">
-                        <button class="category-btn active" data-category="all">
-                            <i class="fas fa-star"></i>
-                            <span>Todos</span>
-                        </button>
-                        <button class="category-btn" data-category="amor">
-                            <i class="fas fa-heart"></i>
-                            <span>Amor</span>
-                        </button>
-                        <button class="category-btn" data-category="cumprimentos">
-                            <i class="fas fa-hand"></i>
-                            <span>Saudações</span>
-                        </button>
-                        <button class="category-btn" data-category="comida">
-                            <i class="fas fa-utensils"></i>
-                            <span>Comida</span>
-                        </button>
-                        <button class="category-btn" data-category="animais">
-                            <i class="fas fa-paw"></i>
-                            <span>Animais</span>
-                        </button>
-                        <button class="category-btn" data-category="elogios">
-                            <i class="fas fa-crown"></i>
-                            <span>Elogios</span>
-                        </button>
-                        <button class="category-btn" data-category="presentes">
-                            <i class="fas fa-gift"></i>
-                            <span>Presentes</span>
-                        </button>
-                        <button class="category-btn" data-category="celebração">
-                            <i class="fas fa-champagne-glasses"></i>
-                            <span>Celebração</span>
-                        </button>
-                    </div>
-                    
-                    <div class="modal-body">
-                        <div class="stickers-grid" id="stickersGrid">
-                            ${this.generateStickersHTML()}
-                        </div>
-                    </div>
-                    
-                    <div class="modal-footer">
-                        <div class="sticker-info">
-                            <i class="fas fa-info-circle"></i>
-                            <span>Stickers contam como mensagem no seu limite diário</span>
-                        </div>
-                        <button class="btn btn-outline" onclick="StickersSystem.closeModal()">Fechar</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        
-        // Configurar eventos do modal
-        this.setupCategoryFilters();
-        this.setupStickerClickEvents();
-        
-        console.log('✅ Modal de stickers criado e configurado!');
+        // Remover event listeners antigos
+        const newStickerBtn = stickerBtn.cloneNode(true);
+        stickerBtn.parentNode.replaceChild(newStickerBtn, stickerBtn);
+
+        // Adicionar novo event listener
+        newStickerBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.openModal();
+        });
+
+        console.log('✅ Botão de stickers configurado!');
     }
 
-    generateStickersHTML() {
-        console.log('🎨 Gerando HTML dos stickers...');
+    setupStickersModal() {
+        console.log('🔧 Configurando modal de stickers do HTML...');
         
-        return this.stickers.map(sticker => {
-            const videoUrl = `${this.storageBaseUrl}${sticker.name}.mp4`;
-            console.log(`📹 Sticker: ${sticker.name} -> ${videoUrl}`);
-            
-            return `
-                <div class="sticker-item" data-sticker="${sticker.name}" data-category="${sticker.category}">
-                    <div class="sticker-video-container">
-                        <video width="80" height="80" loop muted playsinline preload="metadata">
-                            <source src="${videoUrl}" type="video/mp4">
-                            Seu navegador não suporta vídeo.
-                        </video>
-                        <div class="sticker-overlay">
-                            <i class="fas fa-paper-plane"></i>
-                        </div>
-                    </div>
-                    <span class="sticker-name">${sticker.display_name}</span>
-                </div>
-            `;
-        }).join('');
+        const modal = document.getElementById('stickersModal');
+        if (!modal) {
+            console.error('❌ Modal de stickers não encontrado no HTML!');
+            return;
+        }
+
+        console.log('✅ Modal encontrado, configurando eventos...');
+
+        // 1. Configurar botão de fechar
+        const closeBtn = modal.querySelector('.modal-close');
+        if (closeBtn) {
+            closeBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.closeModal();
+            };
+        }
+
+        // 2. Configurar botão fechar do footer
+        const closeFooterBtn = modal.querySelector('.modal-footer .btn-outline');
+        if (closeFooterBtn) {
+            closeFooterBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.closeModal();
+            };
+        }
+
+        // 3. Configurar categorias
+        this.setupCategoryFilters();
+
+        // 4. Configurar clique nos stickers
+        this.setupStickerClickEvents();
+
+        // 5. Configurar fechar ao clicar fora
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.closeModal();
+            }
+        });
+
+        // 6. Configurar tecla ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isModalOpen()) {
+                this.closeModal();
+            }
+        });
+
+        console.log('✅ Modal completamente configurado!');
     }
 
     setupCategoryFilters() {
@@ -154,13 +130,21 @@ class StickersSystem {
         console.log(`🔧 Configurando ${categoryBtns.length} categorias...`);
         
         categoryBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
+            // Remover event listeners antigos
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            
+            // Adicionar novo event listener
+            newBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
                 // Remover active de todos
                 categoryBtns.forEach(b => b.classList.remove('active'));
                 // Adicionar active no clicado
-                btn.classList.add('active');
+                newBtn.classList.add('active');
                 
-                const category = btn.dataset.category;
+                const category = newBtn.dataset.category;
                 console.log(`🎯 Categoria selecionada: ${category}`);
                 this.filterStickersByCategory(category);
             });
@@ -169,9 +153,8 @@ class StickersSystem {
 
     filterStickersByCategory(category) {
         const allStickers = document.querySelectorAll('.sticker-item');
-        console.log(`🔍 Filtrando ${allStickers.length} stickers por categoria: ${category}`);
-        
         let visibleCount = 0;
+        
         allStickers.forEach(sticker => {
             const stickerCategory = sticker.dataset.category;
             
@@ -183,7 +166,7 @@ class StickersSystem {
             }
         });
         
-        console.log(`👀 ${visibleCount} stickers visíveis`);
+        console.log(`👀 ${visibleCount} stickers visíveis na categoria ${category}`);
     }
 
     setupStickerClickEvents() {
@@ -191,37 +174,28 @@ class StickersSystem {
         console.log(`🔧 Configurando eventos para ${stickerItems.length} stickers...`);
         
         stickerItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const stickerName = item.getAttribute('data-sticker');
+            // Remover event listeners antigos clonando o elemento
+            const newItem = item.cloneNode(true);
+            item.parentNode.replaceChild(newItem, item);
+            
+            // Adicionar novo event listener
+            newItem.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const stickerName = newItem.getAttribute('data-sticker');
                 console.log(`🎯 Clicou no sticker: ${stickerName}`);
                 this.sendSticker(stickerName);
             });
-        });
-    }
-
-    setupEventListeners() {
-        // Botão de stickers na área de mensagem
-        const stickerBtn = document.getElementById('stickerBtn');
-        if (stickerBtn) {
-            console.log('🔧 Configurando botão de stickers...');
-            stickerBtn.addEventListener('click', () => this.openModal());
-        } else {
-            console.log('❌ Botão de stickers não encontrado!');
-        }
-
-        // Fechar modal com ESC
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isModalOpen()) {
-                this.closeModal();
-            }
-        });
-
-        // Fechar modal clicando fora
-        document.addEventListener('click', (e) => {
-            const modal = document.getElementById('stickersModal');
-            if (modal && e.target === modal) {
-                this.closeModal();
-            }
+            
+            // Adicionar efeitos de hover via JavaScript
+            newItem.addEventListener('mouseenter', () => {
+                newItem.style.transform = 'translateY(-5px) scale(1.05)';
+            });
+            
+            newItem.addEventListener('mouseleave', () => {
+                newItem.style.transform = 'translateY(0) scale(1)';
+            });
         });
     }
 
@@ -240,19 +214,38 @@ class StickersSystem {
 
         const modal = document.getElementById('stickersModal');
         if (modal) {
-            console.log('✅ Modal encontrado, exibindo...');
             modal.style.display = 'flex';
+            modal.style.opacity = '0';
+            
+            // Animação de entrada
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                modal.querySelector('.stickers-modal').style.transform = 'scale(1)';
+            }, 10);
+            
+            document.body.style.overflow = 'hidden';
             this.playStickerVideos();
+            
+            console.log('✅ Modal aberto com sucesso!');
         } else {
-            console.log('❌ Modal não encontrado!');
+            console.error('❌ Modal não encontrado ao tentar abrir!');
         }
     }
 
     closeModal() {
         const modal = document.getElementById('stickersModal');
         if (modal) {
-            modal.style.display = 'none';
-            this.pauseStickerVideos();
+            // Animação de saída
+            modal.style.opacity = '0';
+            modal.querySelector('.stickers-modal').style.transform = 'scale(0.9)';
+            
+            setTimeout(() => {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+                this.pauseStickerVideos();
+            }, 300);
+            
+            console.log('✅ Modal fechado!');
         }
     }
 
@@ -263,37 +256,32 @@ class StickersSystem {
 
     playStickerVideos() {
         const videos = document.querySelectorAll('#stickersModal video');
-        console.log(`🎬 Tentando reproduzir ${videos.length} vídeos...`);
+        console.log(`🎬 Iniciando ${videos.length} vídeos de stickers...`);
         
-        let successCount = 0;
-        let errorCount = 0;
+        let playedCount = 0;
         
         videos.forEach((video, index) => {
-            video.play().then(() => {
-                successCount++;
-                console.log(`✅ Video ${index + 1} reproduzindo: ${video.src}`);
-            }).catch(error => {
-                errorCount++;
-                console.log(`❌ Erro no video ${index + 1}:`, error.message, video.src);
-                // Mostrar placeholder de erro
-                this.showVideoError(video.parentElement);
-            });
+            // Reset do video
+            video.currentTime = 0;
+            video.loop = true;
+            video.muted = true;
+            video.playsInline = true;
+            
+            // Tentar reproduzir
+            const playPromise = video.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    playedCount++;
+                    console.log(`✅ Vídeo ${index + 1} reproduzindo: ${video.src}`);
+                }).catch(error => {
+                    console.log(`⚠️ Vídeo ${index + 1} não pôde autoplay (normal):`, error.message);
+                    // Não é um erro crítico - alguns navegadores bloqueiam autoplay
+                });
+            }
         });
         
-        console.log(`📊 Resultado: ${successCount} sucessos, ${errorCount} erros`);
-        
-        if (errorCount > 0) {
-            this.showNotification(`Alguns stickers não carregaram. Verifique o console.`, 'warning');
-        }
-    }
-
-    showVideoError(container) {
-        container.innerHTML = `
-            <div class="video-error-placeholder">
-                <i class="fas fa-exclamation-triangle"></i>
-                <span>Erro ao carregar</span>
-            </div>
-        `;
+        console.log(`📊 Vídeos processados: ${playedCount}/${videos.length} iniciados`);
     }
 
     pauseStickerVideos() {
@@ -302,6 +290,7 @@ class StickersSystem {
             video.pause();
             video.currentTime = 0;
         });
+        console.log('⏸️ Todos os vídeos pausados');
     }
 
     async sendSticker(stickerName) {
@@ -330,11 +319,13 @@ class StickersSystem {
             if (!isPremium) {
                 const canSend = await window.MessagesSystem.checkCanSendMessage();
                 if (!canSend.can_send) {
-                    window.MessagesSystem.handleSendError(canSend.reason);
+                    this.handleSendError(canSend.reason);
                     this.showSendingState(false);
                     return;
                 }
             }
+
+            console.log(`📤 Enviando sticker para ${currentConversation}...`);
 
             // Enviar sticker via RPC
             const { data, error } = await this.supabase
@@ -344,7 +335,12 @@ class StickersSystem {
                     p_sticker_name: stickerName
                 });
 
-            if (error) throw error;
+            if (error) {
+                console.error('❌ Erro RPC:', error);
+                throw new Error(error.message);
+            }
+
+            console.log('📦 Resposta do servidor:', data);
 
             if (data === 'success') {
                 this.showNotification('🎉 Sticker enviado com sucesso!', 'success');
@@ -359,14 +355,17 @@ class StickersSystem {
 
         } catch (error) {
             console.error('❌ Erro ao enviar sticker:', error);
-            this.showNotification('❌ Erro ao enviar sticker', 'error');
+            this.showNotification('❌ Erro ao enviar sticker. Tentando método alternativo...', 'warning');
             
             // Fallback: tentar enviar como mensagem normal
             try {
-                await this.sendStickerFallback(stickerName, currentConversation);
+                const success = await this.sendStickerFallback(stickerName, currentConversation);
+                if (!success) {
+                    this.showNotification('❌ Falha ao enviar sticker', 'error');
+                }
             } catch (fallbackError) {
                 console.error('❌ Erro no fallback:', fallbackError);
-                this.showNotification('❌ Falha ao enviar sticker', 'error');
+                this.showNotification('❌ Erro crítico ao enviar sticker', 'error');
             }
         } finally {
             this.showSendingState(false);
@@ -376,153 +375,244 @@ class StickersSystem {
     async sendStickerFallback(stickerName, receiverId) {
         console.log(`🔄 Usando fallback para sticker: ${stickerName}`);
         
-        const { data, error } = await this.supabase
-            .from('messages')
-            .insert({
-                sender_id: this.currentUser.id,
-                receiver_id: receiverId,
-                message: `[STICKER:${stickerName}]`,
-                sent_at: new Date().toISOString(),
-                is_sticker: true,
-                sticker_name: stickerName
-            })
-            .select();
+        try {
+            const { data, error } = await this.supabase
+                .from('messages')
+                .insert({
+                    sender_id: this.currentUser.id,
+                    receiver_id: receiverId,
+                    message: `[STICKER:${stickerName}]`,
+                    sent_at: new Date().toISOString(),
+                    is_sticker: true,
+                    sticker_name: stickerName
+                })
+                .select();
 
-        if (error) throw error;
+            if (error) {
+                console.error('❌ Erro no fallback:', error);
+                return false;
+            }
 
-        if (data) {
-            this.showNotification('🎉 Sticker enviado! (fallback)', 'success');
-            this.closeModal();
-            await this.refreshConversation();
-            return true;
+            if (data && data.length > 0) {
+                this.showNotification('🎉 Sticker enviado! (método alternativo)', 'success');
+                this.closeModal();
+                await this.refreshConversation();
+                return true;
+            }
+            
+            return false;
+            
+        } catch (error) {
+            console.error('❌ Erro crítico no fallback:', error);
+            return false;
         }
-        return false;
     }
 
     async refreshConversation() {
         if (window.MessagesSystem) {
-            console.log('🔄 Atualizando conversa...');
+            console.log('🔄 Atualizando conversa após envio...');
             
-            if (window.MessagesSystem.currentConversation) {
-                await window.MessagesSystem.loadConversationMessages(window.MessagesSystem.currentConversation);
+            try {
+                // Recarregar mensagens da conversa atual
+                if (window.MessagesSystem.currentConversation) {
+                    await window.MessagesSystem.loadConversationMessages(window.MessagesSystem.currentConversation);
+                }
+                
+                // Recarregar lista de conversas
+                if (window.MessagesSystem.loadConversations) {
+                    await window.MessagesSystem.loadConversations();
+                }
+                
+                // Atualizar contador
+                if (window.MessagesSystem.updateMessageCounter) {
+                    window.MessagesSystem.updateMessageCounter();
+                }
+                
+                console.log('✅ Conversa atualizada!');
+                
+            } catch (error) {
+                console.error('❌ Erro ao atualizar conversa:', error);
             }
-            await window.MessagesSystem.loadConversations();
-            window.MessagesSystem.updateMessageCounter();
         }
     }
 
     handleSendError(reason) {
         console.log(`❌ Erro no envio: ${reason}`);
         
-        switch (reason) {
-            case 'limit_reached':
-                this.showNotification('🚫 Limite diário de 4 mensagens atingido! Volte amanhã.', 'error');
-                break;
-            case 'blocked':
-                this.showNotification('🚫 Não é possível enviar sticker para este usuário.', 'error');
-                break;
-            case 'sticker_not_found':
-                this.showNotification('❌ Sticker não encontrado no sistema.', 'error');
-                break;
-            default:
-                this.showNotification(`❌ Erro: ${reason}`, 'error');
-        }
+        const errorMessages = {
+            'limit_reached': '🚫 Limite diário de 4 mensagens atingido! Volte amanhã.',
+            'blocked': '🚫 Não é possível enviar mensagem para este usuário.',
+            'sticker_not_found': '❌ Sticker não encontrado no sistema.',
+            'user_not_found': '❌ Usuário não encontrado.',
+            'not_premium': '🚫 Recurso disponível apenas para usuários Premium.'
+        };
+        
+        const message = errorMessages[reason] || `❌ Erro: ${reason}`;
+        this.showNotification(message, 'error');
     }
 
     showSendingState(isSending) {
         const modal = document.getElementById('stickersModal');
         if (!modal) return;
 
-        const sendButtons = modal.querySelectorAll('.sticker-item');
+        const stickerItems = modal.querySelectorAll('.sticker-item');
+        const sendButtons = modal.querySelectorAll('button');
 
         if (isSending) {
             modal.classList.add('sending');
+            stickerItems.forEach(item => {
+                item.style.pointerEvents = 'none';
+                item.style.opacity = '0.6';
+                item.style.cursor = 'wait';
+            });
             sendButtons.forEach(btn => {
-                btn.style.pointerEvents = 'none';
-                btn.style.opacity = '0.6';
+                btn.disabled = true;
             });
         } else {
             modal.classList.remove('sending');
+            stickerItems.forEach(item => {
+                item.style.pointerEvents = 'auto';
+                item.style.opacity = '1';
+                item.style.cursor = 'pointer';
+            });
             sendButtons.forEach(btn => {
-                btn.style.pointerEvents = 'auto';
-                btn.style.opacity = '1';
+                btn.disabled = false;
             });
         }
     }
 
     showNotification(message, type = 'info') {
+        // Usar a função global de notificação se existir
         if (typeof window.showNotification === 'function') {
             window.showNotification(message, type);
-        } else {
-            // Fallback básico
-            const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 12px 16px;
-                border-radius: 8px;
-                color: white;
-                z-index: 1000;
-                background: ${type === 'error' ? '#e74c3c' : type === 'success' ? '#27ae60' : '#3498db'};
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            `;
-            notification.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
-                    <span>${message}</span>
-                </div>
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
-                }
-            }, 4000);
+            return;
         }
+        
+        // Fallback básico
+        console.log(`${type.toUpperCase()}: ${message}`);
+        
+        // Criar notificação básica
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            z-index: 10001;
+            background: ${type === 'error' ? '#e74c3c' : 
+                        type === 'success' ? '#27ae60' : 
+                        type === 'warning' ? '#f39c12' : '#3498db'};
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            max-width: 300px;
+            word-wrap: break-word;
+        `;
+        
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 
+                                 type === 'success' ? 'check-circle' : 
+                                 type === 'warning' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Remover após 4 segundos
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 4000);
     }
 
     // Para integração com o sistema principal
     setCurrentConversation(conversationId) {
         this.currentConversation = conversationId;
-        console.log(`🎯 Conversa definida: ${conversationId}`);
+        console.log(`🎯 Conversa definida para stickers: ${conversationId}`);
+    }
+
+    // Destruir instância (limpeza)
+    destroy() {
+        this.pauseStickerVideos();
+        this.closeModal();
+        this.isInitialized = false;
+        console.log('🧹 StickersSystem destruído');
     }
 }
 
 // ==================== INICIALIZAÇÃO GLOBAL ====================
 window.StickersSystem = new StickersSystem();
 
-// Inicializar quando o sistema de mensagens estiver pronto
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔰 DOM Carregado - Iniciando stickers...');
+// Inicializar quando o sistema estiver pronto
+function initializeStickersSystem() {
+    // Verificar se MessagesSystem está disponível
+    if (!window.MessagesSystem) {
+        console.log('⏳ Aguardando MessagesSystem...');
+        setTimeout(initializeStickersSystem, 1000);
+        return;
+    }
+
+    // Verificar se usuário está carregado
+    if (!window.MessagesSystem.currentUser) {
+        console.log('⏳ Aguardando usuário...');
+        setTimeout(initializeStickersSystem, 1000);
+        return;
+    }
+
+    console.log('🚀 Inicializando StickersSystem...');
     
-    const initStickersSystem = () => {
-        if (window.MessagesSystem && window.MessagesSystem.currentUser) {
-            console.log('👤 Usuário carregado, inicializando stickers...');
-            window.StickersSystem.initialize(window.MessagesSystem.currentUser);
-            
-            if (window.MessagesSystem.currentConversation) {
-                window.StickersSystem.setCurrentConversation(window.MessagesSystem.currentConversation);
-            }
-            
-        } else {
-            console.log('⏳ Aguardando MessagesSystem...');
-            setTimeout(initStickersSystem, 500);
+    try {
+        window.StickersSystem.initialize(window.MessagesSystem.currentUser);
+        
+        // Atualizar conversa se já existir
+        if (window.MessagesSystem.currentConversation) {
+            window.StickersSystem.setCurrentConversation(window.MessagesSystem.currentConversation);
         }
-    };
+        
+        console.log('🎉 StickersSystem carregado com sucesso!');
+        
+    } catch (error) {
+        console.error('❌ Erro na inicialização do StickersSystem:', error);
+    }
+}
+
+// Iniciar quando DOM carregar
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔰 DOM Carregado - Iniciando sistema de stickers...');
     
-    setTimeout(initStickersSystem, 1000);
+    // Dar tempo para o MessagesSystem inicializar
+    setTimeout(initializeStickersSystem, 2000);
 });
 
-// Funções globais
+// Observar mudanças no MessagesSystem
+let initializationAttempts = 0;
+const maxInitializationAttempts = 10;
+
+const checkMessagesSystemReady = setInterval(() => {
+    if (window.MessagesSystem && window.MessagesSystem.currentUser) {
+        clearInterval(checkMessagesSystemReady);
+        initializeStickersSystem();
+    } else {
+        initializationAttempts++;
+        if (initializationAttempts >= maxInitializationAttempts) {
+            clearInterval(checkMessagesSystemReady);
+            console.error('❌ Timeout: MessagesSystem não carregou após várias tentativas');
+        }
+    }
+}, 1000);
+
+// ==================== FUNÇÕES GLOBAIS PARA HTML ====================
 window.openStickersModal = function() {
-    if (window.StickersSystem) {
+    if (window.StickersSystem && window.StickersSystem.isInitialized) {
         window.StickersSystem.openModal();
     } else {
-        console.log('❌ StickersSystem não disponível');
+        console.error('❌ StickersSystem não inicializado');
+        alert('Sistema de stickers não está pronto. Recarregue a página.');
     }
 };
 
@@ -533,7 +623,14 @@ window.closeStickersModal = function() {
 };
 
 window.sendSticker = function(stickerName) {
-    if (window.StickersSystem) {
+    if (window.StickersSystem && window.StickersSystem.isInitialized) {
         window.StickersSystem.sendSticker(stickerName);
+    } else {
+        console.error('❌ StickersSystem não inicializado');
     }
 };
+
+// Export para módulos (se necessário)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = StickersSystem;
+}

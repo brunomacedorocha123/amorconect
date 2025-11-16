@@ -556,127 +556,17 @@
     <script src="sistema-vibe.js"></script> 
     <script src="mensagens.js"></script>
     <script src="mensagens-temporeal.js"></script>
-    <!-- NOVO: Sistema de Stickers -->
+    <!-- NOVO: Sistema de Stickers CORRIGIDO -->
     <script src="stickers.js"></script>
 
-        <script>
+    <script>
         // Configuração do Supabase
         const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // ==================== SISTEMA DE STICKERS ====================
-        function openStickersModal() {
-            if (!window.MessagesSystem || !window.MessagesSystem.currentConversation) {
-                showNotification('Selecione uma conversa primeiro', 'error');
-                return;
-            }
-            
-            const modal = document.getElementById('stickersModal');
-            modal.style.display = 'flex';
-            
-            // Iniciar videos dos stickers
-            setTimeout(() => {
-                const videos = modal.querySelectorAll('video');
-                videos.forEach(video => {
-                    video.play().catch(() => {
-                        // Silenciar erro de autoplay
-                    });
-                });
-            }, 100);
-        }
-
-        function closeStickersModal() {
-            const modal = document.getElementById('stickersModal');
-            modal.style.display = 'none';
-            
-            // Pausar videos dos stickers
-            const videos = modal.querySelectorAll('video');
-            videos.forEach(video => {
-                video.pause();
-                video.currentTime = 0;
-            });
-        }
-
-        async function sendSticker(stickerName) {
-            if (!window.MessagesSystem || !window.MessagesSystem.currentConversation) {
-                showNotification('Selecione uma conversa primeiro', 'error');
-                return;
-            }
-
-            try {
-                // Verificar se pode enviar (limite diário)
-                let isPremium = false;
-                if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
-                    isPremium = await PremiumManager.checkPremiumStatus();
-                }
-
-                if (!isPremium) {
-                    const canSend = await window.MessagesSystem.checkCanSendMessage();
-                    if (!canSend.can_send) {
-                        window.MessagesSystem.handleSendError(canSend.reason);
-                        return;
-                    }
-                }
-
-                // Enviar sticker como mensagem
-                const { data, error } = await supabase
-                    .rpc('send_sticker_message', {
-                        p_sender_id: window.MessagesSystem.currentUser.id,
-                        p_receiver_id: window.MessagesSystem.currentConversation,
-                        p_sticker_name: stickerName
-                    });
-
-                if (error) throw error;
-
-                if (data === 'success') {
-                    showNotification('Sticker enviado!', 'success');
-                    closeStickersModal();
-                    
-                    // Atualizar conversa
-                    await window.MessagesSystem.loadConversationMessages(window.MessagesSystem.currentConversation);
-                    await window.MessagesSystem.loadConversations();
-                    window.MessagesSystem.updateMessageCounter();
-                    
-                } else {
-                    showNotification(data, 'error');
-                }
-
-            } catch (error) {
-                showNotification('Erro ao enviar sticker', 'error');
-                // Fallback: enviar como mensagem normal
-                await sendStickerFallback(stickerName);
-            }
-        }
-
-        async function sendStickerFallback(stickerName) {
-            try {
-                const { data, error } = await supabase
-                    .from('messages')
-                    .insert({
-                        sender_id: window.MessagesSystem.currentUser.id,
-                        receiver_id: window.MessagesSystem.currentConversation,
-                        message: `[STICKER:${stickerName}]`,
-                        sent_at: new Date().toISOString(),
-                        is_sticker: true,
-                        sticker_name: stickerName
-                    })
-                    .select();
-
-                if (error) throw error;
-
-                if (data) {
-                    showNotification('Sticker enviado!', 'success');
-                    closeStickersModal();
-                    
-                    await window.MessagesSystem.loadConversationMessages(window.MessagesSystem.currentConversation);
-                    await window.MessagesSystem.loadConversations();
-                    window.MessagesSystem.updateMessageCounter();
-                }
-            } catch (fallbackError) {
-                showNotification('Erro ao enviar sticker', 'error');
-            }
-        }
+        // ==================== SISTEMA DE STICKERS SIMPLIFICADO ====================
+        // REMOVIDO: Todas as funções duplicadas de stickers - agora estão no stickers.js
 
         // ==================== CÓDIGO ORIGINAL ====================
         window.acceptProposal = function(proposalId) {
@@ -924,8 +814,8 @@
             // Inicializar sistema Vibe
             initializeSistemaVibe();
             
-            // Inicializar sistema de Stickers
-            initializeStickersSystem();
+            // VERIFICAÇÃO: StickersSystem será inicializado automaticamente pelo stickers.js
+            console.log('🔰 StickersSystem será inicializado automaticamente...');
             
             // Verificar parâmetros da URL
             setTimeout(checkUrlParams, 1000);
@@ -941,25 +831,7 @@
             }, 500);
         });
 
-        // ==================== INICIALIZAÇÃO DOS STICKERS ====================
-        function initializeStickersSystem() {
-            // Adicionar event listeners para stickers
-            const stickerBtn = document.getElementById('stickerBtn');
-            if (stickerBtn) {
-                stickerBtn.addEventListener('click', openStickersModal);
-            }
-
-            // Adicionar event listeners para cada sticker
-            setTimeout(() => {
-                const stickerItems = document.querySelectorAll('.sticker-item');
-                stickerItems.forEach(item => {
-                    item.addEventListener('click', () => {
-                        const stickerName = item.getAttribute('data-sticker');
-                        sendSticker(stickerName);
-                    });
-                });
-            }, 1000);
-        }
+        // REMOVIDO: função initializeStickersSystem() - agora está no stickers.js
 
         // Função global para mostrar notificações
         function showNotification(message, type = 'info') {
@@ -993,9 +865,7 @@
         }
 
         // Funções globais para uso no HTML
-        window.openStickersModal = openStickersModal;
-        window.closeStickersModal = closeStickersModal;
-        window.sendSticker = sendSticker;
+        // APENAS as funções necessárias para o HTML - stickers removidas
         window.showFidelityProposal = showFidelityProposal;
         window.showManageFidelity = showManageFidelity;
         window.showNotification = showNotification;
@@ -1005,6 +875,27 @@
         window.closeManageFidelityModal = closeManageFidelityModal;
         window.confirmFidelityProposal = confirmFidelityProposal;
         window.cancelFidelityAgreement = cancelFidelityAgreement;
+        
+        // Funções de stickers APENAS como fallback - o stickers.js tem as versões completas
+        window.openStickersModal = function() {
+            if (window.StickersSystem && window.StickersSystem.openModal) {
+                window.StickersSystem.openModal();
+            } else {
+                showNotification('Sistema de stickers carregando...', 'warning');
+            }
+        };
+        
+        window.closeStickersModal = function() {
+            if (window.StickersSystem && window.StickersSystem.closeModal) {
+                window.StickersSystem.closeModal();
+            }
+        };
+        
+        window.sendSticker = function(stickerName) {
+            if (window.StickersSystem && window.StickersSystem.sendSticker) {
+                window.StickersSystem.sendSticker(stickerName);
+            }
+        };
     </script>
 </body>
 </html>

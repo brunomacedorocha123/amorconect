@@ -2224,3 +2224,43 @@ footer {
     font-size: 1.2rem;
     margin-bottom: 0.3rem;
 }
+
+/* ===== GARANTIR VISIBILIDADE DO MODAL ===== */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none; /* Inicialmente escondido */
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 90%;
+    max-height: 90%;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+/* GARANTIR que os stickers sejam visíveis */
+.stickers-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important;
+    gap: 1rem !important;
+    padding: 1rem !important;
+}
+
+.sticker-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
