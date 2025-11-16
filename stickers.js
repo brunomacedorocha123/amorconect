@@ -1,10 +1,32 @@
-// stickers.js - SISTEMA COMPLETO E FUNCIONAL
+// stickers.js - SISTEMA 100% FUNCIONAL E COMPLETO
 class StickersSystem {
     constructor() {
         this.supabase = window.supabase;
         this.currentUser = null;
         this.currentConversation = null;
         this.isInitialized = false;
+        this.storageBaseUrl = 'https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/';
+        
+        // Lista completa de stickers
+        this.stickers = [
+            { name: 'videoanel', display_name: 'Anel', category: 'amor' },
+            { name: 'videoboanoite', display_name: 'Boa Noite', category: 'cumprimentos' },
+            { name: 'videobolo', display_name: 'Bolo', category: 'comida' },
+            { name: 'videobomdia', display_name: 'Bom Dia', category: 'cumprimentos' },
+            { name: 'videocachorinho', display_name: 'Cachorrinho', category: 'animais' },
+            { name: 'videocafe', display_name: 'Café', category: 'comida' },
+            { name: 'videocarta', display_name: 'Carta', category: 'amor' },
+            { name: 'videocoracao', display_name: 'Coração', category: 'amor' },
+            { name: 'videocoroa', display_name: 'Coroa', category: 'elogios' },
+            { name: 'videodrink', display_name: 'Drink', category: 'comida' },
+            { name: 'videogatinha', display_name: 'Gatinha', category: 'animais' },
+            { name: 'videoostra1', display_name: 'Ostra', category: 'comida' },
+            { name: 'videoperfume1', display_name: 'Perfume', category: 'presentes' },
+            { name: 'videorosa1', display_name: 'Rosa', category: 'amor' },
+            { name: 'videosorvete1', display_name: 'Sorvete', category: 'comida' },
+            { name: 'videotacas1', display_name: 'Taças', category: 'celebração' },
+            { name: 'videourso', display_name: 'Urso', category: 'animais' }
+        ];
     }
 
     async initialize(currentUser) {
@@ -12,13 +34,119 @@ class StickersSystem {
         this.isInitialized = true;
         
         console.log('🎯 Inicializando Sistema de Stickers...');
+        console.log('👤 Usuário:', this.currentUser.id);
         
         // Configurar TODOS os eventos
-        this.setupCategoryFilters();
-        this.setupStickerClickEvents();
         this.setupEventListeners();
+        this.setupStickerModal();
         
         console.log('✅ Sistema de Stickers INICIALIZADO com sucesso!');
+    }
+
+    setupStickerModal() {
+        console.log('🔧 Configurando modal de stickers...');
+        
+        // Remover modal existente se houver
+        const existingModal = document.getElementById('stickersModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Criar modal COMPLETO
+        const modalHTML = `
+            <div id="stickersModal" class="modal">
+                <div class="modal-content stickers-modal">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-smile"></i> Stickers</h3>
+                        <button class="modal-close" onclick="StickersSystem.closeModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Categorias -->
+                    <div class="stickers-categories" id="stickersCategories">
+                        <button class="category-btn active" data-category="all">
+                            <i class="fas fa-star"></i>
+                            <span>Todos</span>
+                        </button>
+                        <button class="category-btn" data-category="amor">
+                            <i class="fas fa-heart"></i>
+                            <span>Amor</span>
+                        </button>
+                        <button class="category-btn" data-category="cumprimentos">
+                            <i class="fas fa-hand"></i>
+                            <span>Saudações</span>
+                        </button>
+                        <button class="category-btn" data-category="comida">
+                            <i class="fas fa-utensils"></i>
+                            <span>Comida</span>
+                        </button>
+                        <button class="category-btn" data-category="animais">
+                            <i class="fas fa-paw"></i>
+                            <span>Animais</span>
+                        </button>
+                        <button class="category-btn" data-category="elogios">
+                            <i class="fas fa-crown"></i>
+                            <span>Elogios</span>
+                        </button>
+                        <button class="category-btn" data-category="presentes">
+                            <i class="fas fa-gift"></i>
+                            <span>Presentes</span>
+                        </button>
+                        <button class="category-btn" data-category="celebração">
+                            <i class="fas fa-champagne-glasses"></i>
+                            <span>Celebração</span>
+                        </button>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <div class="stickers-grid" id="stickersGrid">
+                            ${this.generateStickersHTML()}
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <div class="sticker-info">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Stickers contam como mensagem no seu limite diário</span>
+                        </div>
+                        <button class="btn btn-outline" onclick="StickersSystem.closeModal()">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        // Configurar eventos do modal
+        this.setupCategoryFilters();
+        this.setupStickerClickEvents();
+        
+        console.log('✅ Modal de stickers criado e configurado!');
+    }
+
+    generateStickersHTML() {
+        console.log('🎨 Gerando HTML dos stickers...');
+        
+        return this.stickers.map(sticker => {
+            const videoUrl = `${this.storageBaseUrl}${sticker.name}.mp4`;
+            console.log(`📹 Sticker: ${sticker.name} -> ${videoUrl}`);
+            
+            return `
+                <div class="sticker-item" data-sticker="${sticker.name}" data-category="${sticker.category}">
+                    <div class="sticker-video-container">
+                        <video width="80" height="80" loop muted playsinline preload="metadata">
+                            <source src="${videoUrl}" type="video/mp4">
+                            Seu navegador não suporta vídeo.
+                        </video>
+                        <div class="sticker-overlay">
+                            <i class="fas fa-paper-plane"></i>
+                        </div>
+                    </div>
+                    <span class="sticker-name">${sticker.display_name}</span>
+                </div>
+            `;
+        }).join('');
     }
 
     setupCategoryFilters() {
@@ -43,15 +171,19 @@ class StickersSystem {
         const allStickers = document.querySelectorAll('.sticker-item');
         console.log(`🔍 Filtrando ${allStickers.length} stickers por categoria: ${category}`);
         
+        let visibleCount = 0;
         allStickers.forEach(sticker => {
             const stickerCategory = sticker.dataset.category;
             
             if (category === 'all' || stickerCategory === category) {
                 sticker.style.display = 'flex';
+                visibleCount++;
             } else {
                 sticker.style.display = 'none';
             }
         });
+        
+        console.log(`👀 ${visibleCount} stickers visíveis`);
     }
 
     setupStickerClickEvents() {
@@ -131,13 +263,37 @@ class StickersSystem {
 
     playStickerVideos() {
         const videos = document.querySelectorAll('#stickersModal video');
-        console.log(`🎬 Reproduzindo ${videos.length} vídeos...`);
+        console.log(`🎬 Tentando reproduzir ${videos.length} vídeos...`);
         
-        videos.forEach(video => {
-            video.play().catch(e => {
-                console.log('⏸️ Autoplay bloqueado para:', video.src);
+        let successCount = 0;
+        let errorCount = 0;
+        
+        videos.forEach((video, index) => {
+            video.play().then(() => {
+                successCount++;
+                console.log(`✅ Video ${index + 1} reproduzindo: ${video.src}`);
+            }).catch(error => {
+                errorCount++;
+                console.log(`❌ Erro no video ${index + 1}:`, error.message, video.src);
+                // Mostrar placeholder de erro
+                this.showVideoError(video.parentElement);
             });
         });
+        
+        console.log(`📊 Resultado: ${successCount} sucessos, ${errorCount} erros`);
+        
+        if (errorCount > 0) {
+            this.showNotification(`Alguns stickers não carregaram. Verifique o console.`, 'warning');
+        }
+    }
+
+    showVideoError(container) {
+        container.innerHTML = `
+            <div class="video-error-placeholder">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Erro ao carregar</span>
+            </div>
+        `;
     }
 
     pauseStickerVideos() {
@@ -210,6 +366,7 @@ class StickersSystem {
                 await this.sendStickerFallback(stickerName, currentConversation);
             } catch (fallbackError) {
                 console.error('❌ Erro no fallback:', fallbackError);
+                this.showNotification('❌ Falha ao enviar sticker', 'error');
             }
         } finally {
             this.showSendingState(false);

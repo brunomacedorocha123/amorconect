@@ -2202,3 +2202,25 @@ footer {
 .sticker-item:hover .sticker-tooltip {
     opacity: 1;
 }
+
+/* Placeholder para erro de video */
+.video-error-placeholder {
+    width: 80px;
+    height: 80px;
+    background: rgba(245, 101, 101, 0.1);
+    border: 2px dashed #e74c3c;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #e74c3c;
+    font-size: 0.7rem;
+    text-align: center;
+    padding: 0.5rem;
+}
+
+.video-error-placeholder i {
+    font-size: 1.2rem;
+    margin-bottom: 0.3rem;
+}
