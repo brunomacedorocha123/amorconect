@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- Header -->
+    <!-- Header (mantido igual) -->
     <header>
         <div class="container">
             <div class="header-content">
@@ -106,7 +106,7 @@
                                 <p>Selecione uma conversa para começar a enviar mensagens</p>
                             </div>
                             
-                            <!-- ⭐ ESTRUTURA DO HEADER QUANDO CONVERSA SELECIONADA -->
+                            <!-- Header quando conversa selecionada -->
                             <div class="chat-header-content" style="display: none; width: 100%;">
                                 <div class="chat-header-user">
                                     <div class="chat-user-avatar">
@@ -123,12 +123,12 @@
                                     </div>
                                 </div>
                                 <div class="chat-header-actions">
-                                    <!-- ⭐ BOTÃO VIBE EXCLUSIVE ADICIONADO -->
+                                    <!-- Botão Vibe Exclusive -->
                                     <button class="chat-action-btn fidelity-btn" id="fidelityProposeBtn" style="display: none;" 
                                             title="Propor Vibe Exclusive">
                                         <i class="fas fa-gem"></i> Vibe Exclusive
                                     </button>
-                                    <!-- ⭐ BOTÃO PROPOSTAS RECEBIDAS ADICIONADO -->
+                                    <!-- Botão Propostas Recebidas -->
                                     <button class="chat-action-btn proposals-btn" id="viewProposalsBtn" style="display: none;" 
                                             title="Propostas recebidas">
                                         <i class="fas fa-bell"></i>
@@ -150,15 +150,21 @@
                             </div>
                         </div>
 
-                        <!-- Área de Digitação (inicialmente escondida) -->
+                        <!-- Área de Digitação COM STICKERS -->
                         <div class="message-input-area" id="messageInputArea" style="display: none;">
                             <div class="message-input-container">
+                                <!-- Botão Stickers -->
+                                <button class="btn-sticker" id="stickerBtn" title="Stickers">
+                                    <i class="fas fa-smile"></i>
+                                </button>
+                                
                                 <textarea 
                                     id="messageInput" 
                                     placeholder="Digite sua mensagem..." 
                                     rows="1"
                                     maxlength="1000"
                                 ></textarea>
+                                
                                 <div class="input-actions">
                                     <div class="char-counter" id="charCounter">0/1000</div>
                                     <button class="btn-send" id="sendMessage">
@@ -176,7 +182,7 @@
         </div>
     </main>
 
-    <!-- Footer -->
+    <!-- Footer (mantido igual) -->
     <footer>
         <div class="container">
             <div class="footer-content">
@@ -232,6 +238,67 @@
             </div>
         </div>
     </footer>
+
+    <!-- Modal de Stickers -->
+    <div id="stickersModal" class="modal">
+        <div class="modal-content stickers-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-smile"></i> Stickers</h3>
+                <button class="modal-close" onclick="closeStickersModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="stickers-grid" id="stickersGrid">
+                    <!-- Stickers serão carregados aqui -->
+                    <div class="sticker-item" data-sticker="videoanel.mp4">
+                        <video width="80" height="80" loop muted playsinline>
+                            <source src="stickers/videoanel.mp4" type="video/mp4">
+                        </video>
+                        <span class="sticker-name">Anel</span>
+                    </div>
+                    <div class="sticker-item" data-sticker="videoboanoite.mp4">
+                        <video width="80" height="80" loop muted playsinline>
+                            <source src="stickers/videoboanoite.mp4" type="video/mp4">
+                        </video>
+                        <span class="sticker-name">Boa Noite</span>
+                    </div>
+                    <div class="sticker-item" data-sticker="videobolo.mp4">
+                        <video width="80" height="80" loop muted playsinline>
+                            <source src="stickers/videobolo.mp4" type="video/mp4">
+                        </video>
+                        <span class="sticker-name">Bolo</span>
+                    </div>
+                    <div class="sticker-item" data-sticker="videobomdia.mp4">
+                        <video width="80" height="80" loop muted playsinline>
+                            <source src="stickers/videobomdia.mp4" type="video/mp4">
+                        </video>
+                        <span class="sticker-name">Bom Dia</span>
+                    </div>
+                    <div class="sticker-item" data-sticker="videocachorinho.mp4">
+                        <video width="80" height="80" loop muted playsinline>
+                            <source src="stickers/videocachorinho.mp4" type="video/mp4">
+                        </video>
+                        <span class="sticker-name">Cachorrinho</span>
+                    </div>
+                    <div class="sticker-item" data-sticker="videocafe.mp4">
+                        <video width="80" height="80" loop muted playsinline>
+                            <source src="stickers/videocafe.mp4" type="video/mp4">
+                        </video>
+                        <span class="sticker-name">Café</span>
+                    </div>
+                    <!-- Continuo no próximo comentário... -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="sticker-info">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Stickers contam como mensagem no seu limite diário</span>
+                </div>
+                <button class="btn btn-outline" onclick="closeStickersModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal de Informações do Usuário -->
     <div id="userInfoModal" class="modal">
@@ -295,320 +362,462 @@
             </div>
         </div>
     </div>
-<script src="auth-vibe.js"></script>
+
+    <script src="auth-vibe.js"></script>
     <script src="premium-check.js"></script>
     <script src="sistema-vibe.js"></script> 
     <script src="mensagens.js"></script>
     <script src="mensagens-temporeal.js"></script>
+    <!-- NOVO: Script dos Stickers -->
+    <script src="stickers.js"></script>
 
-   
-   <script>
-    // Configuração do Supabase
-    const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        <!-- Script Principal -->
+    <script>
+        // Configuração do Supabase
+        const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // ==================== CÓDIGO ORIGINAL ====================
-    window.acceptProposal = function(proposalId) {
-        if (window.sistemaVibe) {
-            window.sistemaVibe.acceptFidelityProposal(proposalId);
-        } else {
-            alert('Sistema Vibe não carregado! Recarregue a página.');
-        }
-    };
-
-    window.rejectProposal = function(proposalId) {
-        if (window.sistemaVibe) {
-            window.sistemaVibe.rejectFidelityProposal(proposalId);
-        } else {
-            alert('Sistema Vibe não carregado! Recarregue a página.');
-        }
-    };
-
-    function initializeSistemaVibe() {
-        if (window.MessagesSystem && window.MessagesSystem.currentUser) {
-            if (!window.sistemaVibe) {
-                window.sistemaVibe = new SistemaVibe();
-                window.sistemaVibe.initialize(window.MessagesSystem.currentUser);
+        // ==================== SISTEMA DE STICKERS ====================
+        function openStickersModal() {
+            if (!window.MessagesSystem || !window.MessagesSystem.currentConversation) {
+                showNotification('Selecione uma conversa primeiro', 'error');
+                return;
             }
             
+            const modal = document.getElementById('stickersModal');
+            modal.style.display = 'flex';
+            
+            // Iniciar videos dos stickers
             setTimeout(() => {
-                if (window.sistemaVibe) {
-                    window.sistemaVibe.createProposalsButton();
-                    window.sistemaVibe.createFidelityButton();
+                const videos = modal.querySelectorAll('video');
+                videos.forEach(video => {
+                    video.play().catch(() => {
+                        // Silenciar erro de autoplay
+                    });
+                });
+            }, 100);
+        }
+
+        function closeStickersModal() {
+            const modal = document.getElementById('stickersModal');
+            modal.style.display = 'none';
+            
+            // Pausar videos dos stickers
+            const videos = modal.querySelectorAll('video');
+            videos.forEach(video => {
+                video.pause();
+                video.currentTime = 0;
+            });
+        }
+
+        async function sendSticker(stickerName) {
+            if (!window.MessagesSystem || !window.MessagesSystem.currentConversation) {
+                showNotification('Selecione uma conversa primeiro', 'error');
+                return;
+            }
+
+            try {
+                // Verificar se pode enviar (limite diário)
+                let isPremium = false;
+                if (window.PremiumManager && typeof window.PremiumManager.checkPremiumStatus === 'function') {
+                    isPremium = await PremiumManager.checkPremiumStatus();
                 }
-            }, 1500);
-        } else {
-            setTimeout(initializeSistemaVibe, 1000);
-        }
-    }
-    
-    // Função de logout
-    async function logout() {
-        try {
-            const { error } = await supabase.auth.signOut();
-            if (error) throw error;
-            window.location.href = 'login.html';
-        } catch (error) {
-            // Logout silencioso
-        }
-    }
 
-    // Funções dos modais
-    function closeUserInfoModal() {
-        document.getElementById('userInfoModal').style.display = 'none';
-    }
+                if (!isPremium) {
+                    const canSend = await window.MessagesSystem.checkCanSendMessage();
+                    if (!canSend.can_send) {
+                        window.MessagesSystem.handleSendError(canSend.reason);
+                        return;
+                    }
+                }
 
-    function closeFidelityModal() {
-        document.getElementById('fidelityModal').style.display = 'none';
-    }
+                // Enviar sticker como mensagem
+                const { data, error } = await supabase
+                    .rpc('send_sticker_message', {
+                        p_sender_id: window.MessagesSystem.currentUser.id,
+                        p_receiver_id: window.MessagesSystem.currentConversation,
+                        p_sticker_name: stickerName
+                    });
 
-    function closeManageFidelityModal() {
-        document.getElementById('manageFidelityModal').style.display = 'none';
-    }
+                if (error) throw error;
 
-    function blockCurrentUser() {
-        // Implementar bloqueio de usuário
-    }
-
-    // Funções Vibe Exclusive
-    function showFidelityProposal() {
-        if (!window.MessagesSystem || !window.MessagesSystem.currentConversation) {
-            showNotification('Selecione uma conversa primeiro', 'error');
-            return;
-        }
-
-        const modal = document.getElementById('fidelityModal');
-        const content = document.getElementById('fidelityModalContent');
-        
-        content.innerHTML = `
-            <div class="fidelity-proposal">
-                <div class="proposal-header">
-                    <i class="fas fa-heart"></i>
-                    <h4>Propor Vibe Exclusive</h4>
-                </div>
-                <div class="proposal-content">
-                    <p>Você está prestes a propor um <strong>Vibe Exclusive</strong> para esta conexão especial!</p>
+                if (data === 'success') {
+                    showNotification('Sticker enviado!', 'success');
+                    closeStickersModal();
                     
-                    <div class="fidelity-benefits">
-                        <h5>📋 Como funciona:</h5>
-                        <ul>
-                            <li>✅ Foco total nesta conexão</li>
-                            <li>✅ Vocês desaparecem das buscas de outros usuários</li>
-                            <li>✅ Não recebem mais mensagens de outras pessoas</li>
-                            <li>✅ Badge exclusiva no perfil</li>
-                            <li>✅ Estatísticas da conexão</li>
-                        </ul>
-                    </div>
+                    // Atualizar conversa
+                    await window.MessagesSystem.loadConversationMessages(window.MessagesSystem.currentConversation);
+                    await window.MessagesSystem.loadConversations();
+                    window.MessagesSystem.updateMessageCounter();
+                    
+                } else {
+                    showNotification(data, 'error');
+                }
 
-                    <div class="fidelity-terms">
-                        <h5>⚖️ Termos do Acordo:</h5>
-                        <ul>
-                            <li>• Ambos precisam aceitar a proposta</li>
-                            <li>• Exclusivo para usuários Premium</li>
-                            <li>• Período de reflexão de 24h após aceite</li>
-                            <li>• Quarentena de 7 dias se cancelarem</li>
-                        </ul>
-                    </div>
-
-                    <div class="proposal-warning">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span>Esta ação é reversível, mas terá período de quarentena.</span>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        modal.style.display = 'flex';
-    }
-
-    async function confirmFidelityProposal() {
-        if (!window.MessagesSystem || !window.MessagesSystem.currentConversation) {
-            showNotification('Erro: conversa não selecionada', 'error');
-            return;
+            } catch (error) {
+                showNotification('Erro ao enviar sticker', 'error');
+                // Fallback: enviar como mensagem normal
+                await sendStickerFallback(stickerName);
+            }
         }
 
-        try {
-            const { data, error } = await supabase
-                .rpc('propose_fidelity_agreement', {
-                    p_proposer_id: window.MessagesSystem.currentUser.id,
-                    p_receiver_id: window.MessagesSystem.currentConversation
-                });
+        async function sendStickerFallback(stickerName) {
+            try {
+                const { data, error } = await supabase
+                    .from('messages')
+                    .insert({
+                        sender_id: window.MessagesSystem.currentUser.id,
+                        receiver_id: window.MessagesSystem.currentConversation,
+                        message: `[STICKER:${stickerName}]`,
+                        sent_at: new Date().toISOString(),
+                        is_sticker: true,
+                        sticker_name: stickerName
+                    })
+                    .select();
 
-            if (error) throw error;
+                if (error) throw error;
 
-            if (data === 'success') {
-                showNotification('Proposta de Vibe Exclusive enviada!', 'success');
-                closeFidelityModal();
-                updateFidelityButton();
+                if (data) {
+                    showNotification('Sticker enviado!', 'success');
+                    closeStickersModal();
+                    
+                    await window.MessagesSystem.loadConversationMessages(window.MessagesSystem.currentConversation);
+                    await window.MessagesSystem.loadConversations();
+                    window.MessagesSystem.updateMessageCounter();
+                }
+            } catch (fallbackError) {
+                showNotification('Erro ao enviar sticker', 'error');
+            }
+        }
+
+        // ==================== CÓDIGO ORIGINAL ====================
+        window.acceptProposal = function(proposalId) {
+            if (window.sistemaVibe) {
+                window.sistemaVibe.acceptFidelityProposal(proposalId);
             } else {
-                showNotification(data, 'error');
+                alert('Sistema Vibe não carregado! Recarregue a página.');
             }
+        };
 
-        } catch (error) {
-            showNotification('Erro ao enviar proposta', 'error');
-        }
-    }
-
-    function showManageFidelity() {
-        const modal = document.getElementById('manageFidelityModal');
-        const content = document.getElementById('manageFidelityContent');
-        
-        content.innerHTML = `
-            <div class="manage-fidelity">
-                <div class="fidelity-status">
-                    <i class="fas fa-gem"></i>
-                    <h4>Vibe Exclusive Ativo</h4>
-                    <p>Com: <strong id="partnerName">Carregando...</strong></p>
-                    <p>Desde: <strong id="agreementDate">Carregando...</strong></p>
-                </div>
-
-                <div class="fidelity-stats">
-                    <h5>📊 Estatísticas da Conexão:</h5>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <span class="stat-value" id="daysTogether">0</span>
-                            <span class="stat-label">dias juntos</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value" id="messagesExchanged">0</span>
-                            <span class="stat-label">mensagens</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="fidelity-actions">
-                    <div class="action-warning">
-                        <i class="fas fa-info-circle"></i>
-                        <p>Ao encerrar, entrará em quarentena de <strong>7 dias</strong> antes de poder propor novo Vibe Exclusive.</p>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        loadFidelityManagementData();
-        modal.style.display = 'flex';
-    }
-
-    async function loadFidelityManagementData() {
-        // Carregar dados do acordo
-    }
-
-    async function cancelFidelityAgreement() {
-        if (!confirm('Tem certeza que deseja encerrar o Vibe Exclusive? Haverá período de quarentena de 7 dias.')) {
-            return;
-        }
-
-        try {
-            const { data, error } = await supabase
-                .rpc('cancel_fidelity_agreement', {
-                    p_user_id: window.MessagesSystem.currentUser.id
-                });
-
-            if (error) throw error;
-
-            if (data === 'success') {
-                showNotification('Vibe Exclusive encerrado', 'success');
-                closeManageFidelityModal();
-                updateFidelityButton();
+        window.rejectProposal = function(proposalId) {
+            if (window.sistemaVibe) {
+                window.sistemaVibe.rejectFidelityProposal(proposalId);
             } else {
-                showNotification(data, 'error');
+                alert('Sistema Vibe não carregado! Recarregue a página.');
             }
+        };
 
-        } catch (error) {
-            showNotification('Erro ao encerrar acordo', 'error');
-        }
-    }
-
-    function updateFidelityButton() {
-        if (window.MessagesSystem && window.MessagesSystem.updateFidelityButton) {
-            window.MessagesSystem.updateFidelityButton();
-        }
-    }
-
-    // Verificar se veio redirecionado do perfil
-    function checkUrlParams() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const userId = urlParams.get('user');
-        if (userId && window.MessagesSystem) {
-            window.MessagesSystem.selectConversation(userId);
-        }
-    }
-
-    // Verificação de redirecionamento Vibe Exclusive
-    function checkVibeRedirect() {
-        setTimeout(() => {
-            if (window.AuthVibeSystem) {
-                window.AuthVibeSystem.checkAuthAndVibe();
+        function initializeSistemaVibe() {
+            if (window.MessagesSystem && window.MessagesSystem.currentUser) {
+                if (!window.sistemaVibe) {
+                    window.sistemaVibe = new SistemaVibe();
+                    window.sistemaVibe.initialize(window.MessagesSystem.currentUser);
+                }
+                
+                setTimeout(() => {
+                    if (window.sistemaVibe) {
+                        window.sistemaVibe.createProposalsButton();
+                        window.sistemaVibe.createFidelityButton();
+                    }
+                }, 1500);
+            } else {
+                setTimeout(initializeSistemaVibe, 1000);
             }
-        }, 1000);
-    }
-
-    // Inicialização quando o DOM estiver pronto
-    document.addEventListener('DOMContentLoaded', function() {
-        // Inicializar sistema de mensagens
-        if (typeof MessagesSystem !== 'undefined') {
-            MessagesSystem.initialize();
         }
         
-        // Inicializar sistema Vibe
-        initializeSistemaVibe();
-        
-        // Verificar parâmetros da URL
-        setTimeout(checkUrlParams, 1000);
-        
-        // Verificar redirecionamento Vibe
-        checkVibeRedirect();
-        
-        // Atualizar UI premium
-        setTimeout(async () => {
-            if (typeof PremiumManager !== 'undefined') {
-                await PremiumManager.updateUIWithPremiumStatus();
+        // Função de logout
+        async function logout() {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                window.location.href = 'login.html';
+            } catch (error) {
+                // Logout silencioso
             }
-        }, 500);
-    });
+        }
 
-    // Função global para mostrar notificações
-    function showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 12px 16px;
-            border-radius: 8px;
-            color: white;
-            z-index: 1000;
-            background: ${type === 'error' ? '#e74c3c' : type === 'success' ? '#27ae60' : '#3498db'};
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        `;
-        notification.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
-                <span>${message}</span>
-            </div>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
+        // Funções dos modais
+        function closeUserInfoModal() {
+            document.getElementById('userInfoModal').style.display = 'none';
+        }
+
+        function closeFidelityModal() {
+            document.getElementById('fidelityModal').style.display = 'none';
+        }
+
+        function closeManageFidelityModal() {
+            document.getElementById('manageFidelityModal').style.display = 'none';
+        }
+
+        function blockCurrentUser() {
+            // Implementar bloqueio de usuário
+        }
+
+        // Funções Vibe Exclusive
+        function showFidelityProposal() {
+            if (!window.MessagesSystem || !window.MessagesSystem.currentConversation) {
+                showNotification('Selecione uma conversa primeiro', 'error');
+                return;
             }
-        }, 3000);
-    }
 
-    // Funções globais para uso no HTML
-    window.showFidelityProposal = showFidelityProposal;
-    window.showManageFidelity = showManageFidelity;
-    window.showNotification = showNotification;
-    window.logout = logout;
-    window.closeUserInfoModal = closeUserInfoModal;
-    window.closeFidelityModal = closeFidelityModal;
-    window.closeManageFidelityModal = closeManageFidelityModal;
-    window.confirmFidelityProposal = confirmFidelityProposal;
-    window.cancelFidelityAgreement = cancelFidelityAgreement;
-</script>
+            const modal = document.getElementById('fidelityModal');
+            const content = document.getElementById('fidelityModalContent');
+            
+            content.innerHTML = `
+                <div class="fidelity-proposal">
+                    <div class="proposal-header">
+                        <i class="fas fa-heart"></i>
+                        <h4>Propor Vibe Exclusive</h4>
+                    </div>
+                    <div class="proposal-content">
+                        <p>Você está prestes a propor um <strong>Vibe Exclusive</strong> para esta conexão especial!</p>
+                        
+                        <div class="fidelity-benefits">
+                            <h5>📋 Como funciona:</h5>
+                            <ul>
+                                <li>✅ Foco total nesta conexão</li>
+                                <li>✅ Vocês desaparecem das buscas de outros usuários</li>
+                                <li>✅ Não recebem mais mensagens de outras pessoas</li>
+                                <li>✅ Badge exclusiva no perfil</li>
+                                <li>✅ Estatísticas da conexão</li>
+                            </ul>
+                        </div>
+
+                        <div class="fidelity-terms">
+                            <h5>⚖️ Termos do Acordo:</h5>
+                            <ul>
+                                <li>• Ambos precisam aceitar a proposta</li>
+                                <li>• Exclusivo para usuários Premium</li>
+                                <li>• Período de reflexão de 24h após aceite</li>
+                                <li>• Quarentena de 7 dias se cancelarem</li>
+                            </ul>
+                        </div>
+
+                        <div class="proposal-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Esta ação é reversível, mas terá período de quarentena.</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            modal.style.display = 'flex';
+        }
+
+        async function confirmFidelityProposal() {
+            if (!window.MessagesSystem || !window.MessagesSystem.currentConversation) {
+                showNotification('Erro: conversa não selecionada', 'error');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .rpc('propose_fidelity_agreement', {
+                        p_proposer_id: window.MessagesSystem.currentUser.id,
+                        p_receiver_id: window.MessagesSystem.currentConversation
+                    });
+
+                if (error) throw error;
+
+                if (data === 'success') {
+                    showNotification('Proposta de Vibe Exclusive enviada!', 'success');
+                    closeFidelityModal();
+                    updateFidelityButton();
+                } else {
+                    showNotification(data, 'error');
+                }
+
+            } catch (error) {
+                showNotification('Erro ao enviar proposta', 'error');
+            }
+        }
+
+        function showManageFidelity() {
+            const modal = document.getElementById('manageFidelityModal');
+            const content = document.getElementById('manageFidelityContent');
+            
+            content.innerHTML = `
+                <div class="manage-fidelity">
+                    <div class="fidelity-status">
+                        <i class="fas fa-gem"></i>
+                        <h4>Vibe Exclusive Ativo</h4>
+                        <p>Com: <strong id="partnerName">Carregando...</strong></p>
+                        <p>Desde: <strong id="agreementDate">Carregando...</strong></p>
+                    </div>
+
+                    <div class="fidelity-stats">
+                        <h5>📊 Estatísticas da Conexão:</h5>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-value" id="daysTogether">0</span>
+                                <span class="stat-label">dias juntos</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="messagesExchanged">0</span>
+                                <span class="stat-label">mensagens</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fidelity-actions">
+                        <div class="action-warning">
+                            <i class="fas fa-info-circle"></i>
+                            <p>Ao encerrar, entrará em quarentena de <strong>7 dias</strong> antes de poder propor novo Vibe Exclusive.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            loadFidelityManagementData();
+            modal.style.display = 'flex';
+        }
+
+        async function loadFidelityManagementData() {
+            // Carregar dados do acordo
+        }
+
+        async function cancelFidelityAgreement() {
+            if (!confirm('Tem certeza que deseja encerrar o Vibe Exclusive? Haverá período de quarentena de 7 dias.')) {
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .rpc('cancel_fidelity_agreement', {
+                        p_user_id: window.MessagesSystem.currentUser.id
+                    });
+
+                if (error) throw error;
+
+                if (data === 'success') {
+                    showNotification('Vibe Exclusive encerrado', 'success');
+                    closeManageFidelityModal();
+                    updateFidelityButton();
+                } else {
+                    showNotification(data, 'error');
+                }
+
+            } catch (error) {
+                showNotification('Erro ao encerrar acordo', 'error');
+            }
+        }
+
+        function updateFidelityButton() {
+            if (window.MessagesSystem && window.MessagesSystem.updateFidelityButton) {
+                window.MessagesSystem.updateFidelityButton();
+            }
+        }
+
+        // Verificar se veio redirecionado do perfil
+        function checkUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('user');
+            if (userId && window.MessagesSystem) {
+                window.MessagesSystem.selectConversation(userId);
+            }
+        }
+
+        // Verificação de redirecionamento Vibe Exclusive
+        function checkVibeRedirect() {
+            setTimeout(() => {
+                if (window.AuthVibeSystem) {
+                    window.AuthVibeSystem.checkAuthAndVibe();
+                }
+            }, 1000);
+        }
+
+        // Inicialização quando o DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar sistema de mensagens
+            if (typeof MessagesSystem !== 'undefined') {
+                MessagesSystem.initialize();
+            }
+            
+            // Inicializar sistema Vibe
+            initializeSistemaVibe();
+            
+            // Inicializar sistema de Stickers
+            initializeStickersSystem();
+            
+            // Verificar parâmetros da URL
+            setTimeout(checkUrlParams, 1000);
+            
+            // Verificar redirecionamento Vibe
+            checkVibeRedirect();
+            
+            // Atualizar UI premium
+            setTimeout(async () => {
+                if (typeof PremiumManager !== 'undefined') {
+                    await PremiumManager.updateUIWithPremiumStatus();
+                }
+            }, 500);
+        });
+
+        // ==================== INICIALIZAÇÃO DOS STICKERS ====================
+        function initializeStickersSystem() {
+            // Adicionar event listeners para stickers
+            const stickerBtn = document.getElementById('stickerBtn');
+            if (stickerBtn) {
+                stickerBtn.addEventListener('click', openStickersModal);
+            }
+
+            // Adicionar event listeners para cada sticker
+            setTimeout(() => {
+                const stickerItems = document.querySelectorAll('.sticker-item');
+                stickerItems.forEach(item => {
+                    item.addEventListener('click', () => {
+                        const stickerName = item.getAttribute('data-sticker');
+                        sendSticker(stickerName);
+                    });
+                });
+            }, 1000);
+        }
+
+        // Função global para mostrar notificações
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 16px;
+                border-radius: 8px;
+                color: white;
+                z-index: 1000;
+                background: ${type === 'error' ? '#e74c3c' : type === 'success' ? '#27ae60' : '#3498db'};
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            `;
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+
+        // Funções globais para uso no HTML
+        window.openStickersModal = openStickersModal;
+        window.closeStickersModal = closeStickersModal;
+        window.sendSticker = sendSticker;
+        window.showFidelityProposal = showFidelityProposal;
+        window.showManageFidelity = showManageFidelity;
+        window.showNotification = showNotification;
+        window.logout = logout;
+        window.closeUserInfoModal = closeUserInfoModal;
+        window.closeFidelityModal = closeFidelityModal;
+        window.closeManageFidelityModal = closeManageFidelityModal;
+        window.confirmFidelityProposal = confirmFidelityProposal;
+        window.cancelFidelityAgreement = cancelFidelityAgreement;
+    </script>
 </body>
 </html>
