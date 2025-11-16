@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acesso Admin - Amor Conect</title>
+    <title>Login - PulseLove</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI'; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
             display: flex; 
             justify-content: center; 
             align-items: center; 
@@ -18,20 +19,26 @@
             background: white; 
             padding: 3rem; 
             border-radius: 20px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
             text-align: center; 
             max-width: 400px; 
             width: 100%; 
         }
-        .logo { font-size: 4rem; margin-bottom: 1rem; }
-        h1 { color: #667eea; margin-bottom: 0.5rem; font-size: 1.8rem; }
+        .logo { 
+            margin-bottom: 1.5rem; 
+        }
+        .logo-img {
+            max-width: 150px;
+            height: auto;
+        }
+        h1 { color: #333; margin-bottom: 0.5rem; font-size: 1.8rem; }
         .subtitle { color: #666; margin-bottom: 2rem; font-size: 1rem; }
         .input-group { margin-bottom: 1.5rem; text-align: left; }
         label { display: block; margin-bottom: 0.5rem; color: #333; font-weight: 600; }
         input { width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem; transition: border-color 0.3s; }
-        input:focus { outline: none; border-color: #667eea; }
+        input:focus { outline: none; border-color: #ff6b6b; }
         .login-btn { 
-            background: #667eea; 
+            background: #ff6b6b; 
             color: white; 
             border: none; 
             padding: 15px; 
@@ -43,7 +50,7 @@
             transition: background 0.3s; 
             margin-bottom: 1rem; 
         }
-        .login-btn:hover { background: #5a6fd8; }
+        .login-btn:hover { background: #e05555; }
         .error { 
             color: #e53e3e; 
             background: #fed7d7; 
@@ -53,18 +60,28 @@
             display: none; 
             font-size: 0.9rem; 
         }
-        .footer { margin-top: 2rem; color: #666; font-size: 0.8rem; }
+        .footer { margin-top: 2rem; color: #666; font-size: 0.9rem; }
+        .links { margin-top: 1rem; }
+        .links a { 
+            color: #ff6b6b; 
+            text-decoration: none; 
+            margin: 0 10px; 
+            font-weight: 500; 
+        }
+        .links a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <div class="logo">👑</div>
-        <h1>Painel Administrativo</h1>
-        <p class="subtitle">Amor Conect - Acesso Restrito</p>
+        <div class="logo">
+            <img src="logopulse.png" alt="PulseLove" class="logo-img">
+        </div>
+        <h1>Bem-vindo de volta</h1>
+        <p class="subtitle">Entre na sua conta para continuar</p>
         
         <div class="input-group">
-            <label for="username">Usuário:</label>
-            <input type="text" id="username" placeholder="Digite seu usuário">
+            <label for="email">E-mail:</label>
+            <input type="email" id="email" placeholder="seu@email.com">
         </div>
         
         <div class="input-group">
@@ -72,33 +89,41 @@
             <input type="password" id="password" placeholder="Digite sua senha">
         </div>
         
-        <button class="login-btn" onclick="fazerLogin()">🔓 Acessar Painel</button>
+        <button class="login-btn" onclick="fazerLogin()">
+            <i class="fas fa-sign-in-alt"></i> Entrar
+        </button>
         
-        <div class="error" id="errorMsg">Usuário ou senha incorretos!</div>
+        <div class="error" id="errorMsg">E-mail ou senha incorretos!</div>
+        
+        <div class="links">
+            <a href="cadastro.html">Criar conta</a> | 
+            <a href="recuperar-senha.html">Esqueci a senha</a>
+        </div>
         
         <div class="footer">
-            Acesso exclusivo para administradores
+            PulseLove &copy; 2024 - Conectando corações
         </div>
     </div>
 
     <script>
         function fazerLogin() {
-            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const errorMsg = document.getElementById('errorMsg');
             
-            // 🔐 CREDENCIAIS DO ADMIN
-            const usuarioCorreto = 'admin';
-            const senhaCorreta = 'AmorConect2024!';
-            
-            if (username === usuarioCorreto && password === senhaCorreta) {
-                localStorage.setItem('adminAuthenticated', 'true');
-                window.location.href = 'admin.html';
-            } else {
+            // Validação básica
+            if (!email || !password) {
+                errorMsg.textContent = 'Por favor, preencha todos os campos!';
                 errorMsg.style.display = 'block';
-                document.getElementById('password').value = '';
-                document.getElementById('password').focus();
+                return;
             }
+            
+            // Simulação de login - você integrará com Supabase depois
+            errorMsg.textContent = 'Sistema de login em desenvolvimento...';
+            errorMsg.style.display = 'block';
+            
+            // Aqui você integrará com a autenticação do Supabase
+            console.log('Tentativa de login:', { email, password });
         }
         
         // Enter para enviar
@@ -107,11 +132,6 @@
                 fazerLogin();
             }
         });
-
-        // Redirecionar se já estiver autenticado
-        if (localStorage.getItem('adminAuthenticated') === 'true') {
-            window.location.href = 'admin.html';
-        }
     </script>
 </body>
 </html>
