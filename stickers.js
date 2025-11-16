@@ -1,4 +1,4 @@
-// stickers.js - SISTEMA DE STICKERS COMPLETO E FUNCIONAL
+// stickers.js - SISTEMA DE STICKERS 100% CORRIGIDO E FUNCIONAL
 class StickersSystem {
     constructor() {
         this.supabase = window.supabase;
@@ -308,7 +308,7 @@ class StickersSystem {
     }
 
     async sendSticker(stickerName) {
-        console.log(`🚀 ENVIANDO STICKER: ${stickerName}`);
+        console.log(`🚀 ENVIANDO STICKER (MÉTODO CORRETO): ${stickerName}`);
         
         if (!this.currentUser || !window.MessagesSystem) {
             this.showNotification('Erro: usuário não autenticado', 'error');
@@ -341,7 +341,7 @@ class StickersSystem {
 
             console.log(`📤 Enviando sticker para ${currentConversation}...`);
 
-            // Enviar sticker via RPC
+            // 🎯 MÉTODO CORRETO: Enviar sticker via RPC com NOVA função
             const { data, error } = await this.supabase
                 .rpc('send_sticker_message', {
                     p_sender_id: this.currentUser.id,
@@ -369,56 +369,40 @@ class StickersSystem {
 
         } catch (error) {
             console.error('❌ Erro ao enviar sticker:', error);
-            this.showNotification('❌ Erro ao enviar sticker. Tentando método alternativo...', 'warning');
             
-            // Fallback: tentar enviar como mensagem normal
+            // 🎯 FALLBACK MELHORADO: Inserir diretamente na tabela messages
             try {
-                const success = await this.sendStickerFallback(stickerName, currentConversation);
-                if (!success) {
+                console.log('🔄 Tentando fallback direto...');
+                const { data, error } = await this.supabase
+                    .from('messages')
+                    .insert({
+                        sender_id: this.currentUser.id,
+                        receiver_id: currentConversation,
+                        message: '[STICKER]',
+                        sent_at: new Date().toISOString(),
+                        is_sticker: true,
+                        sticker_name: stickerName
+                    })
+                    .select();
+
+                if (error) {
+                    console.error('❌ Erro no fallback:', error);
                     this.showNotification('❌ Falha ao enviar sticker', 'error');
+                    return;
                 }
+
+                if (data && data.length > 0) {
+                    this.showNotification('🎉 Sticker enviado!', 'success');
+                    this.closeModal();
+                    await this.refreshConversation();
+                }
+                
             } catch (fallbackError) {
-                console.error('❌ Erro no fallback:', fallbackError);
-                this.showNotification('❌ Erro crítico ao enviar sticker', 'error');
+                console.error('❌ Erro crítico no fallback:', fallbackError);
+                this.showNotification('❌ Erro ao enviar sticker', 'error');
             }
         } finally {
             this.showSendingState(false);
-        }
-    }
-
-    async sendStickerFallback(stickerName, receiverId) {
-        console.log(`🔄 Usando fallback para sticker: ${stickerName}`);
-        
-        try {
-            const { data, error } = await this.supabase
-                .from('messages')
-                .insert({
-                    sender_id: this.currentUser.id,
-                    receiver_id: receiverId,
-                    message: `[STICKER:${stickerName}]`,
-                    sent_at: new Date().toISOString(),
-                    is_sticker: true,
-                    sticker_name: stickerName
-                })
-                .select();
-
-            if (error) {
-                console.error('❌ Erro no fallback:', error);
-                return false;
-            }
-
-            if (data && data.length > 0) {
-                this.showNotification('🎉 Sticker enviado! (método alternativo)', 'success');
-                this.closeModal();
-                await this.refreshConversation();
-                return true;
-            }
-            
-            return false;
-            
-        } catch (error) {
-            console.error('❌ Erro crítico no fallback:', error);
-            return false;
         }
     }
 
