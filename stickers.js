@@ -214,14 +214,19 @@ class StickersSystem {
 
         const modal = document.getElementById('stickersModal');
         if (modal) {
+            // FORÇAR VISIBILIDADE - CORREÇÃO CRÍTICA
             modal.style.display = 'flex';
-            modal.style.opacity = '0';
+            modal.style.visibility = 'visible';
+            modal.style.opacity = '1';
+            modal.style.background = 'rgba(0, 0, 0, 0.8)';
             
-            // Animação de entrada
-            setTimeout(() => {
-                modal.style.opacity = '1';
-                modal.querySelector('.stickers-modal').style.transform = 'scale(1)';
-            }, 10);
+            // Forçar visibilidade do conteúdo
+            const modalContent = modal.querySelector('.stickers-modal');
+            if (modalContent) {
+                modalContent.style.opacity = '1';
+                modalContent.style.visibility = 'visible';
+                modalContent.style.transform = 'scale(1)';
+            }
             
             document.body.style.overflow = 'hidden';
             this.playStickerVideos();
@@ -235,15 +240,9 @@ class StickersSystem {
     closeModal() {
         const modal = document.getElementById('stickersModal');
         if (modal) {
-            // Animação de saída
-            modal.style.opacity = '0';
-            modal.querySelector('.stickers-modal').style.transform = 'scale(0.9)';
-            
-            setTimeout(() => {
-                modal.style.display = 'none';
-                document.body.style.overflow = '';
-                this.pauseStickerVideos();
-            }, 300);
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+            this.pauseStickerVideos();
             
             console.log('✅ Modal fechado!');
         }
