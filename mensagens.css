@@ -1451,6 +1451,27 @@ footer {
 }
 /* ===== SISTEMA DE STICKERS 100% FUNCIONAL ===== */
 
+/* Variáveis CSS */
+:root {
+    --gold: #c6a664;
+    --burgundy: #8B0000;
+    --dark-bg: #1a1a1a;
+    --section-bg: #f8f9fa;
+    --white: #ffffff;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --text-light: #999999;
+    --info: #3498db;
+    --error: #e74c3c;
+    --success: #27ae60;
+    --border-radius-sm: 8px;
+    --border-radius: 12px;
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    --shadow-card: 0 4px 15px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.15);
+    --transition: all 0.3s ease;
+}
+
 /* Botão Sticker na Área de Mensagem */
 .btn-sticker {
     background: none;
@@ -1484,6 +1505,11 @@ footer {
 
 .btn-sticker.loading i {
     animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Modal Base */
@@ -1527,6 +1553,8 @@ footer {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    color: var(--text-primary);
+    font-size: 1.3rem;
 }
 
 .modal-close {
@@ -1537,6 +1565,7 @@ footer {
     padding: 0.5rem;
     border-radius: 50%;
     transition: background 0.3s ease;
+    color: var(--text-secondary);
 }
 
 .modal-close:hover {
@@ -1546,6 +1575,7 @@ footer {
 .modal-body {
     max-height: 60vh;
     overflow-y: auto;
+    padding: 1.5rem;
 }
 
 .modal-footer {
@@ -1554,10 +1584,11 @@ footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: var(--section-bg);
 }
 
 /* Modal de Stickers Específico */
-#stickersModal .stickers-modal {
+.stickers-modal {
     max-width: 650px;
     width: 100%;
     background: white;
@@ -1579,9 +1610,10 @@ footer {
 .stickers-categories {
     display: flex;
     gap: 0.5rem;
-    padding: 1rem 1.5rem 0;
+    padding: 1rem 1.5rem;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     flex-wrap: wrap;
+    background: var(--section-bg);
 }
 
 .category-btn {
@@ -1591,7 +1623,7 @@ footer {
     padding: 0.6rem 1rem;
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 20px;
-    background: var(--section-bg);
+    background: var(--white);
     color: var(--text-secondary);
     cursor: pointer;
     transition: var(--transition);
@@ -1622,7 +1654,7 @@ footer {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 1rem;
-    padding: 1rem;
+    padding: 1.5rem;
 }
 
 .sticker-item {
@@ -1803,44 +1835,12 @@ footer {
     font-size: 0.7rem;
     opacity: 0.8;
     text-align: center;
+    color: var(--text-light);
 }
 
 .message.sticker-message .message-status {
     justify-content: center;
     margin-top: 0.3rem;
-}
-
-/* Efeitos Especiais para Stickers */
-.sticker-premium-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: var(--gold);
-    color: var(--dark-bg);
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.6rem;
-    font-weight: bold;
-    border: 2px solid var(--white);
-    box-shadow: var(--shadow);
-}
-
-.sticker-favorite {
-    position: absolute;
-    top: 5px;
-    left: 5px;
-    color: var(--burgundy);
-    font-size: 0.8rem;
-    opacity: 0;
-    transition: var(--transition);
-}
-
-.sticker-item:hover .sticker-favorite {
-    opacity: 1;
 }
 
 /* Loading State para Stickers */
@@ -1854,7 +1854,13 @@ footer {
     grid-column: 1 / -1;
 }
 
-.stickers-loading .loading-spinner {
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(198, 166, 100, 0.3);
+    border-top: 3px solid var(--gold);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
     margin-bottom: 1rem;
 }
 
@@ -1983,6 +1989,26 @@ footer {
         background: var(--dark-card);
         border-color: rgba(255, 255, 255, 0.1);
     }
+    
+    .modal-content {
+        background: var(--dark-bg);
+        color: white;
+    }
+    
+    .modal-header h3 {
+        color: white;
+    }
+    
+    .category-btn {
+        background: #2d3748;
+        color: #cbd5e0;
+        border-color: #4a5568;
+    }
+    
+    .category-btn.active {
+        background: var(--gold);
+        color: var(--dark-bg);
+    }
 }
 
 /* Responsividade */
@@ -1999,7 +2025,7 @@ footer {
     }
     
     .stickers-categories {
-        padding: 0.8rem 1rem 0;
+        padding: 0.8rem 1rem;
         overflow-x: auto;
         justify-content: flex-start;
     }
@@ -2103,13 +2129,6 @@ footer {
 .sticker-item:nth-child(8) { animation-delay: 0.4s; }
 .sticker-item:nth-child(9) { animation-delay: 0.45s; }
 .sticker-item:nth-child(10) { animation-delay: 0.5s; }
-.sticker-item:nth-child(11) { animation-delay: 0.55s; }
-.sticker-item:nth-child(12) { animation-delay: 0.6s; }
-.sticker-item:nth-child(13) { animation-delay: 0.65s; }
-.sticker-item:nth-child(14) { animation-delay: 0.7s; }
-.sticker-item:nth-child(15) { animation-delay: 0.75s; }
-.sticker-item:nth-child(16) { animation-delay: 0.8s; }
-.sticker-item:nth-child(17) { animation-delay: 0.85s; }
 
 /* Efeito de Pressão */
 .sticker-item:active {
@@ -2203,4 +2222,120 @@ footer {
 .video-error-placeholder i {
     font-size: 1.2rem;
     margin-bottom: 0.3rem;
+}
+
+/* Botões no Modal Footer */
+.btn {
+    padding: 0.7rem 1.5rem;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    font-size: 0.9rem;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--text-secondary);
+    color: var(--text-secondary);
+}
+
+.btn-outline:hover {
+    background: var(--text-secondary);
+    color: white;
+}
+
+.btn-primary {
+    background: var(--gold);
+    color: var(--dark-bg);
+}
+
+.btn-primary:hover {
+    background: #b89448;
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background: var(--error);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+/* Classes auxiliares para mensagens */
+.message {
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    border-radius: var(--border-radius);
+}
+
+.message.own {
+    background: rgba(198, 166, 100, 0.1);
+    margin-left: 2rem;
+}
+
+.message.other {
+    background: var(--section-bg);
+    margin-right: 2rem;
+}
+
+/* Ajustes para o sistema de mensagens existente */
+.message-input-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.8rem;
+    padding: 1rem;
+    background: var(--section-bg);
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.message-input-container textarea {
+    flex: 1;
+    border: none;
+    background: transparent;
+    resize: none;
+    outline: none;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    max-height: 120px;
+}
+
+.input-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.char-counter {
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+.btn-send {
+    background: var(--gold);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    color: var(--dark-bg);
+}
+
+.btn-send:hover {
+    background: #b89448;
+    transform: scale(1.05);
+}
+
+.btn-send:disabled {
+    background: var(--text-light);
+    cursor: not-allowed;
+    transform: none;
 }
