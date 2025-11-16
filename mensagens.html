@@ -239,255 +239,104 @@
         </div>
     </footer>
 
-    <!-- Modal de Stickers COMPLETO E FUNCIONAL -->
-<div id="stickersModal" class="modal">
-    <div class="modal-content stickers-modal">
-        <div class="modal-header">
-            <h3><i class="fas fa-smile"></i> Stickers</h3>
-            <button class="modal-close" onclick="closeStickersModal()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        
-        <!-- Categorias FIXAS -->
-        <div class="stickers-categories" id="stickersCategories">
-            <button class="category-btn active" data-category="all">
-                <i class="fas fa-star"></i>
-                <span>Todos</span>
-            </button>
-            <button class="category-btn" data-category="amor">
-                <i class="fas fa-heart"></i>
-                <span>Amor</span>
-            </button>
-            <button class="category-btn" data-category="cumprimentos">
-                <i class="fas fa-hand"></i>
-                <span>Saudações</span>
-            </button>
-            <button class="category-btn" data-category="comida">
-                <i class="fas fa-utensils"></i>
-                <span>Comida</span>
-            </button>
-            <button class="category-btn" data-category="animais">
-                <i class="fas fa-paw"></i>
-                <span>Animais</span>
-            </button>
-            <button class="category-btn" data-category="elogios">
-                <i class="fas fa-crown"></i>
-                <span>Elogios</span>
-            </button>
-            <button class="category-btn" data-category="presentes">
-                <i class="fas fa-gift"></i>
-                <span>Presentes</span>
-            </button>
-            <button class="category-btn" data-category="celebração">
-                <i class="fas fa-champagne-glasses"></i>
-                <span>Celebração</span>
-            </button>
-        </div>
-        
-        <div class="modal-body">
-            <div class="stickers-grid" id="stickersGrid">
-                <!-- TODOS OS 17 STICKERS FIXOS -->
-                <div class="sticker-item" data-sticker="videoanel" data-category="amor">
-                    <div class="sticker-video-container">
-                        <video width="80" height="80" loop muted playsinline preload="metadata">
-                            <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videoanel.mp4" type="video/mp4">
-                        </video>
-                        <div class="sticker-overlay">
-                            <i class="fas fa-paper-plane"></i>
+    <!-- Modal de Stickers CORRIGIDO E FUNCIONAL -->
+    <div id="stickersModal" class="modal">
+        <div class="modal-content stickers-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-smile"></i> Stickers</h3>
+                <button class="modal-close" onclick="closeStickersModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <!-- Categorias -->
+            <div class="stickers-categories" id="stickersCategories">
+                <button class="category-btn active" data-category="all">
+                    <i class="fas fa-star"></i>
+                    <span>Todos</span>
+                </button>
+                <button class="category-btn" data-category="amor">
+                    <i class="fas fa-heart"></i>
+                    <span>Amor</span>
+                </button>
+                <button class="category-btn" data-category="cumprimentos">
+                    <i class="fas fa-hand"></i>
+                    <span>Saudações</span>
+                </button>
+                <button class="category-btn" data-category="comida">
+                    <i class="fas fa-utensils"></i>
+                    <span>Comida</span>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="stickers-grid" id="stickersGrid">
+                    <!-- STICKERS SIMPLIFICADOS - APENAS 4 PARA TESTE -->
+                    <div class="sticker-item" data-sticker="videocoracao" data-category="amor">
+                        <div class="sticker-video-container">
+                            <video width="80" height="80" loop muted playsinline preload="metadata">
+                                <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videocoracao.mp4" type="video/mp4">
+                                Seu navegador não suporta vídeos.
+                            </video>
+                            <div class="sticker-overlay">
+                                <i class="fas fa-paper-plane"></i>
+                            </div>
                         </div>
+                        <span class="sticker-name">Coração</span>
                     </div>
-                    <span class="sticker-name">Anel</span>
-                </div>
-                <div class="sticker-item" data-sticker="videoboanoite" data-category="cumprimentos">
-                    <div class="sticker-video-container">
-                        <video width="80" height="80" loop muted playsinline preload="metadata">
-                            <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videoboanoite.mp4" type="video/mp4">
-                        </video>
-                        <div class="sticker-overlay">
-                            <i class="fas fa-paper-plane"></i>
+                    
+                    <div class="sticker-item" data-sticker="videobomdia" data-category="cumprimentos">
+                        <div class="sticker-video-container">
+                            <video width="80" height="80" loop muted playsinline preload="metadata">
+                                <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videobomdia.mp4" type="video/mp4">
+                                Seu navegador não suporta vídeos.
+                            </video>
+                            <div class="sticker-overlay">
+                                <i class="fas fa-paper-plane"></i>
+                            </div>
                         </div>
+                        <span class="sticker-name">Bom Dia</span>
                     </div>
-                    <span class="sticker-name">Boa Noite</span>
-                </div>
-                <div class="sticker-item" data-sticker="videobolo" data-category="comida">
-                    <div class="sticker-video-container">
-                        <video width="80" height="80" loop muted playsinline preload="metadata">
-                            <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videobolo.mp4" type="video/mp4">
-                        </video>
-                        <div class="sticker-overlay">
-                            <i class="fas fa-paper-plane"></i>
+                    
+                    <div class="sticker-item" data-sticker="videobolo" data-category="comida">
+                        <div class="sticker-video-container">
+                            <video width="80" height="80" loop muted playsinline preload="metadata">
+                                <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videobolo.mp4" type="video/mp4">
+                                Seu navegador não suporta vídeos.
+                            </video>
+                            <div class="sticker-overlay">
+                                <i class="fas fa-paper-plane"></i>
+                            </div>
                         </div>
+                        <span class="sticker-name">Bolo</span>
                     </div>
-                    <span class="sticker-name">Bolo</span>
-                </div>
-                <div class="sticker-item" data-sticker="videobomdia" data-category="cumprimentos">
-                    <div class="sticker-video-container">
-                        <video width="80" height="80" loop muted playsinline preload="metadata">
-                            <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videobomdia.mp4" type="video/mp4">
-                        </video>
-                        <div class="sticker-overlay">
-                            <i class="fas fa-paper-plane"></i>
+                    
+                    <div class="sticker-item" data-sticker="videocachorinho" data-category="animais">
+                        <div class="sticker-video-container">
+                            <video width="80" height="80" loop muted playsinline preload="metadata">
+                                <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videocachorinho.mp4" type="video/mp4">
+                                Seu navegador não suporta vídeos.
+                            </video>
+                            <div class="sticker-overlay">
+                                <i class="fas fa-paper-plane"></i>
+                            </div>
                         </div>
+                        <span class="sticker-name">Cachorrinho</span>
                     </div>
-                    <span class="sticker-name">Bom Dia</span>
-                </div>
-                <div class="sticker-item" data-sticker="videocachorinho" data-category="animais">
-                    <div class="sticker-video-container">
-                        <video width="80" height="80" loop muted playsinline preload="metadata">
-                            <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videocachorinho.mp4" type="video/mp4">
-                        </video>
-                        <div class="sticker-overlay">
-                            <i class="fas fa-paper-plane"></i>
-                        </div>
-                    </div>
-                    <span class="sticker-name">Cachorrinho</span>
-                </div>
-                <div class="sticker-item" data-sticker="videocafe" data-category="comida">
-                    <div class="sticker-video-container">
-                        <video width="80" height="80" loop muted playsinline preload="metadata">
-                            <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videocafe.mp4" type="video/mp4">
-                        </video>
-                        <div class="sticker-overlay">
-                            <i class="fas fa-paper-plane"></i>
-                        </div>
-                    </div>
-                    <span class="sticker-name">Café</span>
-                </div>
-                <div class="sticker-item" data-sticker="videocarta" data-category="amor">
-                    <div class="sticker-video-container">
-                        <video width="80" height="80" loop muted playsinline preload="metadata">
-                            <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videocarta.mp4" type="video/mp4">
-                        </video>
-                        <div class="sticker-overlay">
-                            <i class="fas fa-paper-plane"></i>
-                        </div>
-                    </div>
-                    <span class="sticker-name">Carta</span>
-                </div>
-                <div class="sticker-item" data-sticker="videocoracao" data-category="amor">
-                    <div class="sticker-video-container">
-                        <video width="80" height="80" loop muted playsinline preload="metadata">
-                            <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videocoracao.mp4" type="video/mp4">
-                        </video>
-                        <div class="sticker-overlay">
-                            <i class="fas fa-paper-plane"></i>
-                        </div>
-                    </div>
-                    <span class="sticker-name">Coração</span>
-                </div>
-                <div class="sticker-item" data-sticker="videocoroa" data-category="elogios">
-                    <div class="sticker-video-container">
-                        <video width="80" height="80" loop muted playsinline preload="metadata">
-                            <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videocoroa.mp4" type="video/mp4">
-                        </video>
-                        <div class="sticker-overlay">
-                            <i class="fas fa-paper-plane"></i>
-                        </div>
-                    </div>
-                    <span class="sticker-name">Coroa</span>
-                </div>
-                <div class="sticker-item" data-sticker="videodrink" data-category="comida">
-                    <div class="sticker-video-container">
-                        <video width="80" height="80" loop muted playsinline preload="metadata">
-                            <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videodrink.mp4" type="video/mp4">
-                        </video>
-                        <div class="sticker-overlay">
-                            <i class="fas fa-paper-plane"></i>
-                        </div>
-                    </div>
-                    <span class="sticker-name">Drink</span>
-                </div>
-                <div class="sticker-item" data-sticker="videogatinha" data-category="animais">
-                    <div class="sticker-video-container">
-                        <video width="80" height="80" loop muted playsinline preload="metadata">
-                            <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videogatinha.mp4" type="video/mp4">
-                        </video>
-                        <div class="sticker-overlay">
-                            <i class="fas fa-paper-plane"></i>
-                        </div>
-                    </div>
-                    <span class="sticker-name">Gatinha</span>
-                </div>
-                <div class="sticker-item" data-sticker="videoostra1" data-category="comida">
-                    <div class="sticker-video-container">
-                        <video width="80" height="80" loop muted playsinline preload="metadata">
-                            <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videoostra1.mp4" type="video/mp4">
-                        </video>
-                        <div class="sticker-overlay">
-                            <i class="fas fa-paper-plane"></i>
-                        </div>
-                    </div>
-                    <span class="sticker-name">Ostra</span>
-                </div>
-                <div class="sticker-item" data-sticker="videoperfume1" data-category="presentes">
-                    <div class="sticker-video-container">
-                        <video width="80" height="80" loop muted playsinline preload="metadata">
-                            <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videoperfume1.mp4" type="video/mp4">
-                        </video>
-                        <div class="sticker-overlay">
-                            <i class="fas fa-paper-plane"></i>
-                        </div>
-                    </div>
-                    <span class="sticker-name">Perfume</span>
-                </div>
-                <div class="sticker-item" data-sticker="videorosa1" data-category="amor">
-                    <div class="sticker-video-container">
-                        <video width="80" height="80" loop muted playsinline preload="metadata">
-                            <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videorosa1.mp4" type="video/mp4">
-                        </video>
-                        <div class="sticker-overlay">
-                            <i class="fas fa-paper-plane"></i>
-                        </div>
-                    </div>
-                    <span class="sticker-name">Rosa</span>
-                </div>
-                <div class="sticker-item" data-sticker="videosorvete1" data-category="comida">
-                    <div class="sticker-video-container">
-                        <video width="80" height="80" loop muted playsinline preload="metadata">
-                            <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videosorvete1.mp4" type="video/mp4">
-                        </video>
-                        <div class="sticker-overlay">
-                            <i class="fas fa-paper-plane"></i>
-                        </div>
-                    </div>
-                    <span class="sticker-name">Sorvete</span>
-                </div>
-                <div class="sticker-item" data-sticker="videotacas1" data-category="celebração">
-                    <div class="sticker-video-container">
-                        <video width="80" height="80" loop muted playsinline preload="metadata">
-                            <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videotacas1.mp4" type="video/mp4">
-                        </video>
-                        <div class="sticker-overlay">
-                            <i class="fas fa-paper-plane"></i>
-                        </div>
-                    </div>
-                    <span class="sticker-name">Taças</span>
-                </div>
-                <div class="sticker-item" data-sticker="videourso" data-category="animais">
-                    <div class="sticker-video-container">
-                        <video width="80" height="80" loop muted playsinline preload="metadata">
-                            <source src="https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/videourso.mp4" type="video/mp4">
-                        </video>
-                        <div class="sticker-overlay">
-                            <i class="fas fa-paper-plane"></i>
-                        </div>
-                    </div>
-                    <span class="sticker-name">Urso</span>
                 </div>
             </div>
-        </div>
-        
-        <div class="modal-footer">
-            <div class="sticker-info">
-                <i class="fas fa-info-circle"></i>
-                <span>Stickers contam como mensagem no seu limite diário</span>
+            
+            <div class="modal-footer">
+                <div class="sticker-info">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Stickers contam como mensagem no seu limite diário</span>
+                </div>
+                <button class="btn btn-outline" onclick="closeStickersModal()">Fechar</button>
             </div>
-            <button class="btn btn-outline" onclick="closeStickersModal()">Fechar</button>
         </div>
     </div>
-</div>
-    <!-- Modal de Informações do Usuário -->
+
+        <!-- Modal de Informações do Usuário -->
     <div id="userInfoModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -556,17 +405,96 @@
     <script src="sistema-vibe.js"></script> 
     <script src="mensagens.js"></script>
     <script src="mensagens-temporeal.js"></script>
-    <!-- NOVO: Sistema de Stickers CORRIGIDO -->
+    <!-- SISTEMA DE STICKERS CORRIGIDO -->
     <script src="stickers.js"></script>
 
     <script>
-        // Configuração do Supabase
+        // ==================== CONFIGURAÇÃO SUPABASE ====================
         const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // ==================== SISTEMA DE STICKERS SIMPLIFICADO ====================
-        // REMOVIDO: Todas as funções duplicadas de stickers - agora estão no stickers.js
+        // Função para testar se os vídeos existem
+        async function testarStickers() {
+            console.log('🔍 TESTANDO STICKERS...');
+            const stickers = ['videocoracao', 'videobomdia', 'videobolo', 'videocachorinho'];
+            
+            for (const sticker of stickers) {
+                const url = `https://rohsbrkbdlbewonibclf.supabase.co/storage/v1/object/public/stickers/${sticker}.mp4`;
+                try {
+                    const response = await fetch(url, { method: 'HEAD' });
+                    console.log(response.ok ? `✅ ${sticker} - EXISTE` : `❌ ${sticker} - NÃO EXISTE`);
+                } catch (error) {
+                    console.log(`❌ ${sticker} - ERRO: ${error.message}`);
+                }
+            }
+        }
+
+        // ==================== FUNÇÕES GLOBAIS STICKERS ====================
+        window.openStickersModal = function() {
+            console.log('🎯 Abrindo modal de stickers...');
+            const modal = document.getElementById('stickersModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                // Testar stickers ao abrir o modal
+                setTimeout(testarStickers, 1000);
+            }
+        };
+
+        window.closeStickersModal = function() {
+            console.log('🎯 Fechando modal de stickers...');
+            const modal = document.getElementById('stickersModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        };
+
+        window.sendSticker = function(stickerName) {
+            console.log(`🚀 Enviando sticker: ${stickerName}`);
+            if (window.StickersSystem && window.StickersSystem.sendSticker) {
+                window.StickersSystem.sendSticker(stickerName);
+            } else {
+                // Fallback direto
+                enviarStickerDireto(stickerName);
+            }
+        };
+
+        // Fallback direto para stickers
+        async function enviarStickerDireto(stickerName) {
+            if (!window.MessagesSystem || !window.MessagesSystem.currentConversation) {
+                showNotification('Selecione uma conversa primeiro', 'error');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('messages')
+                    .insert({
+                        sender_id: window.MessagesSystem.currentUser.id,
+                        receiver_id: window.MessagesSystem.currentConversation,
+                        message: '[STICKER]',
+                        sent_at: new Date().toISOString(),
+                        is_sticker: true,
+                        sticker_name: stickerName
+                    })
+                    .select();
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    showNotification('🎉 Sticker enviado!', 'success');
+                    window.closeStickersModal();
+                    // Recarregar conversa
+                    if (window.MessagesSystem.loadConversationMessages) {
+                        await window.MessagesSystem.loadConversationMessages(window.MessagesSystem.currentConversation);
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Erro ao enviar sticker:', error);
+                showNotification('❌ Erro ao enviar sticker', 'error');
+            }
+        }
 
         // ==================== CÓDIGO ORIGINAL ====================
         window.acceptProposal = function(proposalId) {
@@ -804,18 +732,17 @@
             }, 1000);
         }
 
-        // Inicialização quando o DOM estiver pronto
+        // ==================== INICIALIZAÇÃO ====================
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 INICIANDO SISTEMA COMPLETO...');
+            
             // Inicializar sistema de mensagens
             if (typeof MessagesSystem !== 'undefined') {
-                MessagesSystem.initialize();
+                window.MessagesSystem = new MessagesSystem();
             }
             
             // Inicializar sistema Vibe
             initializeSistemaVibe();
-            
-            // VERIFICAÇÃO: StickersSystem será inicializado automaticamente pelo stickers.js
-            console.log('🔰 StickersSystem será inicializado automaticamente...');
             
             // Verificar parâmetros da URL
             setTimeout(checkUrlParams, 1000);
@@ -829,9 +756,16 @@
                     await PremiumManager.updateUIWithPremiumStatus();
                 }
             }, 500);
-        });
 
-        // REMOVIDO: função initializeStickersSystem() - agora está no stickers.js
+            // Configurar botão de stickers manualmente
+            setTimeout(() => {
+                const stickerBtn = document.getElementById('stickerBtn');
+                if (stickerBtn) {
+                    stickerBtn.onclick = window.openStickersModal;
+                    console.log('✅ Botão de stickers configurado');
+                }
+            }, 2000);
+        });
 
         // Função global para mostrar notificações
         function showNotification(message, type = 'info') {
@@ -865,7 +799,6 @@
         }
 
         // Funções globais para uso no HTML
-        // APENAS as funções necessárias para o HTML - stickers removidas
         window.showFidelityProposal = showFidelityProposal;
         window.showManageFidelity = showManageFidelity;
         window.showNotification = showNotification;
@@ -875,27 +808,6 @@
         window.closeManageFidelityModal = closeManageFidelityModal;
         window.confirmFidelityProposal = confirmFidelityProposal;
         window.cancelFidelityAgreement = cancelFidelityAgreement;
-        
-        // Funções de stickers APENAS como fallback - o stickers.js tem as versões completas
-        window.openStickersModal = function() {
-            if (window.StickersSystem && window.StickersSystem.openModal) {
-                window.StickersSystem.openModal();
-            } else {
-                showNotification('Sistema de stickers carregando...', 'warning');
-            }
-        };
-        
-        window.closeStickersModal = function() {
-            if (window.StickersSystem && window.StickersSystem.closeModal) {
-                window.StickersSystem.closeModal();
-            }
-        };
-        
-        window.sendSticker = function(stickerName) {
-            if (window.StickersSystem && window.StickersSystem.sendSticker) {
-                window.StickersSystem.sendSticker(stickerName);
-            }
-        };
     </script>
 </body>
 </html>
