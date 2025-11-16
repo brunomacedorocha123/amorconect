@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Amor Conect - Encontre seu par ideal</title>
+    <title>PulseLove - Encontre seu par ideal</title>
     <link rel="stylesheet" href="index.css">
-    <link rel="stylesheet" href="index-mobile.css">
+    <link rel="stylesheet" href="index-mobile.css" media="(max-width: 768px)">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <!-- Header -->
@@ -13,7 +14,7 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <img src="logopulselove.png" alt="Amor Conect">
+                    <img src="logopulse.png" alt="PulseLove" class="logo-img">
                 </div>
                 
                 <nav class="main-nav">
@@ -21,6 +22,7 @@
                         <li><a href="#como-funciona">Como Funciona</a></li>
                         <li><a href="#depoimentos">Depoimentos</a></li>
                         <li><a href="#sobre">Sobre</a></li>
+                        <li><a href="pricing.html" class="premium-link"><i class="fas fa-crown"></i> Premium</a></li>
                     </ul>
                 </nav>
 
@@ -29,7 +31,7 @@
                     <a href="cadastro.html" class="btn btn-primary">Cadastre-se</a>
                 </div>
 
-                <div class="menu-toggle">
+                <div class="menu-toggle" id="menuToggle">
                     <span></span>
                     <span></span>
                     <span></span>
@@ -42,9 +44,49 @@
     <section class="hero">
         <div class="container">
             <div class="hero-content">
-                <h2>Encontre a conexão que seu coração procura</h2>
+                <h1>Encontre a conexão que seu coração procura</h1>
                 <p>Uma plataforma sofisticada e discreta para conhecer pessoas especiais e construir relacionamentos genuínos.</p>
-                <a href="cadastro.html" class="btn btn-primary btn-large">Comece sua jornada</a>
+                <div class="hero-buttons">
+                    <a href="cadastro.html" class="btn btn-primary btn-large">Comece sua jornada</a>
+                    <a href="#como-funciona" class="btn btn-outline btn-large">Saiba mais</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">10K+</span>
+                        <span class="stat-label">Usuários ativos</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">500+</span>
+                        <span class="stat-label">Casais formados</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">98%</span>
+                        <span class="stat-label">Satisfação</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="floating-card card-1">
+                    <div class="card-avatar"></div>
+                    <div class="card-info">
+                        <h4>Ana, 28</h4>
+                        <p>Encontrou seu par perfeito</p>
+                    </div>
+                </div>
+                <div class="floating-card card-2">
+                    <div class="card-avatar"></div>
+                    <div class="card-info">
+                        <h4>Carlos, 32</h4>
+                        <p>Conectado há 3 meses</p>
+                    </div>
+                </div>
+                <div class="floating-card card-3">
+                    <div class="card-avatar"></div>
+                    <div class="card-info">
+                        <h4>Marina, 30</h4>
+                        <p>Online agora</p>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -53,24 +95,51 @@
     <section class="features">
         <div class="container">
             <div class="section-title">
-                <h2>Por que escolher o Amor Conect?</h2>
+                <h2>Por que escolher o PulseLove?</h2>
                 <p>Nossa plataforma foi desenvolvida pensando em sua segurança e privacidade, oferecendo uma experiência única de conexão.</p>
             </div>
             <div class="features-grid">
                 <div class="feature-card">
-                    <div class="feature-icon">🔒</div>
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
                     <h3>Segurança Total</h3>
-                    <p>Perfis verificados e ambiente controlado para sua tranquilidade.</p>
+                    <p>Perfis verificados e ambiente controlado para sua tranquilidade. Moderação 24h para garantir uma experiência segura.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">💌</div>
+                    <div class="feature-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
                     <h3>Conexões Autênticas</h3>
-                    <p>Conheça pessoas reais com interesses compatíveis com os seus.</p>
+                    <p>Algoritmo inteligente que conecta pessoas com interesses e valores compatíveis para relacionamentos significativos.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">🌟</div>
-                    <h3>Experiência Personalizada</h3>
-                    <p>Encontre pessoas que compartilham seus valores e objetivos.</p>
+                    <div class="feature-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <h3>Experiência Premium</h3>
+                    <p>Recursos exclusivos para membros premium que desejam potencializar suas chances de encontrar o par ideal.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>App Mobile</h3>
+                    <p>Conecte-se onde estiver com nosso aplicativo otimizado para iOS e Android. Totalmente responsivo.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Comunidade Selecionada</h3>
+                    <p>Nossa comunidade é formada por pessoas sérias buscando relacionamentos genuínos e duradouros.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <h3>Privacidade Garantida</h3>
+                    <p>Controle total sobre sua privacidade. Suas informações estão seguras conosco.</p>
                 </div>
             </div>
         </div>
@@ -86,24 +155,39 @@
             <div class="steps">
                 <div class="step">
                     <div class="step-number">1</div>
+                    <div class="step-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
                     <h3>Crie seu Perfil</h3>
-                    <p>Cadastre-se fornecendo informações básicas e crie um perfil autêntico.</p>
+                    <p>Cadastre-se fornecendo informações básicas e crie um perfil autêntico que reflita sua personalidade.</p>
                 </div>
                 <div class="step">
                     <div class="step-number">2</div>
-                    <h3>Complete seu Perfil</h3>
-                    <p>Adicione informações complementares para aumentar suas conexões.</p>
+                    <div class="step-icon">
+                        <i class="fas fa-sliders-h"></i>
+                    </div>
+                    <h3>Personalize Preferências</h3>
+                    <p>Defina suas preferências e critérios para encontrar pessoas compatíveis com seu estilo de vida.</p>
                 </div>
                 <div class="step">
                     <div class="step-number">3</div>
+                    <div class="step-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
                     <h3>Encontre Pessoas</h3>
-                    <p>Explore perfis compatíveis com seus interesses e valores.</p>
+                    <p>Explore perfis compatíveis com seus interesses e valores através do nosso sistema de matching inteligente.</p>
                 </div>
                 <div class="step">
                     <div class="step-number">4</div>
+                    <div class="step-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
                     <h3>Conecte-se</h3>
-                    <p>Envie mensagens e construa relacionamentos significativos.</p>
+                    <p>Envie mensagens, reaja a perfis e construa relacionamentos significativos no seu próprio ritmo.</p>
                 </div>
+            </div>
+            <div class="cta-center">
+                <a href="cadastro.html" class="btn btn-primary btn-large">Começar Agora</a>
             </div>
         </div>
     </section>
@@ -117,33 +201,138 @@
             </div>
             <div class="testimonial-grid">
                 <div class="testimonial-card">
-                    <p class="testimonial-text">"Depois de anos tentando aplicativos tradicionais, finalmente encontrei alguém com valores compatíveis. Hoje estamos juntos há 6 meses!"</p>
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">"Depois de anos tentando aplicativos tradicionais, finalmente encontrei alguém com valores compatíveis. O algoritmo do PulseLove é incrível! Hoje estamos juntos há 6 meses!"</p>
                     <div class="testimonial-author">
-                        <div class="author-avatar">M</div>
+                        <div class="author-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
                         <div class="author-info">
-                            <h4>Mariana</h4>
+                            <h4>Mariana Silva</h4>
                             <p>32 anos, São Paulo</p>
                         </div>
                     </div>
                 </div>
                 <div class="testimonial-card">
-                    <p class="testimonial-text">"A plataforma me permitiu conhecer pessoas genuínas. A conexão que fiz aqui foi diferente de qualquer outra experiência online."</p>
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">"A plataforma me permitiu conhecer pessoas genuínas. A conexão que fiz aqui foi diferente de qualquer outra experiência online. Encontrei meu parceiro ideal!"</p>
                     <div class="testimonial-author">
-                        <div class="author-avatar">R</div>
+                        <div class="author-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
                         <div class="author-info">
-                            <h4>Ricardo</h4>
+                            <h4>Ricardo Oliveira</h4>
                             <p>38 anos, Rio de Janeiro</p>
                         </div>
                     </div>
                 </div>
                 <div class="testimonial-card">
-                    <p class="testimonial-text">"Adorei a privacidade e o respeito que encontrei na plataforma. Conheci alguém especial sem pressão e no meu tempo."</p>
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">"Adorei a privacidade e o respeito que encontrei na plataforma. Conheci alguém especial sem pressão e no meu tempo. Recomendo para todos!"</p>
                     <div class="testimonial-author">
-                        <div class="author-avatar">C</div>
+                        <div class="author-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
                         <div class="author-info">
-                            <h4>Carolina</h4>
+                            <h4>Carolina Santos</h4>
                             <p>29 anos, Belo Horizonte</p>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Premium Section -->
+    <section class="premium-section">
+        <div class="container">
+            <div class="premium-content">
+                <div class="premium-info">
+                    <h2>Experimente o PulseLove Premium</h2>
+                    <p>Desbloqueie recursos exclusivos e aumente suas chances de encontrar o amor verdadeiro.</p>
+                    <ul class="premium-features">
+                        <li><i class="fas fa-check"></i> Mensagens ilimitadas</li>
+                        <li><i class="fas fa-check"></i> Ver quem curtiu seu perfil</li>
+                        <li><i class="fas fa-check"></i> Destaque no ranking de matches</li>
+                        <li><i class="fas fa-check"></i> Modo invisível</li>
+                        <li><i class="fas fa-check"></i> Filtros avançados</li>
+                        <li><i class="fas fa-check"></i> Suporte prioritário</li>
+                    </ul>
+                    <a href="pricing.html" class="btn btn-premium">
+                        <i class="fas fa-crown"></i> Conhecer Planos
+                    </a>
+                </div>
+                <div class="premium-visual">
+                    <div class="premium-card">
+                        <i class="fas fa-crown"></i>
+                        <h3>Premium</h3>
+                        <p>Recursos exclusivos para sua jornada</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section" id="sobre">
+        <div class="container">
+            <div class="section-title">
+                <h2>Perguntas Frequentes</h2>
+                <p>Tire suas dúvidas sobre o PulseLove</p>
+            </div>
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>O PulseLove é gratuito?</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Sim! Oferecemos uma versão gratuita com funcionalidades básicas para você conhecer a plataforma. Temos também planos premium com recursos exclusivos.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>Como é feita a verificação de perfis?</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Utilizamos um sistema de verificação em múltiplas etapas, incluindo verificação de e-mail, análise de perfis por nossa equipe e opcionalmente verificação por documento.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>Posso usar o PulseLove no celular?</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Sim! Temos um aplicativo nativo para iOS e Android, além da versão web totalmente responsiva que funciona perfeitamente em dispositivos móveis.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>Como funciona o sistema de matches?</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Nosso algoritmo analisa mais de 50 critérios de compatibilidade, incluindo interesses, valores, estilo de vida e personalidade para conectar você com pessoas realmente compatíveis.</p>
                     </div>
                 </div>
             </div>
@@ -155,7 +344,10 @@
         <div class="container">
             <h2>Pronto para encontrar sua conexão perfeita?</h2>
             <p>Junte-se a milhares de pessoas que já descobriram relacionamentos significativos através da nossa plataforma.</p>
-            <a href="cadastro.html" class="btn btn-light btn-large">Comece Agora</a>
+            <div class="cta-buttons">
+                <a href="cadastro.html" class="btn btn-light btn-large">Criar Conta Gratuita</a>
+                <a href="login.html" class="btn btn-outline-light btn-large">Fazer Login</a>
+            </div>
         </div>
     </section>
 
@@ -163,40 +355,113 @@
     <footer>
         <div class="container">
             <div class="footer-content">
-                <div class="footer-column">
-                    <h3>Amor Conect</h3>
-                    <p>Uma plataforma segura e discreta para conectar corações e construir relacionamentos genuínos.</p>
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <img src="logopulse.png" alt="PulseLove" class="logo-img">
+                    </div>
+                    <p class="footer-description">
+                        Conectando corações, construindo histórias de amor genuínas.
+                    </p>
                     <div class="social-links">
-                        <a href="#" class="social-icon">f</a>
-                        <a href="#" class="social-icon">t</a>
-                        <a href="#" class="social-icon">i</a>
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-tiktok"></i></a>
                     </div>
                 </div>
-                <div class="footer-column">
-                    <h3>Links Rápidos</h3>
-                    <ul>
-                        <li><a href="index.html">Página Inicial</a></li>
+                
+                <div class="footer-section">
+                    <h3>Navegação</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
                         <li><a href="#como-funciona">Como Funciona</a></li>
                         <li><a href="#depoimentos">Depoimentos</a></li>
-                        <li><a href="#sobre">Sobre Nós</a></li>
+                        <li><a href="#sobre">Sobre</a></li>
                     </ul>
                 </div>
-                <div class="footer-column">
+                
+                <div class="footer-section">
+                    <h3>Recursos</h3>
+                    <ul class="footer-links">
+                        <li><a href="busca.html">Buscar Pessoas</a></li>
+                        <li><a href="mensagens.html">Mensagens</a></li>
+                        <li><a href="pricing.html">Planos Premium</a></li>
+                        <li><a href="blog.html">Blog</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Legal</h3>
+                    <ul class="footer-links">
+                        <li><a href="privacidade.html">Privacidade</a></li>
+                        <li><a href="termos.html">Termos de Uso</a></li>
+                        <li><a href="seguranca.html">Segurança</a></li>
+                        <li><a href="comunidade.html">Diretrizes</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
                     <h3>Suporte</h3>
-                    <ul>
-                        <li><a href="#">Central de Ajuda</a></li>
-                        <li><a href="#">Política de Privacidade</a></li>
-                        <li><a href="#">Termos de Uso</a></li>
-                        <li><a href="#">Contato</a></li>
+                    <ul class="footer-links">
+                        <li><a href="ajuda.html">Central de Ajuda</a></li>
+                        <li><a href="contato.html">Contato</a></li>
+                        <li><a href="sugestoes.html">Sugestões</a></li>
+                        <li><a href="status.html">Status do Sistema</a></li>
                     </ul>
                 </div>
             </div>
-            <div class="copyright">
-                <p>&copy; 2024 Amor Conect. Todos os direitos reservados.</p>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 PulseLove. Todos os direitos reservados.</p>
+                <p>Feito com <i class="fas fa-heart"></i> para conectar pessoas</p>
             </div>
         </div>
     </footer>
 
     <script src="index.js"></script>
+    <script>
+        // Funcionalidade básica para FAQ
+        document.addEventListener('DOMContentLoaded', function() {
+            const faqQuestions = document.querySelectorAll('.faq-question');
+            
+            faqQuestions.forEach(question => {
+                question.addEventListener('click', () => {
+                    const answer = question.nextElementSibling;
+                    const icon = question.querySelector('i');
+                    
+                    // Alternar visibilidade da resposta
+                    answer.style.display = answer.style.display === 'block' ? 'none' : 'block';
+                    
+                    // Rotacionar ícone
+                    icon.style.transform = answer.style.display === 'block' ? 'rotate(180deg)' : 'rotate(0deg)';
+                });
+            });
+
+            // Menu mobile toggle
+            const menuToggle = document.getElementById('menuToggle');
+            const mainNav = document.querySelector('.main-nav');
+            
+            if (menuToggle && mainNav) {
+                menuToggle.addEventListener('click', () => {
+                    mainNav.classList.toggle('active');
+                    menuToggle.classList.toggle('active');
+                });
+            }
+
+            // Smooth scroll para links internos
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>
