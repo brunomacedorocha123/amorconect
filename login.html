@@ -3,35 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acesso Admin - Amor Conect</title>
+    <title>Login - PulseLove</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI'; }
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        }
+        
         body { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
             display: flex; 
             justify-content: center; 
             align-items: center; 
             min-height: 100vh; 
             padding: 20px; 
         }
+        
         .login-container { 
             background: white; 
             padding: 3rem; 
             border-radius: 20px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
             text-align: center; 
             max-width: 400px; 
             width: 100%; 
         }
-        .logo { font-size: 4rem; margin-bottom: 1rem; }
-        h1 { color: #667eea; margin-bottom: 0.5rem; font-size: 1.8rem; }
-        .subtitle { color: #666; margin-bottom: 2rem; font-size: 1rem; }
-        .input-group { margin-bottom: 1.5rem; text-align: left; }
-        label { display: block; margin-bottom: 0.5rem; color: #333; font-weight: 600; }
-        input { width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem; transition: border-color 0.3s; }
-        input:focus { outline: none; border-color: #667eea; }
+        
+        .logo { 
+            margin-bottom: 1.5rem; 
+        }
+        
+        .logo-img {
+            max-width: 150px;
+            height: auto;
+        }
+        
+        h1 { 
+            color: #333; 
+            margin-bottom: 0.5rem; 
+            font-size: 1.8rem; 
+            font-weight: 600;
+        }
+        
+        .subtitle { 
+            color: #666; 
+            margin-bottom: 2rem; 
+            font-size: 1rem; 
+            line-height: 1.5;
+        }
+        
+        .input-group { 
+            margin-bottom: 1.5rem; 
+            text-align: left; 
+        }
+        
+        label { 
+            display: block; 
+            margin-bottom: 0.5rem; 
+            color: #333; 
+            font-weight: 600; 
+            font-size: 0.9rem;
+        }
+        
+        input { 
+            width: 100%; 
+            padding: 15px; 
+            border: 2px solid #e2e8f0; 
+            border-radius: 10px; 
+            font-size: 1rem; 
+            transition: all 0.3s; 
+        }
+        
+        input:focus { 
+            outline: none; 
+            border-color: #ff6b6b;
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+        }
+        
         .login-btn { 
-            background: #667eea; 
+            background: #ff6b6b; 
             color: white; 
             border: none; 
             padding: 15px; 
@@ -40,78 +94,184 @@
             font-weight: 600; 
             cursor: pointer; 
             width: 100%; 
-            transition: background 0.3s; 
+            transition: all 0.3s; 
             margin-bottom: 1rem; 
         }
-        .login-btn:hover { background: #5a6fd8; }
-        .error { 
-            color: #e53e3e; 
-            background: #fed7d7; 
-            padding: 12px; 
-            border-radius: 8px; 
-            margin-top: 1rem; 
-            display: none; 
-            font-size: 0.9rem; 
+        
+        .login-btn:hover { 
+            background: #e05555;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
         }
-        .footer { margin-top: 2rem; color: #666; font-size: 0.8rem; }
+        
+        .login-btn:active {
+            transform: translateY(0);
+        }
+        
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        
+        .message-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        
+        .message-success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+        
+        .message-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        
+        .login-footer {
+            margin-top: 2rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .login-footer a {
+            color: #ff6b6b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .login-footer a:hover {
+            color: #e05555;
+            text-decoration: underline;
+        }
+        
+        .links {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .footer {
+            margin-top: 2rem;
+            color: #666;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+        
+        /* Loading animation */
+        .fa-spin {
+            animation: fa-spin 1s infinite linear;
+        }
+        
+        @keyframes fa-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <div class="logo">👑</div>
-        <h1>Painel Administrativo</h1>
-        <p class="subtitle">Amor Conect - Acesso Restrito</p>
-        
-        <div class="input-group">
-            <label for="username">Usuário:</label>
-            <input type="text" id="username" placeholder="Digite seu usuário">
+        <div class="logo">
+            <img src="logopulse.png" alt="PulseLove" class="logo-img">
         </div>
         
-        <div class="input-group">
-            <label for="password">Senha:</label>
-            <input type="password" id="password" placeholder="Digite sua senha">
+        <h1>Bem-vindo de volta</h1>
+        <p class="subtitle">Entre na sua conta para continuar sua jornada de conexões</p>
+        
+        <form class="login-form" id="loginForm">
+            <div class="input-group">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" placeholder="seu@email.com" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="password">Senha</label>
+                <input type="password" id="password" placeholder="Sua senha" required>
+            </div>
+            
+            <button type="submit" class="login-btn">
+                <i class="fas fa-sign-in-alt"></i> Entrar na sua conta
+            </button>
+        </form>
+
+        <div class="links">
+            <a href="cadastro.html">Criar conta</a>
+            <a href="recuperar-senha.html">Esqueci a senha</a>
         </div>
-        
-        <button class="login-btn" onclick="fazerLogin()">🔓 Acessar Painel</button>
-        
-        <div class="error" id="errorMsg">Usuário ou senha incorretos!</div>
+
+        <div id="loginMessage" class="message" style="display: none;"></div>
         
         <div class="footer">
-            Acesso exclusivo para administradores
+            PulseLove &copy; 2024 - Conectando corações, construindo histórias
         </div>
     </div>
 
     <script>
-        function fazerLogin() {
-            const username = document.getElementById('username').value;
+        // Configuração Supabase
+        const SUPABASE_URL = 'https://rohsbrkbdlbewonibclf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaHNicmtiZGxiZXdvbmliY2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2MTc5MDMsImV4cCI6MjA3NjE5MzkwM30.PUbV15B1wUoU_-dfggCwbsS5U7C1YsoTrtcahEKn_Oc';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Login com Supabase
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const errorMsg = document.getElementById('errorMsg');
+            const messageDiv = document.getElementById('loginMessage');
+            const loginBtn = document.querySelector('.login-btn');
             
-            // 🔐 CREDENCIAIS DO ADMIN
-            const usuarioCorreto = 'admin';
-            const senhaCorreta = 'AmorConect2024!';
-            
-            if (username === usuarioCorreto && password === senhaCorreta) {
-                localStorage.setItem('adminAuthenticated', 'true');
-                window.location.href = 'admin.html';
-            } else {
-                errorMsg.style.display = 'block';
-                document.getElementById('password').value = '';
-                document.getElementById('password').focus();
-            }
-        }
-        
-        // Enter para enviar
-        document.getElementById('password').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                fazerLogin();
+            try {
+                // Mostrar loading
+                messageDiv.style.display = 'block';
+                messageDiv.className = 'message message-info';
+                messageDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando na sua conta...';
+                loginBtn.disabled = true;
+                
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) throw error;
+                
+                // Login bem-sucedido
+                messageDiv.className = 'message message-success';
+                messageDiv.innerHTML = '<i class="fas fa-check"></i> Login realizado com sucesso! Redirecionando...';
+                
+                setTimeout(() => {
+                    window.location.href = 'home.html';
+                }, 1500);
+                
+            } catch (error) {
+                messageDiv.className = 'message message-error';
+                messageDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${error.message}`;
+                loginBtn.disabled = false;
             }
         });
 
-        // Redirecionar se já estiver autenticado
-        if (localStorage.getItem('adminAuthenticated') === 'true') {
-            window.location.href = 'admin.html';
-        }
+        // Verificar se já está logado
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) {
+                window.location.href = 'home.html';
+            }
+        });
+
+        // Enter para enviar
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }
+        });
     </script>
 </body>
 </html>
