@@ -1861,3 +1861,54 @@ footer {
 .sticker-item:hover .sticker-overlay {
     opacity: 0.8;
 }
+
+/* Garantir que vídeos sejam visíveis */
+.sticker-video video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 8px;
+    display: block !important;
+    background: white !important;
+    border: 2px solid rgba(198, 166, 100, 0.3);
+}
+
+.message-sticker video {
+    width: 120px !important;
+    height: 120px !important;
+    object-fit: cover !important;
+    border-radius: 16px;
+    display: block !important;
+    background: white !important;
+    border: 2px solid rgba(198, 166, 100, 0.3);
+}
+
+/* Overlay */
+.sticker-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    border-radius: 8px;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.sticker-overlay i {
+    font-size: 1.2rem;
+}
+
+/* Fallback para vídeos com erro */
+.video-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}

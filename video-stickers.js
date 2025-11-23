@@ -3,7 +3,6 @@ class VideoStickersSystem {
     constructor() {
         this.supabase = window.supabase;
         this.currentUser = null;
-        this.stickers = [];
         this.stickersSentToday = 0;
         this.maxStickersFree = 4;
         
@@ -110,9 +109,9 @@ class VideoStickersSystem {
 
             if (error) throw error;
 
-            this.stickers = stickers || [];
+            const stickersList = stickers || [];
 
-            if (this.stickers.length === 0) {
+            if (stickersList.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-film"></i>
@@ -123,32 +122,37 @@ class VideoStickersSystem {
                 return;
             }
 
-            // Renderizar stickers de forma SIMPLES
-            container.innerHTML = this.stickers.map(sticker => `
-                <div class="sticker-item" onclick="videoStickersSystem.selectSticker('${sticker.name}', '${sticker.display_name}')">
-                    <div class="sticker-video">
-                        <video 
-                            width="80" 
-                            height="80" 
-                            loop 
-                            muted 
-                            playsinline
-                            preload="metadata"
-                        >
-                            <source src="assets/stickers/${sticker.name}.mp4" type="video/mp4">
-                        </video>
-                        <div class="sticker-overlay">
-                            <i class="fas fa-play"></i>
+            // Renderizar stickers com caminhos ABSOLUTOS
+            container.innerHTML = stickersList.map(sticker => {
+                // ⭐⭐ CAMINHO CORRETO - ajuste conforme sua estrutura
+                const videoPath = `assets/stickers/${sticker.name}.mp4`;
+                
+                return `
+                    <div class="sticker-item" onclick="videoStickersSystem.selectSticker('${sticker.name}', '${sticker.display_name}')">
+                        <div class="sticker-video">
+                            <video 
+                                width="80" 
+                                height="80" 
+                                loop 
+                                muted 
+                                playsinline
+                                preload="metadata"
+                                style="background: transparent;"
+                            >
+                                <source src="${videoPath}" type="video/mp4">
+                                Seu navegador não suporta vídeo HTML5.
+                            </video>
+                            <div class="sticker-overlay">
+                                <i class="fas fa-play"></i>
+                            </div>
                         </div>
+                        <div class="sticker-name">${sticker.display_name}</div>
                     </div>
-                    <div class="sticker-name">${sticker.display_name}</div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
 
-            // Configurar vídeos após renderização
-            setTimeout(() => {
-                this.setupVideos();
-            }, 100);
+            // Configurar interações dos vídeos
+            this.setupVideoInteractions();
 
         } catch (error) {
             console.error('Erro ao carregar stickers:', error);
@@ -162,31 +166,31 @@ class VideoStickersSystem {
         }
     }
 
-    setupVideos() {
+    setupVideoInteractions() {
         document.querySelectorAll('.sticker-item').forEach(item => {
             const video = item.querySelector('video');
             const overlay = item.querySelector('.sticker-overlay');
             
             if (!video) return;
 
-            // Tentar carregar o vídeo
-            video.load();
-
-            // Evento quando vídeo carrega
+            // Configurar eventos do vídeo
             video.addEventListener('loadeddata', () => {
                 console.log('✅ Vídeo carregado:', video.src);
-                overlay.style.display = 'flex';
+                if (overlay) overlay.style.display = 'flex';
             });
 
-            // Evento de erro no vídeo
-            video.addEventListener('error', () => {
-                console.log('❌ Erro no vídeo:', video.src);
+            video.addEventListener('error', (e) => {
+                console.log('❌ Erro no vídeo:', video.src, e);
                 this.showVideoFallback(item);
+            });
+
+            video.addEventListener('canplay', () => {
+                console.log('🎬 Vídeo pronto para reproduzir:', video.src);
             });
 
             // Hover para play/pause
             item.addEventListener('mouseenter', () => {
-                if (video.readyState >= 2) { // Tem dados para reproduzir
+                if (video.readyState >= 2) { // Tem dados suficientes
                     video.currentTime = 0;
                     video.play().catch(e => {
                         console.log('Erro ao reproduzir:', e);
@@ -198,6 +202,9 @@ class VideoStickersSystem {
                 video.pause();
                 video.currentTime = 0;
             });
+
+            // Tentar carregar o vídeo
+            video.load();
         });
     }
 
@@ -216,7 +223,7 @@ class VideoStickersSystem {
                         border-radius: 12px; display: flex; flex-direction: column; align-items: center; 
                         justify-content: center; color: white; font-size: 0.7rem; text-align: center;">
                 <i class="fas fa-film" style="font-size: 1.5rem; margin-bottom: 5px;"></i>
-                <span>Sticker</span>
+                <span>${item.querySelector('.sticker-name')?.textContent || 'Sticker'}</span>
             </div>
         `;
         videoContainer.appendChild(fallback);
@@ -224,7 +231,7 @@ class VideoStickersSystem {
 
     async selectSticker(stickerName, displayName) {
         try {
-            // Verificar se pode enviar sticker
+            // Verificar se usuário pode enviar sticker
             if (!await this.canSendSticker()) {
                 return;
             }
@@ -364,6 +371,7 @@ class VideoStickersSystem {
 
         const sticker = messageData.sticker_name;
         const displayName = messageData.sticker_display_name || 'Sticker';
+        const videoPath = `assets/stickers/${sticker}.mp4`;
 
         return `
             <div class="message ${isOwnMessage ? 'own' : 'other'} sticker-message">
@@ -375,8 +383,9 @@ class VideoStickersSystem {
                         muted 
                         playsinline 
                         autoplay
+                        style="background: transparent;"
                     >
-                        <source src="assets/stickers/${sticker}.mp4" type="video/mp4">
+                        <source src="${videoPath}" type="video/mp4">
                     </video>
                     <div class="sticker-caption">${displayName}</div>
                 </div>
