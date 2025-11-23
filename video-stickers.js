@@ -1,4 +1,4 @@
-// video-stickers.js - SISTEMA COMPLETO DE VIDEO STICKERS
+// video-stickers.js - VERSÃO FUNCIONAL
 class VideoStickersSystem {
     constructor() {
         this.supabase = window.supabase;
@@ -16,10 +16,9 @@ class VideoStickersSystem {
                 this.currentUser = user;
                 await this.loadUserStickersData();
                 this.setupEventListeners();
-                console.log('✅ Video Stickers System inicializado');
             }
         } catch (error) {
-            console.error('Erro ao inicializar Video Stickers:', error);
+            console.error('Erro:', error);
         }
     }
 
@@ -80,7 +79,6 @@ class VideoStickersSystem {
         const modal = document.getElementById('stickersModal');
         if (modal) {
             modal.style.display = 'none';
-            // Pausar todos os vídeos
             document.querySelectorAll('.sticker-video video').forEach(video => {
                 video.pause();
                 video.currentTime = 0;
@@ -93,13 +91,6 @@ class VideoStickersSystem {
         if (!container) return;
 
         try {
-            container.innerHTML = `
-                <div class="loading-state">
-                    <div class="loading-spinner"></div>
-                    <p>Carregando stickers...</p>
-                </div>
-            `;
-
             // Carregar stickers do banco
             const { data: stickers, error } = await this.supabase
                 .from('stickers')
@@ -122,35 +113,30 @@ class VideoStickersSystem {
                 return;
             }
 
-            // ⭐⭐ CORREÇÃO: VÍDEOS NA RAIZ - SEM PASTA
-            container.innerHTML = stickersList.map(sticker => {
-                const videoPath = `${sticker.name}.mp4`; // ⭐ NA RAIZ
-                
-                return `
-                    <div class="sticker-item" onclick="videoStickersSystem.selectSticker('${sticker.name}', '${sticker.display_name}')">
-                        <div class="sticker-video">
-                            <video 
-                                width="80" 
-                                height="80" 
-                                loop 
-                                muted 
-                                playsinline
-                                preload="metadata"
-                                style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; background: white; display: block;"
-                            >
-                                <source src="${videoPath}" type="video/mp4">
-                            </video>
-                            <div class="sticker-overlay">
-                                <i class="fas fa-play"></i>
-                            </div>
+            // ⭐⭐ RENDERIZAÇÃO CORRETA - VÍDEOS FUNCIONAIS
+            container.innerHTML = stickersList.map(sticker => `
+                <div class="sticker-item" onclick="videoStickersSystem.selectSticker('${sticker.name}', '${sticker.display_name}')">
+                    <div class="sticker-video">
+                        <video 
+                            width="80" 
+                            height="80" 
+                            loop 
+                            muted 
+                            playsinline
+                            preload="auto"
+                            style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; display: block;"
+                        >
+                            <source src="${sticker.name}.mp4" type="video/mp4">
+                        </video>
+                        <div class="sticker-overlay">
+                            <i class="fas fa-play"></i>
                         </div>
-                        <div class="sticker-name">${sticker.display_name}</div>
-                        <div style="font-size: 9px; color: #888; margin-top: 2px;">${sticker.name}.mp4</div>
                     </div>
-                `;
-            }).join('');
+                    <div class="sticker-name">${sticker.display_name}</div>
+                </div>
+            `).join('');
 
-            // Configurar interações dos vídeos
+            // Configurar interações
             this.setupVideoInteractions();
 
         } catch (error) {
@@ -172,79 +158,41 @@ class VideoStickersSystem {
             
             if (!video) return;
 
-            // Mostrar overlay inicialmente
-            if (overlay) overlay.style.display = 'flex';
-
-            // Configurar eventos do vídeo
+            // Quando vídeo carrega, esconde overlay
             video.addEventListener('loadeddata', () => {
-                console.log('✅ Vídeo carregado:', video.src);
                 if (overlay) overlay.style.display = 'none';
             });
 
-            video.addEventListener('error', (e) => {
-                console.log('❌ Erro no vídeo:', video.src);
-                this.showVideoFallback(item);
-            });
-
-            video.addEventListener('canplay', () => {
-                console.log('🎬 Vídeo pronto para reproduzir:', video.src);
-            });
-
-            // Hover para play/pause
+            // Hover - Play
             item.addEventListener('mouseenter', () => {
                 if (video.readyState >= 2) {
                     video.currentTime = 0;
                     video.play().catch(e => {
-                        console.log('Erro ao reproduzir:', e);
-                        // Mostrar overlay se não conseguir reproduzir
+                        // Se não conseguir play, mostra overlay
                         if (overlay) overlay.style.display = 'flex';
                     });
-                    // Esconder overlay durante reprodução
-                    if (overlay) overlay.style.display = 'none';
                 }
             });
 
+            // Mouse leave - Pause
             item.addEventListener('mouseleave', () => {
                 video.pause();
                 video.currentTime = 0;
-                // Mostrar overlay novamente
+                // Mostra overlay novamente
                 if (overlay) overlay.style.display = 'flex';
             });
 
-            // Tentar carregar o vídeo
+            // Carregar vídeo
             video.load();
         });
     }
 
-    showVideoFallback(item) {
-        const videoContainer = item.querySelector('.sticker-video');
-        const video = item.querySelector('video');
-        const overlay = item.querySelector('.sticker-overlay');
-        
-        if (video) video.style.display = 'none';
-        if (overlay) overlay.style.display = 'none';
-        
-        const fallback = document.createElement('div');
-        fallback.className = 'video-fallback';
-        fallback.innerHTML = `
-            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #c6a664, #a65b5b); 
-                        border-radius: 12px; display: flex; flex-direction: column; align-items: center; 
-                        justify-content: center; color: white; font-size: 0.7rem; text-align: center;">
-                <i class="fas fa-film" style="font-size: 1.5rem; margin-bottom: 5px;"></i>
-                <span>${item.querySelector('.sticker-name')?.textContent || 'Sticker'}</span>
-            </div>
-        `;
-        videoContainer.appendChild(fallback);
-    }
-
     async selectSticker(stickerName, displayName) {
         try {
-            // Verificar se usuário pode enviar sticker
             if (!await this.canSendSticker()) {
                 return;
             }
 
-            // Verificar se há conversa selecionada
             if (!window.MessagesSystem || !window.MessagesSystem.currentConversation) {
                 this.showNotification('Selecione uma conversa primeiro', 'error');
                 return;
@@ -277,11 +225,8 @@ class VideoStickersSystem {
     async sendStickerViaMessagesSystem(stickerMessage) {
         const messageInput = document.getElementById('messageInput');
         if (messageInput && window.MessagesSystem && window.MessagesSystem.sendMessage) {
-            // Formatar mensagem especial para stickers
             const formattedMessage = `[STICKER]${JSON.stringify(stickerMessage)}[/STICKER]`;
             messageInput.value = formattedMessage;
-            
-            // Usar o sistema de envio do MessagesSystem
             await window.MessagesSystem.sendMessage();
         } else {
             throw new Error('Sistema de mensagens não disponível');
@@ -289,17 +234,13 @@ class VideoStickersSystem {
     }
 
     async canSendSticker() {
-        // Verificar se é premium
         let isPremium = false;
         if (window.MessagesSystem && window.MessagesSystem.currentUser?.profile?.is_premium) {
             isPremium = window.MessagesSystem.currentUser.profile.is_premium;
         }
         
-        if (isPremium) {
-            return true;
-        }
+        if (isPremium) return true;
 
-        // Verificar limite free
         if (this.stickersSentToday >= this.maxStickersFree) {
             this.showNotification(`Limite de stickers atingido! Free: ${this.maxStickersFree}/dia | Premium: Ilimitado`, 'error');
             return false;
@@ -355,31 +296,16 @@ class VideoStickersSystem {
         } else if (typeof window.showNotification === 'function') {
             window.showNotification(message, type);
         } else {
-            // Fallback simples
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 12px 16px;
-                border-radius: 8px;
-                color: white;
-                z-index: 10000;
-                background: ${type === 'error' ? '#e74c3c' : type === 'success' ? '#27ae60' : '#3498db'};
-            `;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 3000);
+            alert(message);
         }
     }
 
-    // ⭐⭐ CORREÇÃO: Render no chat com vídeos na RAIZ
+    // Render no chat
     static renderStickerMessage(messageData, isOwnMessage = false) {
         if (!messageData.sticker_name) return '';
 
         const sticker = messageData.sticker_name;
-        const displayName = messageData.sticker_display_name || 'Sticker';
-        const videoPath = `${sticker}.mp4`; // ⭐ NA RAIZ
+        const displayName = messageData.sticker_display_name;
 
         return `
             <div class="message ${isOwnMessage ? 'own' : 'other'} sticker-message">
@@ -391,9 +317,9 @@ class VideoStickersSystem {
                         muted 
                         playsinline 
                         autoplay
-                        style="width: 120px; height: 120px; object-fit: cover; border-radius: 16px; background: white; display: block;"
+                        style="width: 120px; height: 120px; object-fit: cover; border-radius: 16px; display: block;"
                     >
-                        <source src="${videoPath}" type="video/mp4">
+                        <source src="${sticker}.mp4" type="video/mp4">
                     </video>
                     <div class="sticker-caption">${displayName}</div>
                 </div>
@@ -409,11 +335,10 @@ class VideoStickersSystem {
     }
 }
 
-// Inicializar quando DOM estiver pronto
+// Inicializar
 document.addEventListener('DOMContentLoaded', function() {
     window.videoStickersSystem = new VideoStickersSystem();
 });
 
-// Manter compatibilidade com funções globais existentes
 window.openStickersModal = () => window.videoStickersSystem?.openStickersModal();
 window.closeStickersModal = () => window.videoStickersSystem?.closeStickersModal();
