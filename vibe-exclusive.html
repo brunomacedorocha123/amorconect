@@ -184,8 +184,11 @@
             padding: 2rem;
             overflow-y: auto;
             background: radial-gradient(circle at center, rgba(198, 166, 100, 0.05) 0%, transparent 70%);
+            display: flex;
+            flex-direction: column;
         }
 
+        /* ✅ ESTILOS PARA MENSAGENS NORMAIS */
         .vibe-message {
             max-width: 70%;
             margin-bottom: 1.5rem;
@@ -227,6 +230,75 @@
             display: flex;
             align-items: center;
             gap: 0.3rem;
+        }
+
+        /* ✅ ESTILOS PARA STICKERS DE VÍDEO - SEM BALÃO! */
+        .sticker-container {
+            max-width: 180px !important;
+            margin: 15px 0;
+            padding: 0 !important;
+            background: transparent !important;
+            border: none !important;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .own-sticker {
+            align-self: flex-end;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .other-sticker {
+            align-self: flex-start;
+            margin-right: auto;
+            text-align: left;
+        }
+
+        .video-sticker-wrapper {
+            display: inline-block;
+            text-align: center;
+            position: relative;
+        }
+
+        .video-sticker {
+            width: 150px;
+            height: 150px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            border: 3px solid var(--gold);
+            background: transparent;
+            display: block;
+            object-fit: cover;
+        }
+
+        .own-sticker .video-sticker {
+            border-color: var(--gold);
+            box-shadow: 0 8px 25px rgba(198, 166, 100, 0.3);
+        }
+
+        .other-sticker .video-sticker {
+            border-color: var(--exclusive-border);
+        }
+
+        .sticker-caption {
+            font-size: 0.7rem;
+            color: var(--exclusive-text);
+            margin-top: 0.5rem;
+            font-style: italic;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            display: inline-block;
+            opacity: 0.8;
+        }
+
+        .sticker-time {
+            font-size: 0.7rem;
+            color: var(--exclusive-text);
+            opacity: 0.6;
+            margin-top: 0.3rem;
+            text-align: center;
         }
 
         .vibe-input-area {
@@ -593,6 +665,15 @@
                 max-width: 85%;
             }
             
+            .sticker-container {
+                max-width: 150px !important;
+            }
+            
+            .video-sticker {
+                width: 120px;
+                height: 120px;
+            }
+            
             .header-content {
                 flex-direction: column;
                 gap: 1rem;
@@ -806,7 +887,6 @@
         </div>
     </div>
 
-    <script src="video-stickers.js"></script>
     <script>
         // ==================== SISTEMA VIBE EXCLUSIVE COMPLETO ====================
 
@@ -847,7 +927,7 @@
             }
         }
 
-        // ✅ SISTEMA DE STICKERS
+        // ✅ SISTEMA DE STICKERS - FUNÇÕES PRINCIPAIS
         function openStickersModal() {
             const modal = document.getElementById('stickersModal');
             if (modal) {
@@ -978,15 +1058,16 @@
                     return;
                 }
 
+                // ✅ ENVIA COMO STICKER DE VÍDEO REAL
                 const stickerMessage = {
-                    type: 'sticker',
+                    type: 'video_sticker',
                     sticker_name: stickerName,
                     sticker_display_name: displayName,
-                    content: `Enviou um sticker: ${displayName}`,
+                    is_sticker: true,
                     timestamp: new Date().toISOString()
                 };
 
-                const formattedMessage = `[STICKER]${JSON.stringify(stickerMessage)}[/STICKER]`;
+                const formattedMessage = `[VIDEO_STICKER]${JSON.stringify(stickerMessage)}[/VIDEO_STICKER]`;
                 
                 await sendVibeMessageDirect(formattedMessage);
                 closeStickersModal();
@@ -998,7 +1079,8 @@
             }
         }
 
-        // ✅ FUNÇÕES PRINCIPAIS DO VIBE
+        // CONTINUA NO PRÓXIMO COMENTÁRIO...
+                // ✅ FUNÇÕES PRINCIPAIS DO VIBE EXCLUSIVE
         async function validateVibeAccess() {
             try {
                 const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -1194,34 +1276,36 @@
             scrollToBottom();
         }
 
+        // ✅ FUNÇÃO CRÍTICA - RENDERIZA STICKERS COMO VÍDEO PURO
         function createMessageElement(msg) {
             const isOwn = msg.sender_id === currentUser.id;
             
-            // ✅ RENDERIZAÇÃO DE STICKERS
-            if (msg.message && msg.message.includes('[STICKER]')) {
+            // ✅ RENDERIZAÇÃO DE STICKERS - VÍDEO PURO SEM BALÃO!
+            if (msg.message && msg.message.includes('[VIDEO_STICKER]')) {
                 try {
-                    const stickerMatch = msg.message.match(/\[STICKER\](.*?)\[\/STICKER\]/);
+                    const stickerMatch = msg.message.match(/\[VIDEO_STICKER\](.*?)\[\/VIDEO_STICKER\]/);
                     if (stickerMatch) {
                         const stickerData = JSON.parse(stickerMatch[1]);
                         
                         const messageDiv = document.createElement('div');
-                        messageDiv.className = `vibe-message ${isOwn ? 'own' : 'other'} sticker-message`;
+                        messageDiv.className = `sticker-container ${isOwn ? 'own-sticker' : 'other-sticker'}`;
                         messageDiv.innerHTML = `
-                            <div class="message-sticker">
-                                <video width="120" height="120" loop muted playsinline autoplay
-                                       style="width: 120px; height: 120px; object-fit: cover; border-radius: 16px; display: block; background: var(--exclusive-card);">
+                            <div class="video-sticker-wrapper">
+                                <video 
+                                    width="150" 
+                                    height="150" 
+                                    loop 
+                                    muted 
+                                    playsinline 
+                                    autoplay
+                                    class="video-sticker"
+                                >
                                     <source src="${stickerData.sticker_name}.mp4" type="video/mp4">
+                                    Seu navegador não suporta vídeos.
                                 </video>
                                 <div class="sticker-caption">${stickerData.sticker_display_name}</div>
                             </div>
-                            <div class="message-meta">
-                                <span class="message-time">${formatTime(msg.sent_at)}</span>
-                                ${isOwn ? `
-                                    <div class="message-status">
-                                        <i class="fas fa-check status-sent"></i>
-                                    </div>
-                                ` : ''}
-                            </div>
+                            <div class="sticker-time">${formatTime(msg.sent_at)}</div>
                         `;
                         return messageDiv;
                     }
@@ -1230,7 +1314,7 @@
                 }
             }
             
-            // Mensagem normal
+            // Mensagem normal (texto) - mantém o balão tradicional
             const messageDiv = document.createElement('div');
             messageDiv.className = `vibe-message ${isOwn ? 'own' : 'other'}`;
             
@@ -1272,13 +1356,19 @@
                         sendVibeMessage();
                     }
                 });
+
+                setTimeout(() => {
+                    if (activeAgreement) {
+                        messageInput.focus();
+                    }
+                }, 1000);
             }
 
             if (sendBtn) {
                 sendBtn.addEventListener('click', sendVibeMessage);
             }
 
-            // ✅ FECHAR MODAIS
+            // ✅ FECHAR MODAIS AO CLICAR FORA
             document.addEventListener('click', function(e) {
                 const stickersModal = document.getElementById('stickersModal');
                 const cancelModal = document.getElementById('cancelVibeModal');
@@ -1291,6 +1381,7 @@
                 }
             });
 
+            // ✅ FECHAR MODAIS COM ESC
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
                     closeStickersModal();
