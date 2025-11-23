@@ -2488,3 +2488,29 @@ footer {
 .sticker-item:hover .sticker-video {
     background: rgba(198, 166, 100, 0.1) !important;
 }
+
+/* CORREÇÃO PARA VÍDEOS */
+.sticker-video video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 8px;
+    display: block !important;
+    background: transparent !important;
+}
+
+.message-sticker video {
+    width: 120px !important;
+    height: 120px !important;
+    object-fit: cover !important;
+    border-radius: 16px;
+    display: block !important;
+    background: transparent !important;
+}
+
+/* Garantir que os vídeos sejam visíveis */
+.sticker-item video,
+.message-sticker video {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
