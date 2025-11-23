@@ -1051,6 +1051,7 @@
             });
         }
 
+        // ✅ FUNÇÃO CRÍTICA CORRIGIDA - ENVIO DE STICKER
         async function selectSticker(stickerName, displayName) {
             try {
                 if (!currentUser || !activeAgreement) {
@@ -1058,7 +1059,7 @@
                     return;
                 }
 
-                // ✅ ENVIA COMO STICKER DE VÍDEO REAL
+                // ✅ CORREÇÃO: ENVIA COMO VIDEO_STICKER (NÃO STICKER)
                 const stickerMessage = {
                     type: 'video_sticker',
                     sticker_name: stickerName,
@@ -1067,7 +1068,10 @@
                     timestamp: new Date().toISOString()
                 };
 
+                // ✅ CORREÇÃO: USA VIDEO_STICKER COMO MARCADOR
                 const formattedMessage = `[VIDEO_STICKER]${JSON.stringify(stickerMessage)}[/VIDEO_STICKER]`;
+                
+                console.log('🎯 Enviando sticker:', formattedMessage);
                 
                 await sendVibeMessageDirect(formattedMessage);
                 closeStickersModal();
@@ -1276,14 +1280,22 @@
             scrollToBottom();
         }
 
-        // ✅ FUNÇÃO CRÍTICA - RENDERIZA STICKERS COMO VÍDEO PURO
+        // ✅ FUNÇÃO CRÍTICA CORRIGIDA - RENDERIZA STICKERS COMO VÍDEO PURO
         function createMessageElement(msg) {
             const isOwn = msg.sender_id === currentUser.id;
             
-            // ✅ RENDERIZAÇÃO DE STICKERS - VÍDEO PURO SEM BALÃO!
-            if (msg.message && msg.message.includes('[VIDEO_STICKER]')) {
+            // ✅ CORREÇÃO: DETECTA VIDEO_STICKER E STICKER (PARA COMPATIBILIDADE)
+            if (msg.message && (msg.message.includes('[VIDEO_STICKER]') || msg.message.includes('[STICKER]'))) {
                 try {
-                    const stickerMatch = msg.message.match(/\[VIDEO_STICKER\](.*?)\[\/VIDEO_STICKER\]/);
+                    let stickerMatch = msg.message.match(/\[VIDEO_STICKER\](.*?)\[\/VIDEO_STICKER\]/);
+                    let stickerType = 'VIDEO_STICKER';
+                    
+                    // ✅ SE NÃO ENCONTRAR VIDEO_STICKER, TENTA STICKER NORMAL
+                    if (!stickerMatch) {
+                        stickerMatch = msg.message.match(/\[STICKER\](.*?)\[\/STICKER\]/);
+                        stickerType = 'STICKER';
+                    }
+                    
                     if (stickerMatch) {
                         const stickerData = JSON.parse(stickerMatch[1]);
                         
