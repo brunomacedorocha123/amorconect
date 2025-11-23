@@ -12,32 +12,16 @@ class VideoStickersSystem {
 
     async initialize() {
         try {
-            // Aguardar MessagesSystem estar pronto
-            await this.waitForMessagesSystem();
-            
             const { data: { user } } = await this.supabase.auth.getUser();
             if (user) {
                 this.currentUser = user;
                 await this.loadUserStickersData();
                 this.setupEventListeners();
-                console.log('✅ Video Stickers System inicializado e integrado');
+                console.log('✅ Video Stickers System inicializado');
             }
         } catch (error) {
             console.error('Erro ao inicializar Video Stickers:', error);
         }
-    }
-
-    async waitForMessagesSystem() {
-        return new Promise((resolve) => {
-            const check = () => {
-                if (window.MessagesSystem && window.MessagesSystem.currentUser) {
-                    resolve();
-                } else {
-                    setTimeout(check, 100);
-                }
-            };
-            check();
-        });
     }
 
     async loadUserStickersData() {
@@ -117,6 +101,7 @@ class VideoStickersSystem {
                 </div>
             `;
 
+            // Carregar stickers do banco
             const { data: stickers, error } = await this.supabase
                 .from('stickers')
                 .select('*')
@@ -138,7 +123,7 @@ class VideoStickersSystem {
                 return;
             }
 
-            // ⭐⭐ RENDERIZAÇÃO CORRIGIDA - Vídeos funcionais
+            // Renderizar stickers de forma SIMPLES
             container.innerHTML = this.stickers.map(sticker => `
                 <div class="sticker-item" onclick="videoStickersSystem.selectSticker('${sticker.name}', '${sticker.display_name}')">
                     <div class="sticker-video">
@@ -147,12 +132,10 @@ class VideoStickersSystem {
                             height="80" 
                             loop 
                             muted 
-                            playsinline 
-                            preload="auto"
-                            poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' fill='%23f8f9fa'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='10' fill='%23666'%3E${sticker.display_name}%3C/text%3E%3C/svg%3E"
+                            playsinline
+                            preload="metadata"
                         >
                             <source src="assets/stickers/${sticker.name}.mp4" type="video/mp4">
-                            Seu navegador não suporta vídeos HTML5.
                         </video>
                         <div class="sticker-overlay">
                             <i class="fas fa-play"></i>
@@ -162,8 +145,10 @@ class VideoStickersSystem {
                 </div>
             `).join('');
 
-            // Configurar hover dos vídeos
-            this.setupVideoHover();
+            // Configurar vídeos após renderização
+            setTimeout(() => {
+                this.setupVideos();
+            }, 100);
 
         } catch (error) {
             console.error('Erro ao carregar stickers:', error);
@@ -177,72 +162,69 @@ class VideoStickersSystem {
         }
     }
 
-    setupVideoHover() {
+    setupVideos() {
         document.querySelectorAll('.sticker-item').forEach(item => {
             const video = item.querySelector('video');
+            const overlay = item.querySelector('.sticker-overlay');
             
-            // Pré-carregar o vídeo
+            if (!video) return;
+
+            // Tentar carregar o vídeo
             video.load();
-            
-            item.addEventListener('mouseenter', () => {
-                video.currentTime = 0;
-                video.play().catch(e => {
-                    console.log('Erro ao reproduzir vídeo:', e);
-                    // Fallback: mostrar que é um vídeo
-                    this.showVideoError(item);
-                });
+
+            // Evento quando vídeo carrega
+            video.addEventListener('loadeddata', () => {
+                console.log('✅ Vídeo carregado:', video.src);
+                overlay.style.display = 'flex';
             });
-            
+
+            // Evento de erro no vídeo
+            video.addEventListener('error', () => {
+                console.log('❌ Erro no vídeo:', video.src);
+                this.showVideoFallback(item);
+            });
+
+            // Hover para play/pause
+            item.addEventListener('mouseenter', () => {
+                if (video.readyState >= 2) { // Tem dados para reproduzir
+                    video.currentTime = 0;
+                    video.play().catch(e => {
+                        console.log('Erro ao reproduzir:', e);
+                    });
+                }
+            });
+
             item.addEventListener('mouseleave', () => {
                 video.pause();
                 video.currentTime = 0;
-                this.hideVideoError(item);
-            });
-
-            // Configurar eventos do vídeo
-            video.addEventListener('loadeddata', () => {
-                console.log('✅ Vídeo carregado:', video.src);
-            });
-            
-            video.addEventListener('error', (e) => {
-                console.log('❌ Erro no vídeo:', video.src, e);
-                this.showVideoError(item);
             });
         });
     }
 
-    showVideoError(item) {
+    showVideoFallback(item) {
         const videoContainer = item.querySelector('.sticker-video');
         const video = item.querySelector('video');
+        const overlay = item.querySelector('.sticker-overlay');
         
-        if (videoContainer && video) {
-            video.style.display = 'none';
-            const errorMsg = document.createElement('div');
-            errorMsg.className = 'video-error';
-            errorMsg.innerHTML = `
-                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea, #764ba2); 
-                            border-radius: 12px; display: flex; flex-direction: column; align-items: center; 
-                            justify-content: center; color: white; font-size: 0.7rem; text-align: center; padding: 5px;">
-                    <i class="fas fa-film" style="font-size: 1.2rem; margin-bottom: 5px;"></i>
-                    <span>Vídeo</span>
-                </div>
-            `;
-            videoContainer.appendChild(errorMsg);
-        }
-    }
-
-    hideVideoError(item) {
-        const videoContainer = item.querySelector('.sticker-video');
-        const video = item.querySelector('video');
-        const errorMsg = videoContainer.querySelector('.video-error');
+        if (video) video.style.display = 'none';
+        if (overlay) overlay.style.display = 'none';
         
-        if (video) video.style.display = 'block';
-        if (errorMsg) errorMsg.remove();
+        const fallback = document.createElement('div');
+        fallback.className = 'video-fallback';
+        fallback.innerHTML = `
+            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #c6a664, #a65b5b); 
+                        border-radius: 12px; display: flex; flex-direction: column; align-items: center; 
+                        justify-content: center; color: white; font-size: 0.7rem; text-align: center;">
+                <i class="fas fa-film" style="font-size: 1.5rem; margin-bottom: 5px;"></i>
+                <span>Sticker</span>
+            </div>
+        `;
+        videoContainer.appendChild(fallback);
     }
 
     async selectSticker(stickerName, displayName) {
         try {
-            // Verificar se usuário pode enviar sticker
+            // Verificar se pode enviar sticker
             if (!await this.canSendSticker()) {
                 return;
             }
@@ -376,7 +358,7 @@ class VideoStickersSystem {
         }
     }
 
-    // ⭐⭐ MÉTODO PARA RENDERIZAR STICKER NO CHAT
+    // Método para renderizar sticker no chat
     static renderStickerMessage(messageData, isOwnMessage = false) {
         if (!messageData.sticker_name) return '';
 
@@ -393,7 +375,6 @@ class VideoStickersSystem {
                         muted 
                         playsinline 
                         autoplay
-                        poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' fill='%23f8f9fa'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='12' fill='%23666'%3E${displayName}%3C/text%3E%3C/svg%3E"
                     >
                         <source src="assets/stickers/${sticker}.mp4" type="video/mp4">
                     </video>
