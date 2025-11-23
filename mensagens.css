@@ -2465,3 +2465,26 @@ footer {
     background: rgba(198, 166, 100, 0.5);
 }
 
+
+/* CORREÇÃO IMEDIATA PARA VÍDEOS PRETOS */
+.sticker-video {
+    background: white !important;
+    border: 2px solid rgba(198, 166, 100, 0.5) !important;
+    border-radius: 12px;
+}
+
+.sticker-video video {
+    background: white !important;
+    border-radius: 8px;
+}
+
+.message-sticker video {
+    background: white !important;
+    border: 2px solid rgba(198, 166, 100, 0.5) !important;
+    border-radius: 16px;
+}
+
+/* Para vídeos no modal */
+.sticker-item:hover .sticker-video {
+    background: rgba(198, 166, 100, 0.1) !important;
+}
