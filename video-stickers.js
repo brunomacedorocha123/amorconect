@@ -122,10 +122,9 @@ class VideoStickersSystem {
                 return;
             }
 
-            // Renderizar stickers com caminhos ABSOLUTOS
+            // ⭐⭐ CORREÇÃO: VÍDEOS NA RAIZ - SEM PASTA
             container.innerHTML = stickersList.map(sticker => {
-                // ⭐⭐ CAMINHO CORRETO - ajuste conforme sua estrutura
-                const videoPath = `assets/stickers/${sticker.name}.mp4`;
+                const videoPath = `${sticker.name}.mp4`; // ⭐ NA RAIZ
                 
                 return `
                     <div class="sticker-item" onclick="videoStickersSystem.selectSticker('${sticker.name}', '${sticker.display_name}')">
@@ -137,16 +136,16 @@ class VideoStickersSystem {
                                 muted 
                                 playsinline
                                 preload="metadata"
-                                style="background: transparent;"
+                                style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; background: white; display: block;"
                             >
                                 <source src="${videoPath}" type="video/mp4">
-                                Seu navegador não suporta vídeo HTML5.
                             </video>
                             <div class="sticker-overlay">
                                 <i class="fas fa-play"></i>
                             </div>
                         </div>
                         <div class="sticker-name">${sticker.display_name}</div>
+                        <div style="font-size: 9px; color: #888; margin-top: 2px;">${sticker.name}.mp4</div>
                     </div>
                 `;
             }).join('');
@@ -173,14 +172,17 @@ class VideoStickersSystem {
             
             if (!video) return;
 
+            // Mostrar overlay inicialmente
+            if (overlay) overlay.style.display = 'flex';
+
             // Configurar eventos do vídeo
             video.addEventListener('loadeddata', () => {
                 console.log('✅ Vídeo carregado:', video.src);
-                if (overlay) overlay.style.display = 'flex';
+                if (overlay) overlay.style.display = 'none';
             });
 
             video.addEventListener('error', (e) => {
-                console.log('❌ Erro no vídeo:', video.src, e);
+                console.log('❌ Erro no vídeo:', video.src);
                 this.showVideoFallback(item);
             });
 
@@ -190,17 +192,23 @@ class VideoStickersSystem {
 
             // Hover para play/pause
             item.addEventListener('mouseenter', () => {
-                if (video.readyState >= 2) { // Tem dados suficientes
+                if (video.readyState >= 2) {
                     video.currentTime = 0;
                     video.play().catch(e => {
                         console.log('Erro ao reproduzir:', e);
+                        // Mostrar overlay se não conseguir reproduzir
+                        if (overlay) overlay.style.display = 'flex';
                     });
+                    // Esconder overlay durante reprodução
+                    if (overlay) overlay.style.display = 'none';
                 }
             });
 
             item.addEventListener('mouseleave', () => {
                 video.pause();
                 video.currentTime = 0;
+                // Mostrar overlay novamente
+                if (overlay) overlay.style.display = 'flex';
             });
 
             // Tentar carregar o vídeo
@@ -365,13 +373,13 @@ class VideoStickersSystem {
         }
     }
 
-    // Método para renderizar sticker no chat
+    // ⭐⭐ CORREÇÃO: Render no chat com vídeos na RAIZ
     static renderStickerMessage(messageData, isOwnMessage = false) {
         if (!messageData.sticker_name) return '';
 
         const sticker = messageData.sticker_name;
         const displayName = messageData.sticker_display_name || 'Sticker';
-        const videoPath = `assets/stickers/${sticker}.mp4`;
+        const videoPath = `${sticker}.mp4`; // ⭐ NA RAIZ
 
         return `
             <div class="message ${isOwnMessage ? 'own' : 'other'} sticker-message">
@@ -383,7 +391,7 @@ class VideoStickersSystem {
                         muted 
                         playsinline 
                         autoplay
-                        style="background: transparent;"
+                        style="width: 120px; height: 120px; object-fit: cover; border-radius: 16px; background: white; display: block;"
                     >
                         <source src="${videoPath}" type="video/mp4">
                     </video>
