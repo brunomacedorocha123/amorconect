@@ -449,33 +449,32 @@
         </div>
     </div>
 
-    <!-- Modal Video Stickers -->
-    <div id="stickersModal" class="modal">
-        <div class="modal-content stickers-modal">
-            <div class="modal-header">
-                <h3><i class="fas fa-film"></i> Video Stickers</h3>
-                <button class="modal-close" onclick="closeStickersModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="stickers-container" id="stickersContainer">
-                    <div class="loading-state">
-                        <div class="loading-spinner"></div>
-                        <p>Carregando stickers...</p>
-                    </div>
+  <!-- Modal Video Stickers -->
+<div id="stickersModal" class="modal" style="display: none;">
+    <div class="modal-content stickers-modal">
+        <div class="modal-header">
+            <h3><i class="fas fa-film"></i> Video Stickers</h3>
+            <button class="modal-close" onclick="closeStickersModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="stickers-container" id="stickersContainer">
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Carregando stickers...</p>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <div class="sticker-counter" id="stickerCounter">
-                    <span class="counter-text">Stickers hoje: </span>
-                    <span class="counter-number">0/4</span>
-                </div>
-                <button class="btn btn-outline" onclick="closeStickersModal()">Fechar</button>
             </div>
         </div>
+        <div class="modal-footer">
+            <div class="sticker-counter" id="stickerCounter">
+                <span class="counter-text">Stickers hoje: </span>
+                <span class="counter-number">0/4</span>
+            </div>
+            <button class="btn btn-outline" onclick="closeStickersModal()">Fechar</button>
+        </div>
     </div>
-
+</div>
     <!-- SCRIPTS -->
     <script src="auth-vibe.js"></script>
     <script src="premium-check.js"></script>
