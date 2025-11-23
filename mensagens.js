@@ -630,12 +630,13 @@ class MessagesSystem {
                                 if (window.VideoStickersSystem && window.VideoStickersSystem.renderStickerMessage) {
                                     return window.VideoStickersSystem.renderStickerMessage(stickerData, msg.is_own_message);
                                 } else {
-                                    // Fallback para sticker
+                                    // ⭐⭐ CORREÇÃO: VÍDEOS NA RAIZ
                                     return `
                                         <div class="message ${msg.is_own_message ? 'own' : 'other'} sticker-message">
                                             <div class="message-sticker">
-                                                <video width="120" height="120" loop muted playsinline autoplay>
-                                                    <source src="assets/stickers/${stickerData.sticker_name}.mp4" type="video/mp4">
+                                                <video width="120" height="120" loop muted playsinline autoplay
+                                                       style="width: 120px; height: 120px; object-fit: cover; border-radius: 16px; display: block; background: white;">
+                                                    <source src="${stickerData.sticker_name}.mp4" type="video/mp4">
                                                 </video>
                                                 <div class="sticker-caption">${stickerData.sticker_display_name}</div>
                                             </div>
