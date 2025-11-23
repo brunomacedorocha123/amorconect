@@ -1975,3 +1975,493 @@ footer {
 .sticker-video.loading video {
     opacity: 0.3;
 }
+
+/* ==================== VIDEO STICKERS SYSTEM ==================== */
+
+/* MODAL BASE FUNCIONAL */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-content {
+    background: var(--white);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    margin: 20px;
+}
+
+/* Botão de Stickers na Área de Mensagem */
+.stickers-btn {
+    background: none;
+    border: 1px solid rgba(198, 166, 100, 0.3);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--gold);
+    font-size: 1.1rem;
+    position: relative;
+}
+
+.stickers-btn:hover {
+    background: var(--gold);
+    color: var(--white);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(198, 166, 100, 0.3);
+}
+
+.stickers-btn:active {
+    transform: scale(0.95);
+}
+
+/* Modal de Stickers Específico */
+.stickers-modal {
+    border: 2px solid var(--gold) !important;
+    background: var(--white) !important;
+}
+
+.stickers-modal .modal-header {
+    background: linear-gradient(135deg, rgba(198, 166, 100, 0.1), rgba(166, 91, 91, 0.1)) !important;
+    border-bottom: 1px solid rgba(198, 166, 100, 0.2) !important;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stickers-modal .modal-header h3 {
+    color: var(--text-primary) !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.stickers-modal .modal-header h3 i {
+    color: var(--gold) !important;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    background: rgba(166, 91, 91, 0.1);
+    color: var(--burgundy);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.modal-footer {
+    padding: 1.5rem;
+    border-top: 1px solid rgba(198, 166, 100, 0.2);
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Container de Stickers */
+.stickers-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+    background: var(--section-bg);
+    border-radius: var(--border-radius-sm);
+}
+
+/* Item Individual do Sticker */
+.sticker-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.8rem;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    background: var(--white);
+    position: relative;
+    overflow: hidden;
+}
+
+.sticker-item:hover {
+    border-color: var(--gold);
+    background: rgba(198, 166, 100, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.sticker-item:active {
+    transform: translateY(0);
+}
+
+/* Container do Video */
+.sticker-video {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--dark-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border: 2px solid rgba(198, 166, 100, 0.3);
+}
+
+.sticker-video video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.sticker-item:hover .sticker-video video {
+    transform: scale(1.05);
+}
+
+/* Overlay de Play no Hover */
+.sticker-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all 0.3s ease;
+    color: var(--white);
+    border-radius: 8px;
+}
+
+.sticker-item:hover .sticker-overlay {
+    opacity: 1;
+}
+
+.sticker-overlay i {
+    font-size: 1.5rem;
+    background: rgba(198, 166, 100, 0.8);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Nome do Sticker */
+.sticker-name {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-align: center;
+    font-weight: 500;
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sticker-item:hover .sticker-name {
+    color: var(--gold);
+    font-weight: 600;
+}
+
+/* Contador de Stickers no Modal */
+.sticker-counter {
+    background: rgba(166, 91, 91, 0.1);
+    padding: 0.6rem 1rem;
+    border-radius: 20px;
+    border: 1px solid rgba(166, 91, 91, 0.2);
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-right: auto;
+    transition: all 0.3s ease;
+}
+
+.sticker-counter.premium {
+    background: rgba(198, 166, 100, 0.1);
+    border-color: rgba(198, 166, 100, 0.3);
+}
+
+.sticker-counter.premium .counter-number {
+    color: var(--gold);
+    font-weight: 700;
+}
+
+/* ===== MENSAGENS DE STICKER NO CHAT ===== */
+
+/* Container da Mensagem de Sticker */
+.message.sticker-message {
+    background: transparent !important;
+    border: none !important;
+    max-width: 150px !important;
+    padding: 0.5rem !important;
+    margin: 0.3rem 0;
+}
+
+/* Mensagem Própria de Sticker */
+.message.own.sticker-message {
+    align-self: flex-end;
+    margin-left: auto;
+}
+
+/* Mensagem do Outro Usuário de Sticker */
+.message.other.sticker-message {
+    align-self: flex-start;
+    margin-right: auto;
+}
+
+/* Container do Sticker no Chat */
+.message-sticker {
+    text-align: center;
+    position: relative;
+}
+
+.message-sticker video {
+    width: 120px;
+    height: 120px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 2px solid rgba(198, 166, 100, 0.3);
+    transition: all 0.3s ease;
+}
+
+.message.own .message-sticker video {
+    border-color: rgba(198, 166, 100, 0.6);
+    box-shadow: 0 4px 15px rgba(198, 166, 100, 0.2);
+}
+
+.message.other .message-sticker video {
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+.message-sticker video:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* Legenda do Sticker */
+.sticker-caption {
+    font-size: 0.7rem;
+    color: var(--text-light);
+    margin-top: 0.3rem;
+    font-style: italic;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+.message.own .sticker-caption {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Status da Mensagem de Sticker */
+.message.sticker-message .message-time {
+    font-size: 0.65rem;
+    margin-top: 0.2rem;
+    opacity: 0.8;
+}
+
+.message.sticker-message .message-status {
+    font-size: 0.6rem;
+    margin-top: 0.1rem;
+}
+
+/* ===== STATES E ANIMAÇÕES ===== */
+
+/* Loading State no Modal */
+.stickers-container .loading-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-light);
+}
+
+.stickers-container .loading-state i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: var(--gold);
+}
+
+.loading-spinner {
+    border: 3px solid #f1f3f5;
+    border-top: 3px solid var(--gold);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Empty State no Modal */
+.stickers-container .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-light);
+}
+
+.stickers-container .empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #e2e8f0;
+}
+
+.stickers-container .empty-state h3 {
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
+}
+
+/* Animações */
+@keyframes stickerBounce {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.sticker-item.new {
+    animation: stickerBounce 0.6s ease;
+}
+
+.sticker-item.new::after {
+    content: "NOVO";
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: var(--burgundy);
+    color: var(--white);
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+/* ===== RESPONSIVIDADE ===== */
+
+@media (max-width: 768px) {
+    .stickers-modal {
+        max-width: 95% !important;
+        margin: 10px;
+    }
+    
+    .stickers-container {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 0.8rem;
+        padding: 0.8rem;
+    }
+    
+    .sticker-video {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .sticker-name {
+        font-size: 0.7rem;
+        max-width: 70px;
+    }
+    
+    .message-sticker video {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .stickers-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .stickers-container {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 0.6rem;
+        padding: 0.6rem;
+    }
+    
+    .sticker-video {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .sticker-name {
+        font-size: 0.65rem;
+        max-width: 60px;
+    }
+    
+    .message-sticker video {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+/* ===== SCROLLBAR PERSONALIZADA ===== */
+.stickers-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.stickers-container::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 3px;
+}
+
+.stickers-container::-webkit-scrollbar-thumb {
+    background: rgba(198, 166, 100, 0.3);
+    border-radius: 3px;
+}
+
+.stickers-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(198, 166, 100, 0.5);
+}
+
