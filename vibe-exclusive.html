@@ -645,6 +645,83 @@
             margin-bottom: 15px;
         }
 
+        /* Estilos para stickers no modal */
+        .stickers-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px;
+            padding: 10px;
+        }
+
+        .sticker-item {
+            cursor: pointer;
+            text-align: center;
+            padding: 10px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .sticker-item:hover {
+            background: rgba(198, 166, 100, 0.1);
+            border-color: var(--gold);
+            transform: scale(1.05);
+        }
+
+        .sticker-video {
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .sticker-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            border-radius: 8px;
+        }
+
+        .sticker-name {
+            font-size: 0.8rem;
+            color: var(--exclusive-text);
+            word-break: break-word;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--exclusive-text);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(198, 166, 100, 0.3);
+            border-left: 4px solid var(--gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .sticker-counter {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--gold);
+            font-weight: 600;
+        }
+
         @media (max-width: 968px) {
             .vibe-container {
                 grid-template-columns: 1fr;
@@ -1073,7 +1150,13 @@
                 
                 console.log('🎯 Enviando sticker:', formattedMessage);
                 
+                // ✅ CORREÇÃO CRÍTICA: Atualiza a interface IMEDIATAMENTE após enviar
                 await sendVibeMessageDirect(formattedMessage);
+                
+                // ✅ CORREÇÃO: Recarrega as mensagens IMEDIATAMENTE
+                await loadVibeMessages();
+                scrollToBottom();
+                
                 closeStickersModal();
                 showNotification(`Sticker "${displayName}" enviado!`, 'success');
 
@@ -1083,8 +1166,7 @@
             }
         }
 
-        // CONTINUA NO PRÓXIMO COMENTÁRIO...
-                // ✅ FUNÇÕES PRINCIPAIS DO VIBE EXCLUSIVE
+        // ✅ FUNÇÕES PRINCIPAIS DO VIBE EXCLUSIVE
         async function validateVibeAccess() {
             try {
                 const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -1426,6 +1508,7 @@
                 messageInput.value = '';
                 messageInput.style.height = 'auto';
                 
+                // ✅ CORREÇÃO: Recarrega as mensagens IMEDIATAMENTE
                 await loadVibeMessages();
                 await loadConnectionStats();
                 
