@@ -944,7 +944,7 @@ class MessagesSystem {
         return { status: 'offline', text: 'Offline', class: 'status-offline' };
     }
 
-    async sendMessage() {
+        async sendMessage() {
         const messageInput = document.getElementById('messageInput');
         const message = messageInput.value.trim();
         
@@ -979,6 +979,8 @@ class MessagesSystem {
                 const canSend = await this.checkCanSendMessage(isSticker);
                 if (!canSend.can_send) {
                     this.handleSendError(canSend.reason);
+                    this.setSendButtonState(false);
+                    this.clearMessageStatus();
                     return;
                 }
             }
@@ -993,6 +995,11 @@ class MessagesSystem {
             if (error) throw error;
 
             if (data === 'success') {
+                // ⭐⭐ ATUALIZAR CONTADOR APÓS ENVIO BEM-SUCEDIDO
+                if (!isPremium) {
+                    await this.incrementMessageCounter(isSticker);
+                }
+                
                 messageInput.value = '';
                 this.updateCharCounter();
                 this.showMessageStatus(isSticker ? 'Sticker enviado!' : 'Mensagem enviada!', 'success');
@@ -1014,6 +1021,48 @@ class MessagesSystem {
         }
     }
 
+    // ⭐⭐ NOVA FUNÇÃO: INCREMENTAR CONTADOR DE MENSAGENS/STICKERS
+    async incrementMessageCounter(isSticker = false) {
+        try {
+            await this.resetDailyCounterIfNeeded();
+
+            const { data: limits, error } = await this.supabase
+                .from('user_message_limits')
+                .select('messages_sent_today, stickers_sent_today')
+                .eq('user_id', this.currentUser.id)
+                .single();
+
+            if (error) {
+                // Criar registro se não existir
+                await this.supabase
+                    .from('user_message_limits')
+                    .upsert({
+                        user_id: this.currentUser.id,
+                        messages_sent_today: isSticker ? 0 : 1,
+                        stickers_sent_today: isSticker ? 1 : 0,
+                        last_reset_date: new Date().toISOString().split('T')[0]
+                    });
+                return;
+            }
+
+            // Atualizar contador específico
+            const updateData = {};
+            if (isSticker) {
+                updateData.stickers_sent_today = (limits.stickers_sent_today || 0) + 1;
+            } else {
+                updateData.messages_sent_today = (limits.messages_sent_today || 0) + 1;
+            }
+
+            await this.supabase
+                .from('user_message_limits')
+                .update(updateData)
+                .eq('user_id', this.currentUser.id);
+
+        } catch (error) {
+            console.error('Erro ao incrementar contador:', error);
+        }
+    }
+
     async sendMessageFallback(message) {
         try {
             const { data, error } = await this.supabase
@@ -1029,6 +1078,17 @@ class MessagesSystem {
             if (error) throw error;
 
             if (data) {
+                // ⭐⭐ ATUALIZAR CONTADOR NO FALLBACK TAMBÉM
+                let isPremium = false;
+                if (this.currentUser.profile?.is_premium) {
+                    isPremium = this.currentUser.profile.is_premium;
+                }
+                
+                const isSticker = message.includes('[STICKER]');
+                if (!isPremium) {
+                    await this.incrementMessageCounter(isSticker);
+                }
+
                 this.showNotification('Mensagem enviada!', 'success');
                 await this.loadConversationMessages(this.currentConversation);
                 await this.loadConversations();
@@ -1167,14 +1227,15 @@ class MessagesSystem {
                 .single();
 
             let sentToday = 0;
+            let stickersSentToday = 0;
             
             if (!error && limits) {
                 sentToday = limits.messages_sent_today || 0;
+                stickersSentToday = limits.stickers_sent_today || 0;
             }
 
             counter.innerHTML = `
-                <span class="counter-text">Mensagens hoje: </span>
-                <span class="counter-number">${sentToday}/${this.messageLimit}</span>
+                <span class="counter-text">Mensagens: ${sentToday}/${this.messageLimit} | Stickers: ${stickersSentToday}/${this.stickerLimit}</span>
             `;
             counter.classList.remove('premium');
 
