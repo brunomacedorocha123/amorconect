@@ -18,13 +18,9 @@ document.addEventListener('DOMContentLoaded', function() {
 // FUNÇÃO PRINCIPAL DE INICIALIZAÇÃO
 async function initializeApp() {
   try {
-    console.log('🔧 Inicializando PulseLove...');
-    
     // 1. Verificar autenticação
     const authenticated = await checkAuthentication();
     if (!authenticated) return;
-    
-    console.log('✅ Usuário autenticado:', PulseLove.currentUser.email);
     
     // 2. Atualizar status online
     await updateOnlineStatusSafe(PulseLove.currentUser.id, true);
@@ -48,10 +44,7 @@ async function initializeApp() {
     startNotificationPolling();
     startStatusUpdates();
     
-    console.log('🎉 Aplicação inicializada com sucesso!');
-    
   } catch (error) {
-    console.error('❌ Erro na inicialização:', error);
     showNotification('Erro ao carregar a página. Tente recarregar.', 'error');
   }
 }
@@ -65,7 +58,6 @@ async function updateOnlineStatusSafe(userId, isOnline = true) {
     });
     return success && !error;
   } catch (error) {
-    console.error('Erro ao atualizar status:', error);
     return false;
   }
 }
@@ -134,14 +126,12 @@ async function checkAuthentication() {
   try {
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error || !user) {
-      console.log('Usuário não autenticado, redirecionando...');
       window.location.href = 'login.html';
       return false;
     }
     PulseLove.currentUser = user;
     return true;
   } catch (error) {
-    console.error('Erro na autenticação:', error);
     window.location.href = 'login.html';
     return false;
   }
@@ -162,7 +152,6 @@ async function loadUserProfile() {
     return profile;
     
   } catch (error) {
-    console.error('Erro ao carregar perfil:', error);
     showNotification('Erro ao carregar perfil', 'error');
     return null;
   }
@@ -219,16 +208,11 @@ function updateUserHeader(profile) {
   }
 }
 
-// ========== SEÇÃO "QUEM TE CURTIU" (CORRIGIDA) ==========
+// ========== SEÇÃO "QUEM TE CURTIU" ==========
 async function loadFeelsSection() {
   try {
     const container = document.getElementById('feelsContainer');
-    if (!container) {
-      console.error('Container feelsContainer não encontrado');
-      return;
-    }
-    
-    console.log('🔄 Carregando seção "Quem te curtiu"...');
+    if (!container) return;
     
     // Mostrar estado de carregamento
     container.innerHTML = `
@@ -238,24 +222,12 @@ async function loadFeelsSection() {
       </div>
     `;
     
-    // 🔴 CORREÇÃO: VERIFICAR SE O USUÁRIO EXISTE ANTES DE FAZER A CONSULTA
-    if (!PulseLove.currentUser || !PulseLove.currentUser.id) {
-      console.error('❌ Usuário não autenticado para carregar feels');
-      container.innerHTML = `
-        <div class="feels-empty-state">
-          <i class="fas fa-exclamation-triangle"></i>
-          <p>Usuário não autenticado</p>
-        </div>
-      `;
-      return;
-    }
-    
-    // Buscar curtidas recebidas
+    // Buscar curtidas recebidas - USANDO ESTRUTURA CORRETA
     const { data: feels, error } = await supabase
       .from('user_feels')
       .select(`
         created_at,
-        profiles:sender_id (
+        profiles:giver_id (
           id,
           nickname,
           avatar_url,
@@ -267,31 +239,7 @@ async function loadFeelsSection() {
       .order('created_at', { ascending: false })
       .limit(10);
     
-    if (error) {
-      console.error('Erro ao buscar feels:', error);
-      
-      // 🔴 CORREÇÃO: MELHOR TRATAMENTO DE ERRO
-      if (error.code === 'PGRST204' || error.message.includes('does not exist')) {
-        // Tabela não existe ou sem permissão
-        container.innerHTML = `
-          <div class="feels-free-state">
-            <div class="feels-count">0</div>
-            <div class="feels-free-message">
-              <i class="fas fa-lock"></i>
-              Ainda não há curtidas
-            </div>
-            <button class="btn btn-primary" onclick="goToPricing()">
-              <i class="fas fa-crown"></i> Virar Premium para ver quem te curtiu
-            </button>
-          </div>
-        `;
-      } else {
-        throw error;
-      }
-      return;
-    }
-    
-    console.log(`✅ ${feels?.length || 0} curtidas encontradas`);
+    if (error) throw error;
     
     // Verificar se usuário é premium
     const { data: profile } = await supabase
@@ -306,15 +254,15 @@ async function loadFeelsSection() {
     renderFeelsSection(feels || [], isPremium);
     
   } catch (error) {
-    console.error('❌ Erro na seção feels:', error);
     const container = document.getElementById('feelsContainer');
     if (container) {
-      // 🔴 CORREÇÃO: NÃO CHAMAR A SI MESMA RECURSIVAMENTE
       container.innerHTML = `
         <div class="feels-empty-state">
           <i class="fas fa-exclamation-triangle"></i>
-          <p>Não foi possível carregar as curtidas</p>
-          <small>Tente atualizar a página</small>
+          <p>Erro ao carregar curtidas</p>
+          <button class="btn btn-outline" onclick="loadFeelsSection()">
+            Tentar novamente
+          </button>
         </div>
       `;
     }
@@ -370,16 +318,11 @@ function renderFeelsSection(feels, isPremium) {
     const initials = getUserInitials(profile.nickname || 'U');
     const isOnline = checkIfUserIsOnline(profile.last_online_at);
     
-    // 🔴 CORREÇÃO: VALIDAÇÃO DE DADOS DO PERFIL
-    if (!profile || !profile.id) {
-      return ''; // Ignorar perfis inválidos
-    }
-    
     return `
       <div class="feel-user-card" onclick="viewUserProfile('${profile.id}')">
         <div class="feel-user-avatar">
           ${profile.avatar_url ? 
-            `<img src="${profile.avatar_url}" alt="${profile.nickname || 'Usuário'}" 
+            `<img src="${profile.avatar_url}" alt="${profile.nickname}" 
                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
             ''
           }
@@ -408,17 +351,11 @@ function renderFeelsSection(feels, isPremium) {
     ` : ''}
   `;
 }
-
 // ========== SEÇÃO "QUEM TE VISITOU" ==========
 async function loadVisitorsSection() {
   try {
     const container = document.getElementById('visitorsContainer');
-    if (!container) {
-      console.error('Container visitorsContainer não encontrado');
-      return;
-    }
-    
-    console.log('🔄 Carregando seção "Quem te visitou"...');
+    if (!container) return;
     
     // Mostrar estado de carregamento
     container.innerHTML = `
@@ -427,18 +364,6 @@ async function loadVisitorsSection() {
         <p>Carregando visitas...</p>
       </div>
     `;
-    
-    // 🔴 CORREÇÃO: VERIFICAR SE O USUÁRIO EXISTE ANTES DE FAZER A CONSULTA
-    if (!PulseLove.currentUser || !PulseLove.currentUser.id) {
-      console.error('❌ Usuário não autenticado para carregar visitas');
-      container.innerHTML = `
-        <div class="feels-empty-state">
-          <i class="fas fa-exclamation-triangle"></i>
-          <p>Usuário não autenticado</p>
-        </div>
-      `;
-      return;
-    }
     
     // Buscar visitas recebidas (últimas 24 horas)
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -460,31 +385,7 @@ async function loadVisitorsSection() {
       .order('viewed_at', { ascending: false })
       .limit(10);
     
-    if (error) {
-      console.error('Erro ao buscar visitas:', error);
-      
-      // 🔴 CORREÇÃO: MELHOR TRATAMENTO DE ERRO
-      if (error.code === 'PGRST204' || error.message.includes('does not exist')) {
-        // Tabela não existe ou sem permissão
-        container.innerHTML = `
-          <div class="feels-free-state">
-            <div class="feels-count">0</div>
-            <div class="feels-free-message">
-              <i class="fas fa-lock"></i>
-              Ainda não há visitas
-            </div>
-            <button class="btn btn-primary" onclick="goToPricing()">
-              <i class="fas fa-crown"></i> Virar Premium para ver quem te visitou
-            </button>
-          </div>
-        `;
-      } else {
-        throw error;
-      }
-      return;
-    }
-    
-    console.log(`✅ ${visits?.length || 0} visitas encontradas`);
+    if (error) throw error;
     
     // Verificar se usuário é premium
     const { data: profile } = await supabase
@@ -499,15 +400,15 @@ async function loadVisitorsSection() {
     renderVisitorsSection(visits || [], isPremium);
     
   } catch (error) {
-    console.error('❌ Erro na seção visitantes:', error);
     const container = document.getElementById('visitorsContainer');
     if (container) {
-      // 🔴 CORREÇÃO: NÃO CHAMAR A SI MESMA RECURSIVAMENTE
       container.innerHTML = `
         <div class="feels-empty-state">
           <i class="fas fa-exclamation-triangle"></i>
-          <p>Não foi possível carregar as visitas</p>
-          <small>Tente atualizar a página</small>
+          <p>Erro ao carregar visitas</p>
+          <button class="btn btn-outline" onclick="loadVisitorsSection()">
+            Tentar novamente
+          </button>
         </div>
       `;
     }
@@ -563,16 +464,11 @@ function renderVisitorsSection(visits, isPremium) {
     const initials = getUserInitials(profile.nickname || 'U');
     const isOnline = checkIfUserIsOnline(profile.last_online_at);
     
-    // 🔴 CORREÇÃO: VALIDAÇÃO DE DADOS DO PERFIL
-    if (!profile || !profile.id) {
-      return ''; // Ignorar perfis inválidos
-    }
-    
     return `
       <div class="feel-user-card" onclick="viewUserProfile('${profile.id}')">
         <div class="feel-user-avatar">
           ${profile.avatar_url ? 
-            `<img src="${profile.avatar_url}" alt="${profile.nickname || 'Usuário'}" 
+            `<img src="${profile.avatar_url}" alt="${profile.nickname}" 
                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
             ''
           }
@@ -713,7 +609,6 @@ async function loadUsers() {
     displayUsers(profilesWithStatus);
     
   } catch (error) {
-    console.error('Erro ao carregar usuários:', error);
     const usersGrid = document.getElementById('usersGrid');
     if (usersGrid) {
       usersGrid.innerHTML = `
@@ -787,7 +682,6 @@ async function filterBlockedUsers(users) {
     return users.filter(user => !allBlockedIds.includes(user.id));
     
   } catch (error) {
-    console.error('Erro ao filtrar bloqueados:', error);
     return users;
   }
 }
@@ -921,7 +815,7 @@ async function loadNotificationCount() {
       updateNotificationBadge(notifications);
     }
   } catch (error) {
-    console.error('Erro ao carregar notificações:', error);
+    // Silenciar erro de notificações
   }
 }
 
@@ -1000,7 +894,6 @@ async function goToVisitorsPage() {
       }
     }
   } catch (error) {
-    console.error('Erro:', error);
     window.location.href = 'visitantes.html';
   }
 }
@@ -1022,7 +915,6 @@ async function goToFeelsPage() {
       }
     }
   } catch (error) {
-    console.error('Erro:', error);
     window.location.href = 'feels.html';
   }
 }
@@ -1047,7 +939,6 @@ async function logout() {
     window.location.href = 'login.html';
     
   } catch (error) {
-    console.error('Erro no logout:', error);
     showNotification('Erro ao sair. Tente novamente.', 'error');
   }
 }
@@ -1102,11 +993,9 @@ function showNotification(message, type = 'success') {
 // ========== LISTENER DE AUTENTICAÇÃO ==========
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_OUT') {
-    console.log('Usuário deslogado');
     stopNotificationPolling();
     stopStatusUpdates();
   } else if (event === 'SIGNED_IN' && session) {
-    console.log('Usuário logado:', session.user.email);
     PulseLove.currentUser = session.user;
     startNotificationPolling();
     startStatusUpdates();
@@ -1132,6 +1021,9 @@ window.goToPricing = goToPricing;
 window.goToVisitorsPage = goToVisitorsPage;
 window.goToFeelsPage = goToFeelsPage;
 window.logout = logout;
+window.loadFeelsSection = loadFeelsSection;
+window.loadVisitorsSection = loadVisitorsSection;
+window.loadUsers = loadUsers;
 
 // Funções dos modais (mantidas do código original)
 function openUserActions(userId, userName) {
@@ -1251,5 +1143,5 @@ document.head.appendChild(style);
 
 // Verificação inicial quando a página carrega
 window.addEventListener('load', function() {
-  console.log('Página carregada - PulseLove');
+  // Inicialização já feita pelo DOMContentLoaded
 });
