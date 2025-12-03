@@ -219,7 +219,7 @@ function updateUserHeader(profile) {
   }
 }
 
-// ========== SEÇÃO "QUEM TE CURTIU" ==========
+// ========== SEÇÃO "QUEM TE CURTIU" (CORRIGIDA) ==========
 async function loadFeelsSection() {
   try {
     const container = document.getElementById('feelsContainer');
@@ -237,6 +237,18 @@ async function loadFeelsSection() {
         <p>Carregando curtidas...</p>
       </div>
     `;
+    
+    // 🔴 CORREÇÃO: VERIFICAR SE O USUÁRIO EXISTE ANTES DE FAZER A CONSULTA
+    if (!PulseLove.currentUser || !PulseLove.currentUser.id) {
+      console.error('❌ Usuário não autenticado para carregar feels');
+      container.innerHTML = `
+        <div class="feels-empty-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Usuário não autenticado</p>
+        </div>
+      `;
+      return;
+    }
     
     // Buscar curtidas recebidas
     const { data: feels, error } = await supabase
@@ -257,7 +269,26 @@ async function loadFeelsSection() {
     
     if (error) {
       console.error('Erro ao buscar feels:', error);
-      throw error;
+      
+      // 🔴 CORREÇÃO: MELHOR TRATAMENTO DE ERRO
+      if (error.code === 'PGRST204' || error.message.includes('does not exist')) {
+        // Tabela não existe ou sem permissão
+        container.innerHTML = `
+          <div class="feels-free-state">
+            <div class="feels-count">0</div>
+            <div class="feels-free-message">
+              <i class="fas fa-lock"></i>
+              Ainda não há curtidas
+            </div>
+            <button class="btn btn-primary" onclick="goToPricing()">
+              <i class="fas fa-crown"></i> Virar Premium para ver quem te curtiu
+            </button>
+          </div>
+        `;
+      } else {
+        throw error;
+      }
+      return;
     }
     
     console.log(`✅ ${feels?.length || 0} curtidas encontradas`);
@@ -278,13 +309,12 @@ async function loadFeelsSection() {
     console.error('❌ Erro na seção feels:', error);
     const container = document.getElementById('feelsContainer');
     if (container) {
+      // 🔴 CORREÇÃO: NÃO CHAMAR A SI MESMA RECURSIVAMENTE
       container.innerHTML = `
         <div class="feels-empty-state">
           <i class="fas fa-exclamation-triangle"></i>
-          <p>Erro ao carregar curtidas</p>
-          <button class="btn btn-outline" onclick="loadFeelsSection()">
-            Tentar novamente
-          </button>
+          <p>Não foi possível carregar as curtidas</p>
+          <small>Tente atualizar a página</small>
         </div>
       `;
     }
@@ -340,11 +370,16 @@ function renderFeelsSection(feels, isPremium) {
     const initials = getUserInitials(profile.nickname || 'U');
     const isOnline = checkIfUserIsOnline(profile.last_online_at);
     
+    // 🔴 CORREÇÃO: VALIDAÇÃO DE DADOS DO PERFIL
+    if (!profile || !profile.id) {
+      return ''; // Ignorar perfis inválidos
+    }
+    
     return `
       <div class="feel-user-card" onclick="viewUserProfile('${profile.id}')">
         <div class="feel-user-avatar">
           ${profile.avatar_url ? 
-            `<img src="${profile.avatar_url}" alt="${profile.nickname}" 
+            `<img src="${profile.avatar_url}" alt="${profile.nickname || 'Usuário'}" 
                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
             ''
           }
@@ -393,6 +428,18 @@ async function loadVisitorsSection() {
       </div>
     `;
     
+    // 🔴 CORREÇÃO: VERIFICAR SE O USUÁRIO EXISTE ANTES DE FAZER A CONSULTA
+    if (!PulseLove.currentUser || !PulseLove.currentUser.id) {
+      console.error('❌ Usuário não autenticado para carregar visitas');
+      container.innerHTML = `
+        <div class="feels-empty-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>Usuário não autenticado</p>
+        </div>
+      `;
+      return;
+    }
+    
     // Buscar visitas recebidas (últimas 24 horas)
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     
@@ -415,7 +462,26 @@ async function loadVisitorsSection() {
     
     if (error) {
       console.error('Erro ao buscar visitas:', error);
-      throw error;
+      
+      // 🔴 CORREÇÃO: MELHOR TRATAMENTO DE ERRO
+      if (error.code === 'PGRST204' || error.message.includes('does not exist')) {
+        // Tabela não existe ou sem permissão
+        container.innerHTML = `
+          <div class="feels-free-state">
+            <div class="feels-count">0</div>
+            <div class="feels-free-message">
+              <i class="fas fa-lock"></i>
+              Ainda não há visitas
+            </div>
+            <button class="btn btn-primary" onclick="goToPricing()">
+              <i class="fas fa-crown"></i> Virar Premium para ver quem te visitou
+            </button>
+          </div>
+        `;
+      } else {
+        throw error;
+      }
+      return;
     }
     
     console.log(`✅ ${visits?.length || 0} visitas encontradas`);
@@ -436,13 +502,12 @@ async function loadVisitorsSection() {
     console.error('❌ Erro na seção visitantes:', error);
     const container = document.getElementById('visitorsContainer');
     if (container) {
+      // 🔴 CORREÇÃO: NÃO CHAMAR A SI MESMA RECURSIVAMENTE
       container.innerHTML = `
         <div class="feels-empty-state">
           <i class="fas fa-exclamation-triangle"></i>
-          <p>Erro ao carregar visitas</p>
-          <button class="btn btn-outline" onclick="loadVisitorsSection()">
-            Tentar novamente
-          </button>
+          <p>Não foi possível carregar as visitas</p>
+          <small>Tente atualizar a página</small>
         </div>
       `;
     }
@@ -498,11 +563,16 @@ function renderVisitorsSection(visits, isPremium) {
     const initials = getUserInitials(profile.nickname || 'U');
     const isOnline = checkIfUserIsOnline(profile.last_online_at);
     
+    // 🔴 CORREÇÃO: VALIDAÇÃO DE DADOS DO PERFIL
+    if (!profile || !profile.id) {
+      return ''; // Ignorar perfis inválidos
+    }
+    
     return `
       <div class="feel-user-card" onclick="viewUserProfile('${profile.id}')">
         <div class="feel-user-avatar">
           ${profile.avatar_url ? 
-            `<img src="${profile.avatar_url}" alt="${profile.nickname}" 
+            `<img src="${profile.avatar_url}" alt="${profile.nickname || 'Usuário'}" 
                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : 
             ''
           }
